@@ -14,7 +14,105 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      businesses: {
+        Row: {
+          additional_categories: string[] | null
+          attributes: string[] | null
+          business_name: string
+          business_profile_id: string | null
+          cid: string | null
+          city: string | null
+          country: string | null
+          created_at: string
+          description: string | null
+          hours: Json | null
+          id: string
+          kg_id: string | null
+          latitude: number | null
+          longitude: number | null
+          opening_date: string | null
+          phone: string | null
+          photos: Json | null
+          place_id: string | null
+          postal_code: string | null
+          primary_category: string | null
+          products: Json | null
+          region: string | null
+          review_count: number | null
+          review_rating: number | null
+          service_area: string[] | null
+          street: string | null
+          suite: string | null
+          updated_at: string
+          user_id: string
+          website: string | null
+        }
+        Insert: {
+          additional_categories?: string[] | null
+          attributes?: string[] | null
+          business_name: string
+          business_profile_id?: string | null
+          cid?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          description?: string | null
+          hours?: Json | null
+          id?: string
+          kg_id?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          opening_date?: string | null
+          phone?: string | null
+          photos?: Json | null
+          place_id?: string | null
+          postal_code?: string | null
+          primary_category?: string | null
+          products?: Json | null
+          region?: string | null
+          review_count?: number | null
+          review_rating?: number | null
+          service_area?: string[] | null
+          street?: string | null
+          suite?: string | null
+          updated_at?: string
+          user_id: string
+          website?: string | null
+        }
+        Update: {
+          additional_categories?: string[] | null
+          attributes?: string[] | null
+          business_name?: string
+          business_profile_id?: string | null
+          cid?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          description?: string | null
+          hours?: Json | null
+          id?: string
+          kg_id?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          opening_date?: string | null
+          phone?: string | null
+          photos?: Json | null
+          place_id?: string | null
+          postal_code?: string | null
+          primary_category?: string | null
+          products?: Json | null
+          region?: string | null
+          review_count?: number | null
+          review_rating?: number | null
+          service_area?: string[] | null
+          street?: string | null
+          suite?: string | null
+          updated_at?: string
+          user_id?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
