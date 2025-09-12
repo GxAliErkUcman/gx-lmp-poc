@@ -39,6 +39,8 @@ export function CategorySelect({
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchValue, setSearchValue] = useState('');
+  const [remoteResults, setRemoteResults] = useState<Category[] | null>(null);
+  const [searchLoading, setSearchLoading] = useState(false);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -60,40 +62,73 @@ export function CategorySelect({
     fetchCategories();
   }, []);
 
-  // Custom search function with word boundary priority
+  // Fetch remote filtered results when searching to include items beyond initial limit
+  useEffect(() => {
+    if (!searchValue) {
+      setRemoteResults(null);
+      return;
+    }
+    setSearchLoading(true);
+    const handler = setTimeout(async () => {
+      try {
+        const { data, error } = await supabase
+          .from('categories')
+          .select('id, category_name')
+          .ilike('category_name', `%${searchValue}%`)
+          .limit(5000);
+        if (error) throw error;
+        setRemoteResults(data || []);
+      } catch (e) {
+        console.error('Search fetch error:', e);
+        setRemoteResults([]);
+      } finally {
+        setSearchLoading(false);
+      }
+    }, 200);
+
+    return () => clearTimeout(handler);
+  }, [searchValue]);
+
+  // Custom search with normalization and scoring: exact > startsWith > wordBoundary > contains
   const getFilteredCategories = () => {
     if (!searchValue) return categories;
 
-    const searchLower = searchValue.toLowerCase();
-    const exactMatches: Category[] = [];
-    const wordBoundaryMatches: Category[] = [];
-    const startsWithMatches: Category[] = [];
-    const containsMatches: Category[] = [];
+    const normalize = (s: string) =>
+      s
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '') // remove diacritics
+        .replace(/\s+/g, ' ') // collapse spaces
+        .trim()
+        .toLowerCase();
 
-    categories.forEach(category => {
-      const categoryLower = category.category_name.toLowerCase();
-      
-      if (categoryLower === searchLower) {
-        exactMatches.push(category);
-      } else {
-        // Check for word boundary matches (complete word)
-        const wordRegex = new RegExp(`\\b${searchLower}\\b`, 'i');
-        if (wordRegex.test(category.category_name)) {
-          wordBoundaryMatches.push(category);
-        } else if (categoryLower.startsWith(searchLower)) {
-          startsWithMatches.push(category);
-        } else if (categoryLower.includes(searchLower)) {
-          containsMatches.push(category);
-        }
-      }
-    });
+    const escapeRegExp = (str: string) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-    // Sort all groups alphabetically
-    wordBoundaryMatches.sort((a, b) => a.category_name.localeCompare(b.category_name));
-    startsWithMatches.sort((a, b) => a.category_name.localeCompare(b.category_name));
-    containsMatches.sort((a, b) => a.category_name.localeCompare(b.category_name));
+    const q = normalize(searchValue);
+    const wordRe = new RegExp(`\\b${escapeRegExp(q)}\\b`, 'i');
+    const source = remoteResults ?? categories;
 
-    return [...exactMatches, ...wordBoundaryMatches, ...startsWithMatches, ...containsMatches];
+    const ranked = source
+      .map((c) => ({
+        c,
+        n: normalize(c.category_name),
+      }))
+      // Only keep items that contain the query somewhere (normalized)
+      .filter((o) => o.n.includes(q))
+      .map((o) => {
+        let score = 0;
+        if (o.n === q) score = 400; // exact phrase match
+        else if (o.n.startsWith(q)) score = 300; // starts with query
+        else if (wordRe.test(o.n)) score = 200; // has whole word match
+        else score = 100; // contains
+        return { ...o, score };
+      })
+      .sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score;
+        return a.c.category_name.localeCompare(b.c.category_name);
+      })
+      .map((o) => o.c);
+
+    return ranked;
   };
 
   const filteredCategories = getFilteredCategories();
@@ -122,7 +157,7 @@ export function CategorySelect({
           />
           <CommandList>
             <CommandEmpty>
-              {loading ? "Loading categories..." : "No category found."}
+              {loading || searchLoading ? (searchLoading ? "Searching..." : "Loading categories...") : "No category found."}
             </CommandEmpty>
             <CommandGroup>
               {!loading && filteredCategories.map((category) => (
