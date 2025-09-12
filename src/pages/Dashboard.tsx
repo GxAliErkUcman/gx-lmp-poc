@@ -4,12 +4,14 @@ import { Navigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Upload, Download, Edit, Trash2 } from 'lucide-react';
+import { Plus, Upload, Download, Edit, Trash2, Grid, Table2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 import { toast } from '@/hooks/use-toast';
 import BusinessDialog from '@/components/BusinessDialog';
 import ImportDialog from '@/components/ImportDialog';
+import BusinessTableView from '@/components/BusinessTableView';
+import MultiEditDialog from '@/components/MultiEditDialog';
 
 type BusinessRow = Database['public']['Tables']['businesses']['Row'];
 
@@ -20,6 +22,9 @@ const Dashboard = () => {
   const [businessDialogOpen, setBusinessDialogOpen] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [editingBusiness, setEditingBusiness] = useState<BusinessRow | null>(null);
+  const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
+  const [multiEditDialogOpen, setMultiEditDialogOpen] = useState(false);
+  const [selectedBusinessIds, setSelectedBusinessIds] = useState<string[]>([]);
 
   if (!user) {
     return <Navigate to="/auth" replace />;
@@ -107,6 +112,11 @@ const Dashboard = () => {
     setBusinessDialogOpen(true);
   };
 
+  const handleMultiEdit = (selectedIds: string[]) => {
+    setSelectedBusinessIds(selectedIds);
+    setMultiEditDialogOpen(true);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -136,6 +146,24 @@ const Dashboard = () => {
             </p>
           </div>
           <div className="flex gap-2">
+            {/* View Mode Toggle */}
+            <div className="flex border rounded-lg p-1">
+              <Button
+                variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('grid')}
+              >
+                <Grid className="w-4 h-4" />
+              </Button>
+              <Button
+                variant={viewMode === 'table' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('table')}
+              >
+                <Table2 className="w-4 h-4" />
+              </Button>
+            </div>
+            
             <Button 
               onClick={() => setImportDialogOpen(true)}
               variant="outline"
@@ -170,6 +198,13 @@ const Dashboard = () => {
               </Button>
             </CardContent>
           </Card>
+        ) : viewMode === 'table' ? (
+          <BusinessTableView
+            businesses={businesses}
+            onEdit={handleEditBusiness}
+            onDelete={handleDeleteBusiness}
+            onMultiEdit={handleMultiEdit}
+          />
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {businesses.map((business) => (
@@ -250,6 +285,17 @@ const Dashboard = () => {
         onSuccess={() => {
           fetchBusinesses();
           setImportDialogOpen(false);
+        }}
+      />
+
+      <MultiEditDialog
+        open={multiEditDialogOpen}
+        onOpenChange={setMultiEditDialogOpen}
+        selectedIds={selectedBusinessIds}
+        onSuccess={() => {
+          fetchBusinesses();
+          setMultiEditDialogOpen(false);
+          setSelectedBusinessIds([]);
         }}
       />
     </div>
