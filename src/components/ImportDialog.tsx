@@ -34,22 +34,50 @@ const ImportDialog = ({ open, onOpenChange, onSuccess }: ImportDialogProps) => {
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState<'upload' | 'mapping' | 'preview'>('upload');
 
-  // Common field mappings for intelligent detection
+  // Field mappings aligned with database schema
   const fieldMappings: Record<string, string[]> = {
+    'storeCode': ['store code', 'code', 'id'],
     'businessName': ['name', 'business name', 'company name', 'business', 'company'],
     'primaryCategory': ['category', 'business category', 'type', 'industry'],
     'addressLine1': ['address', 'street address', 'street', 'addr1', 'address1'],
+    'addressLine2': ['address2', 'addr2', 'address line 2'],
+    'addressLine3': ['address3', 'addr3', 'address line 3'],
+    'addressLine4': ['address4', 'addr4', 'address line 4'],
+    'addressLine5': ['address5', 'addr5', 'address line 5'],
     'city': ['city', 'town'],
-    'region': ['state', 'region', 'province', 'area'],
-    'postal_code': ['zip', 'zipcode', 'postal code', 'postcode'],
+    'state': ['state', 'region', 'province', 'area'],
     'country': ['country'],
-    'phone': ['phone', 'telephone', 'tel', 'mobile', 'contact'],
+    'postalCode': ['zip', 'zipcode', 'postal code', 'postcode'],
+    'district': ['district', 'neighborhood'],
+    'primaryPhone': ['phone', 'telephone', 'tel', 'mobile', 'contact'],
+    'additionalPhones': ['additional phones', 'other phones', 'secondary phone'],
     'website': ['website', 'web', 'url', 'site'],
-    'description': ['description', 'desc', 'about', 'summary'],
+    'fromTheBusiness': ['description', 'desc', 'about', 'summary', 'from the business'],
     'latitude': ['lat', 'latitude'],
     'longitude': ['lng', 'longitude', 'lon'],
-    'additional_categories': ['additional categories', 'secondary categories', 'other categories'],
-    'hours': ['hours', 'opening hours', 'business hours', 'open hours']
+    'additionalCategories': ['additional categories', 'secondary categories', 'other categories'],
+    'mondayHours': ['monday', 'monday hours', 'mon'],
+    'tuesdayHours': ['tuesday', 'tuesday hours', 'tue'],
+    'wednesdayHours': ['wednesday', 'wednesday hours', 'wed'],
+    'thursdayHours': ['thursday', 'thursday hours', 'thu'],
+    'fridayHours': ['friday', 'friday hours', 'fri'],
+    'saturdayHours': ['saturday', 'saturday hours', 'sat'],
+    'sundayHours': ['sunday', 'sunday hours', 'sun'],
+    'specialHours': ['special hours', 'holiday hours'],
+    'temporarilyClosed': ['closed', 'temporarily closed', 'temp closed'],
+    'openingDate': ['opening date', 'open date', 'established'],
+    'labels': ['labels', 'tags'],
+    'adwords': ['adwords', 'google ads'],
+    'logoPhoto': ['logo', 'logo photo', 'logo image'],
+    'coverPhoto': ['cover', 'cover photo', 'main image'],
+    'otherPhotos': ['photos', 'other photos', 'images'],
+    'appointmentURL': ['appointment', 'appointment url', 'booking'],
+    'menuURL': ['menu', 'menu url'],
+    'reservationsURL': ['reservations', 'reservation url'],
+    'orderAheadURL': ['order ahead', 'order url'],
+    'customServices': ['services', 'custom services'],
+    'socialMediaUrls': ['social media', 'social urls'],
+    'moreHours': ['more hours', 'additional hours']
   };
 
   const requiredFields = ['businessName'];
@@ -171,27 +199,33 @@ const ImportDialog = ({ open, onOpenChange, onSuccess }: ImportDialogProps) => {
       const businessesToInsert = parsedData.map(row => {
         const business: any = {
           user_id: user.id,
-          businessName: '',
-          addressLine1: '',
-          country: '',
-          primaryCategory: '',
-          mondayHours: "09:00-18:00",
-          tuesdayHours: "09:00-18:00", 
-          wednesdayHours: "09:00-18:00",
-          thursdayHours: "09:00-18:00",
-          fridayHours: "09:00-18:00",
-          saturdayHours: "10:00-14:00",
-          sundayHours: "Closed"
+          // Let storeCode be auto-generated if not provided
         };
 
         columnMappings.forEach(mapping => {
           if (mapping.mapped && row[mapping.original]) {
             const value = row[mapping.original];
+            
+            // Handle numeric fields
             if (mapping.mapped === 'latitude' || mapping.mapped === 'longitude') {
               business[mapping.mapped] = parseFloat(value) || null;
-            } else if (mapping.mapped === 'additionalCategories') {
-              business[mapping.mapped] = value.split(',').map((cat: string) => cat.trim()).filter(Boolean).join(',');
-            } else {
+            }
+            // Handle date fields
+            else if (mapping.mapped === 'openingDate') {
+              business[mapping.mapped] = value ? new Date(value).toISOString().split('T')[0] : null;
+            }
+            // Handle boolean fields
+            else if (mapping.mapped === 'temporarilyClosed') {
+              business[mapping.mapped] = value === 'true' || value === '1' || value === 'yes';
+            }
+            // Handle text fields that can be comma-separated
+            else if (mapping.mapped === 'additionalCategories' || mapping.mapped === 'additionalPhones') {
+              business[mapping.mapped] = typeof value === 'string' && value.includes(',') 
+                ? value.split(',').map((item: string) => item.trim()).filter(Boolean).join(',')
+                : value;
+            }
+            // Handle all other fields as strings
+            else {
               business[mapping.mapped] = value;
             }
           }

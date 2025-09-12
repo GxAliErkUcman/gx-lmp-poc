@@ -18,16 +18,16 @@ export type Database = {
         Row: {
           additionalCategories: string | null
           additionalPhones: string | null
-          addressLine1: string
+          addressLine1: string | null
           addressLine2: string | null
           addressLine3: string | null
           addressLine4: string | null
           addressLine5: string | null
           adwords: string | null
           appointmentURL: string | null
-          businessName: string
+          businessName: string | null
           city: string | null
-          country: string
+          country: string | null
           coverPhoto: string | null
           created_at: string
           customServices: Json | null
@@ -46,7 +46,7 @@ export type Database = {
           orderAheadURL: string | null
           otherPhotos: string | null
           postalCode: string | null
-          primaryCategory: string
+          primaryCategory: string | null
           primaryPhone: string | null
           reservationsURL: string | null
           saturdayHours: string | null
@@ -67,16 +67,16 @@ export type Database = {
         Insert: {
           additionalCategories?: string | null
           additionalPhones?: string | null
-          addressLine1: string
+          addressLine1?: string | null
           addressLine2?: string | null
           addressLine3?: string | null
           addressLine4?: string | null
           addressLine5?: string | null
           adwords?: string | null
           appointmentURL?: string | null
-          businessName: string
+          businessName?: string | null
           city?: string | null
-          country: string
+          country?: string | null
           coverPhoto?: string | null
           created_at?: string
           customServices?: Json | null
@@ -95,7 +95,7 @@ export type Database = {
           orderAheadURL?: string | null
           otherPhotos?: string | null
           postalCode?: string | null
-          primaryCategory: string
+          primaryCategory?: string | null
           primaryPhone?: string | null
           reservationsURL?: string | null
           saturdayHours?: string | null
@@ -103,7 +103,7 @@ export type Database = {
           specialHours?: string | null
           state?: string | null
           status?: string
-          storeCode: string
+          storeCode?: string
           sundayHours?: string | null
           temporarilyClosed?: boolean | null
           thursdayHours?: string | null
@@ -116,16 +116,16 @@ export type Database = {
         Update: {
           additionalCategories?: string | null
           additionalPhones?: string | null
-          addressLine1?: string
+          addressLine1?: string | null
           addressLine2?: string | null
           addressLine3?: string | null
           addressLine4?: string | null
           addressLine5?: string | null
           adwords?: string | null
           appointmentURL?: string | null
-          businessName?: string
+          businessName?: string | null
           city?: string | null
-          country?: string
+          country?: string | null
           coverPhoto?: string | null
           created_at?: string
           customServices?: Json | null
@@ -144,7 +144,7 @@ export type Database = {
           orderAheadURL?: string | null
           otherPhotos?: string | null
           postalCode?: string | null
-          primaryCategory?: string
+          primaryCategory?: string | null
           primaryPhone?: string | null
           reservationsURL?: string | null
           saturdayHours?: string | null
