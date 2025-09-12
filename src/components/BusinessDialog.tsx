@@ -19,6 +19,7 @@ import { Business } from '@/types/business';
 import PhotoUpload from '@/components/PhotoUpload';
 import OpeningHours from '@/components/OpeningHours';
 import LocationMap from '@/components/LocationMap';
+import { CategorySelect } from '@/components/CategorySelect';
 
 const businessSchema = z.object({
   storeCode: z.string().min(1, 'Store code is required'),
@@ -363,7 +364,12 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
               </div>
               <div className="md:col-span-2">
                 <Label htmlFor="primaryCategory">Primary Category *</Label>
-                <Input {...register('primaryCategory')} id="primaryCategory" placeholder="Contact your project manager for correct category" />
+                <CategorySelect
+                  value={watch('primaryCategory')}
+                  onValueChange={(value) => setValue('primaryCategory', value)}
+                  placeholder="Select primary category..."
+                  required
+                />
                 {errors.primaryCategory && (
                   <p className="text-sm text-destructive mt-1">{errors.primaryCategory.message}</p>
                 )}
@@ -455,7 +461,11 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
                   <Label htmlFor="additionalCategories">Additional Categories</Label>
-                  <Input {...register('additionalCategories')} id="additionalCategories" placeholder="Comma-separated (max 10)" />
+                  <CategorySelect
+                    value={watch('additionalCategories')}
+                    onValueChange={(value) => setValue('additionalCategories', value)}
+                    placeholder="Select additional category..."
+                  />
                 </div>
                 <div>
                   <Label htmlFor="labels">Labels</Label>
