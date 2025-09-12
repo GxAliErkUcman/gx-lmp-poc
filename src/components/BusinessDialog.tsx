@@ -489,6 +489,11 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
             longitude={business?.longitude}
             onLocationChange={handleLocationChange}
             address={getCurrentAddress()}
+            addressLine1={watch('addressLine1')}
+            city={watch('city')}
+            state={watch('state')}
+            country={watch('country')}
+            postalCode={watch('postalCode')}
           />
 
           {/* Opening Hours */}

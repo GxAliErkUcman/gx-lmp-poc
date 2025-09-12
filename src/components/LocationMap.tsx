@@ -11,9 +11,15 @@ interface LocationMapProps {
   longitude?: number | null;
   onLocationChange: (lat: number, lng: number) => void;
   address?: string;
+  // Structured address components for better geocoding
+  addressLine1?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  postalCode?: string;
 }
 
-const LocationMap = ({ latitude, longitude, onLocationChange, address }: LocationMapProps) => {
+const LocationMap = ({ latitude, longitude, onLocationChange, address, addressLine1, city, state, country, postalCode }: LocationMapProps) => {
   const [mapLatitude, setMapLatitude] = useState<string>(latitude?.toString() || '');
   const [mapLongitude, setMapLongitude] = useState<string>(longitude?.toString() || '');
   const [loading, setLoading] = useState(false);
@@ -59,7 +65,11 @@ const LocationMap = ({ latitude, longitude, onLocationChange, address }: Locatio
   };
 
   const geocodeAddress = async () => {
-    if (!address) {
+    // Build structured address from components
+    const addressComponents = [addressLine1, city, state, country].filter(Boolean);
+    const fullAddress = address || addressComponents.join(', ');
+    
+    if (!fullAddress && addressComponents.length === 0) {
       toast({
         title: "No address provided",
         description: "Please fill in the address fields first",
@@ -70,25 +80,64 @@ const LocationMap = ({ latitude, longitude, onLocationChange, address }: Locatio
 
     setLoading(true);
     try {
-      // Using a free geocoding service (OpenStreetMap Nominatim)
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`
-      );
-      const data = await response.json();
+      let results = null;
+      
+      // Strategy 1: Try structured search with individual components
+      if (addressLine1 && city && country) {
+        const structuredQuery = new URLSearchParams({
+          format: 'json',
+          street: addressLine1,
+          city: city,
+          ...(state && { state }),
+          country: country,
+          ...(postalCode && { postalcode: postalCode }),
+          limit: '3',
+          addressdetails: '1'
+        });
+        
+        const structuredResponse = await fetch(
+          `https://nominatim.openstreetmap.org/search?${structuredQuery}`
+        );
+        const structuredData = await structuredResponse.json();
+        
+        if (structuredData && structuredData.length > 0) {
+          results = structuredData[0];
+        }
+      }
+      
+      // Strategy 2: Fallback to free-form search with better formatting
+      if (!results) {
+        const freeformQuery = new URLSearchParams({
+          format: 'json',
+          q: fullAddress,
+          limit: '3',
+          addressdetails: '1',
+          ...(country && { countrycodes: getCountryCode(country) })
+        });
+        
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/search?${freeformQuery}`
+        );
+        const data = await response.json();
+        
+        if (data && data.length > 0) {
+          results = data[0];
+        }
+      }
 
-      if (data && data.length > 0) {
-        const { lat, lon } = data[0];
+      if (results) {
+        const { lat, lon } = results;
         setMapLatitude(lat);
         setMapLongitude(lon);
         onLocationChange(parseFloat(lat), parseFloat(lon));
         toast({
           title: "Address geocoded",
-          description: "Coordinates have been set based on the address",
+          description: `Coordinates found: ${parseFloat(lat).toFixed(6)}, ${parseFloat(lon).toFixed(6)}`,
         });
       } else {
         toast({
           title: "Address not found",
-          description: "Could not find coordinates for this address",
+          description: "Could not find precise coordinates for this address. Try entering coordinates manually.",
           variant: "destructive",
         });
       }
@@ -101,6 +150,31 @@ const LocationMap = ({ latitude, longitude, onLocationChange, address }: Locatio
     } finally {
       setLoading(false);
     }
+  };
+
+  // Helper function to get country codes for better geocoding
+  const getCountryCode = (countryName: string): string => {
+    const countryCodes: { [key: string]: string } = {
+      'Austria': 'AT',
+      'Germany': 'DE', 
+      'Switzerland': 'CH',
+      'Turkey': 'TR',
+      'United States': 'US',
+      'United Kingdom': 'GB',
+      'France': 'FR',
+      'Italy': 'IT',
+      'Spain': 'ES',
+      'Netherlands': 'NL',
+      'Belgium': 'BE',
+      'Poland': 'PL',
+      'Czech Republic': 'CZ',
+      'Hungary': 'HU',
+      'Slovakia': 'SK',
+      'Slovenia': 'SI',
+      'Croatia': 'HR'
+    };
+    
+    return countryCodes[countryName] || '';
   };
 
   const updateCoordinates = () => {
@@ -201,7 +275,7 @@ const LocationMap = ({ latitude, longitude, onLocationChange, address }: Locatio
             variant="outline"
             size="sm"
             onClick={geocodeAddress}
-            disabled={loading || !address}
+            disabled={loading || (!address && !addressLine1)}
           >
             <MapPin className="w-4 h-4 mr-2" />
             {loading ? 'Geocoding...' : 'Find from Address'}
