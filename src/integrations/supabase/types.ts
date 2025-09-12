@@ -16,100 +16,166 @@ export type Database = {
     Tables: {
       businesses: {
         Row: {
-          additional_categories: string[] | null
-          attributes: string[] | null
-          business_name: string
-          business_profile_id: string | null
-          cid: string | null
+          additionalCategories: string | null
+          additionalPhones: string | null
+          addressLine1: string
+          addressLine2: string | null
+          addressLine3: string | null
+          addressLine4: string | null
+          addressLine5: string | null
+          adwords: string | null
+          appointmentURL: string | null
+          businessName: string
           city: string | null
-          country: string | null
+          country: string
+          coverPhoto: string | null
           created_at: string
-          description: string | null
-          hours: Json | null
+          customServices: Json | null
+          district: string | null
+          fridayHours: string | null
+          fromTheBusiness: string | null
           id: string
-          kg_id: string | null
+          labels: string | null
           latitude: number | null
+          logoPhoto: string | null
           longitude: number | null
-          opening_date: string | null
-          phone: string | null
-          photos: Json | null
-          place_id: string | null
-          postal_code: string | null
-          primary_category: string | null
-          products: Json | null
-          region: string | null
-          review_count: number | null
-          review_rating: number | null
-          service_area: string[] | null
-          street: string | null
-          suite: string | null
+          menuURL: string | null
+          mondayHours: string | null
+          moreHours: Json | null
+          openingDate: string | null
+          orderAheadURL: string | null
+          otherPhotos: string | null
+          postalCode: string | null
+          primaryCategory: string
+          primaryPhone: string | null
+          reservationsURL: string | null
+          saturdayHours: string | null
+          socialMediaUrls: Json | null
+          specialHours: string | null
+          state: string | null
+          storeCode: string
+          sundayHours: string | null
+          temporarilyClosed: boolean | null
+          thursdayHours: string | null
+          tuesdayHours: string | null
           updated_at: string
           user_id: string
           website: string | null
+          wednesdayHours: string | null
         }
         Insert: {
-          additional_categories?: string[] | null
-          attributes?: string[] | null
-          business_name: string
-          business_profile_id?: string | null
-          cid?: string | null
+          additionalCategories?: string | null
+          additionalPhones?: string | null
+          addressLine1: string
+          addressLine2?: string | null
+          addressLine3?: string | null
+          addressLine4?: string | null
+          addressLine5?: string | null
+          adwords?: string | null
+          appointmentURL?: string | null
+          businessName: string
           city?: string | null
-          country?: string | null
+          country: string
+          coverPhoto?: string | null
           created_at?: string
-          description?: string | null
-          hours?: Json | null
+          customServices?: Json | null
+          district?: string | null
+          fridayHours?: string | null
+          fromTheBusiness?: string | null
           id?: string
-          kg_id?: string | null
+          labels?: string | null
           latitude?: number | null
+          logoPhoto?: string | null
           longitude?: number | null
-          opening_date?: string | null
-          phone?: string | null
-          photos?: Json | null
-          place_id?: string | null
-          postal_code?: string | null
-          primary_category?: string | null
-          products?: Json | null
-          region?: string | null
-          review_count?: number | null
-          review_rating?: number | null
-          service_area?: string[] | null
-          street?: string | null
-          suite?: string | null
+          menuURL?: string | null
+          mondayHours?: string | null
+          moreHours?: Json | null
+          openingDate?: string | null
+          orderAheadURL?: string | null
+          otherPhotos?: string | null
+          postalCode?: string | null
+          primaryCategory: string
+          primaryPhone?: string | null
+          reservationsURL?: string | null
+          saturdayHours?: string | null
+          socialMediaUrls?: Json | null
+          specialHours?: string | null
+          state?: string | null
+          storeCode: string
+          sundayHours?: string | null
+          temporarilyClosed?: boolean | null
+          thursdayHours?: string | null
+          tuesdayHours?: string | null
           updated_at?: string
           user_id: string
           website?: string | null
+          wednesdayHours?: string | null
         }
         Update: {
-          additional_categories?: string[] | null
-          attributes?: string[] | null
-          business_name?: string
-          business_profile_id?: string | null
-          cid?: string | null
+          additionalCategories?: string | null
+          additionalPhones?: string | null
+          addressLine1?: string
+          addressLine2?: string | null
+          addressLine3?: string | null
+          addressLine4?: string | null
+          addressLine5?: string | null
+          adwords?: string | null
+          appointmentURL?: string | null
+          businessName?: string
           city?: string | null
-          country?: string | null
+          country?: string
+          coverPhoto?: string | null
           created_at?: string
-          description?: string | null
-          hours?: Json | null
+          customServices?: Json | null
+          district?: string | null
+          fridayHours?: string | null
+          fromTheBusiness?: string | null
           id?: string
-          kg_id?: string | null
+          labels?: string | null
           latitude?: number | null
+          logoPhoto?: string | null
           longitude?: number | null
-          opening_date?: string | null
-          phone?: string | null
-          photos?: Json | null
-          place_id?: string | null
-          postal_code?: string | null
-          primary_category?: string | null
-          products?: Json | null
-          region?: string | null
-          review_count?: number | null
-          review_rating?: number | null
-          service_area?: string[] | null
-          street?: string | null
-          suite?: string | null
+          menuURL?: string | null
+          mondayHours?: string | null
+          moreHours?: Json | null
+          openingDate?: string | null
+          orderAheadURL?: string | null
+          otherPhotos?: string | null
+          postalCode?: string | null
+          primaryCategory?: string
+          primaryPhone?: string | null
+          reservationsURL?: string | null
+          saturdayHours?: string | null
+          socialMediaUrls?: Json | null
+          specialHours?: string | null
+          state?: string | null
+          storeCode?: string
+          sundayHours?: string | null
+          temporarilyClosed?: boolean | null
+          thursdayHours?: string | null
+          tuesdayHours?: string | null
           updated_at?: string
           user_id?: string
           website?: string | null
+          wednesdayHours?: string | null
+        }
+        Relationships: []
+      }
+      categories: {
+        Row: {
+          category_name: string | null
+          created_at: string
+          id: number
+        }
+        Insert: {
+          category_name?: string | null
+          created_at?: string
+          id?: number
+        }
+        Update: {
+          category_name?: string | null
+          created_at?: string
+          id?: number
         }
         Relationships: []
       }
@@ -118,7 +184,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      generate_store_code: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      validate_opening_hours: {
+        Args: { hours_text: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
