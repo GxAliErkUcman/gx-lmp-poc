@@ -14,6 +14,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import type { Database } from '@/integrations/supabase/types';
 import { toast } from '@/hooks/use-toast';
+import PhotoUpload from '@/components/PhotoUpload';
+import OpeningHours from '@/components/OpeningHours';
+import LocationMap from '@/components/LocationMap';
 
 type BusinessRow = Database['public']['Tables']['businesses']['Row'];
 
@@ -29,15 +32,8 @@ const businessSchema = z.object({
   postalCode: z.string().optional(),
   region: z.string().optional(),
   country: z.string().optional(),
-  placeId: z.string().optional(),
-  cid: z.string().optional(),
-  businessProfileId: z.string().optional(),
-  kgId: z.string().optional(),
-  openingDate: z.string().optional(),
   latitude: z.number().optional(),
   longitude: z.number().optional(),
-  reviewCount: z.number().min(0).optional(),
-  reviewRating: z.number().min(0).max(5).optional(),
 });
 
 type BusinessFormData = z.infer<typeof businessSchema>;
@@ -55,6 +51,16 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
   const [additionalCategories, setAdditionalCategories] = useState<string[]>([]);
   const [serviceAreas, setServiceAreas] = useState<string[]>([]);
   const [attributes, setAttributes] = useState<string[]>([]);
+  const [photos, setPhotos] = useState<any[]>([]);
+  const [hours, setHours] = useState({
+    monday: "09:00-18:00",
+    tuesday: "09:00-18:00", 
+    wednesday: "09:00-18:00",
+    thursday: "09:00-18:00",
+    friday: "09:00-18:00",
+    saturday: "10:00-14:00",
+    sunday: "Closed"
+  });
 
   const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<BusinessFormData>({
     resolver: zodResolver(businessSchema),
@@ -74,25 +80,38 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
       setValue('postalCode', business.postal_code || '');
       setValue('region', business.region || '');
       setValue('country', business.country || '');
-      setValue('placeId', business.place_id || '');
-      setValue('cid', business.cid || '');
-      setValue('businessProfileId', business.business_profile_id || '');
-      setValue('kgId', business.kg_id || '');
-      setValue('openingDate', business.opening_date || '');
       setValue('latitude', business.latitude || undefined);
       setValue('longitude', business.longitude || undefined);
-      setValue('reviewCount', business.review_count || undefined);
-      setValue('reviewRating', business.review_rating || undefined);
       
       setAdditionalCategories(business.additional_categories || []);
       setServiceAreas(business.service_area || []);
       setAttributes(business.attributes || []);
+      setPhotos(business.photos as any[] || []);
+      setHours({
+        monday: (business.hours as any)?.monday || "09:00-18:00",
+        tuesday: (business.hours as any)?.tuesday || "09:00-18:00",
+        wednesday: (business.hours as any)?.wednesday || "09:00-18:00",
+        thursday: (business.hours as any)?.thursday || "09:00-18:00",
+        friday: (business.hours as any)?.friday || "09:00-18:00",
+        saturday: (business.hours as any)?.saturday || "10:00-14:00",
+        sunday: (business.hours as any)?.sunday || "Closed"
+      });
     } else {
       // Reset for new business
       reset();
       setAdditionalCategories([]);
       setServiceAreas([]);
       setAttributes([]);
+      setPhotos([]);
+      setHours({
+        monday: "09:00-18:00",
+        tuesday: "09:00-18:00",
+        wednesday: "09:00-18:00",
+        thursday: "09:00-18:00",
+        friday: "09:00-18:00",
+        saturday: "10:00-14:00",
+        sunday: "Closed"
+      });
     }
   }, [business, setValue, reset]);
 
@@ -117,15 +136,18 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
         website: data.website || null,
         description: data.description || null,
         attributes,
-        place_id: data.placeId || null,
-        cid: data.cid || null,
-        business_profile_id: data.businessProfileId || null,
-        kg_id: data.kgId || null,
-        opening_date: data.openingDate || null,
+        photos,
+        hours,
         latitude: data.latitude || null,
         longitude: data.longitude || null,
-        review_count: data.reviewCount || 0,
-        review_rating: data.reviewRating || null,
+        // Keep existing hidden fields for editing
+        place_id: business?.place_id || null,
+        cid: business?.cid || null,
+        business_profile_id: business?.business_profile_id || null,
+        kg_id: business?.kg_id || null,
+        opening_date: business?.opening_date || null,
+        review_count: business?.review_count || 0,
+        review_rating: business?.review_rating || null,
       };
 
       let error;
@@ -160,19 +182,33 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
     }
   };
 
-  const addArrayItem = (setter: (prev: string[]) => void, currentArray: string[]) => {
+  const updateArrayItem = (setter: React.Dispatch<React.SetStateAction<string[]>>, currentArray: string[], index: number, value: string) => {
+    const newArray = [...currentArray];
+    newArray[index] = value;
+    setter(newArray);
+  };
+
+  const addArrayItem = (setter: React.Dispatch<React.SetStateAction<string[]>>, currentArray: string[]) => {
     setter([...currentArray, '']);
   };
 
-  const removeArrayItem = (setter: (prev: string[]) => void, currentArray: string[], index: number) => {
+  const removeArrayItem = (setter: React.Dispatch<React.SetStateAction<string[]>>, currentArray: string[], index: number) => {
     const newArray = currentArray.filter((_, i) => i !== index);
     setter(newArray);
   };
 
-  const updateArrayItem = (setter: (prev: string[]) => void, currentArray: string[], index: number, value: string) => {
-    const newArray = [...currentArray];
-    newArray[index] = value;
-    setter(newArray);
+  const handleLocationChange = (lat: number, lng: number) => {
+    setValue('latitude', lat);
+    setValue('longitude', lng);
+  };
+
+  const getCurrentAddress = () => {
+    const street = register('street').name ? (document.getElementById('street') as HTMLInputElement)?.value : '';
+    const city = register('city').name ? (document.getElementById('city') as HTMLInputElement)?.value : '';
+    const region = register('region').name ? (document.getElementById('region') as HTMLInputElement)?.value : '';
+    const country = register('country').name ? (document.getElementById('country') as HTMLInputElement)?.value : '';
+    
+    return [street, city, region, country].filter(Boolean).join(', ');
   };
 
   return (
@@ -250,6 +286,34 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
             </CardContent>
           </Card>
 
+          {/* Location Coordinates */}
+          <LocationMap
+            latitude={business?.latitude}
+            longitude={business?.longitude}
+            onLocationChange={handleLocationChange}
+            address={getCurrentAddress()}
+          />
+
+          {/* Opening Hours */}
+          <OpeningHours
+            hours={hours}
+            onHoursChange={setHours}
+          />
+
+          {/* Photo Upload */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Business Photos</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <PhotoUpload
+                photos={photos}
+                onPhotosChange={setPhotos}
+                maxPhotos={10}
+              />
+            </CardContent>
+          </Card>
+
           {/* Categories and Service Areas */}
           <div className="grid gap-6 md:grid-cols-2">
             <Card>
@@ -321,117 +385,40 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
             </Card>
           </div>
 
-          {/* Google IDs and Coordinates */}
+          {/* Business Attributes */}
           <Card>
             <CardHeader>
-              <CardTitle>Google Information & Location</CardTitle>
+              <CardTitle className="flex items-center justify-between">
+                Business Attributes
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => addArrayItem(setAttributes, attributes)}
+                >
+                  <Plus className="w-4 h-4" />
+                </Button>
+              </CardTitle>
             </CardHeader>
-            <CardContent className="grid gap-4 md:grid-cols-3">
-              <div>
-                <Label htmlFor="placeId">Place ID</Label>
-                <Input {...register('placeId')} id="placeId" />
-              </div>
-              <div>
-                <Label htmlFor="cid">CID</Label>
-                <Input {...register('cid')} id="cid" />
-              </div>
-              <div>
-                <Label htmlFor="businessProfileId">Business Profile ID</Label>
-                <Input {...register('businessProfileId')} id="businessProfileId" />
-              </div>
-              <div>
-                <Label htmlFor="kgId">Knowledge Graph ID</Label>
-                <Input {...register('kgId')} id="kgId" />
-              </div>
-              <div>
-                <Label htmlFor="latitude">Latitude</Label>
-                <Input 
-                  {...register('latitude', { valueAsNumber: true })} 
-                  id="latitude" 
-                  type="number" 
-                  step="any"
-                />
-              </div>
-              <div>
-                <Label htmlFor="longitude">Longitude</Label>
-                <Input 
-                  {...register('longitude', { valueAsNumber: true })} 
-                  id="longitude" 
-                  type="number" 
-                  step="any"
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Additional Information */}
-          <div className="grid gap-6 md:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Additional Details</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="openingDate">Opening Date</Label>
-                  <Input {...register('openingDate')} id="openingDate" type="date" />
-                </div>
-                <div>
-                  <Label htmlFor="reviewCount">Review Count</Label>
-                  <Input 
-                    {...register('reviewCount', { valueAsNumber: true })} 
-                    id="reviewCount" 
-                    type="number" 
-                    min="0"
+            <CardContent className="space-y-2">
+              {attributes.map((attribute, index) => (
+                <div key={index} className="flex gap-2">
+                  <Input
+                    value={attribute}
+                    onChange={(e) => updateArrayItem(setAttributes, attributes, index, e.target.value)}
+                    placeholder="Attribute (e.g., Wheelchair accessible)"
                   />
-                </div>
-                <div>
-                  <Label htmlFor="reviewRating">Review Rating</Label>
-                  <Input 
-                    {...register('reviewRating', { valueAsNumber: true })} 
-                    id="reviewRating" 
-                    type="number" 
-                    min="0" 
-                    max="5" 
-                    step="0.1"
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  Business Attributes
                   <Button
                     type="button"
                     size="sm"
-                    onClick={() => addArrayItem(setAttributes, attributes)}
+                    variant="outline"
+                    onClick={() => removeArrayItem(setAttributes, attributes, index)}
                   >
-                    <Plus className="w-4 h-4" />
+                    <Trash2 className="w-4 h-4" />
                   </Button>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {attributes.map((attribute, index) => (
-                  <div key={index} className="flex gap-2">
-                    <Input
-                      value={attribute}
-                      onChange={(e) => updateArrayItem(setAttributes, attributes, index, e.target.value)}
-                      placeholder="Attribute (e.g., Wheelchair accessible)"
-                    />
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      onClick={() => removeArrayItem(setAttributes, attributes, index)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-          </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
 
           <Separator />
 

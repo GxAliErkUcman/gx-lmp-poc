@@ -48,6 +48,8 @@ const ImportDialog = ({ open, onOpenChange, onSuccess }: ImportDialogProps) => {
     'description': ['description', 'desc', 'about', 'summary'],
     'latitude': ['lat', 'latitude'],
     'longitude': ['lng', 'longitude', 'lon'],
+    'additional_categories': ['additional categories', 'secondary categories', 'other categories'],
+    'hours': ['hours', 'opening hours', 'business hours', 'open hours']
   };
 
   const requiredFields = ['business_name'];
@@ -185,6 +187,25 @@ const ImportDialog = ({ open, onOpenChange, onSuccess }: ImportDialogProps) => {
             const value = row[mapping.original];
             if (mapping.mapped === 'latitude' || mapping.mapped === 'longitude') {
               business[mapping.mapped] = parseFloat(value) || null;
+            } else if (mapping.mapped === 'additional_categories') {
+              // Handle comma-separated categories
+              business[mapping.mapped] = value.split(',').map((cat: string) => cat.trim()).filter(Boolean);
+            } else if (mapping.mapped === 'hours') {
+              // Handle different hour formats
+              if (typeof value === 'string' && value.includes('-')) {
+                // Simple format like "9:00-17:00"
+                business.hours = {
+                  monday: value,
+                  tuesday: value,
+                  wednesday: value,
+                  thursday: value,
+                  friday: value,
+                  saturday: value.includes('closed') ? 'Closed' : value,
+                  sunday: 'Closed'
+                };
+              } else {
+                business[mapping.mapped] = value;
+              }
             } else {
               business[mapping.mapped] = value;
             }
@@ -385,9 +406,11 @@ const ImportDialog = ({ open, onOpenChange, onSuccess }: ImportDialogProps) => {
               <Button variant="outline" onClick={() => setStep('mapping')}>
                 Back to Mapping
               </Button>
-              <Button onClick={importData} disabled={loading}>
-                {loading ? 'Importing...' : `Import ${parsedData.length} Businesses`}
-              </Button>
+              <div className="flex gap-2">
+                <Button onClick={importData} disabled={loading}>
+                  {loading ? 'Importing...' : `Import ${parsedData.length} Businesses`}
+                </Button>
+              </div>
             </div>
           </div>
         )}
