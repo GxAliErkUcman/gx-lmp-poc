@@ -32,33 +32,38 @@ const daysOfWeek = [
 
 const OpeningHours = ({ hours, onHoursChange }: OpeningHoursProps) => {
   const updateHour = (day: keyof Hours, value: string) => {
+    // Convert "Closed" to null for database storage
+    const dbValue = value.toLowerCase() === 'closed' ? null : value;
     onHoursChange({
       ...hours,
-      [day]: value,
+      [day]: dbValue,
     });
   };
 
   const setAllWeekdays = (value: string) => {
+    const dbValue = value.toLowerCase() === 'closed' ? null : value;
     onHoursChange({
       ...hours,
-      monday: value,
-      tuesday: value,
-      wednesday: value,
-      thursday: value,
-      friday: value,
+      monday: dbValue,
+      tuesday: dbValue,
+      wednesday: dbValue,
+      thursday: dbValue,
+      friday: dbValue,
     });
   };
 
   const setAllWeekend = (value: string) => {
+    const dbValue = value.toLowerCase() === 'closed' ? null : value;
     onHoursChange({
       ...hours,
-      saturday: value,
-      sunday: value,
+      saturday: dbValue,
+      sunday: dbValue,
     });
   };
 
-  const parseHourRange = (hourString: string) => {
-    if (hourString.toLowerCase() === 'closed') {
+  const parseHourRange = (hourString: string | null) => {
+    // Treat null or empty as closed
+    if (!hourString || hourString.toLowerCase() === 'closed') {
       return { open: '', close: '', isClosed: true };
     }
     
@@ -185,7 +190,7 @@ const OpeningHours = ({ hours, onHoursChange }: OpeningHoursProps) => {
               <div key={key} className="grid grid-cols-3 gap-2 items-center">
                 <span className="text-muted-foreground">{label}:</span>
                 <Input
-                  value={hours[key]}
+                  value={hours[key] || 'Closed'}
                   onChange={(e) => updateHour(key, e.target.value)}
                   placeholder="e.g., 09:00-18:00 or Closed"
                   className="text-xs col-span-2"

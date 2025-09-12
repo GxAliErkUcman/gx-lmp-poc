@@ -226,6 +226,11 @@ const ImportDialog = ({ open, onOpenChange, onSuccess }: ImportDialogProps) => {
               const v = String(value).toLowerCase().trim();
               business[mapping.mapped] = v === 'true' || v === '1' || v === 'yes';
             }
+            // Handle opening hours fields (convert "Closed" to null)
+            else if (mapping.mapped.includes('Hours')) {
+              const hourValue = String(value).trim();
+              business[mapping.mapped] = hourValue && hourValue.toLowerCase() !== 'closed' ? hourValue : null;
+            }
             // Handle text fields that can be comma-separated
             else if (mapping.mapped === 'additionalCategories' || mapping.mapped === 'additionalPhones') {
               business[mapping.mapped] = typeof value === 'string' && value.includes(',') 
