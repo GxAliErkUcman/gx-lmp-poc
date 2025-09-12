@@ -40,7 +40,7 @@ const PhotoUpload = ({ photos, onPhotosChange, maxPhotos = 10 }: PhotoUploadProp
     try {
       const uploadPromises = acceptedFiles.map(async (file) => {
         const fileExt = file.name.split('.').pop();
-        const fileName = `${Date.now()}-${Math.random()}.${fileExt}`;
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
         // Include user ID in file path for RLS policy compliance
         const filePath = `${user.id}/${fileName}`;
 
