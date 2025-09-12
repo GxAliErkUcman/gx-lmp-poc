@@ -234,6 +234,43 @@ const LocationMap = ({ latitude, longitude, onLocationChange, address, addressLi
     }
   };
 
+  const openInOpenStreetMap = () => {
+    if (mapLatitude && mapLongitude) {
+      const url = `https://www.openstreetmap.org/?mlat=${mapLatitude}&mlon=${mapLongitude}#map=18/${mapLatitude}/${mapLongitude}`;
+      try {
+        // Try direct window.open first
+        const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
+        if (!newWindow) {
+          // If popup blocked, copy URL to clipboard
+          navigator.clipboard.writeText(url).then(() => {
+            toast({
+              title: "OpenStreetMap URL copied!",
+              description: "Paste the URL in your browser to view the location",
+            });
+          }).catch(() => {
+            toast({
+              title: "OpenStreetMap",
+              description: "Please manually navigate to: " + url,
+            });
+          });
+        }
+      } catch (error) {
+        // Fallback: copy URL to clipboard
+        navigator.clipboard.writeText(url).then(() => {
+          toast({
+            title: "OpenStreetMap URL copied!",
+            description: "Paste the URL in your browser to view the location",
+          });
+        }).catch(() => {
+          toast({
+            title: "OpenStreetMap",
+            description: "Please manually navigate to: " + url,
+          });
+        });
+      }
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -304,14 +341,26 @@ const LocationMap = ({ latitude, longitude, onLocationChange, address, addressLi
           </Button>
           
           {mapLatitude && mapLongitude && (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={openInMaps}
-            >
-              Copy Coordinates
-            </Button>
+            <>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={openInMaps}
+              >
+                Copy Coordinates
+              </Button>
+              
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={openInOpenStreetMap}
+              >
+                <MapPin className="w-4 h-4 mr-2" />
+                View on OpenStreetMap
+              </Button>
+            </>
           )}
         </div>
 
