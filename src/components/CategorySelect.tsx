@@ -60,12 +60,13 @@ export function CategorySelect({
     fetchCategories();
   }, []);
 
-  // Custom search function that prioritizes exact matches, then starts with, then contains
+  // Custom search function with word boundary priority
   const getFilteredCategories = () => {
     if (!searchValue) return categories;
 
     const searchLower = searchValue.toLowerCase();
     const exactMatches: Category[] = [];
+    const wordBoundaryMatches: Category[] = [];
     const startsWithMatches: Category[] = [];
     const containsMatches: Category[] = [];
 
@@ -74,18 +75,25 @@ export function CategorySelect({
       
       if (categoryLower === searchLower) {
         exactMatches.push(category);
-      } else if (categoryLower.startsWith(searchLower)) {
-        startsWithMatches.push(category);
-      } else if (categoryLower.includes(searchLower)) {
-        containsMatches.push(category);
+      } else {
+        // Check for word boundary matches (complete word)
+        const wordRegex = new RegExp(`\\b${searchLower}\\b`, 'i');
+        if (wordRegex.test(category.category_name)) {
+          wordBoundaryMatches.push(category);
+        } else if (categoryLower.startsWith(searchLower)) {
+          startsWithMatches.push(category);
+        } else if (categoryLower.includes(searchLower)) {
+          containsMatches.push(category);
+        }
       }
     });
 
     // Sort all groups alphabetically
+    wordBoundaryMatches.sort((a, b) => a.category_name.localeCompare(b.category_name));
     startsWithMatches.sort((a, b) => a.category_name.localeCompare(b.category_name));
     containsMatches.sort((a, b) => a.category_name.localeCompare(b.category_name));
 
-    return [...exactMatches, ...startsWithMatches, ...containsMatches];
+    return [...exactMatches, ...wordBoundaryMatches, ...startsWithMatches, ...containsMatches];
   };
 
   const filteredCategories = getFilteredCategories();
