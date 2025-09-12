@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface PhotoUploadProps {
   photos: string[];
@@ -14,8 +15,18 @@ interface PhotoUploadProps {
 
 const PhotoUpload = ({ photos, onPhotosChange, maxPhotos = 10 }: PhotoUploadProps) => {
   const [uploading, setUploading] = useState(false);
+  const { user } = useAuth();
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to upload photos",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (photos.length + acceptedFiles.length > maxPhotos) {
       toast({
         title: "Too many photos",
@@ -29,8 +40,9 @@ const PhotoUpload = ({ photos, onPhotosChange, maxPhotos = 10 }: PhotoUploadProp
     try {
       const uploadPromises = acceptedFiles.map(async (file) => {
         const fileExt = file.name.split('.').pop();
-        const fileName = `${Math.random()}.${fileExt}`;
-        const filePath = `${fileName}`;
+        const fileName = `${Date.now()}-${Math.random()}.${fileExt}`;
+        // Include user ID in file path for RLS policy compliance
+        const filePath = `${user.id}/${fileName}`;
 
         const { error: uploadError } = await supabase.storage
           .from('business-photos')
@@ -64,7 +76,7 @@ const PhotoUpload = ({ photos, onPhotosChange, maxPhotos = 10 }: PhotoUploadProp
     } finally {
       setUploading(false);
     }
-  }, [photos, onPhotosChange, maxPhotos]);
+  }, [photos, onPhotosChange, maxPhotos, user]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
