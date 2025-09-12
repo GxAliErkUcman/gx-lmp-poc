@@ -143,7 +143,9 @@ export function CategorySelect({
           className="w-full justify-between"
         >
           {value
-            ? categories.find((category) => category.category_name === value)?.category_name
+            ? (categories.find((category) => category.category_name === value)?.category_name || 
+               remoteResults?.find((category) => category.category_name === value)?.category_name || 
+               value)
             : placeholder}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
