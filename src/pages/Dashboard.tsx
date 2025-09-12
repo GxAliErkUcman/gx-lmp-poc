@@ -13,15 +13,16 @@ import ImportDialog from '@/components/ImportDialog';
 import BusinessTableView from '@/components/BusinessTableView';
 import MultiEditDialog from '@/components/MultiEditDialog';
 
-type BusinessRow = Database['public']['Tables']['businesses']['Row'];
+import type { Business } from '@/types/business';
+import { JsonExport } from '@/components/JsonExport';
 
 const Dashboard = () => {
   const { user, signOut } = useAuth();
-  const [businesses, setBusinesses] = useState<BusinessRow[]>([]);
+  const [businesses, setBusinesses] = useState<Business[]>([]);
   const [loading, setLoading] = useState(true);
   const [businessDialogOpen, setBusinessDialogOpen] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
-  const [editingBusiness, setEditingBusiness] = useState<BusinessRow | null>(null);
+  const [editingBusiness, setEditingBusiness] = useState<Business | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
   const [multiEditDialogOpen, setMultiEditDialogOpen] = useState(false);
   const [selectedBusinessIds, setSelectedBusinessIds] = useState<string[]>([]);
@@ -38,7 +39,7 @@ const Dashboard = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setBusinesses(data || []);
+      setBusinesses((data || []) as Business[]);
     } catch (error) {
       console.error('Error fetching businesses:', error);
       toast({
@@ -107,7 +108,7 @@ const Dashboard = () => {
     }
   };
 
-  const handleEditBusiness = (business: BusinessRow) => {
+  const handleEditBusiness = (business: Business) => {
     setEditingBusiness(business);
     setBusinessDialogOpen(true);
   };
@@ -211,7 +212,7 @@ const Dashboard = () => {
               <Card key={business.id}>
                 <CardHeader>
                   <CardTitle className="flex items-start justify-between">
-                    <span className="line-clamp-2">{business.business_name}</span>
+                    <span className="line-clamp-2">{business.businessName}</span>
                     <div className="flex gap-1 ml-2">
                       <Button
                         size="sm"
@@ -232,16 +233,16 @@ const Dashboard = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2 text-sm">
-                    {business.primary_category && (
-                      <Badge variant="secondary">{business.primary_category}</Badge>
+                    {business.primaryCategory && (
+                      <Badge variant="secondary">{business.primaryCategory}</Badge>
                     )}
-                    {business.city && business.region && (
+                    {business.city && business.state && (
                       <div className="text-muted-foreground">
-                        {business.city}, {business.region}
+                        {business.city}, {business.state}
                       </div>
                     )}
-                    {business.phone && (
-                      <div className="text-muted-foreground">{business.phone}</div>
+                    {business.primaryPhone && (
+                      <div className="text-muted-foreground">{business.primaryPhone}</div>
                     )}
                     {business.website && (
                       <div className="text-muted-foreground truncate">

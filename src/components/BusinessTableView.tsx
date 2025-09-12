@@ -5,13 +5,11 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Edit, Trash2, Search } from 'lucide-react';
-import type { Database } from '@/integrations/supabase/types';
-
-type BusinessRow = Database['public']['Tables']['businesses']['Row'];
+import { Business } from '@/types/business';
 
 interface BusinessTableViewProps {
-  businesses: BusinessRow[];
-  onEdit: (business: BusinessRow) => void;
+  businesses: Business[];
+  onEdit: (business: Business) => void;
   onDelete: (id: string) => void;
   onMultiEdit: (selectedIds: string[]) => void;
 }
@@ -25,9 +23,9 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit }: Busine
   const handleSearch = (term: string) => {
     setSearchTerm(term);
     const filtered = businesses.filter(business => 
-      business.business_name.toLowerCase().includes(term.toLowerCase()) ||
+      business.businessName?.toLowerCase().includes(term.toLowerCase()) ||
       business.city?.toLowerCase().includes(term.toLowerCase()) ||
-      business.primary_category?.toLowerCase().includes(term.toLowerCase())
+      business.primaryCategory?.toLowerCase().includes(term.toLowerCase())
     );
     setFilteredBusinesses(filtered);
   };
@@ -118,26 +116,26 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit }: Busine
                     onCheckedChange={(checked) => 
                       handleSelectBusiness(business.id, checked as boolean)
                     }
-                    aria-label={`Select ${business.business_name}`}
+                    aria-label={`Select ${business.businessName}`}
                   />
                 </TableCell>
                 <TableCell className="font-medium">
-                  {business.business_name}
+                  {business.businessName}
                 </TableCell>
                 <TableCell>
-                  {business.primary_category && (
-                    <Badge variant="secondary">{business.primary_category}</Badge>
+                  {business.primaryCategory && (
+                    <Badge variant="secondary">{business.primaryCategory}</Badge>
                   )}
                 </TableCell>
                 <TableCell>
-                  {business.city && business.region && (
+                  {business.city && business.state && (
                     <span className="text-sm text-muted-foreground">
-                      {business.city}, {business.region}
+                      {business.city}, {business.state}
                     </span>
                   )}
                 </TableCell>
                 <TableCell>
-                  <span className="text-sm">{business.phone || '-'}</span>
+                  <span className="text-sm">{business.primaryPhone || '-'}</span>
                 </TableCell>
                 <TableCell>
                   {business.website ? (

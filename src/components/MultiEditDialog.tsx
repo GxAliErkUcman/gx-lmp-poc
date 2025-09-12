@@ -24,10 +24,10 @@ import { toast } from '@/hooks/use-toast';
 import { Upload } from 'lucide-react';
 
 const multiEditFormSchema = z.object({
-  phone: z.string().optional(),
+  primaryPhone: z.string().optional(),
   website: z.string().url().optional().or(z.literal('')),
-  description: z.string().optional(),
-  primary_category: z.string().optional(),
+  fromTheBusiness: z.string().optional(),
+  primaryCategory: z.string().optional(),
 });
 
 type MultiEditFormValues = z.infer<typeof multiEditFormSchema>;
@@ -46,10 +46,10 @@ const MultiEditDialog = ({ open, onOpenChange, selectedIds, onSuccess }: MultiEd
   const form = useForm<MultiEditFormValues>({
     resolver: zodResolver(multiEditFormSchema),
     defaultValues: {
-      phone: '',
+      primaryPhone: '',
       website: '',
-      description: '',
-      primary_category: '',
+      fromTheBusiness: '',
+      primaryCategory: '',
     },
   });
 
@@ -117,21 +117,25 @@ const MultiEditDialog = ({ open, onOpenChange, selectedIds, onSuccess }: MultiEd
         .from('business-photos')
         .getPublicUrl(filePath);
 
-      // Update all selected businesses with this photo
-      const photoData = {
-        photos: [{
-          fileName: fileName,
-          url: publicUrl,
-          altText: `Photo for business locations`
-        }]
-      };
-
-      const { error: updateError } = await supabase
+      // Update all selected businesses with this photo URL
+      // Add to existing otherPhotos or create new
+      const { data: existingBusinesses } = await supabase
         .from('businesses')
-        .update(photoData)
+        .select('otherPhotos')
         .in('id', selectedIds);
 
-      if (updateError) throw updateError;
+      const updatePromises = selectedIds.map(async (businessId) => {
+        const existingBusiness = existingBusinesses?.find(b => (b as any).id === businessId);
+        const existingPhotos = existingBusiness?.otherPhotos ? existingBusiness.otherPhotos.split(',') : [];
+        const newPhotos = [...existingPhotos, publicUrl].join(',');
+        
+        return supabase
+          .from('businesses')
+          .update({ otherPhotos: newPhotos })
+          .eq('id', businessId);
+      });
+
+      await Promise.all(updatePromises);
 
       toast({
         title: "Success",
@@ -162,7 +166,7 @@ const MultiEditDialog = ({ open, onOpenChange, selectedIds, onSuccess }: MultiEd
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
-              name="phone"
+              name="primaryPhone"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Phone Number</FormLabel>
@@ -190,7 +194,7 @@ const MultiEditDialog = ({ open, onOpenChange, selectedIds, onSuccess }: MultiEd
 
             <FormField
               control={form.control}
-              name="primary_category"
+              name="primaryCategory"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Primary Category</FormLabel>
@@ -204,7 +208,7 @@ const MultiEditDialog = ({ open, onOpenChange, selectedIds, onSuccess }: MultiEd
 
             <FormField
               control={form.control}
-              name="description"
+              name="fromTheBusiness"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Description</FormLabel>
