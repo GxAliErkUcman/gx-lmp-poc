@@ -60,28 +60,32 @@ export function CategorySelect({
     fetchCategories();
   }, []);
 
-  // Custom search function that prioritizes exact matches
+  // Custom search function that prioritizes exact matches, then starts with, then contains
   const getFilteredCategories = () => {
     if (!searchValue) return categories;
 
     const searchLower = searchValue.toLowerCase();
     const exactMatches: Category[] = [];
-    const partialMatches: Category[] = [];
+    const startsWithMatches: Category[] = [];
+    const containsMatches: Category[] = [];
 
     categories.forEach(category => {
       const categoryLower = category.category_name.toLowerCase();
       
       if (categoryLower === searchLower) {
         exactMatches.push(category);
+      } else if (categoryLower.startsWith(searchLower)) {
+        startsWithMatches.push(category);
       } else if (categoryLower.includes(searchLower)) {
-        partialMatches.push(category);
+        containsMatches.push(category);
       }
     });
 
-    // Sort partial matches alphabetically
-    partialMatches.sort((a, b) => a.category_name.localeCompare(b.category_name));
+    // Sort all groups alphabetically
+    startsWithMatches.sort((a, b) => a.category_name.localeCompare(b.category_name));
+    containsMatches.sort((a, b) => a.category_name.localeCompare(b.category_name));
 
-    return [...exactMatches, ...partialMatches];
+    return [...exactMatches, ...startsWithMatches, ...containsMatches];
   };
 
   const filteredCategories = getFilteredCategories();
