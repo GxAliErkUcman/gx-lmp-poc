@@ -350,15 +350,38 @@ const LocationMap = ({ latitude, longitude, onLocationChange, address, addressLi
               >
                 Copy Coordinates
               </Button>
-              
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={openInOpenStreetMap}
-              >
-                <MapPin className="w-4 h-4 mr-2" />
-                View on OpenStreetMap
+
+              <Button asChild variant="outline" size="sm">
+                <a
+                  href={`https://www.openstreetmap.org/?mlat=${mapLatitude}&mlon=${mapLongitude}#map=18/${mapLatitude}/${mapLongitude}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <MapPin className="w-4 h-4 mr-2" />
+                  Open in OpenStreetMap
+                </a>
+              </Button>
+
+              <Button asChild variant="outline" size="sm">
+                <a
+                  href={`https://www.bing.com/maps?cp=${mapLatitude}~${mapLongitude}&lvl=18`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <MapPin className="w-4 h-4 mr-2" />
+                  Open in Bing Maps
+                </a>
+              </Button>
+
+              <Button asChild variant="outline" size="sm">
+                <a
+                  href={`https://maps.apple.com/?ll=${mapLatitude},${mapLongitude}&q=Location`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <MapPin className="w-4 h-4 mr-2" />
+                  Open in Apple Maps
+                </a>
               </Button>
             </>
           )}
