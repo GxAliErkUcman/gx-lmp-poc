@@ -17,8 +17,9 @@ export const JsonExport = ({ businesses }: JsonExportProps) => {
   const [validationResults, setValidationResults] = useState<Array<{ business: Business; isValid: boolean; errors: any[] }>>([]);
 
   const validateAllBusinesses = () => {
-    const results = businesses.map(business => {
-      // Convert business to JSON schema format
+    // Only validate and export active businesses
+    const activeBusinesses = businesses.filter(b => (b as any).status === 'active');
+    const results = activeBusinesses.map(business => {
       const jsonBusiness = convertToJsonSchema(business);
       const validation = validateBusiness(jsonBusiness);
       return {

@@ -4,7 +4,8 @@ import { Navigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Upload, Download, Edit, Trash2, Grid, Table2 } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Plus, Upload, Edit, Trash2, Grid, Table2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 import { toast } from '@/hooks/use-toast';
@@ -12,7 +13,7 @@ import BusinessDialog from '@/components/BusinessDialog';
 import ImportDialog from '@/components/ImportDialog';
 import BusinessTableView from '@/components/BusinessTableView';
 import MultiEditDialog from '@/components/MultiEditDialog';
-
+import { JsonExport } from '@/components/JsonExport';
 import type { Business } from '@/types/business';
 import LogoUpload from '@/components/LogoUpload';
 
@@ -26,7 +27,7 @@ const Dashboard = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
   const [multiEditDialogOpen, setMultiEditDialogOpen] = useState(false);
   const [selectedBusinessIds, setSelectedBusinessIds] = useState<string[]>([]);
-
+  const [activeTab, setActiveTab] = useState<'active' | 'pending'>('active');
   const [userLogo, setUserLogo] = useState<string | null>(null);
 
   if (!user) {
@@ -89,32 +90,6 @@ const Dashboard = () => {
     }
   };
 
-  const exportBusinesses = () => {
-    try {
-      const jsonData = JSON.stringify(businesses, null, 2);
-      const blob = new Blob([jsonData], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `businesses-${new Date().toISOString().split('T')[0]}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-
-      toast({
-        title: "Success",
-        description: `Exported ${businesses.length} businesses as JSON`,
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to export businesses",
-        variant: "destructive",
-      });
-    }
-  };
-
   const handleEditBusiness = (business: Business) => {
     setEditingBusiness(business);
     setBusinessDialogOpen(true);
@@ -124,6 +99,9 @@ const Dashboard = () => {
     setSelectedBusinessIds(selectedIds);
     setMultiEditDialogOpen(true);
   };
+
+  const activeBusinesses = businesses.filter(b => (b as any).status === 'active');
+  const pendingBusinesses = businesses.filter(b => (b as any).status === 'pending');
 
   if (loading) {
     return (
@@ -170,7 +148,7 @@ const Dashboard = () => {
           <div>
             <h2 className="text-3xl font-bold mb-2">Your Businesses</h2>
             <p className="text-muted-foreground">
-              Manage {businesses.length} business profile{businesses.length !== 1 ? 's' : ''}
+              {activeBusinesses.length} active, {pendingBusinesses.length} need attention
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -206,16 +184,7 @@ const Dashboard = () => {
                 <Upload className="w-4 h-4 mr-2" />
                 Import
               </Button>
-              <Button 
-                onClick={exportBusinesses}
-                variant="outline"
-                size="default"
-                disabled={businesses.length === 0}
-                className="shadow-modern"
-              >
-                <Download className="w-4 h-4 mr-2" />
-                Export
-              </Button>
+              <JsonExport businesses={activeBusinesses} />
               <Button 
                 onClick={() => setBusinessDialogOpen(true)}
                 className="shadow-modern bg-gradient-primary hover:opacity-90"
@@ -246,70 +215,178 @@ const Dashboard = () => {
               </Button>
             </CardContent>
           </Card>
-        ) : viewMode === 'table' ? (
-          <BusinessTableView
-            businesses={businesses}
-            onEdit={handleEditBusiness}
-            onDelete={handleDeleteBusiness}
-            onMultiEdit={handleMultiEdit}
-          />
         ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {businesses.map((business) => (
-              <Card key={business.id} className="shadow-card hover:shadow-modern transition-shadow duration-300">
-                <CardHeader>
-                  <CardTitle className="flex items-start justify-between">
-                    <span className="line-clamp-2">{business.businessName}</span>
-                    <div className="flex gap-1 ml-2">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => handleEditBusiness(business)}
-                        className="hover:bg-primary/10"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => handleDeleteBusiness(business.id)}
-                        className="hover:bg-destructive/10 hover:text-destructive"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2 text-sm">
-                    {business.primaryCategory && (
-                      <Badge variant="secondary">{business.primaryCategory}</Badge>
-                    )}
-                    {business.city && business.state && (
-                      <div className="text-muted-foreground">
-                        {business.city}, {business.state}
-                      </div>
-                    )}
-                    {business.primaryPhone && (
-                      <div className="text-muted-foreground">{business.primaryPhone}</div>
-                    )}
-                    {business.website && (
-                      <div className="text-muted-foreground truncate">
-                        <a 
-                          href={business.website} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="hover:underline"
-                        >
-                          {business.website}
-                        </a>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'active' | 'pending')}>
+            <TabsList className="grid w-full grid-cols-2 mb-6">
+              <TabsTrigger value="active" className="flex items-center gap-2">
+                Active Locations
+                {activeBusinesses.length > 0 && (
+                  <Badge variant="secondary" className="ml-1">
+                    {activeBusinesses.length}
+                  </Badge>
+                )}
+              </TabsTrigger>
+              <TabsTrigger value="pending" className="flex items-center gap-2">
+                Need Attention
+                {pendingBusinesses.length > 0 && (
+                  <Badge variant="destructive" className="ml-1">
+                    {pendingBusinesses.length}
+                  </Badge>
+                )}
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="active">
+              {activeBusinesses.length === 0 ? (
+                <Card className="shadow-card">
+                  <CardContent className="py-16 text-center">
+                    <p className="text-muted-foreground">No active businesses found.</p>
+                  </CardContent>
+                </Card>
+              ) : viewMode === 'table' ? (
+                <BusinessTableView
+                  businesses={activeBusinesses}
+                  onEdit={handleEditBusiness}
+                  onDelete={handleDeleteBusiness}
+                  onMultiEdit={handleMultiEdit}
+                />
+              ) : (
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  {activeBusinesses.map((business) => (
+                    <Card key={business.id} className="shadow-card hover:shadow-modern transition-shadow duration-300">
+                      <CardHeader>
+                        <CardTitle className="flex items-start justify-between">
+                          <span className="line-clamp-2">{business.businessName}</span>
+                          <div className="flex gap-1 ml-2">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleEditBusiness(business)}
+                              className="hover:bg-primary/10"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleDeleteBusiness(business.id)}
+                              className="hover:bg-destructive/10 hover:text-destructive"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-2 text-sm">
+                          {business.primaryCategory && (
+                            <Badge variant="secondary">{business.primaryCategory}</Badge>
+                          )}
+                          {business.city && business.state && (
+                            <div className="text-muted-foreground">
+                              {business.city}, {business.state}
+                            </div>
+                          )}
+                          {business.primaryPhone && (
+                            <div className="text-muted-foreground">{business.primaryPhone}</div>
+                          )}
+                          {business.website && (
+                            <div className="text-muted-foreground truncate">
+                              <a 
+                                href={business.website} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="hover:underline"
+                              >
+                                {business.website}
+                              </a>
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+            
+            <TabsContent value="pending">
+              {pendingBusinesses.length === 0 ? (
+                <Card className="shadow-card">
+                  <CardContent className="py-16 text-center">
+                    <p className="text-muted-foreground">No pending businesses found.</p>
+                  </CardContent>
+                </Card>
+              ) : viewMode === 'table' ? (
+                <BusinessTableView
+                  businesses={pendingBusinesses}
+                  onEdit={handleEditBusiness}
+                  onDelete={handleDeleteBusiness}
+                  onMultiEdit={handleMultiEdit}
+                />
+              ) : (
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  {pendingBusinesses.map((business) => (
+                    <Card key={business.id} className="shadow-card hover:shadow-modern transition-shadow duration-300 border-amber-200 bg-amber-50/50">
+                      <CardHeader>
+                        <CardTitle className="flex items-start justify-between">
+                          <div>
+                            <span className="line-clamp-2">{business.businessName}</span>
+                            <Badge variant="destructive" className="mt-2">Needs Attention</Badge>
+                          </div>
+                          <div className="flex gap-1 ml-2">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleEditBusiness(business)}
+                              className="hover:bg-primary/10"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleDeleteBusiness(business.id)}
+                              className="hover:bg-destructive/10 hover:text-destructive"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-2 text-sm">
+                          {business.primaryCategory && (
+                            <Badge variant="secondary">{business.primaryCategory}</Badge>
+                          )}
+                          {business.city && business.state && (
+                            <div className="text-muted-foreground">
+                              {business.city}, {business.state}
+                            </div>
+                          )}
+                          {business.primaryPhone && (
+                            <div className="text-muted-foreground">{business.primaryPhone}</div>
+                          )}
+                          {business.website && (
+                            <div className="text-muted-foreground truncate">
+                              <a 
+                                href={business.website} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="hover:underline"
+                              >
+                                {business.website}
+                              </a>
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
         )}
       </main>
 

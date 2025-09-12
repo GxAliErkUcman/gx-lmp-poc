@@ -53,6 +53,7 @@ export type Database = {
           socialMediaUrls: Json | null
           specialHours: string | null
           state: string | null
+          status: string
           storeCode: string
           sundayHours: string | null
           temporarilyClosed: boolean | null
@@ -101,6 +102,7 @@ export type Database = {
           socialMediaUrls?: Json | null
           specialHours?: string | null
           state?: string | null
+          status?: string
           storeCode: string
           sundayHours?: string | null
           temporarilyClosed?: boolean | null
@@ -149,6 +151,7 @@ export type Database = {
           socialMediaUrls?: Json | null
           specialHours?: string | null
           state?: string | null
+          status?: string
           storeCode?: string
           sundayHours?: string | null
           temporarilyClosed?: boolean | null
@@ -187,6 +190,12 @@ export type Database = {
       generate_store_code: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      is_business_complete: {
+        Args: {
+          business_row: Database["public"]["Tables"]["businesses"]["Row"]
+        }
+        Returns: boolean
       }
       validate_opening_hours: {
         Args: { hours_text: string }

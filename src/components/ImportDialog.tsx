@@ -36,9 +36,9 @@ const ImportDialog = ({ open, onOpenChange, onSuccess }: ImportDialogProps) => {
 
   // Common field mappings for intelligent detection
   const fieldMappings: Record<string, string[]> = {
-    'business_name': ['name', 'business name', 'company name', 'business', 'company'],
-    'primary_category': ['category', 'business category', 'type', 'industry'],
-    'street': ['address', 'street address', 'street', 'addr1', 'address1'],
+    'businessName': ['name', 'business name', 'company name', 'business', 'company'],
+    'primaryCategory': ['category', 'business category', 'type', 'industry'],
+    'addressLine1': ['address', 'street address', 'street', 'addr1', 'address1'],
     'city': ['city', 'town'],
     'region': ['state', 'region', 'province', 'area'],
     'postal_code': ['zip', 'zipcode', 'postal code', 'postcode'],
@@ -52,7 +52,10 @@ const ImportDialog = ({ open, onOpenChange, onSuccess }: ImportDialogProps) => {
     'hours': ['hours', 'opening hours', 'business hours', 'open hours']
   };
 
-  const requiredFields = ['business_name'];
+  const requiredFields = ['businessName'];
+  
+  // Essential fields for determining if a business is complete
+  const essentialFields = ['businessName', 'addressLine1', 'country', 'primaryCategory'];
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: {
@@ -142,13 +145,17 @@ const ImportDialog = ({ open, onOpenChange, onSuccess }: ImportDialogProps) => {
     
     if (missingRequired.length > 0) {
       toast({
-        title: "Missing Required Fields",
-        description: `Please map the following required fields: ${missingRequired.join(', ')}`,
+        title: "Missing Required Fields", 
+        description: `Please map at least the business name field: ${missingRequired.join(', ')}`,
         variant: "destructive",
       });
       return false;
     }
     return true;
+  };
+
+  const checkBusinessCompleteness = (business: any) => {
+    return essentialFields.every(field => business[field] && business[field].toString().trim() !== '');
   };
 
   const previewImport = () => {
@@ -164,22 +171,17 @@ const ImportDialog = ({ open, onOpenChange, onSuccess }: ImportDialogProps) => {
       const businessesToInsert = parsedData.map(row => {
         const business: any = {
           user_id: user.id,
-          business_name: '',
-          additional_categories: [],
-          service_area: [],
-          attributes: [],
-          products: [],
-          photos: [],
-          hours: {
-            monday: "09:00-18:00",
-            tuesday: "09:00-18:00",
-            wednesday: "09:00-18:00",
-            thursday: "09:00-18:00",
-            friday: "09:00-18:00",
-            saturday: "10:00-14:00",
-            sunday: "Closed"
-          },
-          review_count: 0,
+          businessName: '',
+          addressLine1: '',
+          country: '',
+          primaryCategory: '',
+          mondayHours: "09:00-18:00",
+          tuesdayHours: "09:00-18:00", 
+          wednesdayHours: "09:00-18:00",
+          thursdayHours: "09:00-18:00",
+          fridayHours: "09:00-18:00",
+          saturdayHours: "10:00-14:00",
+          sundayHours: "Closed"
         };
 
         columnMappings.forEach(mapping => {
@@ -187,30 +189,17 @@ const ImportDialog = ({ open, onOpenChange, onSuccess }: ImportDialogProps) => {
             const value = row[mapping.original];
             if (mapping.mapped === 'latitude' || mapping.mapped === 'longitude') {
               business[mapping.mapped] = parseFloat(value) || null;
-            } else if (mapping.mapped === 'additional_categories') {
-              // Handle comma-separated categories
-              business[mapping.mapped] = value.split(',').map((cat: string) => cat.trim()).filter(Boolean);
-            } else if (mapping.mapped === 'hours') {
-              // Handle different hour formats
-              if (typeof value === 'string' && value.includes('-')) {
-                // Simple format like "9:00-17:00"
-                business.hours = {
-                  monday: value,
-                  tuesday: value,
-                  wednesday: value,
-                  thursday: value,
-                  friday: value,
-                  saturday: value.includes('closed') ? 'Closed' : value,
-                  sunday: 'Closed'
-                };
-              } else {
-                business[mapping.mapped] = value;
-              }
+            } else if (mapping.mapped === 'additionalCategories') {
+              business[mapping.mapped] = value.split(',').map((cat: string) => cat.trim()).filter(Boolean).join(',');
             } else {
               business[mapping.mapped] = value;
             }
           }
         });
+
+        // Determine status based on completeness
+        const isComplete = checkBusinessCompleteness(business);
+        business.status = isComplete ? 'active' : 'pending';
 
         return business;
       });
@@ -221,9 +210,12 @@ const ImportDialog = ({ open, onOpenChange, onSuccess }: ImportDialogProps) => {
 
       if (error) throw error;
 
+      const activeCount = businessesToInsert.filter(b => b.status === 'active').length;
+      const pendingCount = businessesToInsert.filter(b => b.status === 'pending').length;
+
       toast({
-        title: "Success",
-        description: `Imported ${businessesToInsert.length} businesses successfully`,
+        title: "Import Complete",
+        description: `${activeCount} complete businesses imported, ${pendingCount} incomplete businesses need attention`,
       });
 
       onSuccess();
