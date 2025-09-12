@@ -120,7 +120,12 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit }: Busine
                   />
                 </TableCell>
                 <TableCell className="font-medium">
-                  {business.businessName}
+                  <div className="flex items-center gap-2">
+                    <span>{business.businessName}</span>
+                    {/^(STORE)\d{6}$/.test(business.storeCode || '') && (
+                      <Badge variant="destructive">Replace store code</Badge>
+                    )}
+                  </div>
                 </TableCell>
                 <TableCell>
                   {business.primaryCategory && (

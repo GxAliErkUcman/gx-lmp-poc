@@ -359,6 +359,9 @@ const Dashboard = () => {
                           {business.primaryCategory && (
                             <Badge variant="secondary">{business.primaryCategory}</Badge>
                           )}
+                          {/^(STORE)\d{6}$/.test(business.storeCode || '') && (
+                            <div className="text-destructive">Auto store code assigned — please set your store code</div>
+                          )}
                           {business.city && business.state && (
                             <div className="text-muted-foreground">
                               {business.city}, {business.state}
