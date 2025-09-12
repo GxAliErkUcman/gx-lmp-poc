@@ -75,7 +75,7 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
     thursday: "09:00-18:00",
     friday: "09:00-18:00",
     saturday: "10:00-14:00",
-    sunday: "Closed"
+    sunday: null as string | null
   });
 
   const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<BusinessFormData>({
@@ -155,7 +155,7 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
         thursday: business.thursdayHours || "09:00-18:00",
         friday: business.fridayHours || "09:00-18:00",
         saturday: business.saturdayHours || "10:00-14:00",
-        sunday: business.sundayHours || "Closed"
+        sunday: business.sundayHours ?? null
       });
 
       // Set cover photo
@@ -171,7 +171,7 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
         thursday: "09:00-18:00",
         friday: "09:00-18:00",
         saturday: "10:00-14:00",
-        sunday: "Closed"
+        sunday: null
       });
     }
   }, [business, setValue, reset]);
@@ -179,16 +179,24 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
   const onSubmit = async (data: BusinessFormData) => {
     if (!user) return;
 
-    // Validate the complete business data
+    // Normalize opening hours: convert 'Closed' to null
+    const normalizeHour = (v: string | null | undefined) =>
+      v && typeof v === 'string' && v.toLowerCase() === 'closed' ? null : v;
+
+    const normalizedHours = {
+      mondayHours: normalizeHour(hours.monday),
+      tuesdayHours: normalizeHour(hours.tuesday),
+      wednesdayHours: normalizeHour(hours.wednesday),
+      thursdayHours: normalizeHour(hours.thursday),
+      fridayHours: normalizeHour(hours.friday),
+      saturdayHours: normalizeHour(hours.saturday),
+      sundayHours: normalizeHour(hours.sunday),
+    };
+
+    // Validate the complete business data with normalized hours
     const completeData = {
       ...data,
-      mondayHours: hours.monday,
-      tuesdayHours: hours.tuesday,
-      wednesdayHours: hours.wednesday,
-      thursdayHours: hours.thursday,
-      fridayHours: hours.friday,
-      saturdayHours: hours.saturday,
-      sundayHours: hours.sunday,
+      ...normalizedHours,
       otherPhotos: coverPhoto
     };
 
@@ -202,6 +210,10 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
       });
       return;
     }
+
+    // Decide status: active if valid and store code is not DB auto-generated
+    const isDbAutoStore = /^STORE\d{6}$/.test(data.storeCode || '');
+    const newStatus = validation.isValid && !isDbAutoStore ? 'active' : 'pending';
 
     setLoading(true);
     try {
@@ -230,13 +242,13 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
         openingDate: data.openingDate || null,
         fromTheBusiness: data.fromTheBusiness || null,
         labels: data.labels || null,
-        mondayHours: hours.monday,
-        tuesdayHours: hours.tuesday,
-        wednesdayHours: hours.wednesday,
-        thursdayHours: hours.thursday,
-        fridayHours: hours.friday,
-        saturdayHours: hours.saturday,
-        sundayHours: hours.sunday,
+        mondayHours: normalizedHours.mondayHours,
+        tuesdayHours: normalizedHours.tuesdayHours,
+        wednesdayHours: normalizedHours.wednesdayHours,
+        thursdayHours: normalizedHours.thursdayHours,
+        fridayHours: normalizedHours.fridayHours,
+        saturdayHours: normalizedHours.saturdayHours,
+        sundayHours: normalizedHours.sundayHours,
         temporarilyClosed: data.temporarilyClosed || false,
         logoPhoto: data.logoPhoto || null,
         coverPhoto: data.coverPhoto || null,
@@ -245,6 +257,7 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
         menuURL: data.menuURL || null,
         reservationsURL: data.reservationsURL || null,
         orderAheadURL: data.orderAheadURL || null,
+        status: newStatus,
       };
 
       let error;
