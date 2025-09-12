@@ -218,7 +218,15 @@ const LocationMap = ({ latitude, longitude, onLocationChange, address, addressLi
   const openInMaps = () => {
     if (mapLatitude && mapLongitude) {
       const url = `https://www.google.com/maps?q=${mapLatitude},${mapLongitude}`;
-      window.open(url, '_blank');
+      // Create a temporary link element to avoid service worker preload issues
+      const link = document.createElement('a');
+      link.href = url;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      // Programmatically click the link to avoid service worker navigation preload warnings
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
   };
 
