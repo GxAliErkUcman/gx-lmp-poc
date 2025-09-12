@@ -14,7 +14,7 @@ import BusinessTableView from '@/components/BusinessTableView';
 import MultiEditDialog from '@/components/MultiEditDialog';
 
 import type { Business } from '@/types/business';
-import { JsonExport } from '@/components/JsonExport';
+import LogoUpload from '@/components/LogoUpload';
 
 const Dashboard = () => {
   const { user, signOut } = useAuth();
@@ -165,6 +165,7 @@ const Dashboard = () => {
               </Button>
             </div>
             
+            <LogoUpload onLogoUploaded={fetchBusinesses} />
             <Button 
               onClick={() => setImportDialogOpen(true)}
               variant="outline"

@@ -67,7 +67,7 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [validationErrors, setValidationErrors] = useState<any[]>([]);
-  const [photos, setPhotos] = useState<string[]>([]);
+  const [coverPhoto, setCoverPhoto] = useState<string>('');
   const [hours, setHours] = useState({
     monday: "09:00-18:00",
     tuesday: "09:00-18:00", 
@@ -158,14 +158,12 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
         sunday: business.sundayHours || "Closed"
       });
 
-      // Parse photos from comma-separated URLs
-      if (business.otherPhotos) {
-        setPhotos(business.otherPhotos.split(',').filter(Boolean));
-      }
+      // Set cover photo
+      setCoverPhoto(business.coverPhoto || '');
     } else {
       // Reset for new business
       reset();
-      setPhotos([]);
+      setCoverPhoto('');
       setHours({
         monday: "09:00-18:00",
         tuesday: "09:00-18:00",
@@ -191,7 +189,7 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
       fridayHours: hours.friday,
       saturdayHours: hours.saturday,
       sundayHours: hours.sunday,
-      otherPhotos: photos.join(',')
+      otherPhotos: coverPhoto
     };
 
     const validation = validateBusiness(completeData);
@@ -242,7 +240,7 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
         temporarilyClosed: data.temporarilyClosed || false,
         logoPhoto: data.logoPhoto || null,
         coverPhoto: data.coverPhoto || null,
-        otherPhotos: photos.join(',') || null,
+        otherPhotos: coverPhoto || null,
         appointmentURL: data.appointmentURL || null,
         menuURL: data.menuURL || null,
         reservationsURL: data.reservationsURL || null,
@@ -287,9 +285,10 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
     setValue('longitude', lng);
   };
 
-  const handlePhotosChange = (newPhotos: string[]) => {
-    setPhotos(newPhotos);
-    setValue('otherPhotos', newPhotos.join(','));
+  const handleCoverPhotoChange = (photos: string[]) => {
+    const photoUrl = photos[0] || '';
+    setCoverPhoto(photoUrl);
+    setValue('coverPhoto', photoUrl);
   };
 
   const getCurrentAddress = () => {
@@ -475,16 +474,16 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
             onHoursChange={setHours}
           />
 
-          {/* Photo Upload */}
+          {/* Cover Photo Upload */}
           <Card>
             <CardHeader>
-              <CardTitle>Business Photos</CardTitle>
+              <CardTitle>Cover Photo</CardTitle>
             </CardHeader>
             <CardContent>
               <PhotoUpload
-                photos={photos}
-                onPhotosChange={handlePhotosChange}
-                maxPhotos={10}
+                photos={coverPhoto ? [coverPhoto] : []}
+                onPhotosChange={handleCoverPhotoChange}
+                maxPhotos={1}
               />
             </CardContent>
           </Card>
