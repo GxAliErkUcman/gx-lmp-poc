@@ -27,6 +27,8 @@ const Dashboard = () => {
   const [multiEditDialogOpen, setMultiEditDialogOpen] = useState(false);
   const [selectedBusinessIds, setSelectedBusinessIds] = useState<string[]>([]);
 
+  const [userLogo, setUserLogo] = useState<string | null>(null);
+
   if (!user) {
     return <Navigate to="/auth" replace />;
   }
@@ -39,7 +41,12 @@ const Dashboard = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setBusinesses((data || []) as Business[]);
+      const businessList = (data || []) as Business[];
+      setBusinesses(businessList);
+      
+      // Get user's logo from any business (since it's account-wide)
+      const logoUrl = businessList.length > 0 ? businessList[0].logoPhoto : null;
+      setUserLogo(logoUrl);
     } catch (error) {
       console.error('Error fetching businesses:', error);
       toast({
@@ -127,32 +134,53 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Business Profile Manager</h1>
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted/30">
+      <header className="border-b bg-card/50 backdrop-blur-sm">
+        <div className="container mx-auto px-4 py-6 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            {userLogo && (
+              <div className="w-8 h-8 rounded-lg overflow-hidden bg-muted flex items-center justify-center">
+                <img 
+                  src={userLogo} 
+                  alt="Account Logo" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            )}
+            <div>
+              <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+                Business Profile Manager
+              </h1>
+              {userLogo && (
+                <p className="text-xs text-muted-foreground">Account Logo Applied</p>
+              )}
+            </div>
+          </div>
           <div className="flex items-center gap-4">
             <span className="text-sm text-muted-foreground">{user.email}</span>
-            <Button onClick={signOut} variant="outline">Sign Out</Button>
+            <Button onClick={signOut} variant="outline" className="shadow-modern">
+              Sign Out
+            </Button>
           </div>
         </div>
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
+        <div className="mb-8 flex flex-wrap items-center justify-between gap-6">
           <div>
-            <h2 className="text-xl font-semibold mb-2">Your Businesses</h2>
+            <h2 className="text-3xl font-bold mb-2">Your Businesses</h2>
             <p className="text-muted-foreground">
               Manage {businesses.length} business profile{businesses.length !== 1 ? 's' : ''}
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex items-center gap-3">
             {/* View Mode Toggle */}
-            <div className="flex border rounded-lg p-1">
+            <div className="flex border rounded-xl p-1 bg-card shadow-card">
               <Button
                 variant={viewMode === 'grid' ? 'default' : 'ghost'}
                 size="sm"
                 onClick={() => setViewMode('grid')}
+                className="rounded-lg"
               >
                 <Grid className="w-4 h-4" />
               </Button>
@@ -160,41 +188,59 @@ const Dashboard = () => {
                 variant={viewMode === 'table' ? 'default' : 'ghost'}
                 size="sm"
                 onClick={() => setViewMode('table')}
+                className="rounded-lg"
               >
                 <Table2 className="w-4 h-4" />
               </Button>
             </div>
             
-            <LogoUpload onLogoUploaded={fetchBusinesses} />
-            <Button 
-              onClick={() => setImportDialogOpen(true)}
-              variant="outline"
-            >
-              <Upload className="w-4 h-4 mr-2" />
-              Import CSV/Excel
-            </Button>
-            <Button 
-              onClick={exportBusinesses}
-              variant="outline"
-              disabled={businesses.length === 0}
-            >
-              <Download className="w-4 h-4 mr-2" />
-              Export JSON
-            </Button>
-            <Button onClick={() => setBusinessDialogOpen(true)}>
-              <Plus className="w-4 h-4 mr-2" />
-              Add Business
-            </Button>
+            {/* Action Buttons - Symmetric Layout */}
+            <div className="flex items-center gap-2">
+              <LogoUpload onLogoUploaded={fetchBusinesses} />
+              <Button 
+                onClick={() => setImportDialogOpen(true)}
+                variant="outline"
+                size="default"
+                className="shadow-modern"
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                Import
+              </Button>
+              <Button 
+                onClick={exportBusinesses}
+                variant="outline"
+                size="default"
+                disabled={businesses.length === 0}
+                className="shadow-modern"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Export
+              </Button>
+              <Button 
+                onClick={() => setBusinessDialogOpen(true)}
+                className="shadow-modern bg-gradient-primary hover:opacity-90"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Business
+              </Button>
+            </div>
           </div>
         </div>
 
         {businesses.length === 0 ? (
-          <Card>
-            <CardContent className="py-12 text-center">
-              <div className="text-muted-foreground mb-4">
-                No businesses found. Get started by adding your first business profile.
+          <Card className="shadow-card">
+            <CardContent className="py-16 text-center">
+              <div className="w-16 h-16 mx-auto mb-4 bg-gradient-primary rounded-full flex items-center justify-center">
+                <Plus className="w-8 h-8 text-primary-foreground" />
               </div>
-              <Button onClick={() => setBusinessDialogOpen(true)}>
+              <div className="text-muted-foreground mb-6 space-y-1">
+                <p className="text-lg font-medium">No businesses found</p>
+                <p>Get started by adding your first business profile.</p>
+              </div>
+              <Button 
+                onClick={() => setBusinessDialogOpen(true)}
+                className="shadow-modern bg-gradient-primary hover:opacity-90"
+              >
                 <Plus className="w-4 h-4 mr-2" />
                 Add Your First Business
               </Button>
@@ -210,7 +256,7 @@ const Dashboard = () => {
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {businesses.map((business) => (
-              <Card key={business.id}>
+              <Card key={business.id} className="shadow-card hover:shadow-modern transition-shadow duration-300">
                 <CardHeader>
                   <CardTitle className="flex items-start justify-between">
                     <span className="line-clamp-2">{business.businessName}</span>
@@ -219,6 +265,7 @@ const Dashboard = () => {
                         size="sm"
                         variant="ghost"
                         onClick={() => handleEditBusiness(business)}
+                        className="hover:bg-primary/10"
                       >
                         <Edit className="w-4 h-4" />
                       </Button>
@@ -226,6 +273,7 @@ const Dashboard = () => {
                         size="sm"
                         variant="ghost"
                         onClick={() => handleDeleteBusiness(business.id)}
+                        className="hover:bg-destructive/10 hover:text-destructive"
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>

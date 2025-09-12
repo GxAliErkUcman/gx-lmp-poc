@@ -83,19 +83,19 @@ const LogoUpload = ({ onLogoUploaded }: LogoUploadProps) => {
   });
 
   return (
-    <div
+    <Button
       {...getRootProps()}
-      className={`border-2 border-dashed rounded-lg p-3 text-center cursor-pointer transition-colors ${
-        isDragActive ? 'border-primary bg-primary/5' : 'border-muted-foreground/25'
+      variant="outline"
+      size="default"
+      disabled={uploading}
+      className={`shadow-modern transition-all duration-200 ${
+        isDragActive ? 'border-primary bg-primary/5' : ''
       }`}
     >
       <input {...getInputProps()} />
-      <Image className="mx-auto h-5 w-5 text-muted-foreground mb-1" />
-      <p className="text-xs font-medium">
-        {isDragActive ? 'Drop logo here' : 'Upload Account Logo'}
-      </p>
-      {uploading && <p className="text-xs text-muted-foreground mt-1">Uploading...</p>}
-    </div>
+      <Image className="w-4 h-4 mr-2" />
+      {uploading ? 'Uploading...' : 'Logo'}
+    </Button>
   );
 };
 
