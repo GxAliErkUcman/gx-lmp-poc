@@ -50,11 +50,25 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log('Manual JSON export requested for user:', userId);
 
-    // Fetch businesses for the specified user
+    // First get the user's client_id
+    const { data: userProfile, error: profileError } = await supabaseAdmin
+      .from('profiles')
+      .select('client_id')
+      .eq('user_id', userId)
+      .single();
+
+    if (profileError || !userProfile?.client_id) {
+      console.error('Error fetching user profile or client_id:', profileError);
+      throw new Error('User profile or client_id not found');
+    }
+
+    console.log('Found client_id for user:', userProfile.client_id);
+
+    // Fetch businesses for the user's client
     const { data: businesses, error: fetchError } = await supabaseAdmin
       .from('businesses')
       .select('*')
-      .eq('user_id', userId)
+      .eq('client_id', userProfile.client_id)
       .eq('status', 'active');
 
     if (fetchError) {

@@ -136,11 +136,28 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Fetch all active businesses for the user
+    // First get the user's client_id
+    const { data: userProfile, error: profileError } = await supabase
+      .from('profiles')
+      .select('client_id')
+      .eq('user_id', user_id)
+      .single();
+
+    if (profileError || !userProfile?.client_id) {
+      console.error('Error fetching user profile or client_id:', profileError);
+      return new Response(JSON.stringify({ error: 'User profile or client_id not found' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    console.log('Found client_id for user:', userProfile.client_id);
+
+    // Fetch all active businesses for the user's client
     const { data: businesses, error } = await supabase
       .from('businesses')
       .select('*')
-      .eq('user_id', user_id)
+      .eq('client_id', userProfile.client_id)
       .eq('status', 'active');
 
     if (error) {
