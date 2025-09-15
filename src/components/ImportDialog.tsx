@@ -153,63 +153,71 @@ const ImportDialog = ({ open, onOpenChange, onSuccess }: ImportDialogProps) => {
 
       setParsedData(parsedRows);
 
-      // Auto-detect column mappings with improved precision
+      // Auto-detect column mappings with improved precision and compact matching
       const mappings: ColumnMapping[] = headers.map(header => {
-        const normalizedHeader = header.toLowerCase().trim();
+        const normalizedHeader = String(header).toLowerCase().trim();
+        const compactHeader = normalizedHeader.replace(/[\s_\-]/g, '');
         
-        // Find matching field - use exact match first, then partial match
+        // Find matching field - use exact match (normal or compact), then partial
         let mappedField = '';
-        
-        // First pass: exact matches
-        for (const [field, aliases] of Object.entries(fieldMappings)) {
-          for (const alias of aliases) {
-            if (normalizedHeader === alias) {
-              mappedField = field;
-              break;
-            }
+
+        const matchAlias = (field: string, alias: string) => {
+          const aliasLower = alias.toLowerCase();
+          const aliasCompact = aliasLower.replace(/[\s_\-]/g, '');
+          return (
+            normalizedHeader === aliasLower ||
+            compactHeader === aliasCompact ||
+            normalizedHeader.includes(aliasLower) ||
+            compactHeader.includes(aliasCompact)
+          );
+        };
+
+        // Address line disambiguation helper on COMPACT header
+        const resolveAddressLine = () => {
+          // Try to extract a number after address/addr/al/addressline
+          const m = compactHeader.match(/^(?:addressline|address|addr|al)(\d)$/);
+          if (m) {
+            const n = m[1];
+            return `addressLine${n}`;
           }
-          if (mappedField) break;
+          // If it's a generic address without number, prefer addressLine1
+          if (compactHeader === 'address' || compactHeader === 'streetaddress' || compactHeader === 'addressline') {
+            return 'addressLine1';
+          }
+          return '';
+        };
+
+        // First pass: explicit address-line number detection
+        if (compactHeader.startsWith('address') || compactHeader.startsWith('addr') || compactHeader.startsWith('al')) {
+          const addressField = resolveAddressLine();
+          if (addressField) mappedField = addressField;
         }
-        
-        // Second pass: partial matches if no exact match found
+
+        // If still not mapped, try alias matching in order
         if (!mappedField) {
           for (const [field, aliases] of Object.entries(fieldMappings)) {
             for (const alias of aliases) {
-              if (normalizedHeader.includes(alias)) {
-                // Additional validation to prevent mismatches
+              if (matchAlias(field, alias)) {
+                // Additional guards for storeCode false positives
                 if (field === 'storeCode') {
-                  // Don't map postal code to store code
-                  if (normalizedHeader.includes('postal') || normalizedHeader.includes('zip')) {
+                  if (compactHeader.includes('postal') || compactHeader.includes('postcode') || compactHeader.includes('zip')) {
                     continue;
                   }
-                  // Don't map day hours to store code  
-                  const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-                  if (days.some(day => normalizedHeader.includes(day)) && normalizedHeader.includes('hour')) {
+                  const days = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
+                  if (days.some(day => compactHeader.includes(day)) && compactHeader.includes('hour')) {
                     continue;
                   }
                 }
                 
-                // Prevent address line conflicts - ensure we match the most specific one
-                if (field.startsWith('addressLine') && normalizedHeader.includes('address')) {
-                  // Check if this is specifically for a numbered address line
-                  const addressLineMatch = normalizedHeader.match(/address\s*line?\s*(\d+)|al(\d+)|addr(\d+)|address(\d+)/);
-                  if (addressLineMatch) {
-                    const number = addressLineMatch[1] || addressLineMatch[2] || addressLineMatch[3] || addressLineMatch[4];
-                    if (field === `addressLine${number}`) {
-                      mappedField = field;
-                      break;
-                    } else {
-                      continue; // Skip if not the right number
-                    }
-                  } else if (field === 'addressLine1' && !normalizedHeader.includes('2') && !normalizedHeader.includes('3') && !normalizedHeader.includes('4') && !normalizedHeader.includes('5')) {
-                    // Only map to addressLine1 if no specific number is mentioned
-                    mappedField = field;
-                    break;
+                // Prevent generic 'address' mapping over numbered lines
+                if (field === 'addressLine1') {
+                  if (/(addressline|address|addr|al)[2345]/.test(compactHeader)) {
+                    continue;
                   }
-                } else {
-                  mappedField = field;
-                  break;
                 }
+
+                mappedField = field;
+                break;
               }
             }
             if (mappedField) break;
