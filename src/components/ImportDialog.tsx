@@ -130,12 +130,43 @@ const ImportDialog = ({ open, onOpenChange, onSuccess }: ImportDialogProps) => {
       const mappings: ColumnMapping[] = headers.map(header => {
         const normalizedHeader = header.toLowerCase().trim();
         
-        // Find matching field
+        // Find matching field with improved logic
         let mappedField = '';
+        let bestMatchScore = 0;
+        
         for (const [field, aliases] of Object.entries(fieldMappings)) {
-          if (aliases.some(alias => normalizedHeader.includes(alias))) {
-            mappedField = field;
-            break;
+          for (const alias of aliases) {
+            let score = 0;
+            
+            // Exact match gets highest priority
+            if (normalizedHeader === alias) {
+              score = 100;
+            }
+            // Exact match with common variations (spaces, underscores, hyphens)
+            else if (normalizedHeader.replace(/[\s_-]/g, '') === alias.replace(/[\s_-]/g, '')) {
+              score = 90;
+            }
+            // Header starts with alias (for cases like "Friday Hours - Main Location")
+            else if (normalizedHeader.startsWith(alias)) {
+              score = 80;
+            }
+            // Header ends with alias
+            else if (normalizedHeader.endsWith(alias)) {
+              score = 70;
+            }
+            // Contains alias but not as substring of another word
+            else if (normalizedHeader.includes(alias) && 
+                     (normalizedHeader.includes(' ' + alias + ' ') || 
+                      normalizedHeader.startsWith(alias + ' ') || 
+                      normalizedHeader.endsWith(' ' + alias))) {
+              score = 60;
+            }
+            
+            // Update best match if this score is higher
+            if (score > bestMatchScore) {
+              bestMatchScore = score;
+              mappedField = field;
+            }
           }
         }
 
