@@ -70,21 +70,24 @@ const AdminPanel = () => {
   });
 
   useEffect(() => {
-    if (user === null) {
-      navigate('/auth?redirect=/admin', { replace: true });
-      return;
-    }
-    if (user) {
-      (async () => {
+    const handleUserAuth = async () => {
+      if (user === null) {
+        navigate('/auth?redirect=/admin', { replace: true });
+        return;
+      }
+      
+      if (user) {
         const isAdmin = await checkAdminAccess();
         if (isAdmin) {
           fetchData();
         } else {
           navigate('/dashboard');
         }
-      })();
-    }
-  }, [user]);
+      }
+    };
+    
+    handleUserAuth();
+  }, [user, navigate]);
 
   const checkAdminAccess = async (): Promise<boolean> => {
     try {
@@ -416,12 +419,18 @@ const AdminPanel = () => {
     user.last_name.toLowerCase().includes(userSearchQuery.toLowerCase())
   );
 
+  // Early return for loading state
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     );
+  }
+
+  // Early return for non-authenticated users  
+  if (user === null) {
+    return null;
   }
 
   return (
