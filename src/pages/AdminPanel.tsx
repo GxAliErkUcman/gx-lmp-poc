@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Users, MapPin, Clock, Download, UserPlus, Plus, Trash2 } from 'lucide-react';
+import { Loader2, Users, MapPin, Clock, Download, UserPlus, Plus, Trash2, Settings } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 
@@ -25,6 +25,14 @@ interface Client {
 interface ClientOption {
   id: string;
   name: string;
+}
+
+interface User {
+  user_id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  client_id?: string;
 }
 
 const AdminPanel = () => {
@@ -46,6 +54,12 @@ const AdminPanel = () => {
   const [deleteUsersChecked, setDeleteUsersChecked] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const [newClientName, setNewClientName] = useState('');
+  const [isUserManagementDialogOpen, setIsUserManagementDialogOpen] = useState(false);
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [availableUsers, setAvailableUsers] = useState<User[]>([]);
+  const [clientUsers, setClientUsers] = useState<User[]>([]);
+  const [userSearchQuery, setUserSearchQuery] = useState('');
+  const [userManagementLoading, setUserManagementLoading] = useState(false);
   
   const [newUser, setNewUser] = useState({
     firstName: '',
@@ -114,7 +128,12 @@ const AdminPanel = () => {
         last_updated: stat.last_updated
       })) || [];
       
-      setClients(mappedClients);
+      // Filter out admin clients (clients with "admin" in the name)
+      const filteredClients = mappedClients.filter(client => 
+        !client.name.toLowerCase().includes('admin')
+      );
+      
+      setClients(filteredClients);
 
       // Fetch all clients for the dropdown
       const { data: allClients, error: clientsError } = await supabase
@@ -325,6 +344,103 @@ const AdminPanel = () => {
     setDeleteUsersChecked(false);
   };
 
+  const openUserManagement = async (client: Client) => {
+    setSelectedClient(client);
+    setIsUserManagementDialogOpen(true);
+    setUserSearchQuery('');
+    await fetchUsersForClient(client.id);
+  };
+
+  const fetchUsersForClient = async (clientId: string) => {
+    try {
+      setUserManagementLoading(true);
+
+      // Get all users
+      const { data: allUsers, error: usersError } = await supabase
+        .from('profiles')
+        .select('user_id, first_name, last_name, email, client_id')
+        .neq('role', 'admin'); // Exclude admin users
+
+      if (usersError) throw usersError;
+
+      // Separate users assigned to this client vs available users
+      const assigned = (allUsers || []).filter(u => u.client_id === clientId);
+      const available = (allUsers || []).filter(u => u.client_id !== clientId);
+
+      setClientUsers(assigned);
+      setAvailableUsers(available);
+    } catch (error: any) {
+      console.error('Error fetching users:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load users.",
+        variant: "destructive"
+      });
+    } finally {
+      setUserManagementLoading(false);
+    }
+  };
+
+  const assignUserToClient = async (userId: string) => {
+    if (!selectedClient) return;
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ client_id: selectedClient.id })
+        .eq('user_id', userId);
+
+      if (error) throw error;
+
+      toast({
+        title: "User Assigned",
+        description: "User successfully assigned to client.",
+      });
+
+      await fetchUsersForClient(selectedClient.id);
+      fetchData(); // Refresh client stats
+    } catch (error: any) {
+      console.error('Error assigning user:', error);
+      toast({
+        title: "Error",
+        description: "Failed to assign user to client.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const removeUserFromClient = async (userId: string) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ client_id: null })
+        .eq('user_id', userId);
+
+      if (error) throw error;
+
+      toast({
+        title: "User Removed",
+        description: "User removed from client.",
+      });
+
+      await fetchUsersForClient(selectedClient!.id);
+      fetchData(); // Refresh client stats
+    } catch (error: any) {
+      console.error('Error removing user:', error);
+      toast({
+        title: "Error",
+        description: "Failed to remove user from client.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const filteredAvailableUsers = availableUsers.filter(user =>
+    user.email.toLowerCase().includes(userSearchQuery.toLowerCase()) ||
+    user.first_name.toLowerCase().includes(userSearchQuery.toLowerCase()) ||
+    user.last_name.toLowerCase().includes(userSearchQuery.toLowerCase())
+  );
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -463,6 +579,7 @@ const AdminPanel = () => {
                 <TableHead className="text-center">Pending Locations</TableHead>
                 <TableHead className="text-center">Last Updated</TableHead>
                 <TableHead className="text-center">Actions</TableHead>
+                <TableHead className="text-center">Settings</TableHead>
                 <TableHead className="text-center">Manage</TableHead>
               </TableRow>
             </TableHeader>
@@ -509,6 +626,16 @@ const AdminPanel = () => {
                   <TableCell className="text-center">
                     <Button
                       size="sm"
+                      variant="outline"
+                      onClick={() => openUserManagement(client)}
+                    >
+                      <Settings className="w-4 h-4" />
+                      Users
+                    </Button>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <Button
+                      size="sm"
                       variant="destructive"
                       onClick={() => openDeleteDialog(client)}
                     >
@@ -527,6 +654,96 @@ const AdminPanel = () => {
           )}
         </CardContent>
         </Card>
+
+        {/* User Management Dialog */}
+        <Dialog open={isUserManagementDialogOpen} onOpenChange={setIsUserManagementDialogOpen}>
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+            <DialogHeader>
+              <DialogTitle>Manage Users - {selectedClient?.name}</DialogTitle>
+            </DialogHeader>
+            
+            {userManagementLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-8 h-8 animate-spin" />
+              </div>
+            ) : (
+              <div className="flex-1 space-y-6 overflow-hidden">
+                {/* Current Users */}
+                <div>
+                  <h4 className="font-medium mb-3">
+                    Current Users ({clientUsers.length})
+                  </h4>
+                  {clientUsers.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">No users assigned to this client.</p>
+                  ) : (
+                    <div className="space-y-2 max-h-32 overflow-y-auto">
+                      {clientUsers.map((user) => (
+                        <div key={user.user_id} className="flex items-center justify-between p-2 bg-muted rounded-lg">
+                          <div className="flex-1">
+                            <div className="font-medium text-sm">
+                              {user.first_name} {user.last_name}
+                            </div>
+                            <div className="text-xs text-muted-foreground">{user.email}</div>
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => removeUserFromClient(user.user_id)}
+                          >
+                            Remove
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Available Users */}
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="font-medium">Available Users</h4>
+                    <Input
+                      placeholder="Search users..."
+                      value={userSearchQuery}
+                      onChange={(e) => setUserSearchQuery(e.target.value)}
+                      className="w-48"
+                    />
+                  </div>
+                  
+                  {filteredAvailableUsers.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">
+                      {userSearchQuery ? 'No users match your search.' : 'No available users.'}
+                    </p>
+                  ) : (
+                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                      {filteredAvailableUsers.map((user) => (
+                        <div key={user.user_id} className="flex items-center justify-between p-2 border rounded-lg">
+                          <div className="flex-1">
+                            <div className="font-medium text-sm">
+                              {user.first_name} {user.last_name}
+                            </div>
+                            <div className="text-xs text-muted-foreground">{user.email}</div>
+                            {user.client_id && (
+                              <div className="text-xs text-orange-600">
+                                Currently assigned to another client
+                              </div>
+                            )}
+                          </div>
+                          <Button
+                            size="sm"
+                            onClick={() => assignUserToClient(user.user_id)}
+                          >
+                            Assign
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
 
         {/* Delete Client Confirmation Dialog */}
         <Dialog open={isDeleteClientDialogOpen} onOpenChange={setIsDeleteClientDialogOpen}>
