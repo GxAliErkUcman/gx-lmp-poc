@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Users, MapPin, Clock, Download, UserPlus, Plus, Trash2, Settings } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -446,6 +446,9 @@ const AdminPanel = () => {
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Create New Client</DialogTitle>
+                <DialogDescription>
+                  Add a new client to manage locations and users.
+                </DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
                 <div>
@@ -478,6 +481,9 @@ const AdminPanel = () => {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Create New User</DialogTitle>
+              <DialogDescription>
+                Invite a new user and assign them to a client.
+              </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">

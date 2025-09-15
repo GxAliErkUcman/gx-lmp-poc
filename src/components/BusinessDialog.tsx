@@ -405,7 +405,22 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
           <ValidationErrors errors={validationErrors} className="mb-4" />
         )}
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={handleSubmit(onSubmit, (formErrors: any) => {
+          try {
+            const collected = Object.entries(formErrors || {}).map(([field, err]: any) => ({
+              field,
+              message: err?.message || 'Invalid value'
+            }));
+            setValidationErrors(collected);
+            toast({
+              title: 'Validation Error',
+              description: 'Please review the highlighted fields and try again.',
+              variant: 'destructive',
+            });
+          } catch (e) {
+            console.error('Validation parse error:', e);
+          }
+        })} className="space-y-6">
           {/* Required Fields */}
           <Card>
             <CardHeader>
