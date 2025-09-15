@@ -48,7 +48,7 @@ const AdminPanel = () => {
 
   useEffect(() => {
     if (user === null) {
-      navigate('/auth');
+      navigate('/auth?redirect=/admin', { replace: true });
       return;
     }
     if (user) {
