@@ -36,7 +36,7 @@ const ImportDialog = ({ open, onOpenChange, onSuccess }: ImportDialogProps) => {
 
   // Field mappings aligned with database schema
   const fieldMappings: Record<string, string[]> = {
-    'storeCode': ['store code', 'code', 'id'],
+    'storeCode': ['store code', 'store id', 'storeid', 'store_code', 'storecode', 'location code', 'location id', 'branch code', 'branch id'],
     'businessName': ['name', 'business name', 'company name', 'business', 'company'],
     'primaryCategory': ['category', 'business category', 'type', 'industry'],
     'addressLine1': ['address', 'street address', 'street', 'addr1', 'address1'],
@@ -126,55 +126,78 @@ const ImportDialog = ({ open, onOpenChange, onSuccess }: ImportDialogProps) => {
 
       setParsedData(parsedRows);
 
-      // Auto-detect column mappings
+      // Auto-detect column mappings with heuristics and sample-based disambiguation
+      const dayMap: Record<string, string> = {
+        monday: 'mondayHours',
+        tuesday: 'tuesdayHours',
+        wednesday: 'wednesdayHours',
+        thursday: 'thursdayHours',
+        friday: 'fridayHours',
+        saturday: 'saturdayHours',
+        sunday: 'sundayHours',
+      };
+      const hoursRegex = /^\s*\d{1,2}:\d{2}\s*-\s*\d{1,2}:\d{2}\s*$/i;
+
       const mappings: ColumnMapping[] = headers.map(header => {
         const normalizedHeader = header.toLowerCase().trim();
-        
-        // Find matching field with improved logic
-        let mappedField = '';
-        let bestMatchScore = 0;
-        
-        for (const [field, aliases] of Object.entries(fieldMappings)) {
-          for (const alias of aliases) {
-            let score = 0;
-            
-            // Exact match gets highest priority
-            if (normalizedHeader === alias) {
-              score = 100;
-            }
-            // Exact match with common variations (spaces, underscores, hyphens)
-            else if (normalizedHeader.replace(/[\s_-]/g, '') === alias.replace(/[\s_-]/g, '')) {
-              score = 90;
-            }
-            // Header starts with alias (for cases like "Friday Hours - Main Location")
-            else if (normalizedHeader.startsWith(alias)) {
-              score = 80;
-            }
-            // Header ends with alias
-            else if (normalizedHeader.endsWith(alias)) {
-              score = 70;
-            }
-            // Contains alias but not as substring of another word
-            else if (normalizedHeader.includes(alias) && 
-                     (normalizedHeader.includes(' ' + alias + ' ') || 
-                      normalizedHeader.startsWith(alias + ' ') || 
-                      normalizedHeader.endsWith(' ' + alias))) {
-              score = 60;
-            }
-            
-            // Update best match if this score is higher
-            if (score > bestMatchScore) {
-              bestMatchScore = score;
-              mappedField = field;
+        const sample = String(parsedRows?.[0]?.[header] ?? '').toLowerCase().trim();
+
+        // 1) Strong explicit rules first
+        // Postal/ZIP
+        if (/(postal\s*code|postcode|zip\s*code|zipcode|zip)/i.test(normalizedHeader)) {
+          return { original: header, mapped: 'postalCode', required: requiredFields.includes('postalCode') };
+        }
+        // Day-of-week hours
+        for (const [day, field] of Object.entries(dayMap)) {
+          if (normalizedHeader.includes(day) || normalizedHeader.startsWith(day.slice(0, 3))) {
+            if (hoursRegex.test(sample) || normalizedHeader.includes('hour')) {
+              return { original: header, mapped: field, required: requiredFields.includes(field) };
             }
           }
         }
 
-        return {
-          original: header,
-          mapped: mappedField,
-          required: requiredFields.includes(mappedField),
+        // 2) Scoring-based fallbacks (with alias weights)
+        let mappedField = '';
+        let bestMatchScore = 0;
+        const aliasWeight = (field: string, alias: string) => {
+          if (field === 'storeCode') {
+            if (alias === 'store code' || alias === 'storecode' || alias === 'store id' || alias === 'storeid' || alias === 'store_code') return 100;
+            if (alias.includes('location') || alias.includes('branch')) return 85;
+            if (alias === 'id' || alias === 'code') return 40; // generic, low weight
+          }
+          return 0;
         };
+
+        for (const [field, aliases] of Object.entries(fieldMappings)) {
+          for (const alias of aliases) {
+            let score = 0;
+            if (normalizedHeader === alias) score = 100;
+            else if (normalizedHeader.replace(/[\s_-]/g, '') === alias.replace(/[\s_-]/g, '')) score = 90;
+            else if (normalizedHeader.startsWith(alias)) score = 80;
+            else if (normalizedHeader.endsWith(alias)) score = 70;
+            else if (normalizedHeader.includes(' ' + alias + ' ') || normalizedHeader.startsWith(alias + ' ') || normalizedHeader.endsWith(' ' + alias)) score = 60;
+
+            score += aliasWeight(field, alias);
+
+            if (score > bestMatchScore) { bestMatchScore = score; mappedField = field; }
+          }
+        }
+
+        // 3) Sample-based tie breakers to avoid incorrect storeCode mapping
+        if (mappedField === 'storeCode') {
+          if (hoursRegex.test(sample)) {
+            for (const [day, field] of Object.entries(dayMap)) {
+              if (normalizedHeader.includes(day) || normalizedHeader.startsWith(day.slice(0,3))) {
+                mappedField = field;
+                break;
+              }
+            }
+          } else if (/(postal|post\s*code|postcode|zip|zipcode)/i.test(normalizedHeader)) {
+            mappedField = 'postalCode';
+          }
+        }
+
+        return { original: header, mapped: mappedField, required: requiredFields.includes(mappedField) };
       });
 
       setColumnMappings(mappings);
