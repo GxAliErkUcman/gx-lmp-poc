@@ -355,7 +355,7 @@ const AdminPanel = () => {
     try {
       setUserManagementLoading(true);
 
-      // Get all users
+      // Get all users (admin users can now see all profiles)
       const { data: allUsers, error: usersError } = await supabase
         .from('profiles')
         .select('user_id, first_name, last_name, email, client_id')
@@ -394,7 +394,7 @@ const AdminPanel = () => {
 
       toast({
         title: "User Assigned",
-        description: "User successfully assigned to client.",
+        description: "User successfully assigned to client. Previous assignment removed.",
       });
 
       await fetchUsersForClient(selectedClient.id);
@@ -657,39 +657,49 @@ const AdminPanel = () => {
 
         {/* User Management Dialog */}
         <Dialog open={isUserManagementDialogOpen} onOpenChange={setIsUserManagementDialogOpen}>
-          <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+          <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
             <DialogHeader>
-              <DialogTitle>Manage Users - {selectedClient?.name}</DialogTitle>
+              <DialogTitle className="text-xl">Manage Users - {selectedClient?.name}</DialogTitle>
             </DialogHeader>
             
             {userManagementLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="w-8 h-8 animate-spin" />
+              <div className="flex items-center justify-center py-16">
+                <Loader2 className="w-8 w-8 animate-spin" />
+                <span className="ml-2">Loading users...</span>
               </div>
             ) : (
-              <div className="flex-1 space-y-6 overflow-hidden">
+              <div className="flex-1 grid grid-cols-2 gap-8 overflow-hidden">
                 {/* Current Users */}
-                <div>
-                  <h4 className="font-medium mb-3">
-                    Current Users ({clientUsers.length})
-                  </h4>
+                <div className="space-y-4">
+                  <div className="border-b pb-3">
+                    <h4 className="text-lg font-semibold">
+                      Current Users ({clientUsers.length})
+                    </h4>
+                    <p className="text-sm text-muted-foreground">Users assigned to this client</p>
+                  </div>
+                  
                   {clientUsers.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">No users assigned to this client.</p>
+                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                      <Users className="w-12 h-12 text-muted-foreground mb-4" />
+                      <p className="text-muted-foreground">No users assigned to this client</p>
+                      <p className="text-sm text-muted-foreground">Assign users from the available list</p>
+                    </div>
                   ) : (
-                    <div className="space-y-2 max-h-32 overflow-y-auto">
+                    <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
                       {clientUsers.map((user) => (
-                        <div key={user.user_id} className="flex items-center justify-between p-2 bg-muted rounded-lg">
+                        <div key={user.user_id} className="flex items-center justify-between p-4 bg-muted rounded-lg border">
                           <div className="flex-1">
-                            <div className="font-medium text-sm">
+                            <div className="font-semibold text-base">
                               {user.first_name} {user.last_name}
                             </div>
-                            <div className="text-xs text-muted-foreground">{user.email}</div>
+                            <div className="text-sm text-muted-foreground">{user.email}</div>
                           </div>
                           <Button
                             size="sm"
-                            variant="outline"
+                            variant="destructive"
                             onClick={() => removeUserFromClient(user.user_id)}
                           >
+                            <Trash2 className="w-4 h-4 mr-2" />
                             Remove
                           </Button>
                         </div>
@@ -699,49 +709,72 @@ const AdminPanel = () => {
                 </div>
 
                 {/* Available Users */}
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <h4 className="font-medium">Available Users</h4>
-                    <Input
-                      placeholder="Search users..."
-                      value={userSearchQuery}
-                      onChange={(e) => setUserSearchQuery(e.target.value)}
-                      className="w-48"
-                    />
+                <div className="space-y-4">
+                  <div className="border-b pb-3">
+                    <h4 className="text-lg font-semibold">Available Users</h4>
+                    <p className="text-sm text-muted-foreground">Search and assign users to this client</p>
                   </div>
                   
-                  {filteredAvailableUsers.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">
-                      {userSearchQuery ? 'No users match your search.' : 'No available users.'}
-                    </p>
-                  ) : (
-                    <div className="space-y-2 max-h-48 overflow-y-auto">
-                      {filteredAvailableUsers.map((user) => (
-                        <div key={user.user_id} className="flex items-center justify-between p-2 border rounded-lg">
-                          <div className="flex-1">
-                            <div className="font-medium text-sm">
-                              {user.first_name} {user.last_name}
-                            </div>
-                            <div className="text-xs text-muted-foreground">{user.email}</div>
-                            {user.client_id && (
-                              <div className="text-xs text-orange-600">
-                                Currently assigned to another client
+                  <div className="space-y-4">
+                    <Input
+                      placeholder="Search by name or email..."
+                      value={userSearchQuery}
+                      onChange={(e) => setUserSearchQuery(e.target.value)}
+                      className="w-full"
+                    />
+                    
+                    {filteredAvailableUsers.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center py-12 text-center">
+                        <UserPlus className="w-12 h-12 text-muted-foreground mb-4" />
+                        <p className="text-muted-foreground">
+                          {userSearchQuery ? 'No users match your search' : 'No available users'}
+                        </p>
+                        {userSearchQuery && (
+                          <p className="text-sm text-muted-foreground">Try a different search term</p>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
+                        {filteredAvailableUsers.map((user) => (
+                          <div key={user.user_id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors">
+                            <div className="flex-1">
+                              <div className="font-semibold text-base">
+                                {user.first_name} {user.last_name}
                               </div>
-                            )}
+                              <div className="text-sm text-muted-foreground">{user.email}</div>
+                              {user.client_id && (
+                                <div className="text-xs text-orange-600 mt-1 flex items-center">
+                                  <Clock className="w-3 h-3 mr-1" />
+                                  Currently assigned to another client
+                                </div>
+                              )}
+                            </div>
+                            <Button
+                              size="sm"
+                              onClick={() => assignUserToClient(user.user_id)}
+                              className="ml-4"
+                            >
+                              <UserPlus className="w-4 h-4 mr-2" />
+                              {user.client_id ? 'Reassign' : 'Assign'}
+                            </Button>
                           </div>
-                          <Button
-                            size="sm"
-                            onClick={() => assignUserToClient(user.user_id)}
-                          >
-                            Assign
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
+            
+            <div className="border-t pt-4 mt-6">
+              <Button
+                variant="outline"
+                onClick={() => setIsUserManagementDialogOpen(false)}
+                className="w-full"
+              >
+                Close
+              </Button>
+            </div>
           </DialogContent>
         </Dialog>
 
