@@ -218,21 +218,17 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
 
     setLoading(true);
     try {
-      // Get the user's profile to get their client_id
-      const { data: profile, error: profileError } = await supabase
+      // Get the user's profile to get their client_id (optional)
+      const { data: profile } = await supabase
         .from('profiles')
         .select('client_id')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
-      if (profileError) {
-        console.error('Error getting user profile:', profileError);
-        throw new Error('Failed to get user profile');
-      }
+      // If profile missing, continue without client_id (RLS allows NULL)
 
       const businessData = {
         user_id: user.id,
-        client_id: profile.client_id,
         storeCode: data.storeCode,
         businessName: data.businessName,
         addressLine1: data.addressLine1,
@@ -273,6 +269,11 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
         orderAheadURL: data.orderAheadURL || null,
         status: newStatus,
       };
+
+      // If profile has client_id, include it (optional)
+      if (profile?.client_id) {
+        (businessData as any).client_id = profile.client_id;
+      }
 
       let error;
       if (business) {
