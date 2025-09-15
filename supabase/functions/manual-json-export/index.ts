@@ -74,46 +74,38 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log(`${validBusinesses.length} businesses passed validation`);
 
-    // Generate JSON export
-    const exportData = {
-      exportDate: new Date().toISOString(),
-      clientId: clientId,
-      exportType: 'manual',
-      totalBusinesses: validBusinesses.length,
-      businesses: validBusinesses.map(business => ({
-        storeCode: business.storeCode,
-        businessName: business.businessName,
-        addressLine1: business.addressLine1,
-        addressLine2: business.addressLine2,
-        addressLine3: business.addressLine3,
-        addressLine4: business.addressLine4,
-        addressLine5: business.addressLine5,
-        city: business.city,
-        state: business.state,
-        postalCode: business.postalCode,
-        country: business.country,
-        primaryCategory: business.primaryCategory,
-        additionalCategories: business.additionalCategories,
-        primaryPhone: business.primaryPhone,
-        website: business.website,
-        latitude: business.latitude,
-        longitude: business.longitude,
-        mondayHours: business.mondayHours,
-        tuesdayHours: business.tuesdayHours,
-        wednesdayHours: business.wednesdayHours,
-        thursdayHours: business.thursdayHours,
-        fridayHours: business.fridayHours,
-        saturdayHours: business.saturdayHours,
-        sundayHours: business.sundayHours,
-        logoPhoto: business.logoPhoto,
-        coverPhoto: business.coverPhoto,
-        otherPhotos: business.otherPhotos,
-        status: business.status,
-        updatedAt: business.updated_at
-      }))
-    };
+    // Generate JSON export as a plain array (no metadata wrapper)
+    const businessesArray = validBusinesses.map(business => ({
+      storeCode: business.storeCode,
+      businessName: business.businessName,
+      addressLine1: business.addressLine1,
+      addressLine2: business.addressLine2 ?? null,
+      addressLine3: business.addressLine3 ?? null,
+      addressLine4: business.addressLine4 ?? null,
+      addressLine5: business.addressLine5 ?? null,
+      postalCode: business.postalCode ?? null,
+      city: business.city ?? null,
+      state: business.state ?? null,
+      country: business.country,
+      primaryCategory: business.primaryCategory,
+      additionalCategories: business.additionalCategories ?? null,
+      website: business.website ?? null,
+      primaryPhone: business.primaryPhone ?? null,
+      latitude: business.latitude ?? null,
+      longitude: business.longitude ?? null,
+      mondayHours: business.mondayHours ?? null,
+      tuesdayHours: business.tuesdayHours ?? null,
+      wednesdayHours: business.wednesdayHours ?? null,
+      thursdayHours: business.thursdayHours ?? null,
+      fridayHours: business.fridayHours ?? null,
+      saturdayHours: business.saturdayHours ?? null,
+      sundayHours: business.sundayHours ?? null,
+      logoPhoto: business.logoPhoto ?? null,
+      coverPhoto: business.coverPhoto ?? null,
+      otherPhotos: business.otherPhotos ?? null
+    }));
 
-    const jsonString = JSON.stringify(exportData, null, 2);
+    const jsonString = JSON.stringify(businessesArray, null, 2);
     const fileName = `manualexport-${clientId}-businesses.json`;
 
     // Upload to storage

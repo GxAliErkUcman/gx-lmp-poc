@@ -158,14 +158,8 @@ Deno.serve(async (req) => {
 
     console.log(`Found ${validBusinesses.length} valid businesses for export`);
 
-    // Generate JSON export
-    const exportData = {
-      client_id,
-      exported_at: new Date().toISOString(),
-      businesses: validBusinesses
-    };
-
-    const jsonContent = JSON.stringify(exportData, null, 2);
+    // Generate JSON export as plain array (no metadata)
+    const jsonContent = JSON.stringify(validBusinesses, null, 2);
     const fileName = `client-${client_id}-businesses.json`;
 
     // Upload to storage bucket
