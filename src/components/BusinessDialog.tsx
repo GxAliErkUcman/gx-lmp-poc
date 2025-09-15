@@ -301,21 +301,36 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
       }
 
       if (error) {
+        console.error('Database error:', error);
+        
+        // Re-run validation to show user-friendly errors
+        const revalidation = validateBusiness(completeData);
+        if (!revalidation.isValid) {
+          setValidationErrors(revalidation.errors);
+        }
+        
         let errorMessage = `Failed to ${business ? 'update' : 'create'} business`;
         
         // Provide more specific error messages
-        if (error.message?.includes('duplicate key')) {
+        if (error.message?.includes('duplicate key') || error.message?.includes('storeCode')) {
           errorMessage = 'A business with this store code already exists';
         } else if (error.message?.includes('violates check constraint')) {
-          errorMessage = 'Invalid data format detected';
+          errorMessage = 'Invalid data format detected. Please check all required fields are filled correctly.';
         } else if (error.message?.includes('foreign key')) {
           errorMessage = 'Invalid reference data detected';
+        } else if (error.message?.includes('null value')) {
+          errorMessage = 'Required field is missing. Please check all required fields are filled.';
         } else if (error.code === '23505') {
-          errorMessage = 'Duplicate entry detected';
+          errorMessage = 'Duplicate entry detected - Store code must be unique';
         } else if (error.code === '23503') {
           errorMessage = 'Referenced data not found';
         } else if (error.code === '23514') {
-          errorMessage = 'Data validation failed';
+          errorMessage = 'Data validation failed - Please check field formats';
+        } else if (error.code === '23502') {
+          errorMessage = 'Required field is missing';
+        } else if (error.message) {
+          // Include the actual error message for debugging
+          errorMessage = `${errorMessage}: ${error.message}`;
         }
         
         throw new Error(errorMessage);
