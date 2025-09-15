@@ -27,6 +27,7 @@ export type Database = {
           appointmentURL: string | null
           businessName: string | null
           city: string | null
+          client_id: string | null
           country: string | null
           coverPhoto: string | null
           created_at: string
@@ -76,6 +77,7 @@ export type Database = {
           appointmentURL?: string | null
           businessName?: string | null
           city?: string | null
+          client_id?: string | null
           country?: string | null
           coverPhoto?: string | null
           created_at?: string
@@ -125,6 +127,7 @@ export type Database = {
           appointmentURL?: string | null
           businessName?: string | null
           city?: string | null
+          client_id?: string | null
           country?: string | null
           coverPhoto?: string | null
           created_at?: string
@@ -162,7 +165,15 @@ export type Database = {
           website?: string | null
           wednesdayHours?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "businesses_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       categories: {
         Row: {
@@ -182,6 +193,71 @@ export type Database = {
         }
         Relationships: []
       }
+      clients: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          client_id: string | null
+          created_at: string
+          email: string
+          first_name: string
+          id: string
+          last_name: string
+          role: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string
+          email: string
+          first_name: string
+          id?: string
+          last_name: string
+          role?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string
+          email?: string
+          first_name?: string
+          id?: string
+          last_name?: string
+          role?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -190,6 +266,17 @@ export type Database = {
       generate_store_code: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      get_client_statistics: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          active_locations: number
+          client_id: string
+          client_name: string
+          last_updated: string
+          pending_locations: number
+          user_count: number
+        }[]
       }
       is_business_complete: {
         Args: {
