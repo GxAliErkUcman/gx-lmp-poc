@@ -39,6 +39,8 @@ const AdminPanel = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  
+  // State variables
   const [clients, setClients] = useState<Client[]>([]);
   const [clientOptions, setClientOptions] = useState<ClientOption[]>([]);
   const [loading, setLoading] = useState(true);
