@@ -218,8 +218,21 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
 
     setLoading(true);
     try {
+      // Get the user's profile to get their client_id
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('client_id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (profileError) {
+        console.error('Error getting user profile:', profileError);
+        throw new Error('Failed to get user profile');
+      }
+
       const businessData = {
         user_id: user.id,
+        client_id: profile.client_id,
         storeCode: data.storeCode,
         businessName: data.businessName,
         addressLine1: data.addressLine1,
