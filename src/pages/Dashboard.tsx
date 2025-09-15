@@ -30,9 +30,7 @@ const Dashboard = () => {
   const [activeTab, setActiveTab] = useState<'active' | 'pending'>('active');
   const [userLogo, setUserLogo] = useState<string | null>(null);
 
-  if (!user) {
-    return <Navigate to="/auth" replace />;
-  }
+// Auth redirect handled below after hooks
 
   const fetchBusinesses = async () => {
     try {
@@ -61,8 +59,13 @@ const Dashboard = () => {
   };
 
   useEffect(() => {
+    if (!user) return;
     fetchBusinesses();
-  }, []);
+  }, [user]);
+
+  if (!user) {
+    return <Navigate to="/auth" replace />;
+  }
 
   const handleDeleteBusiness = async (id: string) => {
     if (!confirm('Are you sure you want to delete this business?')) return;
