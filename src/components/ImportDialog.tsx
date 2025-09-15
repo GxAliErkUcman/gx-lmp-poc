@@ -103,10 +103,33 @@ const ImportDialog = ({ open, onOpenChange, onSuccess }: ImportDialogProps) => {
     setLoading(true);
     try {
       const buffer = await file.arrayBuffer();
-      const workbook = XLSX.read(buffer, { type: 'buffer' });
+      
+      // Handle different file types with proper encoding support
+      let workbook: XLSX.WorkBook;
+      if (file.name.toLowerCase().endsWith('.csv')) {
+        // For CSV files, read as text with UTF-8 encoding first
+        const text = new TextDecoder('utf-8').decode(buffer);
+        workbook = XLSX.read(text, { 
+          type: 'string',
+          raw: false,
+          codepage: 65001 // UTF-8 codepage
+        });
+      } else {
+        // For Excel files, use buffer with UTF-8 support
+        workbook = XLSX.read(buffer, { 
+          type: 'buffer',
+          raw: false,
+          codepage: 65001 // UTF-8 codepage
+        });
+      }
+      
       const sheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[sheetName];
-      const data = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
+      const data = XLSX.utils.sheet_to_json(worksheet, { 
+        header: 1,
+        raw: false, // Don't use raw values, format them as strings
+        defval: '' // Default value for empty cells
+      }) as any[][];
 
       if (data.length === 0) {
         throw new Error('No data found in file');
