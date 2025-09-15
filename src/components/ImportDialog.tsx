@@ -34,48 +34,52 @@ const ImportDialog = ({ open, onOpenChange, onSuccess }: ImportDialogProps) => {
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState<'upload' | 'mapping' | 'preview'>('upload');
 
-  // Field mappings aligned with database schema
+  // Field mappings aligned with database schema - ordered by specificity
   const fieldMappings: Record<string, string[]> = {
-    'storeCode': ['store code', 'code', 'id'],
-    'businessName': ['name', 'business name', 'company name', 'business', 'company'],
-    'primaryCategory': ['category', 'business category', 'type', 'industry'],
-    'addressLine1': ['address', 'street address', 'street', 'addr1', 'address1'],
-    'addressLine2': ['address2', 'addr2', 'address line 2'],
-    'addressLine3': ['address3', 'addr3', 'address line 3'],
-    'addressLine4': ['address4', 'addr4', 'address line 4'],
-    'addressLine5': ['address5', 'addr5', 'address line 5'],
+    'storeCode': ['store code', 'storecode', 'code', 'store_code'],
+    'businessName': ['business name', 'name', 'company name', 'business', 'company'],
+    'primaryCategory': ['primary category', 'category', 'business category', 'type', 'industry'],
+    // Address fields - most specific first
+    'addressLine5': ['address line 5', 'address5', 'addr5', 'al5'],
+    'addressLine4': ['address line 4', 'address4', 'addr4', 'al4'],
+    'addressLine3': ['address line 3', 'address3', 'addr3', 'al3'],
+    'addressLine2': ['address line 2', 'address2', 'addr2', 'al2'],
+    'addressLine1': ['address line 1', 'address1', 'addr1', 'al1', 'street address', 'street', 'address'],
+    'postalCode': ['postal code', 'postcode', 'zip code', 'zipcode', 'zip'],
     'city': ['city', 'town'],
     'state': ['state', 'region', 'province', 'area'],
     'country': ['country'],
-    'postalCode': ['zip', 'zipcode', 'postal code', 'postcode'],
     'district': ['district', 'neighborhood'],
-    'primaryPhone': ['phone', 'telephone', 'tel', 'mobile', 'contact'],
+    // Phone fields
+    'primaryPhone': ['primary phone', 'phone', 'telephone', 'tel', 'mobile', 'contact'],
     'additionalPhones': ['additional phones', 'other phones', 'secondary phone'],
-    'website': ['website', 'web', 'url', 'site'],
-    'fromTheBusiness': ['description', 'desc', 'about', 'summary', 'from the business'],
-    'latitude': ['lat', 'latitude'],
-    'longitude': ['lng', 'longitude', 'lon'],
+    // URL fields - most specific first to prevent website collision
+    'appointmentURL': ['appointment url', 'appointment', 'booking url', 'booking'],
+    'menuURL': ['menu url', 'menu'],
+    'reservationsURL': ['reservation url', 'reservations url', 'reservations'],
+    'orderAheadURL': ['order ahead url', 'order url', 'order ahead'],
+    'website': ['website', 'web', 'site url', 'site'],
+    // Other fields
+    'fromTheBusiness': ['from the business', 'description', 'desc', 'about', 'summary'],
+    'latitude': ['latitude', 'lat'],
+    'longitude': ['longitude', 'lng', 'lon'],
     'additionalCategories': ['additional categories', 'secondary categories', 'other categories'],
-    'mondayHours': ['monday', 'monday hours', 'mon'],
-    'tuesdayHours': ['tuesday', 'tuesday hours', 'tue'],
-    'wednesdayHours': ['wednesday', 'wednesday hours', 'wed'],
-    'thursdayHours': ['thursday', 'thursday hours', 'thu'],
-    'fridayHours': ['friday', 'friday hours', 'fri'],
-    'saturdayHours': ['saturday', 'saturday hours', 'sat'],
-    'sundayHours': ['sunday', 'sunday hours', 'sun'],
+    'mondayHours': ['monday hours', 'monday', 'mon hours', 'mon'],
+    'tuesdayHours': ['tuesday hours', 'tuesday', 'tue hours', 'tue'],
+    'wednesdayHours': ['wednesday hours', 'wednesday', 'wed hours', 'wed'],
+    'thursdayHours': ['thursday hours', 'thursday', 'thu hours', 'thu'],
+    'fridayHours': ['friday hours', 'friday', 'fri hours', 'fri'],
+    'saturdayHours': ['saturday hours', 'saturday', 'sat hours', 'sat'],
+    'sundayHours': ['sunday hours', 'sunday', 'sun hours', 'sun'],
     'specialHours': ['special hours', 'holiday hours'],
-    'temporarilyClosed': ['closed', 'temporarily closed', 'temp closed'],
+    'temporarilyClosed': ['temporarily closed', 'temp closed', 'closed'],
     'openingDate': ['opening date', 'open date', 'established'],
     'labels': ['labels', 'tags'],
     'adwords': ['adwords', 'google ads'],
-    'logoPhoto': ['logo', 'logo photo', 'logo image'],
-    'coverPhoto': ['cover', 'cover photo', 'main image'],
-    'otherPhotos': ['photos', 'other photos', 'images'],
-    'appointmentURL': ['appointment', 'appointment url', 'booking'],
-    'menuURL': ['menu', 'menu url'],
-    'reservationsURL': ['reservations', 'reservation url'],
-    'orderAheadURL': ['order ahead', 'order url'],
-    'customServices': ['services', 'custom services'],
+    'logoPhoto': ['logo photo', 'logo image', 'logo'],
+    'coverPhoto': ['cover photo', 'main image', 'cover'],
+    'otherPhotos': ['other photos', 'photos', 'images'],
+    'customServices': ['custom services', 'services'],
     'socialMediaUrls': ['social media', 'social urls'],
     'moreHours': ['more hours', 'additional hours']
   };
@@ -149,28 +153,66 @@ const ImportDialog = ({ open, onOpenChange, onSuccess }: ImportDialogProps) => {
 
       setParsedData(parsedRows);
 
-      // Auto-detect column mappings
+      // Auto-detect column mappings with improved precision
       const mappings: ColumnMapping[] = headers.map(header => {
         const normalizedHeader = header.toLowerCase().trim();
         
-        // Find matching field
+        // Find matching field - use exact match first, then partial match
         let mappedField = '';
+        
+        // First pass: exact matches
         for (const [field, aliases] of Object.entries(fieldMappings)) {
-          if (aliases.some(alias => normalizedHeader.includes(alias))) {
-            // Special fixes for mismatches
-            if (field === 'storeCode') {
-              // Don't map postal code to store code
-              if (normalizedHeader.includes('postal') || normalizedHeader.includes('zip')) {
-                continue;
-              }
-              // Don't map day hours to store code  
-              const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-              if (days.some(day => normalizedHeader.includes(day)) && normalizedHeader.includes('hour')) {
-                continue;
+          for (const alias of aliases) {
+            if (normalizedHeader === alias) {
+              mappedField = field;
+              break;
+            }
+          }
+          if (mappedField) break;
+        }
+        
+        // Second pass: partial matches if no exact match found
+        if (!mappedField) {
+          for (const [field, aliases] of Object.entries(fieldMappings)) {
+            for (const alias of aliases) {
+              if (normalizedHeader.includes(alias)) {
+                // Additional validation to prevent mismatches
+                if (field === 'storeCode') {
+                  // Don't map postal code to store code
+                  if (normalizedHeader.includes('postal') || normalizedHeader.includes('zip')) {
+                    continue;
+                  }
+                  // Don't map day hours to store code  
+                  const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+                  if (days.some(day => normalizedHeader.includes(day)) && normalizedHeader.includes('hour')) {
+                    continue;
+                  }
+                }
+                
+                // Prevent address line conflicts - ensure we match the most specific one
+                if (field.startsWith('addressLine') && normalizedHeader.includes('address')) {
+                  // Check if this is specifically for a numbered address line
+                  const addressLineMatch = normalizedHeader.match(/address\s*line?\s*(\d+)|al(\d+)|addr(\d+)|address(\d+)/);
+                  if (addressLineMatch) {
+                    const number = addressLineMatch[1] || addressLineMatch[2] || addressLineMatch[3] || addressLineMatch[4];
+                    if (field === `addressLine${number}`) {
+                      mappedField = field;
+                      break;
+                    } else {
+                      continue; // Skip if not the right number
+                    }
+                  } else if (field === 'addressLine1' && !normalizedHeader.includes('2') && !normalizedHeader.includes('3') && !normalizedHeader.includes('4') && !normalizedHeader.includes('5')) {
+                    // Only map to addressLine1 if no specific number is mentioned
+                    mappedField = field;
+                    break;
+                  }
+                } else {
+                  mappedField = field;
+                  break;
+                }
               }
             }
-            mappedField = field;
-            break;
+            if (mappedField) break;
           }
         }
 
