@@ -278,6 +278,10 @@ export type Database = {
           user_count: number
         }[]
       }
+      is_admin_user: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       is_business_complete: {
         Args: {
           business_row: Database["public"]["Tables"]["businesses"]["Row"]
