@@ -45,14 +45,13 @@ const AdminPanel = () => {
   const [isCreateUserDialogOpen, setIsCreateUserDialogOpen] = useState(false);
   const [createUserLoading, setCreateUserLoading] = useState(false);
   const [exportLoading, setExportLoading] = useState<string | null>(null);
-  const [createAdminLoading, setCreateAdminLoading] = useState(false);
-  const [isCreateClientDialogOpen, setIsCreateClientDialogOpen] = useState(false);
-  const [isDeleteClientDialogOpen, setIsDeleteClientDialogOpen] = useState(false);
-  const [createClientLoading, setCreateClientLoading] = useState(false);
   const [deleteClientLoading, setDeleteClientLoading] = useState(false);
   const [clientToDelete, setClientToDelete] = useState<Client | null>(null);
   const [deleteUsersChecked, setDeleteUsersChecked] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
+  const [isCreateClientDialogOpen, setIsCreateClientDialogOpen] = useState(false);
+  const [isDeleteClientDialogOpen, setIsDeleteClientDialogOpen] = useState(false);
+  const [createClientLoading, setCreateClientLoading] = useState(false);
   const [newClientName, setNewClientName] = useState('');
   const [isUserManagementDialogOpen, setIsUserManagementDialogOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
@@ -223,32 +222,6 @@ const AdminPanel = () => {
       });
     } finally {
       setExportLoading(null);
-    }
-  };
-
-  const handleCreateAdminUser = async () => {
-    try {
-      setCreateAdminLoading(true);
-
-      const { data, error } = await supabase.functions.invoke('create-admin-user', {});
-
-      if (error) throw error;
-
-      toast({
-        title: "Admin User Created",
-        description: "GX-Admin user created successfully. Email: admin@gx-admin.com, Password: 495185Erk",
-      });
-
-      fetchData(); // Refresh the data
-    } catch (error: any) {
-      console.error('Error creating admin user:', error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to create admin user.",
-        variant: "destructive"
-      });
-    } finally {
-      setCreateAdminLoading(false);
     }
   };
 
@@ -454,14 +427,6 @@ const AdminPanel = () => {
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Admin Panel</h1>
         <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            onClick={handleCreateAdminUser}
-            disabled={createAdminLoading}
-          >
-            {createAdminLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-            Create Admin User
-          </Button>
           <Dialog open={isCreateClientDialogOpen} onOpenChange={setIsCreateClientDialogOpen}>
             <DialogTrigger asChild>
               <Button variant="outline">
