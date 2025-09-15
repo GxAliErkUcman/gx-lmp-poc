@@ -218,14 +218,23 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
 
     setLoading(true);
     try {
-      // Get the user's profile to get their client_id (optional)
+      // Get the user's profile to get their client_id (required for shared business model)
       const { data: profile } = await supabase
         .from('profiles')
         .select('client_id')
         .eq('user_id', user.id)
         .maybeSingle();
 
-      // If profile missing, continue without client_id (RLS allows NULL)
+      // For shared business model, client_id is required
+      if (!profile?.client_id) {
+        toast({
+          title: "Error",
+          description: "You must be assigned to a client to create businesses. Please contact your administrator.",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
 
       const businessData = {
         user_id: user.id,
@@ -267,13 +276,9 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
         menuURL: data.menuURL || null,
         reservationsURL: data.reservationsURL || null,
         orderAheadURL: data.orderAheadURL || null,
+        client_id: profile.client_id, // Required for shared business model
         status: newStatus,
       };
-
-      // If profile has client_id, include it (optional)
-      if (profile?.client_id) {
-        (businessData as any).client_id = profile.client_id;
-      }
 
       let error;
       if (business) {

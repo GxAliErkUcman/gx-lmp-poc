@@ -278,6 +278,10 @@ export type Database = {
           user_count: number
         }[]
       }
+      get_user_client_id: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       is_admin_user: {
         Args: Record<PropertyKey, never>
         Returns: boolean
