@@ -1,4 +1,17 @@
 project_id = "zygzuoodjenpbvfgfika"
 
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
 [functions.generate-json-export]
 verify_jwt = false
+
+[functions.create-user]
+verify_jwt = true
+
+[functions.manual-json-export]
+verify_jwt = true
