@@ -18,11 +18,11 @@ const handler = async (req: Request): Promise<Response> => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    console.log('Creating admin user...');
+    console.log('Creating admin user GX-Admin');
 
-    // Create admin user
-    const { data: adminUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
-      email: 'admin@gx-admin.com',
+    // Create admin user with specific credentials
+    const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
+      email: 'gx-admin@admin.com',
       password: '495185Erk',
       email_confirm: true,
       user_metadata: {
@@ -36,19 +36,43 @@ const handler = async (req: Request): Promise<Response> => {
       throw createError;
     }
 
-    console.log('Admin user created:', adminUser);
+    console.log('Admin user created successfully:', newUser);
 
-    // Create admin profile with admin role and assign to GX Admin client
+    // Check if GX Admin client exists, if not create it
+    let { data: existingClient } = await supabaseAdmin
+      .from('clients')
+      .select('id')
+      .eq('name', 'GX Admin')
+      .single();
+
+    let clientId;
+    if (!existingClient) {
+      const { data: newClient, error: clientError } = await supabaseAdmin
+        .from('clients')
+        .insert([{ name: 'GX Admin' }])
+        .select('id')
+        .single();
+
+      if (clientError) {
+        console.error('Error creating GX Admin client:', clientError);
+        throw clientError;
+      }
+      clientId = newClient.id;
+    } else {
+      clientId = existingClient.id;
+    }
+
+    // Create admin profile manually (bypassing the trigger to set specific role and client)
     const { error: profileError } = await supabaseAdmin
       .from('profiles')
-      .insert({
-        user_id: adminUser.user.id,
+      .insert([{
+        user_id: newUser.user.id,
         first_name: 'GX',
         last_name: 'Admin',
-        email: 'admin@gx-admin.com',
+        email: 'gx-admin@admin.com',
         role: 'admin',
-        client_id: '00000000-0000-0000-0000-000000000001' // GX Admin client ID
-      });
+        client_id: clientId
+      }]);
 
     if (profileError) {
       console.error('Error creating admin profile:', profileError);
@@ -60,8 +84,9 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(
       JSON.stringify({ 
         success: true, 
-        user: adminUser,
-        message: 'Admin user created successfully' 
+        message: 'Admin user created successfully',
+        user: newUser,
+        clientId: clientId
       }),
       {
         status: 200,

@@ -34,6 +34,7 @@ const AdminPanel = () => {
   const [isCreateUserDialogOpen, setIsCreateUserDialogOpen] = useState(false);
   const [createUserLoading, setCreateUserLoading] = useState(false);
   const [exportLoading, setExportLoading] = useState<string | null>(null);
+  const [createAdminLoading, setCreateAdminLoading] = useState(false);
   
   const [newUser, setNewUser] = useState({
     firstName: '',
@@ -183,6 +184,32 @@ const AdminPanel = () => {
     }
   };
 
+  const handleCreateAdminUser = async () => {
+    try {
+      setCreateAdminLoading(true);
+
+      const { data, error } = await supabase.functions.invoke('create-admin-user', {});
+
+      if (error) throw error;
+
+      toast({
+        title: "Admin User Created",
+        description: "GX-Admin user created successfully. Email: gx-admin@admin.com, Password: 495185Erk",
+      });
+
+      fetchData(); // Refresh the data
+    } catch (error: any) {
+      console.error('Error creating admin user:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create admin user.",
+        variant: "destructive"
+      });
+    } finally {
+      setCreateAdminLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -195,7 +222,16 @@ const AdminPanel = () => {
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Admin Panel</h1>
-        <Dialog open={isCreateUserDialogOpen} onOpenChange={setIsCreateUserDialogOpen}>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            onClick={handleCreateAdminUser}
+            disabled={createAdminLoading}
+          >
+            {createAdminLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+            Create Admin User
+          </Button>
+          <Dialog open={isCreateUserDialogOpen} onOpenChange={setIsCreateUserDialogOpen}>
           <DialogTrigger asChild>
             <Button>
               <UserPlus className="w-4 h-4 mr-2" />
@@ -260,6 +296,7 @@ const AdminPanel = () => {
             </div>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       <Card>
