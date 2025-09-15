@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAdmin } from '@/hooks/use-admin';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -77,7 +78,7 @@ const AdminPanel = () => {
       }
       
       if (user) {
-        const isAdmin = await checkAdminAccess();
+        const isAdmin = await handleAdminCheck();
         if (isAdmin) {
           fetchData();
         } else {
@@ -89,15 +90,12 @@ const AdminPanel = () => {
     handleUserAuth();
   }, [user, navigate]);
 
-  const checkAdminAccess = async (): Promise<boolean> => {
-    try {
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('user_id', user?.id)
-        .single();
+  const { checkAdminAccess } = useAdmin();
 
-      if (error || !profile || profile.role !== 'admin') {
+  const handleAdminCheck = async (): Promise<boolean> => {
+    try {
+      const isAdmin = await checkAdminAccess();
+      if (!isAdmin) {
         toast({
           title: "Access Denied",
           description: "You don't have admin privileges to access this panel.",

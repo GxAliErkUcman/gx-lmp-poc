@@ -1,25 +1,50 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
-import { Navigate, useLocation } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { useAdmin } from '@/hooks/use-admin';
 
 const AuthPage = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [checkingAdmin, setCheckingAdmin] = useState(false);
   const { signIn, signUp, user } = useAuth();
+  const { checkAdminAccess } = useAdmin();
   const location = useLocation();
+  const navigate = useNavigate();
   const params = new URLSearchParams(location.search);
   const redirect = params.get('redirect') || '/dashboard';
 
-  // Redirect if already authenticated
-  if (user) {
-    return <Navigate to={redirect} replace />;
+  // Check if user is admin and redirect accordingly
+  useEffect(() => {
+    const handleUserRedirect = async () => {
+      if (user && !checkingAdmin) {
+        setCheckingAdmin(true);
+        const isAdmin = await checkAdminAccess();
+        if (isAdmin) {
+          navigate('/admin', { replace: true });
+        } else {
+          navigate(redirect, { replace: true });
+        }
+      }
+    };
+
+    handleUserRedirect();
+  }, [user, checkAdminAccess, navigate, redirect, checkingAdmin]);
+
+  // Show loading while checking admin status
+  if (user && checkingAdmin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-lg">Redirecting...</div>
+      </div>
+    );
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
