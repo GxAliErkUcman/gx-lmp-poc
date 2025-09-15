@@ -126,9 +126,9 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { user_id } = await req.json();
+    const { client_id } = await req.json();
 
-    console.log(`Generating JSON export for user: ${user_id}`);
+    console.log(`Generating JSON export for client: ${client_id}`);
 
     // Create Supabase client with service role key for admin access
     const supabase = createClient(
@@ -136,28 +136,11 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // First get the user's client_id
-    const { data: userProfile, error: profileError } = await supabase
-      .from('profiles')
-      .select('client_id')
-      .eq('user_id', user_id)
-      .single();
-
-    if (profileError || !userProfile?.client_id) {
-      console.error('Error fetching user profile or client_id:', profileError);
-      return new Response(JSON.stringify({ error: 'User profile or client_id not found' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
-    }
-
-    console.log('Found client_id for user:', userProfile.client_id);
-
-    // Fetch all active businesses for the user's client
+    // Fetch all active businesses for the client
     const { data: businesses, error } = await supabase
       .from('businesses')
       .select('*')
-      .eq('client_id', userProfile.client_id)
+      .eq('client_id', client_id)
       .eq('status', 'active');
 
     if (error) {
@@ -177,13 +160,13 @@ Deno.serve(async (req) => {
 
     // Generate JSON export
     const exportData = {
-      user_id,
+      client_id,
       exported_at: new Date().toISOString(),
       businesses: validBusinesses
     };
 
     const jsonContent = JSON.stringify(exportData, null, 2);
-    const fileName = `user-${user_id}-businesses.json`;
+    const fileName = `client-${client_id}-businesses.json`;
 
     // Upload to storage bucket
     const { error: uploadError } = await supabase.storage
