@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   Select,
   SelectContent,
@@ -6,6 +6,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Search } from 'lucide-react';
 
 const COUNTRIES = [
   { code: 'AD', name: 'Andorra' },
@@ -272,17 +274,49 @@ export const CountrySelect = ({
   placeholder = "Select country...",
   required = false 
 }: CountrySelectProps) => {
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const filteredCountries = useMemo(() => {
+    if (!searchTerm) return COUNTRIES;
+    const term = searchTerm.toLowerCase();
+    return COUNTRIES.filter(country => 
+      country.name.toLowerCase().includes(term) || 
+      country.code.toLowerCase().includes(term)
+    );
+  }, [searchTerm]);
+
   return (
     <Select value={value} onValueChange={onValueChange} required={required}>
       <SelectTrigger>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
-      <SelectContent className="max-h-[200px] overflow-y-auto bg-background border z-50">
-        {COUNTRIES.map((country) => (
-          <SelectItem key={country.code} value={country.code}>
-            {country.name} ({country.code})
-          </SelectItem>
-        ))}
+      <SelectContent className="bg-background border z-50">
+        <div className="sticky top-0 p-2 bg-background border-b">
+          <div className="relative">
+            <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search countries..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-8 h-8"
+              onClick={(e) => e.stopPropagation()}
+              onKeyDown={(e) => e.stopPropagation()}
+            />
+          </div>
+        </div>
+        <div className="max-h-[200px] overflow-y-auto">
+          {filteredCountries.length > 0 ? (
+            filteredCountries.map((country) => (
+              <SelectItem key={country.code} value={country.code}>
+                {country.name} ({country.code})
+              </SelectItem>
+            ))
+          ) : (
+            <div className="py-2 px-4 text-sm text-muted-foreground">
+              No countries found
+            </div>
+          )}
+        </div>
       </SelectContent>
     </Select>
   );
