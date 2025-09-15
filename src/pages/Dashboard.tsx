@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Upload, Edit, Trash2, Grid, Table2 } from 'lucide-react';
+import { Plus, Upload, Edit, Trash2, Grid, Table2, Share2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 import { toast } from '@/hooks/use-toast';
@@ -16,6 +16,7 @@ import MultiEditDialog from '@/components/MultiEditDialog';
 import { JsonExport } from '@/components/JsonExport';
 import type { Business } from '@/types/business';
 import LogoUpload from '@/components/LogoUpload';
+import AccountSocialsDialog from '@/components/AccountSocialsDialog';
 
 const Dashboard = () => {
   const { user, signOut } = useAuth();
@@ -29,6 +30,7 @@ const Dashboard = () => {
   const [selectedBusinessIds, setSelectedBusinessIds] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState<'active' | 'pending'>('active');
   const [userLogo, setUserLogo] = useState<string | null>(null);
+  const [accountSocialsDialogOpen, setAccountSocialsDialogOpen] = useState(false);
 
 // Auth redirect handled below after hooks
 
@@ -178,6 +180,15 @@ const Dashboard = () => {
             {/* Action Buttons - Symmetric Layout */}
             <div className="flex items-center gap-2">
               <LogoUpload onLogoUploaded={fetchBusinesses} />
+              <Button 
+                onClick={() => setAccountSocialsDialogOpen(true)}
+                variant="outline"
+                size="default"
+                className="shadow-modern"
+              >
+                <Share2 className="w-4 h-4 mr-2" />
+                Set Socials
+              </Button>
               <Button 
                 onClick={() => setImportDialogOpen(true)}
                 variant="outline"
@@ -429,6 +440,15 @@ const Dashboard = () => {
           fetchBusinesses();
           setMultiEditDialogOpen(false);
           setSelectedBusinessIds([]);
+        }}
+      />
+
+      <AccountSocialsDialog
+        open={accountSocialsDialogOpen}
+        onOpenChange={setAccountSocialsDialogOpen}
+        onSuccess={() => {
+          fetchBusinesses();
+          setAccountSocialsDialogOpen(false);
         }}
       />
     </div>

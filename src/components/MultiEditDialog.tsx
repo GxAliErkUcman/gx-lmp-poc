@@ -22,6 +22,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { Upload } from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 const multiEditFormSchema = z.object({
   primaryPhone: z.string().optional(),
@@ -191,13 +192,14 @@ const MultiEditDialog = ({ open, onOpenChange, selectedIds, onSuccess }: MultiEd
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[800px] max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>Edit {selectedIds.length} Selected Businesses</DialogTitle>
         </DialogHeader>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <ScrollArea className="max-h-[60vh] pr-4">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
               name="primaryPhone"
@@ -257,7 +259,8 @@ const MultiEditDialog = ({ open, onOpenChange, selectedIds, onSuccess }: MultiEd
             <div className="space-y-4">
               <h3 className="text-lg font-medium">Social Media Links</h3>
               
-              <FormField
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
                 control={form.control}
                 name="facebookUrl"
                 render={({ field }) => (
@@ -271,89 +274,90 @@ const MultiEditDialog = ({ open, onOpenChange, selectedIds, onSuccess }: MultiEd
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="instagramUrl"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Instagram URL</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Leave empty to skip" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                <FormField
+                  control={form.control}
+                  name="instagramUrl"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Instagram URL</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Leave empty to skip" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              <FormField
-                control={form.control}
-                name="linkedinUrl"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>LinkedIn URL</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Leave empty to skip" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                <FormField
+                  control={form.control}
+                  name="linkedinUrl"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>LinkedIn URL</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Leave empty to skip" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              <FormField
-                control={form.control}
-                name="pinterestUrl"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Pinterest URL</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Leave empty to skip" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                <FormField
+                  control={form.control}
+                  name="pinterestUrl"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Pinterest URL</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Leave empty to skip" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              <FormField
-                control={form.control}
-                name="tiktokUrl"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>TikTok URL</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Leave empty to skip" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                <FormField
+                  control={form.control}
+                  name="tiktokUrl"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>TikTok URL</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Leave empty to skip" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              <FormField
-                control={form.control}
-                name="twitterUrl"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>X (Twitter) URL</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Leave empty to skip" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                <FormField
+                  control={form.control}
+                  name="twitterUrl"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>X (Twitter) URL</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Leave empty to skip" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              <FormField
-                control={form.control}
-                name="youtubeUrl"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>YouTube URL</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Leave empty to skip" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                <FormField
+                  control={form.control}
+                  name="youtubeUrl"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>YouTube URL</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Leave empty to skip" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
             </div>
 
             {/* Photo Upload Section */}
@@ -388,16 +392,22 @@ const MultiEditDialog = ({ open, onOpenChange, selectedIds, onSuccess }: MultiEd
               </div>
             </div>
 
-            <div className="flex justify-end gap-2 pt-4">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={loading}>
-                {loading ? 'Updating...' : `Update ${selectedIds.length} Businesses`}
-              </Button>
-            </div>
-          </form>
-        </Form>
+            </form>
+          </Form>
+        </ScrollArea>
+        
+        <div className="flex justify-end gap-2 pt-4 border-t">
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button 
+            type="submit" 
+            disabled={loading}
+            onClick={form.handleSubmit(onSubmit)}
+          >
+            {loading ? 'Updating...' : `Update ${selectedIds.length} Businesses`}
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );
