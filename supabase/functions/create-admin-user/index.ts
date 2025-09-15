@@ -38,55 +38,40 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log('Admin user created successfully:', newUser);
 
-    // Check if GX Admin client exists, if not create it
-    let { data: existingClient } = await supabaseAdmin
-      .from('clients')
-      .select('id')
-      .eq('name', 'GX Admin')
+    const userId = newUser.user.id;
+
+    // The handle_new_user trigger already created a profile and a new client for this user.
+    // Promote to admin without creating duplicate profile/clients.
+    const { data: existingProfile, error: profileFetchError } = await supabaseAdmin
+      .from('profiles')
+      .select('user_id, role')
+      .eq('user_id', userId)
       .single();
 
-    let clientId;
-    if (!existingClient) {
-      const { data: newClient, error: clientError } = await supabaseAdmin
-        .from('clients')
-        .insert([{ name: 'GX Admin' }])
-        .select('id')
-        .single();
-
-      if (clientError) {
-        console.error('Error creating GX Admin client:', clientError);
-        throw clientError;
-      }
-      clientId = newClient.id;
+    if (profileFetchError) {
+      console.warn('Profile not found right after user creation, creating one manually...', profileFetchError);
+      // As a fallback only: create minimal profile without touching client assignment
+      const { error: insertProfileError } = await supabaseAdmin
+        .from('profiles')
+        .insert([{ user_id: userId, first_name: 'GX', last_name: 'Admin', email: 'gx-admin@admin.com', role: 'admin' }]);
+      if (insertProfileError) throw insertProfileError;
     } else {
-      clientId = existingClient.id;
+      if (existingProfile.role !== 'admin') {
+        const { error: updateError } = await supabaseAdmin
+          .from('profiles')
+          .update({ role: 'admin' })
+          .eq('user_id', userId);
+        if (updateError) throw updateError;
+      }
     }
 
-    // Create admin profile manually (bypassing the trigger to set specific role and client)
-    const { error: profileError } = await supabaseAdmin
-      .from('profiles')
-      .insert([{
-        user_id: newUser.user.id,
-        first_name: 'GX',
-        last_name: 'Admin',
-        email: 'gx-admin@admin.com',
-        role: 'admin',
-        client_id: clientId
-      }]);
-
-    if (profileError) {
-      console.error('Error creating admin profile:', profileError);
-      throw profileError;
-    }
-
-    console.log('Admin profile created successfully');
+    console.log('Admin profile ensured and promoted successfully');
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: 'Admin user created successfully',
-        user: newUser,
-        clientId: clientId
+        message: 'Admin user created and promoted successfully',
+        user: newUser
       }),
       {
         status: 200,
