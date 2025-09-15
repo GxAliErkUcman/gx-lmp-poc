@@ -161,6 +161,16 @@ const ImportDialog = ({ open, onOpenChange, onSuccess }: ImportDialogProps) => {
         // Find matching field - use exact match (normal or compact), then partial
         let mappedField = '';
 
+        // 0) Direct field-name equality (handles headers like "fromTheBusiness", "additionalPhones")
+        const fieldNameKeys = Object.keys(fieldMappings);
+        for (const key of fieldNameKeys) {
+          const keyCompact = key.toLowerCase().replace(/[\s_\-]/g, '');
+          if (compactHeader === keyCompact) {
+            mappedField = key;
+            break;
+          }
+        }
+
         const matchAlias = (field: string, alias: string) => {
           const aliasLower = alias.toLowerCase();
           const aliasCompact = aliasLower.replace(/[\s_\-]/g, '');
@@ -196,8 +206,16 @@ const ImportDialog = ({ open, onOpenChange, onSuccess }: ImportDialogProps) => {
         // Second pass: specific field disambiguation for common conflicts
         if (!mappedField) {
           // Handle phone field conflicts - check for additional/secondary first
-          if (compactHeader.includes('phone')) {
-            if (compactHeader.includes('additional') || compactHeader.includes('other') || compactHeader.includes('secondary')) {
+          if (compactHeader.includes('phone') || compactHeader.includes('telephone') || compactHeader.includes('tel')) {
+            const isAdditional = (
+              compactHeader.includes('additional') ||
+              compactHeader.includes('other') ||
+              compactHeader.includes('secondary') ||
+              compactHeader.includes('alternate') ||
+              compactHeader.includes('alt') ||
+              /phone\d+/.test(compactHeader) && !/phone1\b/.test(compactHeader)
+            );
+            if (isAdditional) {
               mappedField = 'additionalPhones';
             } else if (compactHeader.includes('primary') || compactHeader === 'phone' || compactHeader === 'telephone' || compactHeader === 'tel' || compactHeader === 'mobile' || compactHeader === 'contact') {
               mappedField = 'primaryPhone';
@@ -238,13 +256,13 @@ const ImportDialog = ({ open, onOpenChange, onSuccess }: ImportDialogProps) => {
                 }
 
                 // Skip phone conflicts that should have been handled above
-                if ((field === 'primaryPhone' && (compactHeader.includes('additional') || compactHeader.includes('other') || compactHeader.includes('secondary'))) ||
-                    (field === 'additionalPhones' && !compactHeader.includes('additional') && !compactHeader.includes('other') && !compactHeader.includes('secondary'))) {
+                if ((field === 'primaryPhone' && (compactHeader.includes('additional') || compactHeader.includes('other') || compactHeader.includes('secondary') || compactHeader.includes('alternate') || compactHeader.includes('alt') || /phone\d+/.test(compactHeader))) ||
+                    (field === 'additionalPhones' && !(compactHeader.includes('additional') || compactHeader.includes('other') || compactHeader.includes('secondary') || compactHeader.includes('alternate') || compactHeader.includes('alt') || (/phone\d+/.test(compactHeader) && !/phone1\b/.test(compactHeader))))) {
                   continue;
                 }
 
                 // Skip business conflicts that should have been handled above  
-                if ((field === 'businessName' && (compactHeader.includes('from') || compactHeader.includes('description'))) ||
+                if ((field === 'businessName' && (compactHeader.includes('from') || compactHeader.includes('description') || compactHeader.includes('about') || compactHeader.includes('summary'))) ||
                     (field === 'fromTheBusiness' && compactHeader.includes('name') && !compactHeader.includes('from'))) {
                   continue;
                 }
