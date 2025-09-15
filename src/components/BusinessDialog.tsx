@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -356,8 +356,22 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
   };
 
   const handleLocationChange = (lat: number, lng: number) => {
-    setValue('latitude', lat);
-    setValue('longitude', lng);
+    try {
+      setValue('latitude', lat);
+      setValue('longitude', lng);
+      
+      // Clear any previous location-related validation errors
+      setValidationErrors(prev => prev.filter(err => 
+        !['latitude', 'longitude', 'location'].includes(err.field.toLowerCase())
+      ));
+    } catch (error) {
+      console.error('Error updating location:', error);
+      toast({
+        title: "Location Update Error",
+        description: "Failed to update location coordinates",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleCoverPhotoChange = (photos: string[]) => {
@@ -382,6 +396,9 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
           <DialogTitle>
             {business ? 'Edit Business' : 'Add New Business'}
           </DialogTitle>
+          <DialogDescription>
+            {business ? 'Update business information and location details.' : 'Create a new business listing with all required information.'}
+          </DialogDescription>
         </DialogHeader>
 
         {validationErrors.length > 0 && (
