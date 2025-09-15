@@ -10,6 +10,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Users, MapPin, Clock, Download, UserPlus } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+
 
 interface Client {
   id: string;
@@ -28,6 +30,7 @@ interface ClientOption {
 const AdminPanel = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [clients, setClients] = useState<Client[]>([]);
   const [clientOptions, setClientOptions] = useState<ClientOption[]>([]);
   const [loading, setLoading] = useState(true);
@@ -44,13 +47,23 @@ const AdminPanel = () => {
   });
 
   useEffect(() => {
+    if (user === null) {
+      navigate('/auth');
+      return;
+    }
     if (user) {
-      checkAdminAccess();
-      fetchData();
+      (async () => {
+        const isAdmin = await checkAdminAccess();
+        if (isAdmin) {
+          fetchData();
+        } else {
+          navigate('/dashboard');
+        }
+      })();
     }
   }, [user]);
 
-  const checkAdminAccess = async () => {
+  const checkAdminAccess = async (): Promise<boolean> => {
     try {
       const { data: profile, error } = await supabase
         .from('profiles')
@@ -64,10 +77,12 @@ const AdminPanel = () => {
           description: "You don't have admin privileges to access this panel.",
           variant: "destructive"
         });
-        return;
+        return false;
       }
+      return true;
     } catch (error) {
       console.error('Error checking admin access:', error);
+      return false;
     }
   };
 
@@ -194,7 +209,7 @@ const AdminPanel = () => {
 
       toast({
         title: "Admin User Created",
-        description: "GX-Admin user created successfully. Email: gx-admin@admin.com, Password: 495185Erk",
+        description: "GX-Admin user created successfully. Email: admin@gx-admin.com, Password: 495185Erk",
       });
 
       fetchData(); // Refresh the data

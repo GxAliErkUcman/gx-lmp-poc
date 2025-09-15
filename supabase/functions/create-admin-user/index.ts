@@ -20,10 +20,14 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log('Creating admin user GX-Admin');
 
-    // Create admin user with specific credentials
-    const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
-      email: 'gx-admin@admin.com',
-      password: '495185Erk',
+    const adminEmail = 'admin@gx-admin.com';
+    const adminPassword = '495185Erk';
+    let userRecord: any = null;
+
+    // Try to create the admin user, but handle the case where it already exists
+    const { data: created, error: createError } = await supabaseAdmin.auth.admin.createUser({
+      email: adminEmail,
+      password: adminPassword,
       email_confirm: true,
       user_metadata: {
         first_name: 'GX',
@@ -32,13 +36,21 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
     if (createError) {
-      console.error('Error creating admin user:', createError);
-      throw createError;
+      console.warn('Create admin user returned error (may already exist):', createError);
+      // Attempt to find existing user by email
+      const { data: listData, error: listError } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+      if (listError) throw listError;
+      userRecord = listData.users.find((u: any) => u.email?.toLowerCase() === adminEmail);
+      if (!userRecord) {
+        throw createError;
+      }
+    } else {
+      userRecord = created.user;
     }
 
-    console.log('Admin user created successfully:', newUser);
+    console.log('Admin user ensured successfully:', userRecord);
 
-    const userId = newUser.user.id;
+    const userId = userRecord.id;
 
     // The handle_new_user trigger already created a profile and a new client for this user.
     // Promote to admin without creating duplicate profile/clients.
@@ -53,7 +65,7 @@ const handler = async (req: Request): Promise<Response> => {
       // As a fallback only: create minimal profile without touching client assignment
       const { error: insertProfileError } = await supabaseAdmin
         .from('profiles')
-        .insert([{ user_id: userId, first_name: 'GX', last_name: 'Admin', email: 'gx-admin@admin.com', role: 'admin' }]);
+        .insert([{ user_id: userId, first_name: 'GX', last_name: 'Admin', email: adminEmail, role: 'admin' }]);
       if (insertProfileError) throw insertProfileError;
     } else {
       if (existingProfile.role !== 'admin') {
@@ -71,7 +83,7 @@ const handler = async (req: Request): Promise<Response> => {
       JSON.stringify({ 
         success: true, 
         message: 'Admin user created and promoted successfully',
-        user: newUser
+        user: userRecord
       }),
       {
         status: 200,
