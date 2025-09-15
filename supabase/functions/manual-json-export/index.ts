@@ -7,7 +7,7 @@ const corsHeaders = {
 };
 
 interface ManualExportRequest {
-  userId: string;
+  clientId: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -46,29 +46,15 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error('Insufficient permissions');
     }
 
-    const { userId }: ManualExportRequest = await req.json();
+    const { clientId }: ManualExportRequest = await req.json();
 
-    console.log('Manual JSON export requested for user:', userId);
+    console.log('Manual JSON export requested for client:', clientId);
 
-    // First get the user's client_id
-    const { data: userProfile, error: profileError } = await supabaseAdmin
-      .from('profiles')
-      .select('client_id')
-      .eq('user_id', userId)
-      .single();
-
-    if (profileError || !userProfile?.client_id) {
-      console.error('Error fetching user profile or client_id:', profileError);
-      throw new Error('User profile or client_id not found');
-    }
-
-    console.log('Found client_id for user:', userProfile.client_id);
-
-    // Fetch businesses for the user's client
+    // Fetch businesses for the client
     const { data: businesses, error: fetchError } = await supabaseAdmin
       .from('businesses')
       .select('*')
-      .eq('client_id', userProfile.client_id)
+      .eq('client_id', clientId)
       .eq('status', 'active');
 
     if (fetchError) {
@@ -76,7 +62,7 @@ const handler = async (req: Request): Promise<Response> => {
       throw fetchError;
     }
 
-    console.log(`Found ${businesses?.length || 0} active businesses for user ${userId}`);
+    console.log(`Found ${businesses?.length || 0} active businesses for client ${clientId}`);
 
     // Validate businesses using the same logic as automatic export
     const validBusinesses = businesses?.filter(business => {
@@ -91,7 +77,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Generate JSON export
     const exportData = {
       exportDate: new Date().toISOString(),
-      userId: userId,
+      clientId: clientId,
       exportType: 'manual',
       totalBusinesses: validBusinesses.length,
       businesses: validBusinesses.map(business => ({
@@ -128,7 +114,7 @@ const handler = async (req: Request): Promise<Response> => {
     };
 
     const jsonString = JSON.stringify(exportData, null, 2);
-    const fileName = `manualexport-${userId}-businesses.json`;
+    const fileName = `manualexport-${clientId}-businesses.json`;
 
     // Upload to storage
     const { error: uploadError } = await supabaseAdmin.storage

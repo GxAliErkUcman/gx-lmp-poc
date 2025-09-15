@@ -202,12 +202,12 @@ const AdminPanel = () => {
     }
   };
 
-  const handleManualExport = async (userId: string) => {
+  const handleManualExport = async (clientId: string) => {
     try {
-      setExportLoading(userId);
+      setExportLoading(clientId);
 
       const { data, error } = await supabase.functions.invoke('manual-json-export', {
-        body: { userId }
+        body: { clientId }
       });
 
       if (error) throw error;
