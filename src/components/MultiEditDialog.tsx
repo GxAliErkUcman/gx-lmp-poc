@@ -28,6 +28,13 @@ const multiEditFormSchema = z.object({
   website: z.string().url().optional().or(z.literal('')),
   fromTheBusiness: z.string().optional(),
   primaryCategory: z.string().optional(),
+  facebookUrl: z.string().optional(),
+  instagramUrl: z.string().optional(),
+  linkedinUrl: z.string().optional(),
+  pinterestUrl: z.string().optional(),
+  tiktokUrl: z.string().optional(),
+  twitterUrl: z.string().optional(),
+  youtubeUrl: z.string().optional(),
 });
 
 type MultiEditFormValues = z.infer<typeof multiEditFormSchema>;
@@ -50,16 +57,43 @@ const MultiEditDialog = ({ open, onOpenChange, selectedIds, onSuccess }: MultiEd
       website: '',
       fromTheBusiness: '',
       primaryCategory: '',
+      facebookUrl: '',
+      instagramUrl: '',
+      linkedinUrl: '',
+      pinterestUrl: '',
+      tiktokUrl: '',
+      twitterUrl: '',
+      youtubeUrl: '',
     },
   });
 
   const onSubmit = async (values: MultiEditFormValues) => {
     setLoading(true);
     try {
-      // Filter out empty values
+      // Filter out empty values for regular fields
+      const regularFields = ['primaryPhone', 'website', 'fromTheBusiness', 'primaryCategory'];
+      const socialMediaFields = ['facebookUrl', 'instagramUrl', 'linkedinUrl', 'pinterestUrl', 'tiktokUrl', 'twitterUrl', 'youtubeUrl'];
+      
       const updateData = Object.fromEntries(
-        Object.entries(values).filter(([_, value]) => value !== '' && value !== undefined)
+        Object.entries(values)
+          .filter(([key, value]) => regularFields.includes(key) && value !== '' && value !== undefined)
       );
+
+      // Handle social media URLs separately
+      const socialMediaUrls = [
+        { name: 'url_facebook', url: values.facebookUrl || null },
+        { name: 'url_instagram', url: values.instagramUrl || null },
+        { name: 'url_linkedin', url: values.linkedinUrl || null },
+        { name: 'url_pinterest', url: values.pinterestUrl || null },
+        { name: 'url_tiktok', url: values.tiktokUrl || null },
+        { name: 'url_twitter', url: values.twitterUrl || null },
+        { name: 'url_youtube', url: values.youtubeUrl || null },
+      ].filter(item => item.url && item.url.trim() !== '');
+
+      // Add social media to update data if any URLs are provided
+      if (socialMediaUrls.length > 0) {
+        (updateData as any).socialMediaUrls = socialMediaUrls;
+      }
 
       if (Object.keys(updateData).length === 0) {
         toast({
@@ -219,6 +253,108 @@ const MultiEditDialog = ({ open, onOpenChange, selectedIds, onSuccess }: MultiEd
                 </FormItem>
               )}
             />
+
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Social Media Links</h3>
+              
+              <FormField
+                control={form.control}
+                name="facebookUrl"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Facebook URL</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Leave empty to skip" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="instagramUrl"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Instagram URL</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Leave empty to skip" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="linkedinUrl"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>LinkedIn URL</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Leave empty to skip" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="pinterestUrl"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Pinterest URL</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Leave empty to skip" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="tiktokUrl"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>TikTok URL</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Leave empty to skip" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="twitterUrl"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>X (Twitter) URL</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Leave empty to skip" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="youtubeUrl"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>YouTube URL</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Leave empty to skip" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             {/* Photo Upload Section */}
             <div className="space-y-2">

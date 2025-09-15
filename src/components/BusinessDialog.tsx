@@ -61,6 +61,14 @@ const businessSchema = z.object({
   menuURL: z.string().optional(),
   reservationsURL: z.string().optional(),
   orderAheadURL: z.string().optional(),
+  // Social Media URLs
+  facebookUrl: z.string().optional(),
+  instagramUrl: z.string().optional(),
+  linkedinUrl: z.string().optional(),
+  pinterestUrl: z.string().optional(),
+  tiktokUrl: z.string().optional(),
+  twitterUrl: z.string().optional(),
+  youtubeUrl: z.string().optional(),
 });
 
 type BusinessFormData = z.infer<typeof businessSchema>;
@@ -87,6 +95,16 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
     sunday: null as string | null
   });
 
+  const [socialMediaUrls, setSocialMediaUrls] = useState({
+    facebookUrl: "",
+    instagramUrl: "",
+    linkedinUrl: "",
+    pinterestUrl: "",
+    tiktokUrl: "",
+    twitterUrl: "",
+    youtubeUrl: ""
+  });
+
   const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<BusinessFormData>({
     resolver: zodResolver(businessSchema),
     defaultValues: {
@@ -96,6 +114,13 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
       country: "",
       primaryCategory: "",
       temporarilyClosed: false,
+      facebookUrl: "",
+      instagramUrl: "",
+      linkedinUrl: "",
+      pinterestUrl: "",
+      tiktokUrl: "",
+      twitterUrl: "",
+      youtubeUrl: "",
     }
   });
 
@@ -156,6 +181,26 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
       setValue('reservationsURL', business.reservationsURL || '');
       setValue('orderAheadURL', business.orderAheadURL || '');
       
+      // Set social media URLs
+      const currentSocialMedia = business.socialMediaUrls || [];
+      const socialMediaData = {
+        facebookUrl: currentSocialMedia.find((s: any) => s.name === 'url_facebook')?.url || "",
+        instagramUrl: currentSocialMedia.find((s: any) => s.name === 'url_instagram')?.url || "",
+        linkedinUrl: currentSocialMedia.find((s: any) => s.name === 'url_linkedin')?.url || "",
+        pinterestUrl: currentSocialMedia.find((s: any) => s.name === 'url_pinterest')?.url || "",
+        tiktokUrl: currentSocialMedia.find((s: any) => s.name === 'url_tiktok')?.url || "",
+        twitterUrl: currentSocialMedia.find((s: any) => s.name === 'url_twitter')?.url || "",
+        youtubeUrl: currentSocialMedia.find((s: any) => s.name === 'url_youtube')?.url || "",
+      };
+      setSocialMediaUrls(socialMediaData);
+      setValue('facebookUrl', socialMediaData.facebookUrl);
+      setValue('instagramUrl', socialMediaData.instagramUrl);
+      setValue('linkedinUrl', socialMediaData.linkedinUrl);
+      setValue('pinterestUrl', socialMediaData.pinterestUrl);
+      setValue('tiktokUrl', socialMediaData.tiktokUrl);
+      setValue('twitterUrl', socialMediaData.twitterUrl);
+      setValue('youtubeUrl', socialMediaData.youtubeUrl);
+      
       // Set individual day hours
       setHours({
         monday: business.mondayHours || "09:00-18:00",
@@ -202,11 +247,23 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
       sundayHours: normalizeHour(hours.sunday),
     };
 
+    // Convert social media URLs to schema format
+    const socialMediaUrls = [
+      { name: 'url_facebook', url: data.facebookUrl || null },
+      { name: 'url_instagram', url: data.instagramUrl || null },
+      { name: 'url_linkedin', url: data.linkedinUrl || null },
+      { name: 'url_pinterest', url: data.pinterestUrl || null },
+      { name: 'url_tiktok', url: data.tiktokUrl || null },
+      { name: 'url_twitter', url: data.twitterUrl || null },
+      { name: 'url_youtube', url: data.youtubeUrl || null },
+    ].filter(item => item.url && item.url.trim() !== '');
+
     // Validate the complete business data with normalized hours
     const completeData = {
       ...data,
       ...normalizedHours,
-      otherPhotos: coverPhoto
+      otherPhotos: coverPhoto,
+      socialMediaUrls: socialMediaUrls.length > 0 ? socialMediaUrls : null
     };
 
     const validation = validateBusiness(completeData);
@@ -284,6 +341,7 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
         menuURL: data.menuURL || null,
         reservationsURL: data.reservationsURL || null,
         orderAheadURL: data.orderAheadURL || null,
+        socialMediaUrls: socialMediaUrls.length > 0 ? socialMediaUrls : null,
         client_id: profile.client_id, // Required for shared business model
         status: newStatus,
       };
@@ -624,6 +682,43 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
                 onPhotosChange={handleCoverPhotoChange}
                 maxPhotos={1}
               />
+            </CardContent>
+          </Card>
+
+          {/* Social Media Links */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Social Media Links</CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-4 md:grid-cols-2">
+              <div>
+                <Label htmlFor="facebookUrl">Facebook URL</Label>
+                <Input {...register('facebookUrl')} id="facebookUrl" placeholder="https://www.facebook.com/yourpage" />
+              </div>
+              <div>
+                <Label htmlFor="instagramUrl">Instagram URL</Label>
+                <Input {...register('instagramUrl')} id="instagramUrl" placeholder="https://www.instagram.com/youraccount" />
+              </div>
+              <div>
+                <Label htmlFor="linkedinUrl">LinkedIn URL</Label>
+                <Input {...register('linkedinUrl')} id="linkedinUrl" placeholder="https://www.linkedin.com/in/yourprofile" />
+              </div>
+              <div>
+                <Label htmlFor="pinterestUrl">Pinterest URL</Label>
+                <Input {...register('pinterestUrl')} id="pinterestUrl" placeholder="https://www.pinterest.com/youraccount" />
+              </div>
+              <div>
+                <Label htmlFor="tiktokUrl">TikTok URL</Label>
+                <Input {...register('tiktokUrl')} id="tiktokUrl" placeholder="https://www.tiktok.com/@youraccount" />
+              </div>
+              <div>
+                <Label htmlFor="twitterUrl">X (Twitter) URL</Label>
+                <Input {...register('twitterUrl')} id="twitterUrl" placeholder="https://www.x.com/youraccount" />
+              </div>
+              <div className="md:col-span-2">
+                <Label htmlFor="youtubeUrl">YouTube URL</Label>
+                <Input {...register('youtubeUrl')} id="youtubeUrl" placeholder="https://www.youtube.com/channel/yourchannel" />
+              </div>
             </CardContent>
           </Card>
 
