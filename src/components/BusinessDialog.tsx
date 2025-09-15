@@ -20,6 +20,8 @@ import PhotoUpload from '@/components/PhotoUpload';
 import OpeningHours from '@/components/OpeningHours';
 import LocationMap from '@/components/LocationMap';
 import { CategorySelect } from '@/components/CategorySelect';
+import { CountrySelect } from '@/components/CountrySelect';
+import { CitySelect } from '@/components/CitySelect';
 
 const businessSchema = z.object({
   storeCode: z.string().min(1, 'Store code is required'),
@@ -42,7 +44,13 @@ const businessSchema = z.object({
   primaryPhone: z.string().optional(),
   additionalPhones: z.string().optional(),
   adwords: z.string().optional(),
-  openingDate: z.string().optional(),
+  openingDate: z.string().optional().refine((date) => {
+    if (!date) return true; // Optional field
+    const selectedDate = new Date(date);
+    const today = new Date();
+    today.setHours(23, 59, 59, 999); // End of today
+    return selectedDate <= today;
+  }, { message: "Opening date cannot be in the future" }),
   fromTheBusiness: z.string().optional(),
   labels: z.string().optional(),
   temporarilyClosed: z.boolean().optional(),
@@ -292,7 +300,26 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
           .insert([businessData]));
       }
 
-      if (error) throw error;
+      if (error) {
+        let errorMessage = `Failed to ${business ? 'update' : 'create'} business`;
+        
+        // Provide more specific error messages
+        if (error.message?.includes('duplicate key')) {
+          errorMessage = 'A business with this store code already exists';
+        } else if (error.message?.includes('violates check constraint')) {
+          errorMessage = 'Invalid data format detected';
+        } else if (error.message?.includes('foreign key')) {
+          errorMessage = 'Invalid reference data detected';
+        } else if (error.code === '23505') {
+          errorMessage = 'Duplicate entry detected';
+        } else if (error.code === '23503') {
+          errorMessage = 'Referenced data not found';
+        } else if (error.code === '23514') {
+          errorMessage = 'Data validation failed';
+        }
+        
+        throw new Error(errorMessage);
+      }
 
       toast({
         title: "Success",
@@ -301,11 +328,11 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
 
       setValidationErrors([]);
       onSuccess();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving business:', error);
       toast({
         title: "Error",
-        description: `Failed to ${business ? 'update' : 'create'} business`,
+        description: error.message || `Failed to ${business ? 'update' : 'create'} business`,
         variant: "destructive",
       });
     } finally {
@@ -376,7 +403,12 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
               </div>
               <div>
                 <Label htmlFor="country">Country *</Label>
-                <Input {...register('country')} id="country" placeholder="AT, US, GB or full name" />
+                <CountrySelect
+                  value={watch('country')}
+                  onValueChange={(value) => setValue('country', value)}
+                  placeholder="Select country..."
+                  required
+                />
                 {errors.country && (
                   <p className="text-sm text-destructive mt-1">{errors.country.message}</p>
                 )}
@@ -420,7 +452,12 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
               </div>
               <div>
                 <Label htmlFor="city">City</Label>
-                <Input {...register('city')} id="city" />
+                <CitySelect
+                  value={watch('city')}
+                  onValueChange={(value) => setValue('city', value)}
+                  countryCode={watch('country')}
+                  placeholder="Select city..."
+                />
               </div>
               <div>
                 <Label htmlFor="state">State/Region</Label>
@@ -492,7 +529,15 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
                 </div>
                 <div>
                   <Label htmlFor="openingDate">Opening Date</Label>
-                  <Input {...register('openingDate')} id="openingDate" type="date" />
+                  <Input 
+                    {...register('openingDate')} 
+                    id="openingDate" 
+                    type="date" 
+                    max={new Date().toISOString().split('T')[0]}
+                  />
+                  {errors.openingDate && (
+                    <p className="text-sm text-destructive mt-1">{errors.openingDate.message}</p>
+                  )}
                 </div>
                 <div className="flex items-center space-x-2">
                   <Checkbox {...register('temporarilyClosed')} id="temporarilyClosed" />
