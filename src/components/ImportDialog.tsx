@@ -193,7 +193,28 @@ const ImportDialog = ({ open, onOpenChange, onSuccess }: ImportDialogProps) => {
           if (addressField) mappedField = addressField;
         }
 
-        // If still not mapped, try alias matching in order
+        // Second pass: specific field disambiguation for common conflicts
+        if (!mappedField) {
+          // Handle phone field conflicts - check for additional/secondary first
+          if (compactHeader.includes('phone')) {
+            if (compactHeader.includes('additional') || compactHeader.includes('other') || compactHeader.includes('secondary')) {
+              mappedField = 'additionalPhones';
+            } else if (compactHeader.includes('primary') || compactHeader === 'phone' || compactHeader === 'telephone' || compactHeader === 'tel' || compactHeader === 'mobile' || compactHeader === 'contact') {
+              mappedField = 'primaryPhone';
+            }
+          }
+          
+          // Handle business name vs from business conflicts
+          if (compactHeader.includes('business') && !mappedField) {
+            if (compactHeader.includes('from') || compactHeader.includes('description') || compactHeader.includes('about')) {
+              mappedField = 'fromTheBusiness';
+            } else if (compactHeader.includes('name') || compactHeader === 'business' || compactHeader === 'businessname' || compactHeader === 'companyname') {
+              mappedField = 'businessName';
+            }
+          }
+        }
+
+        // Third pass: standard alias matching if still not mapped
         if (!mappedField) {
           for (const [field, aliases] of Object.entries(fieldMappings)) {
             for (const alias of aliases) {
@@ -214,6 +235,18 @@ const ImportDialog = ({ open, onOpenChange, onSuccess }: ImportDialogProps) => {
                   if (/(addressline|address|addr|al)[2345]/.test(compactHeader)) {
                     continue;
                   }
+                }
+
+                // Skip phone conflicts that should have been handled above
+                if ((field === 'primaryPhone' && (compactHeader.includes('additional') || compactHeader.includes('other') || compactHeader.includes('secondary'))) ||
+                    (field === 'additionalPhones' && !compactHeader.includes('additional') && !compactHeader.includes('other') && !compactHeader.includes('secondary'))) {
+                  continue;
+                }
+
+                // Skip business conflicts that should have been handled above  
+                if ((field === 'businessName' && (compactHeader.includes('from') || compactHeader.includes('description'))) ||
+                    (field === 'fromTheBusiness' && compactHeader.includes('name') && !compactHeader.includes('from'))) {
+                  continue;
                 }
 
                 mappedField = field;
