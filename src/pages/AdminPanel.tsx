@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Users, MapPin, Clock, Download, UserPlus } from 'lucide-react';
+import { Loader2, Users, MapPin, Clock, Download, UserPlus, Plus, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 
@@ -38,6 +38,14 @@ const AdminPanel = () => {
   const [createUserLoading, setCreateUserLoading] = useState(false);
   const [exportLoading, setExportLoading] = useState<string | null>(null);
   const [createAdminLoading, setCreateAdminLoading] = useState(false);
+  const [isCreateClientDialogOpen, setIsCreateClientDialogOpen] = useState(false);
+  const [isDeleteClientDialogOpen, setIsDeleteClientDialogOpen] = useState(false);
+  const [createClientLoading, setCreateClientLoading] = useState(false);
+  const [deleteClientLoading, setDeleteClientLoading] = useState(false);
+  const [clientToDelete, setClientToDelete] = useState<Client | null>(null);
+  const [deleteUsersChecked, setDeleteUsersChecked] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState('');
+  const [newClientName, setNewClientName] = useState('');
   
   const [newUser, setNewUser] = useState({
     firstName: '',
@@ -225,6 +233,98 @@ const AdminPanel = () => {
     }
   };
 
+  const handleCreateClient = async () => {
+    if (!newClientName.trim()) {
+      toast({
+        title: "Missing Information",
+        description: "Please enter a client name.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      setCreateClientLoading(true);
+
+      const { error } = await supabase
+        .from('clients')
+        .insert([{ name: newClientName.trim() }]);
+
+      if (error) throw error;
+
+      toast({
+        title: "Client Created",
+        description: `Client "${newClientName}" created successfully.`,
+      });
+
+      setNewClientName('');
+      setIsCreateClientDialogOpen(false);
+      fetchData();
+    } catch (error: any) {
+      console.error('Error creating client:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create client.",
+        variant: "destructive"
+      });
+    } finally {
+      setCreateClientLoading(false);
+    }
+  };
+
+  const handleDeleteClient = async () => {
+    if (!clientToDelete) return;
+    
+    if (deleteConfirmation !== 'DELETE') {
+      toast({
+        title: "Confirmation Required",
+        description: "Please type 'DELETE' to confirm this action.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      setDeleteClientLoading(true);
+
+      const { data, error } = await supabase.functions.invoke('delete-client', {
+        body: {
+          clientId: clientToDelete.id,
+          deleteUsers: deleteUsersChecked
+        }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Client Deleted",
+        description: `Client "${clientToDelete.name}" and ${deleteUsersChecked ? 'associated users' : 'data'} deleted successfully.`,
+      });
+
+      setIsDeleteClientDialogOpen(false);
+      setClientToDelete(null);
+      setDeleteConfirmation('');
+      setDeleteUsersChecked(false);
+      fetchData();
+    } catch (error: any) {
+      console.error('Error deleting client:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete client.",
+        variant: "destructive"
+      });
+    } finally {
+      setDeleteClientLoading(false);
+    }
+  };
+
+  const openDeleteDialog = (client: Client) => {
+    setClientToDelete(client);
+    setIsDeleteClientDialogOpen(true);
+    setDeleteConfirmation('');
+    setDeleteUsersChecked(false);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -246,6 +346,38 @@ const AdminPanel = () => {
             {createAdminLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
             Create Admin User
           </Button>
+          <Dialog open={isCreateClientDialogOpen} onOpenChange={setIsCreateClientDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                <Plus className="w-4 h-4 mr-2" />
+                Add Client
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Create New Client</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="clientName">Client Name</Label>
+                  <Input
+                    id="clientName"
+                    value={newClientName}
+                    onChange={(e) => setNewClientName(e.target.value)}
+                    placeholder="Enter client name"
+                  />
+                </div>
+                <Button
+                  onClick={handleCreateClient}
+                  disabled={createClientLoading}
+                  className="w-full"
+                >
+                  {createClientLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                  Create Client
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
           <Dialog open={isCreateUserDialogOpen} onOpenChange={setIsCreateUserDialogOpen}>
           <DialogTrigger asChild>
             <Button>
@@ -331,6 +463,7 @@ const AdminPanel = () => {
                 <TableHead className="text-center">Pending Locations</TableHead>
                 <TableHead className="text-center">Last Updated</TableHead>
                 <TableHead className="text-center">Actions</TableHead>
+                <TableHead className="text-center">Manage</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -373,6 +506,16 @@ const AdminPanel = () => {
                       Export
                     </Button>
                   </TableCell>
+                  <TableCell className="text-center">
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => openDeleteDialog(client)}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Delete
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -383,9 +526,72 @@ const AdminPanel = () => {
             </div>
           )}
         </CardContent>
-      </Card>
-    </div>
-  );
-};
+        </Card>
 
-export default AdminPanel;
+        {/* Delete Client Confirmation Dialog */}
+        <Dialog open={isDeleteClientDialogOpen} onOpenChange={setIsDeleteClientDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="text-destructive">Delete Client</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="p-4 bg-destructive/10 rounded-lg border border-destructive/20">
+                <p className="text-sm text-destructive font-medium mb-2">
+                  ⚠️ Warning: This is a destructive action
+                </p>
+                <p className="text-sm">
+                  You are about to delete client "{clientToDelete?.name}" and all associated data.
+                </p>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="deleteUsers"
+                  checked={deleteUsersChecked}
+                  onChange={(e) => setDeleteUsersChecked(e.target.checked)}
+                  className="rounded"
+                />
+                <Label htmlFor="deleteUsers" className="text-sm">
+                  Also delete all users associated with this client
+                </Label>
+              </div>
+
+              <div>
+                <Label htmlFor="deleteConfirm">
+                  Type <strong>DELETE</strong> to confirm:
+                </Label>
+                <Input
+                  id="deleteConfirm"
+                  value={deleteConfirmation}
+                  onChange={(e) => setDeleteConfirmation(e.target.value)}
+                  placeholder="Type DELETE to confirm"
+                />
+              </div>
+
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsDeleteClientDialogOpen(false)}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={handleDeleteClient}
+                  disabled={deleteClientLoading || deleteConfirmation !== 'DELETE'}
+                  className="flex-1"
+                >
+                  {deleteClientLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                  Delete Client
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+    );
+  };
+  
+  export default AdminPanel;
