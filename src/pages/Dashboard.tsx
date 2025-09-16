@@ -118,22 +118,16 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted/30">
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted/30 font-montserrat">
       <header className="border-b bg-card/50 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-6 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg overflow-hidden bg-muted flex items-center justify-center">
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 rounded-lg overflow-hidden bg-muted flex items-center justify-center">
               <img 
                 src={jasonerMascot} 
-                alt="Jasoner Mascot" 
+                alt="Jasoner Logo" 
                 className="w-full h-full object-contain"
               />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-                Jasoner
-              </h1>
-              <p className="text-xs text-muted-foreground">Location Data Manager</p>
             </div>
           </div>
           <div className="flex items-center gap-4">
