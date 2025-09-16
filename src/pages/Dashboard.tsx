@@ -17,7 +17,7 @@ import { JsonExport } from '@/components/JsonExport';
 import type { Business } from '@/types/business';
 import LogoUpload from '@/components/LogoUpload';
 import AccountSocialsDialog from '@/components/AccountSocialsDialog';
-import jasonerLogo from '@/assets/jasoner-logo.png';
+import jasonerLogo from '@/assets/jasoner-horizontal-logo.png';
 
 const Dashboard = () => {
   const { user, signOut } = useAuth();
