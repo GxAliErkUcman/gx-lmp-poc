@@ -510,7 +510,9 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
                 <Label htmlFor="country">Country *</Label>
                 <CountrySelect
                   value={watch('country')}
-                  onValueChange={(value) => setValue('country', value)}
+                  onValueChange={(value) => {
+                    setValue('country', value, { shouldValidate: true, shouldTouch: true });
+                  }}
                   placeholder="Select country..."
                   required
                 />
