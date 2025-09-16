@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -19,10 +19,13 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { Share2 } from 'lucide-react';
+import { Share2, Globe } from 'lucide-react';
 
 const accountSocialsSchema = z.object({
   facebookUrl: z.string().optional(),
@@ -34,7 +37,23 @@ const accountSocialsSchema = z.object({
   youtubeUrl: z.string().optional(),
 });
 
+const singleSocialSchema = z.object({
+  platform: z.string(),
+  url: z.string().min(1, 'URL is required'),
+});
+
 type AccountSocialsFormValues = z.infer<typeof accountSocialsSchema>;
+type SingleSocialFormValues = z.infer<typeof singleSocialSchema>;
+
+const SOCIAL_PLATFORMS = [
+  { key: 'facebookUrl', label: 'Facebook', baseUrl: 'https://facebook.com/' },
+  { key: 'instagramUrl', label: 'Instagram', baseUrl: 'https://instagram.com/' },
+  { key: 'linkedinUrl', label: 'LinkedIn', baseUrl: 'https://linkedin.com/company/' },
+  { key: 'pinterestUrl', label: 'Pinterest', baseUrl: 'https://pinterest.com/' },
+  { key: 'tiktokUrl', label: 'TikTok', baseUrl: 'https://tiktok.com/@' },
+  { key: 'twitterUrl', label: 'X (Twitter)', baseUrl: 'https://x.com/' },
+  { key: 'youtubeUrl', label: 'YouTube', baseUrl: 'https://youtube.com/@' },
+] as const;
 
 interface AccountSocialsDialogProps {
   open: boolean;
@@ -44,9 +63,10 @@ interface AccountSocialsDialogProps {
 
 const AccountSocialsDialog = ({ open, onOpenChange, onSuccess }: AccountSocialsDialogProps) => {
   const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState('single');
   const { user } = useAuth();
 
-  const form = useForm<AccountSocialsFormValues>({
+  const allForm = useForm<AccountSocialsFormValues>({
     resolver: zodResolver(accountSocialsSchema),
     defaultValues: {
       facebookUrl: '',
@@ -59,7 +79,28 @@ const AccountSocialsDialog = ({ open, onOpenChange, onSuccess }: AccountSocialsD
     },
   });
 
-  const onSubmit = async (values: AccountSocialsFormValues) => {
+  const singleForm = useForm<SingleSocialFormValues>({
+    resolver: zodResolver(singleSocialSchema),
+    defaultValues: {
+      platform: '',
+      url: '',
+    },
+  });
+
+  // Auto-populate base URL when platform changes
+  useEffect(() => {
+    const platform = singleForm.watch('platform');
+    const currentUrl = singleForm.watch('url');
+    
+    if (platform && !currentUrl) {
+      const platformData = SOCIAL_PLATFORMS.find(p => p.key === platform);
+      if (platformData) {
+        singleForm.setValue('url', platformData.baseUrl);
+      }
+    }
+  }, [singleForm.watch('platform')]);
+
+  const onSubmitAll = async (values: AccountSocialsFormValues) => {
     if (!user) return;
     
     setLoading(true);
@@ -97,7 +138,7 @@ const AccountSocialsDialog = ({ open, onOpenChange, onSuccess }: AccountSocialsD
         description: "Social media links applied to all your businesses",
       });
 
-      form.reset();
+      allForm.reset();
       onSuccess();
       onOpenChange(false);
     } catch (error) {
@@ -112,136 +153,260 @@ const AccountSocialsDialog = ({ open, onOpenChange, onSuccess }: AccountSocialsD
     }
   };
 
+  const onSubmitSingle = async (values: SingleSocialFormValues) => {
+    if (!user) return;
+    
+    setLoading(true);
+    try {
+      // Get current social media URLs for all businesses
+      const { data: businesses, error: fetchError } = await supabase
+        .from('businesses')
+        .select('id, socialMediaUrls')
+        .eq('user_id', user.id);
+
+      if (fetchError) throw fetchError;
+
+      // Update each business individually
+      const platformData = SOCIAL_PLATFORMS.find(p => p.key === values.platform);
+      const platformName = `url_${values.platform.replace('Url', '')}` as const;
+
+      for (const business of businesses || []) {
+        let existingSocials = Array.isArray(business.socialMediaUrls) ? business.socialMediaUrls : [];
+        
+        // Remove existing entry for this platform
+        existingSocials = existingSocials.filter((social: any) => social.name !== platformName);
+        
+        // Add new entry if URL is provided
+        if (values.url.trim() && values.url.trim() !== platformData?.baseUrl) {
+          existingSocials = [...existingSocials, {
+            name: platformName,
+            url: values.url.trim()
+          }];
+        }
+
+        // Update the business
+        const { error: updateError } = await supabase
+          .from('businesses')
+          .update({ socialMediaUrls: existingSocials })
+          .eq('id', business.id);
+
+        if (updateError) throw updateError;
+      }
+
+      const platformLabel = platformData?.label || 'Social media';
+      toast({
+        title: "Success",
+        description: `${platformLabel} link updated across all your businesses`,
+      });
+
+      singleForm.reset();
+      onSuccess();
+      onOpenChange(false);
+    } catch (error) {
+      console.error('Error updating social media:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update social media link",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const SmartInput = ({ field, platform }: { field: any, platform: (typeof SOCIAL_PLATFORMS)[number] }) => {
+    const [focused, setFocused] = useState(false);
+    
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value;
+      // If user deletes everything, reset to base URL
+      if (value === '' && !focused) {
+        field.onChange(platform.baseUrl);
+      } else {
+        field.onChange(value);
+      }
+    };
+
+    const handleFocus = () => {
+      setFocused(true);
+      // If empty or just base URL, position cursor after base URL
+      if (!field.value || field.value === platform.baseUrl) {
+        field.onChange(platform.baseUrl);
+        setTimeout(() => {
+          const input = document.getElementById(platform.key) as HTMLInputElement;
+          if (input) {
+            input.setSelectionRange(platform.baseUrl.length, platform.baseUrl.length);
+          }
+        }, 0);
+      }
+    };
+
+    const handleBlur = () => {
+      setFocused(false);
+      // If user left only the base URL, clear it
+      if (field.value === platform.baseUrl) {
+        field.onChange('');
+      }
+    };
+
+    return (
+      <Input
+        id={platform.key}
+        placeholder={`${platform.baseUrl}yourname`}
+        value={field.value || ''}
+        onChange={handleChange}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
+      />
+    );
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] max-h-[90vh]">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh]">
         <DialogHeader>
-          <DialogTitle>Set Account-Wide Social Media Links</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <Share2 className="w-5 h-5" />
+            Set Account-Wide Social Media Links
+          </DialogTitle>
         </DialogHeader>
 
-        <ScrollArea className="max-h-[60vh] pr-4">
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <div className="space-y-4">
-                <p className="text-sm text-muted-foreground">
-                  These social media links will be applied to all your businesses.
-                </p>
-                
-                <div className="grid gap-4">
-                  <FormField
-                    control={form.control}
-                    name="facebookUrl"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Facebook URL</FormLabel>
-                        <FormControl>
-                          <Input placeholder="https://facebook.com/yourpage" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="single" className="flex items-center gap-2">
+              <Globe className="w-4 h-4" />
+              Update Single Platform
+            </TabsTrigger>
+            <TabsTrigger value="all" className="flex items-center gap-2">
+              <Share2 className="w-4 h-4" />
+              Update All Platforms
+            </TabsTrigger>
+          </TabsList>
 
-                  <FormField
-                    control={form.control}
-                    name="instagramUrl"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Instagram URL</FormLabel>
-                        <FormControl>
-                          <Input placeholder="https://instagram.com/youraccount" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+          <ScrollArea className="max-h-[60vh] pr-4 mt-4">
+            <TabsContent value="single" className="mt-0">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Update Single Platform</CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    Select a specific social media platform to update across all your businesses. This preserves existing links on other platforms.
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <Form {...singleForm}>
+                    <form onSubmit={singleForm.handleSubmit(onSubmitSingle)} className="space-y-4">
+                      <FormField
+                        control={singleForm.control}
+                        name="platform"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Select Platform</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Choose a social media platform" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {SOCIAL_PLATFORMS.map((platform) => (
+                                  <SelectItem key={platform.key} value={platform.key}>
+                                    {platform.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                  <FormField
-                    control={form.control}
-                    name="linkedinUrl"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>LinkedIn URL</FormLabel>
-                        <FormControl>
-                          <Input placeholder="https://linkedin.com/company/yourcompany" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                      {singleForm.watch('platform') && (
+                        <FormField
+                          control={singleForm.control}
+                          name="url"
+                          render={({ field }) => {
+                            const selectedPlatform = SOCIAL_PLATFORMS.find(
+                              p => p.key === singleForm.watch('platform')
+                            );
+                            return (
+                              <FormItem>
+                                <FormLabel>{selectedPlatform?.label} URL</FormLabel>
+                                <FormControl>
+                                  <SmartInput field={field} platform={selectedPlatform!} />
+                                </FormControl>
+                                <p className="text-xs text-muted-foreground">
+                                  The base URL is pre-filled for convenience. Just add your username/page name.
+                                </p>
+                                <FormMessage />
+                              </FormItem>
+                            );
+                          }}
+                        />
+                      )}
+                    </form>
+                  </Form>
+                </CardContent>
+              </Card>
+            </TabsContent>
 
-                  <FormField
-                    control={form.control}
-                    name="pinterestUrl"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Pinterest URL</FormLabel>
-                        <FormControl>
-                          <Input placeholder="https://pinterest.com/youraccount" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="tiktokUrl"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>TikTok URL</FormLabel>
-                        <FormControl>
-                          <Input placeholder="https://tiktok.com/@youraccount" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="twitterUrl"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>X (Twitter) URL</FormLabel>
-                        <FormControl>
-                          <Input placeholder="https://x.com/youraccount" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="youtubeUrl"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>YouTube URL</FormLabel>
-                        <FormControl>
-                          <Input placeholder="https://youtube.com/@yourchannel" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
-            </form>
-          </Form>
-        </ScrollArea>
+            <TabsContent value="all" className="mt-0">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Update All Platforms</CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    Set multiple social media links at once. Empty fields will remove existing links on those platforms.
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <Form {...allForm}>
+                    <form onSubmit={allForm.handleSubmit(onSubmitAll)} className="space-y-4">
+                      <div className="grid gap-4">
+                        {SOCIAL_PLATFORMS.map((platform) => (
+                          <FormField
+                            key={platform.key}
+                            control={allForm.control}
+                            name={platform.key as keyof AccountSocialsFormValues}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>{platform.label} URL</FormLabel>
+                                <FormControl>
+                                  <SmartInput field={field} platform={platform} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        ))}
+                      </div>
+                    </form>
+                  </Form>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </ScrollArea>
+        </Tabs>
         
         <div className="flex justify-end gap-2 pt-4 border-t">
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button 
-            type="submit" 
-            disabled={loading}
-            onClick={form.handleSubmit(onSubmit)}
-          >
-            {loading ? 'Applying...' : 'Apply to All Businesses'}
-          </Button>
+          {activeTab === 'single' ? (
+            <Button 
+              type="submit" 
+              disabled={loading || !singleForm.watch('platform') || !singleForm.watch('url')}
+              onClick={singleForm.handleSubmit(onSubmitSingle)}
+            >
+              {loading ? 'Updating...' : 'Update Selected Platform'}
+            </Button>
+          ) : (
+            <Button 
+              type="submit" 
+              disabled={loading}
+              onClick={allForm.handleSubmit(onSubmitAll)}
+            >
+              {loading ? 'Applying...' : 'Apply to All Businesses'}
+            </Button>
+          )}
         </div>
       </DialogContent>
     </Dialog>
