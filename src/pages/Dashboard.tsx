@@ -17,7 +17,7 @@ import { JsonExport } from '@/components/JsonExport';
 import type { Business } from '@/types/business';
 import LogoUpload from '@/components/LogoUpload';
 import AccountSocialsDialog from '@/components/AccountSocialsDialog';
-import jasonerMascot from '@/assets/jasoner-mascot.png';
+import jasonerLogo from '@/assets/jasoner-logo.png';
 
 const Dashboard = () => {
   const { user, signOut } = useAuth();
@@ -122,11 +122,11 @@ const Dashboard = () => {
       <header className="border-b bg-card/50 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-6 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-lg overflow-hidden bg-muted flex items-center justify-center">
+            <div className="h-12 flex items-center justify-center">
               <img 
-                src={jasonerMascot} 
+                src={jasonerLogo} 
                 alt="Jasoner Logo" 
-                className="w-full h-full object-contain"
+                className="h-full w-auto object-contain"
               />
             </div>
           </div>
