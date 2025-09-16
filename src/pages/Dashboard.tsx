@@ -132,6 +132,15 @@ const Dashboard = () => {
           </div>
           <div className="flex items-center gap-4">
             <span className="text-sm text-muted-foreground">{user.email}</span>
+            {userLogo && (
+              <div className="h-40 flex items-center justify-center">
+                <img 
+                  src={userLogo} 
+                  alt="User Logo" 
+                  className="h-full w-auto object-contain"
+                />
+              </div>
+            )}
             <Button onClick={signOut} variant="outline" className="shadow-modern">
               Sign Out
             </Button>
