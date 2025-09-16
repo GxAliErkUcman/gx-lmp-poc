@@ -17,6 +17,7 @@ import { JsonExport } from '@/components/JsonExport';
 import type { Business } from '@/types/business';
 import LogoUpload from '@/components/LogoUpload';
 import AccountSocialsDialog from '@/components/AccountSocialsDialog';
+import jasonerMascot from '@/assets/jasoner-mascot.png';
 
 const Dashboard = () => {
   const { user, signOut } = useAuth();
@@ -121,22 +122,18 @@ const Dashboard = () => {
       <header className="border-b bg-card/50 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            {userLogo && (
-              <div className="w-8 h-8 rounded-lg overflow-hidden bg-muted flex items-center justify-center">
-                <img 
-                  src={userLogo} 
-                  alt="Account Logo" 
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            )}
+            <div className="w-10 h-10 rounded-lg overflow-hidden bg-muted flex items-center justify-center">
+              <img 
+                src={jasonerMascot} 
+                alt="Jasoner Mascot" 
+                className="w-full h-full object-contain"
+              />
+            </div>
             <div>
               <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-                Business Profile Manager
+                Jasoner
               </h1>
-              {userLogo && (
-                <p className="text-xs text-muted-foreground">Account Logo Applied</p>
-              )}
+              <p className="text-xs text-muted-foreground">Location Data Manager</p>
             </div>
           </div>
           <div className="flex items-center gap-4">
@@ -151,7 +148,7 @@ const Dashboard = () => {
       <main className="container mx-auto px-4 py-8">
         <div className="mb-8 flex flex-wrap items-center justify-between gap-6">
           <div>
-            <h2 className="text-3xl font-bold mb-2">Your Businesses</h2>
+            <h2 className="text-3xl font-bold mb-2">Your Locations</h2>
             <p className="text-muted-foreground">
               {activeBusinesses.length} active, {pendingBusinesses.length} need attention
             </p>

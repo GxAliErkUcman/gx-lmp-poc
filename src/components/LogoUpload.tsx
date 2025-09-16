@@ -94,7 +94,7 @@ const LogoUpload = ({ onLogoUploaded }: LogoUploadProps) => {
     >
       <input {...getInputProps()} />
       <Image className="w-4 h-4 mr-2" />
-      {uploading ? 'Uploading...' : 'Logo'}
+      {uploading ? 'Uploading...' : 'Change your Logo'}
     </Button>
   );
 };
