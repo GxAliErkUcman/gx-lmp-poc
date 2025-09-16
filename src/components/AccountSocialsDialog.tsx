@@ -89,16 +89,17 @@ const AccountSocialsDialog = ({ open, onOpenChange, onSuccess }: AccountSocialsD
 
   // Auto-populate base URL when platform changes
   useEffect(() => {
-    const platform = singleForm.watch('platform');
-    const currentUrl = singleForm.watch('url');
-    
-    if (platform && !currentUrl) {
-      const platformData = SOCIAL_PLATFORMS.find(p => p.key === platform);
-      if (platformData) {
-        singleForm.setValue('url', platformData.baseUrl);
+    const subscription = singleForm.watch((value, { name }) => {
+      if (name === 'platform' && value.platform) {
+        const platformData = SOCIAL_PLATFORMS.find(p => p.key === value.platform);
+        if (platformData) {
+          singleForm.setValue('url', platformData.baseUrl);
+        }
       }
-    }
-  }, [singleForm.watch('platform')]);
+    });
+    
+    return () => subscription.unsubscribe();
+  }, [singleForm]);
 
   const onSubmitAll = async (values: AccountSocialsFormValues) => {
     if (!user) return;
@@ -215,48 +216,26 @@ const AccountSocialsDialog = ({ open, onOpenChange, onSuccess }: AccountSocialsD
   };
 
   const SmartInput = ({ field, platform }: { field: any, platform: (typeof SOCIAL_PLATFORMS)[number] }) => {
-    const [focused, setFocused] = useState(false);
-    
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const value = e.target.value;
-      // If user deletes everything, reset to base URL
-      if (value === '' && !focused) {
-        field.onChange(platform.baseUrl);
-      } else {
-        field.onChange(value);
-      }
-    };
-
-    const handleFocus = () => {
-      setFocused(true);
-      // If empty or just base URL, position cursor after base URL
-      if (!field.value || field.value === platform.baseUrl) {
-        field.onChange(platform.baseUrl);
-        setTimeout(() => {
-          const input = document.getElementById(platform.key) as HTMLInputElement;
-          if (input) {
-            input.setSelectionRange(platform.baseUrl.length, platform.baseUrl.length);
-          }
-        }, 0);
-      }
-    };
-
-    const handleBlur = () => {
-      setFocused(false);
-      // If user left only the base URL, clear it
-      if (field.value === platform.baseUrl) {
-        field.onChange('');
-      }
-    };
-
     return (
       <Input
-        id={platform.key}
         placeholder={`${platform.baseUrl}yourname`}
         value={field.value || ''}
-        onChange={handleChange}
-        onFocus={handleFocus}
-        onBlur={handleBlur}
+        onChange={(e) => field.onChange(e.target.value)}
+        onFocus={(e) => {
+          // If empty or just base URL, set to base URL and position cursor
+          if (!field.value || field.value === platform.baseUrl) {
+            field.onChange(platform.baseUrl);
+            setTimeout(() => {
+              e.target.setSelectionRange(platform.baseUrl.length, platform.baseUrl.length);
+            }, 0);
+          }
+        }}
+        onBlur={() => {
+          // If user left only the base URL, clear it
+          if (field.value === platform.baseUrl) {
+            field.onChange('');
+          }
+        }}
       />
     );
   };
