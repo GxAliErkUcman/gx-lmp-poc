@@ -215,30 +215,6 @@ const AccountSocialsDialog = ({ open, onOpenChange, onSuccess }: AccountSocialsD
     }
   };
 
-  const SmartInput = ({ field, platform }: { field: any, platform: (typeof SOCIAL_PLATFORMS)[number] }) => {
-    return (
-      <Input
-        placeholder={`${platform.baseUrl}yourname`}
-        value={field.value || ''}
-        onChange={(e) => field.onChange(e.target.value)}
-        onFocus={(e) => {
-          // If empty or just base URL, set to base URL and position cursor
-          if (!field.value || field.value === platform.baseUrl) {
-            field.onChange(platform.baseUrl);
-            setTimeout(() => {
-              e.target.setSelectionRange(platform.baseUrl.length, platform.baseUrl.length);
-            }, 0);
-          }
-        }}
-        onBlur={() => {
-          // If user left only the base URL, clear it
-          if (field.value === platform.baseUrl) {
-            field.onChange('');
-          }
-        }}
-      />
-    );
-  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -307,11 +283,33 @@ const AccountSocialsDialog = ({ open, onOpenChange, onSuccess }: AccountSocialsD
                             const selectedPlatform = SOCIAL_PLATFORMS.find(
                               p => p.key === singleForm.watch('platform')
                             );
+                            
+                            if (!selectedPlatform) return null;
+                            
                             return (
                               <FormItem>
-                                <FormLabel>{selectedPlatform?.label} URL</FormLabel>
+                                <FormLabel>{selectedPlatform.label} URL</FormLabel>
                                 <FormControl>
-                                  <SmartInput field={field} platform={selectedPlatform!} />
+                                  <Input
+                                    placeholder={`${selectedPlatform.baseUrl}yourname`}
+                                    {...field}
+                                    value={field.value || ''}
+                                    onFocus={(e) => {
+                                      // If empty or just base URL, set to base URL and position cursor
+                                      if (!field.value || field.value === selectedPlatform.baseUrl) {
+                                        field.onChange(selectedPlatform.baseUrl);
+                                        setTimeout(() => {
+                                          e.target.setSelectionRange(selectedPlatform.baseUrl.length, selectedPlatform.baseUrl.length);
+                                        }, 0);
+                                      }
+                                    }}
+                                    onBlur={() => {
+                                      // If user left only the base URL, clear it
+                                      if (field.value === selectedPlatform.baseUrl) {
+                                        field.onChange('');
+                                      }
+                                    }}
+                                  />
                                 </FormControl>
                                 <p className="text-xs text-muted-foreground">
                                   The base URL is pre-filled for convenience. Just add your username/page name.
@@ -349,7 +347,24 @@ const AccountSocialsDialog = ({ open, onOpenChange, onSuccess }: AccountSocialsD
                               <FormItem>
                                 <FormLabel>{platform.label} URL</FormLabel>
                                 <FormControl>
-                                  <SmartInput field={field} platform={platform} />
+                                  <Input
+                                    placeholder={`${platform.baseUrl}yourname`}
+                                    {...field}
+                                    value={field.value || ''}
+                                    onFocus={(e) => {
+                                      if (!field.value || field.value === platform.baseUrl) {
+                                        field.onChange(platform.baseUrl);
+                                        setTimeout(() => {
+                                          e.target.setSelectionRange(platform.baseUrl.length, platform.baseUrl.length);
+                                        }, 0);
+                                      }
+                                    }}
+                                    onBlur={() => {
+                                      if (field.value === platform.baseUrl) {
+                                        field.onChange('');
+                                      }
+                                    }}
+                                  />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
