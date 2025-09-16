@@ -133,7 +133,7 @@ const Dashboard = () => {
           <div className="flex items-center gap-4">
             <span className="text-sm text-muted-foreground">{user.email}</span>
             {userLogo && (
-              <div className="h-55 flex items-center justify-center">
+              <div className="h-20 flex items-center justify-center">
                 <img 
                   src={userLogo} 
                   alt="User Logo" 
