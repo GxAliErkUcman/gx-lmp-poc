@@ -178,6 +178,27 @@ const LocationMap = ({ latitude, longitude, onLocationChange, address, addressLi
   };
 
   const updateCoordinates = () => {
+    const isBothEmpty = mapLatitude.trim() === '' && mapLongitude.trim() === '';
+
+    if (isBothEmpty) {
+      onLocationChange(null, null);
+      toast({
+        title: "Coordinates cleared",
+        description: "Latitude and longitude have been removed",
+      });
+      return;
+    }
+
+    // If one field is empty but not both, this is invalid
+    if (mapLatitude.trim() === '' || mapLongitude.trim() === '') {
+      toast({
+        title: "Invalid coordinates",
+        description: "Please enter both latitude and longitude or leave both empty",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const lat = parseFloat(mapLatitude);
     const lng = parseFloat(mapLongitude);
 
@@ -335,7 +356,6 @@ const LocationMap = ({ latitude, longitude, onLocationChange, address, addressLi
             variant="outline"
             size="sm"
             onClick={updateCoordinates}
-            disabled={!mapLatitude || !mapLongitude}
           >
             Update Coordinates
           </Button>

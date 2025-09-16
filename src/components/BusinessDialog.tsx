@@ -259,8 +259,17 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
     ].filter(item => item.url && item.url.trim() !== '');
 
     // Validate the complete business data with normalized hours
+    const safeLatitude = typeof (data as any).latitude === 'string'
+      ? ((data as any).latitude.trim() === '' ? null : Number((data as any).latitude))
+      : (data as any).latitude ?? null;
+    const safeLongitude = typeof (data as any).longitude === 'string'
+      ? ((data as any).longitude.trim() === '' ? null : Number((data as any).longitude))
+      : (data as any).longitude ?? null;
+
     const completeData = {
       ...data,
+      latitude: safeLatitude,
+      longitude: safeLongitude,
       ...normalizedHours,
       otherPhotos: coverPhoto,
       socialMediaUrls: socialMediaUrls.length > 0 ? socialMediaUrls : null
@@ -316,8 +325,8 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
         district: data.district || null,
         city: data.city || null,
         state: data.state || null,
-        latitude: data.latitude || null,
-        longitude: data.longitude || null,
+        latitude: (typeof data.latitude === 'number' ? data.latitude : null),
+        longitude: (typeof data.longitude === 'number' ? data.longitude : null),
         additionalCategories: data.additionalCategories || null,
         website: data.website || null,
         primaryPhone: data.primaryPhone || null,
@@ -656,8 +665,8 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
 
           {/* Location Coordinates */}
           <LocationMap
-            latitude={business?.latitude}
-            longitude={business?.longitude}
+            latitude={watch('latitude') as any}
+            longitude={watch('longitude') as any}
             onLocationChange={handleLocationChange}
             address={getCurrentAddress()}
             addressLine1={watch('addressLine1')}
