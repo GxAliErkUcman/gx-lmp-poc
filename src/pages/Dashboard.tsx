@@ -122,7 +122,7 @@ const Dashboard = () => {
       <header className="border-b bg-card/50 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-6 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="h-16 flex items-center justify-center">
+            <div className="h-24 flex items-center justify-center">
               <img 
                 src={jasonerLogo} 
                 alt="Jasoner Logo" 
