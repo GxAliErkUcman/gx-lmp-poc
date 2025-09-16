@@ -9,7 +9,7 @@ import { toast } from '@/hooks/use-toast';
 interface LocationMapProps {
   latitude?: number | null;
   longitude?: number | null;
-  onLocationChange: (lat: number, lng: number) => void;
+  onLocationChange: (lat: number | null, lng: number | null) => void;
   address?: string;
   // Structured address components for better geocoding
   addressLine1?: string;

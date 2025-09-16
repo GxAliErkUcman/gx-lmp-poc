@@ -37,8 +37,8 @@ const businessSchema = z.object({
   district: z.string().optional(),
   city: z.string().optional(),
   state: z.string().optional(),
-  latitude: z.number().optional(),
-  longitude: z.number().optional(),
+  latitude: z.number().nullable().optional(),
+  longitude: z.number().nullable().optional(),
   additionalCategories: z.string().optional(),
   website: z.string().optional(),
   primaryPhone: z.string().optional(),
@@ -413,7 +413,7 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
     }
   };
 
-  const handleLocationChange = (lat: number, lng: number) => {
+  const handleLocationChange = (lat: number | null, lng: number | null) => {
     try {
       setValue('latitude', lat);
       setValue('longitude', lng);
