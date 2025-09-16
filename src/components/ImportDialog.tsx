@@ -5,7 +5,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Upload, FileText, CheckCircle, AlertCircle } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { Upload, FileText, CheckCircle, AlertCircle, AlertTriangle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
@@ -26,6 +29,12 @@ interface ColumnMapping {
   required: boolean;
 }
 
+interface DuplicateBusiness {
+  importRow: ParsedData;
+  existingBusiness: any;
+  storeCode: string;
+}
+
 const ImportDialog = ({ open, onOpenChange, onSuccess }: ImportDialogProps) => {
   const { user } = useAuth();
   const [file, setFile] = useState<File | null>(null);
@@ -33,6 +42,10 @@ const ImportDialog = ({ open, onOpenChange, onSuccess }: ImportDialogProps) => {
   const [columnMappings, setColumnMappings] = useState<ColumnMapping[]>([]);
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState<'upload' | 'mapping' | 'preview'>('upload');
+  const [duplicateBusinesses, setDuplicateBusinesses] = useState<DuplicateBusiness[]>([]);
+  const [overrideConfirmation, setOverrideConfirmation] = useState('');
+  const [allowOverride, setAllowOverride] = useState(false);
+  const [activeTab, setActiveTab] = useState<'review' | 'duplicates'>('review');
 
   // Field mappings aligned with database schema - ordered by specificity
   const fieldMappings: Record<string, string[]> = {
@@ -322,9 +335,77 @@ const ImportDialog = ({ open, onOpenChange, onSuccess }: ImportDialogProps) => {
     return essentialFields.every(field => business[field] && business[field].toString().trim() !== '');
   };
 
+  const checkForDuplicates = async () => {
+    if (!user) return;
+
+    setLoading(true);
+    try {
+      // Get all store codes from the import data
+      const storeCodeMapping = columnMappings.find(m => m.mapped === 'storeCode');
+      if (!storeCodeMapping) {
+        // No store code in import, proceed normally
+        setDuplicateBusinesses([]);
+        setStep('preview');
+        return;
+      }
+
+      const importStoreCodes = parsedData
+        .map(row => row[storeCodeMapping.original])
+        .filter(code => code && String(code).trim() !== '')
+        .map(code => String(code).trim());
+
+      if (importStoreCodes.length === 0) {
+        // No store codes to check
+        setDuplicateBusinesses([]);
+        setStep('preview');
+        return;
+      }
+
+      // Check which store codes already exist in the database
+      const { data: existingBusinesses, error } = await supabase
+        .from('businesses')
+        .select('*')
+        .in('storeCode', importStoreCodes);
+
+      if (error) throw error;
+
+      // Find duplicates
+      const duplicates: DuplicateBusiness[] = [];
+      
+      if (existingBusinesses && existingBusinesses.length > 0) {
+        parsedData.forEach(row => {
+          const rowStoreCode = String(row[storeCodeMapping.original] || '').trim();
+          if (rowStoreCode) {
+            const existing = existingBusinesses.find(b => b.storeCode === rowStoreCode);
+            if (existing) {
+              duplicates.push({
+                importRow: row,
+                existingBusiness: existing,
+                storeCode: rowStoreCode
+              });
+            }
+          }
+        });
+      }
+
+      setDuplicateBusinesses(duplicates);
+      setActiveTab(duplicates.length > 0 ? 'duplicates' : 'review');
+      setStep('preview');
+    } catch (error) {
+      console.error('Error checking for duplicates:', error);
+      toast({
+        title: "Error",
+        description: "Failed to check for duplicate businesses.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const previewImport = () => {
     if (!validateMappings()) return;
-    setStep('preview');
+    checkForDuplicates();
   };
 
   const importData = async () => {
@@ -350,7 +431,21 @@ const ImportDialog = ({ open, onOpenChange, onSuccess }: ImportDialogProps) => {
         return;
       }
 
-      const businessesToInsert = parsedData.map(row => {
+      // Separate new businesses from duplicates
+      const storeCodeMapping = columnMappings.find(m => m.mapped === 'storeCode');
+      const duplicateStoreCodes = duplicateBusinesses.map(d => d.storeCode);
+      
+      // Filter out duplicates from the main import unless override is enabled
+      let businessesToProcess = parsedData;
+      if (duplicateBusinesses.length > 0 && !allowOverride) {
+        businessesToProcess = parsedData.filter(row => {
+          if (!storeCodeMapping) return true;
+          const rowStoreCode = String(row[storeCodeMapping.original] || '').trim();
+          return !duplicateStoreCodes.includes(rowStoreCode);
+        });
+      }
+
+      const businessesToInsert = businessesToProcess.map(row => {
         // Determine if a store code was explicitly provided in the file for this row
         const storeCodeProvided = columnMappings.some(
           (m) => m.mapped === 'storeCode' && row[m.original] && String(row[m.original]).trim() !== ''
@@ -407,18 +502,43 @@ const ImportDialog = ({ open, onOpenChange, onSuccess }: ImportDialogProps) => {
         return business;
       });
 
-      const { error } = await supabase
-        .from('businesses')
-        .insert(businessesToInsert);
+      // Handle overrides if enabled
+      if (allowOverride && duplicateBusinesses.length > 0) {
+        // Delete existing duplicates first
+        const duplicateIds = duplicateBusinesses.map(d => d.existingBusiness.id);
+        const { error: deleteError } = await supabase
+          .from('businesses')
+          .delete()
+          .in('id', duplicateIds);
 
-      if (error) throw error;
+        if (deleteError) throw deleteError;
+      }
+
+      // Insert new businesses (including overrides if applicable)
+      if (businessesToInsert.length > 0) {
+        const { error } = await supabase
+          .from('businesses')
+          .insert(businessesToInsert);
+
+        if (error) throw error;
+      }
 
       const activeCount = businessesToInsert.filter(b => b.status === 'active').length;
       const pendingCount = businessesToInsert.filter(b => b.status === 'pending').length;
+      const overrideCount = allowOverride ? duplicateBusinesses.length : 0;
+      const skippedCount = duplicateBusinesses.length > 0 && !allowOverride ? duplicateBusinesses.length : 0;
+
+      let description = `${activeCount} complete businesses imported, ${pendingCount} incomplete businesses need attention`;
+      if (overrideCount > 0) {
+        description += `, ${overrideCount} existing businesses overridden`;
+      }
+      if (skippedCount > 0) {
+        description += `, ${skippedCount} duplicates skipped`;
+      }
 
       toast({
         title: "Import Complete",
-        description: `${activeCount} complete businesses imported, ${pendingCount} incomplete businesses need attention`,
+        description,
       });
 
       onSuccess();
@@ -438,6 +558,10 @@ const ImportDialog = ({ open, onOpenChange, onSuccess }: ImportDialogProps) => {
     setFile(null);
     setParsedData([]);
     setColumnMappings([]);
+    setDuplicateBusinesses([]);
+    setOverrideConfirmation('');
+    setAllowOverride(false);
+    setActiveTab('review');
     setStep('upload');
   };
 
@@ -445,7 +569,7 @@ const ImportDialog = ({ open, onOpenChange, onSuccess }: ImportDialogProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-6xl max-h-[95vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Import Businesses from Excel/CSV</DialogTitle>
         </DialogHeader>
@@ -557,55 +681,183 @@ const ImportDialog = ({ open, onOpenChange, onSuccess }: ImportDialogProps) => {
         {step === 'preview' && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-medium">Preview Import</h3>
-              <Badge variant="outline">
-                {parsedData.length} businesses to import
-              </Badge>
+              <h3 className="text-lg font-medium">Review Import</h3>
+              <div className="flex items-center gap-2">
+                {duplicateBusinesses.length > 0 && (
+                  <Badge variant="destructive" className="flex items-center gap-1">
+                    <AlertTriangle className="h-3 w-3" />
+                    {duplicateBusinesses.length} Duplicates
+                  </Badge>
+                )}
+                <Badge variant="outline">
+                  {parsedData.length} businesses total
+                </Badge>
+              </div>
             </div>
 
-            <div className="max-h-96 overflow-auto border rounded-md">
-              <table className="w-full text-sm">
-                <thead className="bg-muted">
-                  <tr>
-                    {columnMappings
-                      .filter(m => m.mapped)
-                      .map(mapping => (
-                        <th key={mapping.mapped} className="p-2 text-left">
-                          {mapping.mapped.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                        </th>
-                      ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {parsedData.slice(0, 5).map((row, index) => (
-                    <tr key={index} className="border-t">
-                      {columnMappings
-                        .filter(m => m.mapped)
-                        .map(mapping => (
-                          <td key={mapping.mapped} className="p-2">
-                            {row[mapping.original] || '-'}
-                          </td>
+            <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'review' | 'duplicates')}>
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="review">Review ({parsedData.length - duplicateBusinesses.length} New)</TabsTrigger>
+                <TabsTrigger value="duplicates" disabled={duplicateBusinesses.length === 0}>
+                  Duplicate Locations ({duplicateBusinesses.length})
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="review" className="space-y-4">
+                <div className="max-h-96 overflow-auto border rounded-md">
+                  <table className="w-full text-sm">
+                    <thead className="bg-muted">
+                      <tr>
+                        {columnMappings
+                          .filter(m => m.mapped)
+                          .map(mapping => (
+                            <th key={mapping.mapped} className="p-2 text-left">
+                              {mapping.mapped.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                            </th>
+                          ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {parsedData
+                        .filter(row => {
+                          const storeCodeMapping = columnMappings.find(m => m.mapped === 'storeCode');
+                          if (!storeCodeMapping) return true;
+                          const rowStoreCode = String(row[storeCodeMapping.original] || '').trim();
+                          return !duplicateBusinesses.some(d => d.storeCode === rowStoreCode);
+                        })
+                        .slice(0, 5)
+                        .map((row, index) => (
+                          <tr key={index} className="border-t">
+                            {columnMappings
+                              .filter(m => m.mapped)
+                              .map(mapping => (
+                                <td key={mapping.mapped} className="p-2">
+                                  {row[mapping.original] || '-'}
+                                </td>
+                              ))}
+                          </tr>
                         ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              {parsedData.length > 5 && (
-                <div className="p-2 text-center text-muted-foreground border-t">
-                  ... and {parsedData.length - 5} more rows
+                    </tbody>
+                  </table>
+                  {(parsedData.length - duplicateBusinesses.length) > 5 && (
+                    <div className="p-2 text-center text-muted-foreground border-t">
+                      ... and {(parsedData.length - duplicateBusinesses.length) - 5} more new businesses
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
+              </TabsContent>
 
-            <div className="flex justify-between">
+              <TabsContent value="duplicates" className="space-y-4">
+                {duplicateBusinesses.length > 0 && (
+                  <>
+                    <Card className="bg-yellow-50 border-yellow-200">
+                      <CardContent className="pt-4">
+                        <div className="flex items-start gap-3">
+                          <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5" />
+                          <div>
+                            <h4 className="font-medium text-yellow-800">Duplicate Store Codes Detected</h4>
+                            <p className="text-sm text-yellow-700 mt-1">
+                              The following businesses have store codes that already exist in your database. 
+                              You can choose to override them or skip these duplicates.
+                            </p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <div className="max-h-96 overflow-auto border rounded-md">
+                      <table className="w-full text-sm">
+                        <thead className="bg-muted">
+                          <tr>
+                            <th className="p-2 text-left">Store Code</th>
+                            <th className="p-2 text-left">Import Data</th>
+                            <th className="p-2 text-left">Existing Data</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {duplicateBusinesses.map((duplicate, index) => (
+                            <tr key={index} className="border-t">
+                              <td className="p-2 font-medium">{duplicate.storeCode}</td>
+                              <td className="p-2 text-xs">
+                                <div className="space-y-1">
+                                  <div><strong>Name:</strong> {duplicate.importRow[columnMappings.find(m => m.mapped === 'businessName')?.original || ''] || 'N/A'}</div>
+                                  <div><strong>Address:</strong> {duplicate.importRow[columnMappings.find(m => m.mapped === 'addressLine1')?.original || ''] || 'N/A'}</div>
+                                </div>
+                              </td>
+                              <td className="p-2 text-xs">
+                                <div className="space-y-1">
+                                  <div><strong>Name:</strong> {duplicate.existingBusiness.businessName || 'N/A'}</div>
+                                  <div><strong>Address:</strong> {duplicate.existingBusiness.addressLine1 || 'N/A'}</div>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    <Card className="bg-red-50 border-red-200">
+                      <CardContent className="pt-4">
+                        <div className="space-y-4">
+                          <div className="flex items-start gap-3">
+                            <AlertCircle className="h-5 w-5 text-red-600 mt-0.5" />
+                            <div>
+                              <h4 className="font-medium text-red-800">Override Existing Locations</h4>
+                              <p className="text-sm text-red-700 mt-1">
+                                This will permanently delete the existing businesses and replace them with the imported data.
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="space-y-3">
+                            <div>
+                              <label className="text-sm font-medium text-red-800">
+                                Type "OVERRIDE" to confirm deletion of existing businesses:
+                              </label>
+                              <Input
+                                value={overrideConfirmation}
+                                onChange={(e) => setOverrideConfirmation(e.target.value)}
+                                placeholder="Type OVERRIDE to confirm"
+                                className="mt-1"
+                              />
+                            </div>
+
+                            <div className="flex items-center space-x-2">
+                              <Checkbox
+                                id="override-checkbox"
+                                checked={allowOverride}
+                                onCheckedChange={(checked) => setAllowOverride(checked as boolean)}
+                                disabled={overrideConfirmation !== 'OVERRIDE'}
+                              />
+                              <label
+                                htmlFor="override-checkbox"
+                                className={`text-sm ${overrideConfirmation === 'OVERRIDE' ? 'text-red-800' : 'text-gray-400'}`}
+                              >
+                                I understand this will permanently delete {duplicateBusinesses.length} existing business{duplicateBusinesses.length > 1 ? 'es' : ''} and replace them with imported data
+                              </label>
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </>
+                )}
+              </TabsContent>
+            </Tabs>
+
+            <div className="flex justify-between items-center">
+              <div className="flex gap-2">
+                <Button onClick={importData} disabled={loading}>
+                  {loading ? 'Importing...' : (
+                    allowOverride && duplicateBusinesses.length > 0 
+                      ? `Import ${parsedData.length} Businesses (Override ${duplicateBusinesses.length} Duplicates)`
+                      : `Import ${parsedData.length - duplicateBusinesses.length} New Businesses`
+                  )}
+                </Button>
+              </div>
               <Button variant="outline" onClick={() => setStep('mapping')}>
                 Back to Mapping
               </Button>
-              <div className="flex gap-2">
-                <Button onClick={importData} disabled={loading}>
-                  {loading ? 'Importing...' : `Import ${parsedData.length} Businesses`}
-                </Button>
-              </div>
             </div>
           </div>
         )}
