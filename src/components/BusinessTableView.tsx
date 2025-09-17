@@ -128,11 +128,13 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit }: Busine
               </TableHead>
               <TableHead>
                 <div
-                  className="flex items-center gap-1 cursor-pointer"
+                  className="flex items-center gap-1 cursor-pointer text-gray-700 dark:text-gray-300"
                   onClick={() => handleSort('storeCode')}
                 >
                   <span>Store Code</span>
-                  {currentSort.direction === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />}
+                  {currentSort?.key === 'storeCode' && (
+                    currentSort.direction === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />
+                  )}
                 </div>
               </TableHead>
               <TableHead>Business Name</TableHead>
