@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAdmin } from '@/hooks/use-admin';
-import gxBackground from '@/assets/gx-background.jpg';
+import gxBackground from '@/assets/jasoner-background2.jpg';
 import jasonerMascot from '@/assets/jasoner-mascot.png';
 
 const AuthPage = () => {
