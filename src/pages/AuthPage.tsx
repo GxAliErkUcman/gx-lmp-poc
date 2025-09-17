@@ -8,7 +8,7 @@ import { toast } from '@/hooks/use-toast';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAdmin } from '@/hooks/use-admin';
 import gxBackground from '@/assets/jasoner-background2.jpg';
-import jasonerMascot from '@/assets/jasoner-mascot.png';
+import jasonerMascot from '@/assets/jasoner-logo-1.svg';
 
 const AuthPage = () => {
   const [isLogin, setIsLogin] = useState(true);
