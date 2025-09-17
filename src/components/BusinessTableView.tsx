@@ -99,6 +99,7 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit }: Busine
                   aria-label="Select all businesses"
                 />
               </TableHead>
+              <TableHead>Store Code</TableHead>
               <TableHead>Business Name</TableHead>
               <TableHead>Category</TableHead>
               <TableHead>Location</TableHead>
@@ -126,6 +127,11 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit }: Busine
                       <Badge variant="destructive">Replace store code</Badge>
                     )}
                   </div>
+                </TableCell>
+                <TableCell>
+                  {business.storeCode && (
+                    <Badge variant="secondary">{business.storeCode}</Badge>
+                  )}
                 </TableCell>
                 <TableCell>
                   {business.primaryCategory && (
