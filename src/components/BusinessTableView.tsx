@@ -78,6 +78,7 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit }: Busine
     });
 
     setFilteredBusinesses(sortedArray);
+    setCurrentSort('storeCode', direction);
   };
 
   // Update filtered businesses when businesses prop changes
