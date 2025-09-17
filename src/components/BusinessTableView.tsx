@@ -132,9 +132,7 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit }: Busine
                   onClick={() => handleSort('storeCode')}
                 >
                   <span>Store Code</span>
-                  {currentSort?.key === 'storeCode' && (
-                    currentSort.direction === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />
-                  )}
+                  {currentSort.direction === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />}
                 </div>
               </TableHead>
               <TableHead>Business Name</TableHead>
