@@ -25,7 +25,8 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit }: Busine
     const filtered = businesses.filter(business => 
       business.businessName?.toLowerCase().includes(term.toLowerCase()) ||
       business.city?.toLowerCase().includes(term.toLowerCase()) ||
-      business.primaryCategory?.toLowerCase().includes(term.toLowerCase())
+      business.primaryCategory?.toLowerCase().includes(term.toLowerCase()) || 
+      business.storeCode?.toLowerCase().includes(term.toLowerCase())
     );
     setFilteredBusinesses(filtered);
   };
