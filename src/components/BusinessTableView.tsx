@@ -105,6 +105,7 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit }: Busine
               <TableHead>Location</TableHead>
               <TableHead>Phone</TableHead>
               <TableHead>Website</TableHead>
+              <TableHead>Labels</TableHead>
               <TableHead className="w-20">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -179,6 +180,20 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit }: Busine
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
+                </TableCell>
+                <TableCell>
+                  {business.labels ? (
+                    <a 
+                      href={business.labels} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-sm text-primary hover:underline truncate max-w-[200px] block"
+                    >
+                      {business.labels}
+                    </a>
+                  ) : (
+                    <span className="text-sm text-muted-foreground">-</span>
+                  )}
                 </TableCell>
               </TableRow>
             ))}
