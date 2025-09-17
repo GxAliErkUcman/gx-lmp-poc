@@ -19,7 +19,7 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit }: Busine
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredBusinesses, setFilteredBusinesses] = useState(businesses);
-  const [currentSort, setCurrentSort] = useState<{ key: keyof Business, direction: 'asc' | 'desc' } | null>('asc');
+  const [currentSort, setCurrentSort] = useState<{ key: keyof Business, direction: 'asc' | 'desc' } | null>(null);
 
 
   // Filter businesses based on search term
@@ -51,7 +51,6 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit }: Busine
       setSelectedIds([]);
     }
   };
-  
 
   // Check if all visible businesses are selected
   const isAllSelected = filteredBusinesses.length > 0 && 
