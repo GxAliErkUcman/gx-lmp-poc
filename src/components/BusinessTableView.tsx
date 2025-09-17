@@ -4,8 +4,9 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Edit, Trash2, Search } from 'lucide-react';
+import { Edit, Trash2, Search, ArrowUp, ArrowDown } from 'lucide-react';
 import { Business } from '@/types/business';
+
 
 interface BusinessTableViewProps {
   businesses: Business[];
