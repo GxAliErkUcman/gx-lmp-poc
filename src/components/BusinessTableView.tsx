@@ -53,20 +53,18 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit }: Busine
   const isAllSelected = filteredBusinesses.length > 0 && 
     filteredBusinesses.every(business => selectedIds.includes(business.id));
 
-  const requestSort = (key: keyof Business) => {
+  const handleSort = (key: keyof Business) => {
     let direction: 'asc' | 'desc' = 'asc';
-    // Check if we're already sorting by this key to toggle direction
-    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
-      direction = 'desc';
+    
+    // Check if the same column is clicked to toggle the direction
+    if (currentSort && currentSort.key === key) {
+      direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
     }
-    setSortConfig({ key, direction });
-  
-    // Create a copy of the current filtered businesses to sort
-    const sorted = [...filteredBusinesses].sort((a, b) => {
-      // Handle cases where a property might be undefined
+
+    // Sort a copy of the array and update the state
+    const sortedArray = [...filteredBusinesses].sort((a, b) => {
       const aValue = a[key] || '';
       const bValue = b[key] || '';
-  
       if (aValue < bValue) {
         return direction === 'asc' ? -1 : 1;
       }
@@ -75,9 +73,8 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit }: Busine
       }
       return 0;
     });
-  
-    // Update the state with the newly sorted array
-    setFilteredBusinesses(sorted);
+
+    setFilteredBusinesses(sortedArray);
   };
 
   // Update filtered businesses when businesses prop changes
@@ -127,15 +124,14 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit }: Busine
                   aria-label="Select all businesses"
                 />
               </TableHead>
-              <TableHead className="w-12">
+              <TableHead>
                 <div
                   className="flex items-center gap-1 cursor-pointer"
-                  onClick={() => requestSort('storeCode')}
+                  onClick={() => handleSort('storeCode')}
                 >
                   <span>Store Code</span>
-                  {/* Optional: Add sort direction indicator */}
-                  {sortConfig?.key === 'storeCode' && (
-                    sortConfig.direction === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />
+                  {currentSort?.key === 'storeCode' && (
+                    currentSort.direction === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />
                   )}
                 </div>
               </TableHead>
