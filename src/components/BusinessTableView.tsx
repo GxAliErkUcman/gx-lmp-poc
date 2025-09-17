@@ -53,6 +53,33 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit }: Busine
   const isAllSelected = filteredBusinesses.length > 0 && 
     filteredBusinesses.every(business => selectedIds.includes(business.id));
 
+  const requestSort = (key: keyof Business) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    // Check if we're already sorting by this key to toggle direction
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  
+    // Create a copy of the current filtered businesses to sort
+    const sorted = [...filteredBusinesses].sort((a, b) => {
+      // Handle cases where a property might be undefined
+      const aValue = a[key] || '';
+      const bValue = b[key] || '';
+  
+      if (aValue < bValue) {
+        return direction === 'asc' ? -1 : 1;
+      }
+      if (aValue > bValue) {
+        return direction === 'asc' ? 1 : -1;
+      }
+      return 0;
+    });
+  
+    // Update the state with the newly sorted array
+    setFilteredBusinesses(sorted);
+  };
+
   // Update filtered businesses when businesses prop changes
   React.useEffect(() => {
     handleSearch(searchTerm);
@@ -100,7 +127,18 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit }: Busine
                   aria-label="Select all businesses"
                 />
               </TableHead>
-              <TableHead>Store Code</TableHead>
+              <TableHead className="w-12">
+                <div
+                  className="flex items-center gap-1 cursor-pointer"
+                  onClick={() => requestSort('storeCode')}
+                >
+                  <span>Store Code</span>
+                  {/* Optional: Add sort direction indicator */}
+                  {sortConfig?.key === 'storeCode' && (
+                    sortConfig.direction === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />
+                  )}
+                </div>
+              </TableHead>
               <TableHead>Business Name</TableHead>
               <TableHead>Category</TableHead>
               <TableHead>Location</TableHead>
