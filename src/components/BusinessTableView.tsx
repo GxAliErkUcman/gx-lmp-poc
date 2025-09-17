@@ -78,7 +78,6 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit }: Busine
     });
 
     setFilteredBusinesses(sortedArray);
-    setCurrentSort({ key, direction }); 
   };
 
   // Update filtered businesses when businesses prop changes
@@ -139,7 +138,17 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit }: Busine
                   )}
                 </div>
               </TableHead>
-              <TableHead>Business Name</TableHead>
+              <TableHead>
+                 <div
+                  className="flex items-center gap-1 cursor-pointer text-gray-700 dark:text-gray-300"
+                  onClick={() => handleSort('businessName')}
+                >
+                  <span>Store Code</span>
+                  {currentSort?.key === 'businessName' && (
+                    currentSort.direction === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />
+                  )}
+                </div>
+              </TableHead>
               <TableHead>Category</TableHead>
               <TableHead>Location</TableHead>
               <TableHead>Phone</TableHead>
