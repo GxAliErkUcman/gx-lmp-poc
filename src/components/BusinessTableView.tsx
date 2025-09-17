@@ -120,6 +120,11 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit }: Busine
                     aria-label={`Select ${business.businessName}`}
                   />
                 </TableCell>
+                <TableCell>
+                  {business.storeCode && (
+                    <Badge variant="secondary">{business.storeCode}</Badge>
+                  )}
+                </TableCell>
                 <TableCell className="font-medium">
                   <div className="flex items-center gap-2">
                     <span>{business.businessName}</span>
@@ -127,11 +132,6 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit }: Busine
                       <Badge variant="destructive">Replace store code</Badge>
                     )}
                   </div>
-                </TableCell>
-                <TableCell>
-                  {business.storeCode && (
-                    <Badge variant="secondary">{business.storeCode}</Badge>
-                  )}
                 </TableCell>
                 <TableCell>
                   {business.primaryCategory && (
