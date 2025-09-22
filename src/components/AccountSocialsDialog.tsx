@@ -50,10 +50,10 @@ const SOCIAL_PLATFORMS = [
   { key: 'facebookUrl', label: 'Facebook', baseUrl: 'https://facebook.com/' },
   { key: 'instagramUrl', label: 'Instagram', baseUrl: 'https://instagram.com/' },
   { key: 'linkedinUrl', label: 'LinkedIn', baseUrl: 'https://linkedin.com/company/' },
-  { key: 'pinterestUrl', label: 'Pinterest', baseUrl: 'https://pinterest.com/' },
-  { key: 'tiktokUrl', label: 'TikTok', baseUrl: 'https://tiktok.com/@' },
   { key: 'twitterUrl', label: 'X (Twitter)', baseUrl: 'https://x.com/' },
   { key: 'youtubeUrl', label: 'YouTube', baseUrl: 'https://youtube.com/@' },
+  { key: 'tiktokUrl', label: 'TikTok', baseUrl: 'https://tiktok.com/@' },
+  { key: 'pinterestUrl', label: 'Pinterest', baseUrl: 'https://pinterest.com/' },
 ] as const;
 
 interface AccountSocialsDialogProps {
@@ -315,7 +315,7 @@ const AccountSocialsDialog = ({ open, onOpenChange, onSuccess }: AccountSocialsD
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh]">
+      <DialogContent className="sm:max-w-[800px] max-h-[90vh]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Share2 className="w-5 h-5" />
@@ -365,7 +365,7 @@ const AccountSocialsDialog = ({ open, onOpenChange, onSuccess }: AccountSocialsD
                               {stat.mostCommonUrl && (
                                 <div className="text-[10px]">
                                   <div className="text-muted-foreground break-all font-mono text-[10px] p-1 bg-muted rounded">
-                                    {stat.mostCommonUrl.length > 30 ? stat.mostCommonUrl.substring(0, 30) + '...' : stat.mostCommonUrl}
+                                    {stat.mostCommonUrl.length > 50 ? stat.mostCommonUrl.substring(0, 50) + '...' : stat.mostCommonUrl}
                                   </div>
                                   {stat.urlVariations > 1 && (
                                     <div className="text-[10px] text-amber-600 mt-1">
@@ -402,7 +402,7 @@ const AccountSocialsDialog = ({ open, onOpenChange, onSuccess }: AccountSocialsD
                                 {stat.mostCommonUrl && (
                                   <div className="text-[10px]">
                                     <div className="text-muted-foreground break-all font-mono text-[10px] p-1 bg-muted rounded">
-                                      {stat.mostCommonUrl.length > 30 ? stat.mostCommonUrl.substring(0, 30) + '...' : stat.mostCommonUrl}
+                                      {stat.mostCommonUrl.length > 50 ? stat.mostCommonUrl.substring(0, 50) + '...' : stat.mostCommonUrl}
                                     </div>
                                     {stat.urlVariations > 1 && (
                                       <div className="text-[10px] text-amber-600 mt-1">
