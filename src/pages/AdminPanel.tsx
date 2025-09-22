@@ -250,22 +250,13 @@ const AdminPanel = () => {
 
       if (listError) throw listError;
 
-      // Filter to non-forced exports that start with the current user's name
-      const emailPrefix = (user?.email || '').split('@')[0]?.toLowerCase()
-      const first = (user?.user_metadata?.first_name || '').toLowerCase().replace(/\s+/g, '-')
-      const last = (user?.user_metadata?.last_name || '').toLowerCase().replace(/\s+/g, '-')
-      const nameCandidates = [emailPrefix, [first, last].filter(Boolean).join('.')].filter(Boolean) as string[]
+      // Upload all files from the json-exports bucket
+      const allFiles = files || [];
 
-      const crudFiles = (files || []).filter(file => {
-        if (!file.name.endsWith('.json') || file.name.startsWith('manualexport-')) return false
-        if (nameCandidates.length === 0) return true // fallback: include all non-forced exports
-        return nameCandidates.some(prefix => file.name.toLowerCase().startsWith(prefix))
-      })
-
-      if (crudFiles.length === 0) {
+      if (allFiles.length === 0) {
         toast({
           title: "No Files to Sync",
-          description: "No user-prefixed non-forced exports found to sync to GCP.",
+          description: "No files found in json-exports bucket to sync to GCP.",
           variant: "destructive",
         });
         return;
@@ -275,7 +266,7 @@ const AdminPanel = () => {
       let failedCount = 0;
 
       // Sync each file to GCP
-      for (const file of crudFiles) {
+      for (const file of allFiles) {
         try {
           const { error } = await supabase.functions.invoke('sync-to-gcp', {
             body: {
