@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -460,7 +460,7 @@ const MultiEditDialog = ({ open, onOpenChange, selectedIds, onSuccess }: MultiEd
                   name="twitterUrl"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>X (Twitter) URL</FormLabel>
+                      <FormLabel>Twitter URL</FormLabel>
                       <FormControl>
                         <Input placeholder="Leave empty to skip" {...field} />
                       </FormControl>
@@ -561,7 +561,7 @@ const MultiEditDialog = ({ open, onOpenChange, selectedIds, onSuccess }: MultiEd
                     <input
                       type="file"
                       accept="image/*"
-                      onChange={handleCoverPhotoUpload}
+                      onChange={handlePhotoUpload}
                       disabled={uploading}
                       className="hidden"
                       id="additional-upload"
