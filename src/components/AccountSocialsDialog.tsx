@@ -339,65 +339,89 @@ const AccountSocialsDialog = ({ open, onOpenChange, onSuccess }: AccountSocialsD
             </TabsTrigger>
           </TabsList>
 
-          <ScrollArea className="max-h-[60vh] pr-4 mt-4">
-            <TabsContent value="analytics" className="mt-0">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Social Media Status</CardTitle>
-                  <p className="text-sm text-muted-foreground">
-                    Overview of social media links across all your business locations.
-                  </p>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="grid gap-3">
-                    {socialStats.map(stat => (
-                      <div key={stat.platform} className="p-3 border rounded-lg bg-card/50">
-                        <div className="flex items-center justify-between mb-2">
-                          <h4 className="font-medium text-sm">{stat.platformLabel}</h4>
-                          <Badge variant={stat.locationsWithSocial > 0 ? "default" : "secondary"} className="text-xs">
-                            {stat.locationsWithSocial} of {stat.totalLocations}
-                          </Badge>
-                        </div>
-                        
-                        {stat.locationsWithSocial > 0 ? (
-                          <div className="space-y-1">
-                            {stat.mostCommonUrl && (
-                              <div className="text-xs">
-                                <span className="font-medium">Current link:</span>
-                                <div className="text-muted-foreground break-all font-mono text-xs mt-1 p-1 bg-muted rounded">
-                                  {stat.mostCommonUrl}
+          <TabsContent value="analytics" className="mt-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Social Media Status</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Overview of social media links across all your business locations.
+                </p>
+              </CardHeader>
+              <ScrollArea className="max-h-[50vh]">
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                    {socialStats.slice(0, 4).map(stat => (
+                      <Card key={stat.platform} className="p-3 bg-card/50">
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <h4 className="font-medium text-xs">{stat.platformLabel}</h4>
+                            <Badge variant={stat.locationsWithSocial > 0 ? "default" : "secondary"} className="text-[10px] px-1 py-0.5">
+                              {stat.locationsWithSocial}/{stat.totalLocations}
+                            </Badge>
+                          </div>
+                          
+                          {stat.locationsWithSocial > 0 ? (
+                            <div className="space-y-1">
+                              {stat.mostCommonUrl && (
+                                <div className="text-[10px]">
+                                  <div className="text-muted-foreground break-all font-mono text-[10px] p-1 bg-muted rounded">
+                                    {stat.mostCommonUrl.length > 30 ? stat.mostCommonUrl.substring(0, 30) + '...' : stat.mostCommonUrl}
+                                  </div>
+                                  {stat.urlVariations > 1 && (
+                                    <div className="text-[10px] text-amber-600 mt-1">
+                                      ⚠️ {stat.urlVariations} variants
+                                    </div>
+                                  )}
                                 </div>
-                                {stat.allUrls[0] && (
-                                  <div className="text-xs text-muted-foreground mt-1">
-                                    Used by {stat.allUrls[0].count} location{stat.allUrls[0].count > 1 ? 's' : ''}
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                            
-                            {stat.urlVariations > 1 && (
-                              <div className="text-xs text-amber-600">
-                                <span className="font-medium">⚠️ Inconsistent:</span> {stat.urlVariations} different links across locations
-                                {stat.allUrls.length > 1 && (
-                                  <div className="mt-1 text-xs space-y-1">
-                                    {stat.allUrls.slice(1).map((url, idx) => (
-                                      <div key={idx} className="font-mono p-1 bg-amber-50 rounded">
-                                        {url.url} ({url.count} location{url.count > 1 ? 's' : ''})
-                                      </div>
-                                    ))}
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        ) : (
-                          <div className="text-xs text-muted-foreground">
-                            No {stat.platformLabel} links set
-                          </div>
-                        )}
-                      </div>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="text-[10px] text-muted-foreground">
+                              Not set
+                            </div>
+                          )}
+                        </div>
+                      </Card>
                     ))}
                   </div>
+                  
+                  {socialStats.length > 4 && (
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+                      {socialStats.slice(4).map(stat => (
+                        <Card key={stat.platform} className="p-3 bg-card/50">
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <h4 className="font-medium text-xs">{stat.platformLabel}</h4>
+                              <Badge variant={stat.locationsWithSocial > 0 ? "default" : "secondary"} className="text-[10px] px-1 py-0.5">
+                                {stat.locationsWithSocial}/{stat.totalLocations}
+                              </Badge>
+                            </div>
+                            
+                            {stat.locationsWithSocial > 0 ? (
+                              <div className="space-y-1">
+                                {stat.mostCommonUrl && (
+                                  <div className="text-[10px]">
+                                    <div className="text-muted-foreground break-all font-mono text-[10px] p-1 bg-muted rounded">
+                                      {stat.mostCommonUrl.length > 30 ? stat.mostCommonUrl.substring(0, 30) + '...' : stat.mostCommonUrl}
+                                    </div>
+                                    {stat.urlVariations > 1 && (
+                                      <div className="text-[10px] text-amber-600 mt-1">
+                                        ⚠️ {stat.urlVariations} variants
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <div className="text-[10px] text-muted-foreground">
+                                Not set
+                              </div>
+                            )}
+                          </div>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
                   
                   {socialStats.length === 0 && (
                     <div className="text-center text-muted-foreground text-sm py-8">
@@ -405,17 +429,19 @@ const AccountSocialsDialog = ({ open, onOpenChange, onSuccess }: AccountSocialsD
                     </div>
                   )}
                 </CardContent>
-              </Card>
-            </TabsContent>
+              </ScrollArea>
+            </Card>
+          </TabsContent>
 
-            <TabsContent value="single" className="mt-0">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Update Single Platform</CardTitle>
-                  <p className="text-sm text-muted-foreground">
-                    Select a specific social media platform to update across all your businesses. This preserves existing links on other platforms.
-                  </p>
-                </CardHeader>
+          <TabsContent value="single" className="mt-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Update Single Platform</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Select a specific social media platform to update across all your businesses. This preserves existing links on other platforms.
+                </p>
+              </CardHeader>
+              <ScrollArea className="max-h-[50vh]">
                 <CardContent>
                   <Form {...singleForm}>
                     <form onSubmit={singleForm.handleSubmit(onSubmitSingle)} className="space-y-4">
@@ -496,20 +522,31 @@ const AccountSocialsDialog = ({ open, onOpenChange, onSuccess }: AccountSocialsD
                           }}
                         />
                       )}
+
+                      <div className="flex justify-end gap-2 pt-4">
+                        <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                          Cancel
+                        </Button>
+                        <Button type="submit" disabled={loading}>
+                          {loading ? 'Updating...' : 'Update Platform'}
+                        </Button>
+                      </div>
                     </form>
                   </Form>
                 </CardContent>
-              </Card>
-            </TabsContent>
+              </ScrollArea>
+            </Card>
+          </TabsContent>
 
-            <TabsContent value="all" className="mt-0">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Update All Platforms</CardTitle>
-                  <p className="text-sm text-muted-foreground">
-                    Set multiple social media links at once. Empty fields will remove existing links on those platforms.
-                  </p>
-                </CardHeader>
+          <TabsContent value="all" className="mt-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Update All Platforms</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Set multiple social media links at once. Empty fields will remove existing links on those platforms.
+                </p>
+              </CardHeader>
+              <ScrollArea className="max-h-[50vh]">
                 <CardContent>
                   <Form {...allForm}>
                     <form onSubmit={allForm.handleSubmit(onSubmitAll)} className="space-y-4">
@@ -548,36 +585,22 @@ const AccountSocialsDialog = ({ open, onOpenChange, onSuccess }: AccountSocialsD
                           />
                         ))}
                       </div>
+
+                      <div className="flex justify-end gap-2 pt-4">
+                        <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                          Cancel
+                        </Button>
+                        <Button type="submit" disabled={loading}>
+                          {loading ? 'Applying...' : 'Apply to All Businesses'}
+                        </Button>
+                      </div>
                     </form>
                   </Form>
                 </CardContent>
-              </Card>
-            </TabsContent>
-          </ScrollArea>
+              </ScrollArea>
+            </Card>
+          </TabsContent>
         </Tabs>
-        
-        <div className="flex justify-end gap-2 pt-4 border-t">
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          {activeTab === 'analytics' ? null : activeTab === 'single' ? (
-            <Button 
-              type="submit" 
-              disabled={loading || !singleForm.watch('platform') || !singleForm.watch('url')}
-              onClick={singleForm.handleSubmit(onSubmitSingle)}
-            >
-              {loading ? 'Updating...' : 'Update Selected Platform'}
-            </Button>
-          ) : (
-            <Button 
-              type="submit" 
-              disabled={loading}
-              onClick={allForm.handleSubmit(onSubmitAll)}
-            >
-              {loading ? 'Applying...' : 'Apply to All Businesses'}
-            </Button>
-          )}
-        </div>
       </DialogContent>
     </Dialog>
   );
