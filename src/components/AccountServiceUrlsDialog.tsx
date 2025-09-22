@@ -100,7 +100,7 @@ const AccountServiceUrlsDialog = ({ open, onOpenChange, onSuccess }: AccountServ
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Link className="w-5 h-5" />
@@ -115,7 +115,7 @@ const AccountServiceUrlsDialog = ({ open, onOpenChange, onSuccess }: AccountServ
           </p>
 
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
               <FormField
                 control={form.control}
                 name="appointmentURL"

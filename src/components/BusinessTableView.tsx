@@ -24,6 +24,7 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit }: Busine
   const [currentSort, setCurrentSort] = useState<{ key: keyof Business, direction: 'asc' | 'desc' } | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<string>('');
   const [cityFilter, setCityFilter] = useState<string>('');
+  const [countryFilter, setCountryFilter] = useState<string>('');
   const [showFilters, setShowFilters] = useState(false);
   const [manageColumnsOpen, setManageColumnsOpen] = useState(false);
   
@@ -43,26 +44,33 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit }: Busine
   // Get unique values for filter dropdowns
   const uniqueCategories = [...new Set(businesses.map(b => b.primaryCategory).filter(Boolean))];
   const uniqueCities = [...new Set(businesses.map(b => b.city).filter(Boolean))];
+  const uniqueCountries = [...new Set(businesses.map(b => b.country).filter(Boolean))];
 
   // Filter businesses based on search term and filters
   const handleSearch = (term: string) => {
     setSearchTerm(term);
-    applyFilters(term, categoryFilter, cityFilter);
+    applyFilters(term, categoryFilter, cityFilter, countryFilter);
   };
 
   const handleCategoryFilter = (category: string) => {
     const filterValue = category === "all" ? "" : category;
     setCategoryFilter(filterValue);
-    applyFilters(searchTerm, filterValue, cityFilter);
+    applyFilters(searchTerm, filterValue, cityFilter, countryFilter);
   };
 
   const handleCityFilter = (city: string) => {
     const filterValue = city === "all" ? "" : city;
     setCityFilter(filterValue);
-    applyFilters(searchTerm, categoryFilter, filterValue);
+    applyFilters(searchTerm, categoryFilter, filterValue, countryFilter);
   };
 
-  const applyFilters = (search: string, category: string, city: string) => {
+  const handleCountryFilter = (country: string) => {
+    const filterValue = country === "all" ? "" : country;
+    setCountryFilter(filterValue);
+    applyFilters(searchTerm, categoryFilter, cityFilter, filterValue);
+  };
+
+  const applyFilters = (search: string, category: string, city: string, country: string) => {
     let filtered = businesses.filter(business => {
       const matchesSearch = !search || 
         business.businessName?.toLowerCase().includes(search.toLowerCase()) ||
@@ -72,8 +80,9 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit }: Busine
       
       const matchesCategory = !category || business.primaryCategory === category;
       const matchesCity = !city || business.city === city;
+      const matchesCountry = !country || business.country === country;
       
-      return matchesSearch && matchesCategory && matchesCity;
+      return matchesSearch && matchesCategory && matchesCity && matchesCountry;
     });
     
     setFilteredBusinesses(filtered);
@@ -83,6 +92,7 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit }: Busine
     setSearchTerm('');
     setCategoryFilter('');
     setCityFilter('');
+    setCountryFilter('');
     setFilteredBusinesses(businesses);
   };
 
@@ -134,8 +144,8 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit }: Busine
 
   // Update filtered businesses when businesses prop changes
   React.useEffect(() => {
-    applyFilters(searchTerm, categoryFilter, cityFilter);
-  }, [businesses, searchTerm, categoryFilter, cityFilter]);
+    applyFilters(searchTerm, categoryFilter, cityFilter, countryFilter);
+  }, [businesses, searchTerm, categoryFilter, cityFilter, countryFilter]);
 
   const visibleColumns = columns.filter(col => col.visible);
 
@@ -162,9 +172,9 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit }: Busine
           >
             <Filter className="w-4 h-4" />
             Filters
-            {(categoryFilter || cityFilter) && (
+            {(categoryFilter || cityFilter || countryFilter) && (
               <Badge variant="secondary" className="ml-1">
-                {[categoryFilter, cityFilter].filter(Boolean).length}
+                {[categoryFilter, cityFilter, countryFilter].filter(Boolean).length}
               </Badge>
             )}
           </Button>
@@ -232,8 +242,25 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit }: Busine
               </SelectContent>
             </Select>
           </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium">Country:</span>
+            <Select value={countryFilter} onValueChange={handleCountryFilter}>
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="All countries" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All countries</SelectItem>
+                {uniqueCountries.map(country => (
+                  <SelectItem key={country} value={country}>
+                    {country}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           
-          {(categoryFilter || cityFilter) && (
+          {(categoryFilter || cityFilter || countryFilter) && (
             <Button
               variant="ghost"
               size="sm"
@@ -368,7 +395,7 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit }: Busine
 
       {filteredBusinesses.length === 0 && (
         <div className="text-center py-8 text-muted-foreground">
-          {searchTerm || categoryFilter || cityFilter ? 'No businesses found matching your criteria.' : 'No businesses found.'}
+          {searchTerm || categoryFilter || cityFilter || countryFilter ? 'No businesses found matching your criteria.' : 'No businesses found.'}
         </div>
       )}
 
