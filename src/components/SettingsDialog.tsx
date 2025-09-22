@@ -22,7 +22,8 @@ const SettingsDialog = ({ open, onOpenChange, onLogoUploaded }: SettingsDialogPr
 
   const handleSocialsSuccess = () => {
     setSocialsDialogOpen(false);
-    // Trigger any necessary updates in parent component
+    // Trigger refresh in parent component
+    onLogoUploaded(); // This callback will refresh the businesses data
   };
 
   return (

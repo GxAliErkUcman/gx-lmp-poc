@@ -228,6 +228,7 @@ const AccountSocialsDialog = ({ open, onOpenChange, onSuccess }: AccountSocialsD
       });
 
       allForm.reset();
+      fetchSocialStats(); // Refresh stats after update
       onSuccess();
       onOpenChange(false);
     } catch (error) {
@@ -296,6 +297,7 @@ const AccountSocialsDialog = ({ open, onOpenChange, onSuccess }: AccountSocialsD
       });
 
       singleForm.reset();
+      fetchSocialStats(); // Refresh stats after update
       onSuccess();
       onOpenChange(false);
     } catch (error) {
@@ -346,48 +348,62 @@ const AccountSocialsDialog = ({ open, onOpenChange, onSuccess }: AccountSocialsD
                     Overview of social media links across all your business locations.
                   </p>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  {socialStats.map(stat => (
-                    <div key={stat.platform} className="p-4 border rounded-lg">
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="font-medium">{stat.platformLabel}</h4>
-                        <Badge variant={stat.locationsWithSocial > 0 ? "default" : "secondary"}>
-                          {stat.locationsWithSocial} of {stat.totalLocations} locations
-                        </Badge>
+                <CardContent className="space-y-3">
+                  <div className="grid gap-3">
+                    {socialStats.map(stat => (
+                      <div key={stat.platform} className="p-3 border rounded-lg bg-card/50">
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="font-medium text-sm">{stat.platformLabel}</h4>
+                          <Badge variant={stat.locationsWithSocial > 0 ? "default" : "secondary"} className="text-xs">
+                            {stat.locationsWithSocial} of {stat.totalLocations}
+                          </Badge>
+                        </div>
+                        
+                        {stat.locationsWithSocial > 0 ? (
+                          <div className="space-y-1">
+                            {stat.mostCommonUrl && (
+                              <div className="text-xs">
+                                <span className="font-medium">Current link:</span>
+                                <div className="text-muted-foreground break-all font-mono text-xs mt-1 p-1 bg-muted rounded">
+                                  {stat.mostCommonUrl}
+                                </div>
+                                {stat.allUrls[0] && (
+                                  <div className="text-xs text-muted-foreground mt-1">
+                                    Used by {stat.allUrls[0].count} location{stat.allUrls[0].count > 1 ? 's' : ''}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                            
+                            {stat.urlVariations > 1 && (
+                              <div className="text-xs text-amber-600">
+                                <span className="font-medium">⚠️ Inconsistent:</span> {stat.urlVariations} different links across locations
+                                {stat.allUrls.length > 1 && (
+                                  <div className="mt-1 text-xs space-y-1">
+                                    {stat.allUrls.slice(1).map((url, idx) => (
+                                      <div key={idx} className="font-mono p-1 bg-amber-50 rounded">
+                                        {url.url} ({url.count} location{url.count > 1 ? 's' : ''})
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="text-xs text-muted-foreground">
+                            No {stat.platformLabel} links set
+                          </div>
+                        )}
                       </div>
-                      
-                      {stat.locationsWithSocial > 0 ? (
-                        <div className="space-y-2">
-                          {stat.mostCommonUrl && (
-                            <div className="text-sm">
-                              <span className="font-medium">Most common link:</span>
-                              <div className="text-muted-foreground break-all">{stat.mostCommonUrl}</div>
-                              {stat.allUrls[0] && (
-                                <div className="text-xs text-muted-foreground">
-                                  Used by {stat.allUrls[0].count} location{stat.allUrls[0].count > 1 ? 's' : ''}
-                                </div>
-                              )}
-                            </div>
-                          )}
-                          
-                          {stat.urlVariations > 1 && (
-                            <div className="text-sm text-amber-600">
-                              <span className="font-medium">Note:</span> {stat.urlVariations} different links set across {stat.locationsWithSocial} locations
-                              {stat.allUrls.length > 1 && (
-                                <div className="mt-1 text-xs">
-                                  Other variants: {stat.allUrls.slice(1).map(url => `${url.url} (${url.count})`).join(', ')}
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        <div className="text-sm text-muted-foreground">
-                          No {stat.platformLabel} links set for any locations
-                        </div>
-                      )}
+                    ))}
+                  </div>
+                  
+                  {socialStats.length === 0 && (
+                    <div className="text-center text-muted-foreground text-sm py-8">
+                      Loading social media status...
                     </div>
-                  ))}
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>

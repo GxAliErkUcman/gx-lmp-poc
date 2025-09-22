@@ -189,7 +189,7 @@ const Dashboard = () => {
                 className="shadow-modern"
               >
                 <Settings className="w-4 h-4 mr-2" />
-                Settings
+                Account Wide Settings
               </Button>
               <Button 
                 onClick={() => setImportDialogOpen(true)}

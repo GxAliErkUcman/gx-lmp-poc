@@ -146,89 +146,114 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
     }
   }, [businessName, business, setValue, watch]);
 
-  useEffect(() => {
-    if (business) {
-      // Populate form with existing business data
-      setValue('storeCode', business.storeCode);
-      setValue('businessName', business.businessName);
-      setValue('addressLine1', business.addressLine1);
-      setValue('country', business.country);
-      setValue('primaryCategory', business.primaryCategory);
-      setValue('addressLine2', business.addressLine2 || '');
-      setValue('addressLine3', business.addressLine3 || '');
-      setValue('addressLine4', business.addressLine4 || '');
-      setValue('addressLine5', business.addressLine5 || '');
-      setValue('postalCode', business.postalCode || '');
-      setValue('district', business.district || '');
-      setValue('city', business.city || '');
-      setValue('state', business.state || '');
-      setValue('latitude', business.latitude);
-      setValue('longitude', business.longitude);
-      setValue('additionalCategories', business.additionalCategories || '');
-      setValue('website', business.website || '');
-      setValue('primaryPhone', business.primaryPhone || '');
-      setValue('additionalPhones', business.additionalPhones || '');
-      setValue('adwords', business.adwords || '');
-      setValue('openingDate', business.openingDate || '');
-      setValue('fromTheBusiness', business.fromTheBusiness || '');
-      setValue('labels', business.labels || '');
-      setValue('temporarilyClosed', business.temporarilyClosed || false);
-      setValue('logoPhoto', business.logoPhoto || '');
-      setValue('coverPhoto', business.coverPhoto || '');
-      setValue('otherPhotos', business.otherPhotos || '');
-      setValue('appointmentURL', business.appointmentURL || '');
-      setValue('menuURL', business.menuURL || '');
-      setValue('reservationsURL', business.reservationsURL || '');
-      setValue('orderAheadURL', business.orderAheadURL || '');
-      
-      // Set social media URLs
-      const currentSocialMedia = business.socialMediaUrls || [];
-      const socialMediaData = {
-        facebookUrl: currentSocialMedia.find((s: any) => s.name === 'url_facebook')?.url || "",
-        instagramUrl: currentSocialMedia.find((s: any) => s.name === 'url_instagram')?.url || "",
-        linkedinUrl: currentSocialMedia.find((s: any) => s.name === 'url_linkedin')?.url || "",
-        pinterestUrl: currentSocialMedia.find((s: any) => s.name === 'url_pinterest')?.url || "",
-        tiktokUrl: currentSocialMedia.find((s: any) => s.name === 'url_tiktok')?.url || "",
-        twitterUrl: currentSocialMedia.find((s: any) => s.name === 'url_twitter')?.url || "",
-        youtubeUrl: currentSocialMedia.find((s: any) => s.name === 'url_youtube')?.url || "",
-      };
-      setSocialMediaUrls(socialMediaData);
-      setValue('facebookUrl', socialMediaData.facebookUrl);
-      setValue('instagramUrl', socialMediaData.instagramUrl);
-      setValue('linkedinUrl', socialMediaData.linkedinUrl);
-      setValue('pinterestUrl', socialMediaData.pinterestUrl);
-      setValue('tiktokUrl', socialMediaData.tiktokUrl);
-      setValue('twitterUrl', socialMediaData.twitterUrl);
-      setValue('youtubeUrl', socialMediaData.youtubeUrl);
-      
-      // Set individual day hours
-      setHours({
-        monday: business.mondayHours || "09:00-18:00",
-        tuesday: business.tuesdayHours || "09:00-18:00",
-        wednesday: business.wednesdayHours || "09:00-18:00",
-        thursday: business.thursdayHours || "09:00-18:00",
-        friday: business.fridayHours || "09:00-18:00",
-        saturday: business.saturdayHours || "10:00-14:00",
-        sunday: business.sundayHours ?? null
-      });
+  // Fetch fresh business data when dialog opens
+  const fetchFreshBusinessData = async (businessId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('businesses')
+        .select('*')
+        .eq('id', businessId)
+        .single();
 
-      // Set cover photo
-      setCoverPhoto(business.coverPhoto || '');
-    } else {
-      // Reset for new business
-      reset();
-      setCoverPhoto('');
-      setHours({
-        monday: "09:00-18:00",
-        tuesday: "09:00-18:00",
-        wednesday: "09:00-18:00",
-        thursday: "09:00-18:00",
-        friday: "09:00-18:00",
-        saturday: "10:00-14:00",
-        sunday: null
-      });
+      if (error) throw error;
+      return data as Business;
+    } catch (error) {
+      console.error('Error fetching fresh business data:', error);
+      return null;
     }
-  }, [business, setValue, reset]);
+  };
+
+  useEffect(() => {
+    const loadBusinessData = async () => {
+      if (business && open) {
+        // Fetch fresh data when dialog opens
+        const freshBusiness = await fetchFreshBusinessData(business.id);
+        const businessToUse = freshBusiness || business;
+        
+        // Populate form with existing business data
+        setValue('storeCode', businessToUse.storeCode);
+        setValue('businessName', businessToUse.businessName);
+        setValue('addressLine1', businessToUse.addressLine1);
+        setValue('country', businessToUse.country);
+        setValue('primaryCategory', businessToUse.primaryCategory);
+        setValue('addressLine2', businessToUse.addressLine2 || '');
+        setValue('addressLine3', businessToUse.addressLine3 || '');
+        setValue('addressLine4', businessToUse.addressLine4 || '');
+        setValue('addressLine5', businessToUse.addressLine5 || '');
+        setValue('postalCode', businessToUse.postalCode || '');
+        setValue('district', businessToUse.district || '');
+        setValue('city', businessToUse.city || '');
+        setValue('state', businessToUse.state || '');
+        setValue('latitude', businessToUse.latitude);
+        setValue('longitude', businessToUse.longitude);
+        setValue('additionalCategories', businessToUse.additionalCategories || '');
+        setValue('website', businessToUse.website || '');
+        setValue('primaryPhone', businessToUse.primaryPhone || '');
+        setValue('additionalPhones', businessToUse.additionalPhones || '');
+        setValue('adwords', businessToUse.adwords || '');
+        setValue('openingDate', businessToUse.openingDate || '');
+        setValue('fromTheBusiness', businessToUse.fromTheBusiness || '');
+        setValue('labels', businessToUse.labels || '');
+        setValue('temporarilyClosed', businessToUse.temporarilyClosed || false);
+        setValue('logoPhoto', businessToUse.logoPhoto || '');
+        setValue('coverPhoto', businessToUse.coverPhoto || '');
+        setValue('otherPhotos', businessToUse.otherPhotos || '');
+        setValue('appointmentURL', businessToUse.appointmentURL || '');
+        setValue('menuURL', businessToUse.menuURL || '');
+        setValue('reservationsURL', businessToUse.reservationsURL || '');
+        setValue('orderAheadURL', businessToUse.orderAheadURL || '');
+        
+        // Set social media URLs
+        const currentSocialMedia = businessToUse.socialMediaUrls || [];
+        const socialMediaData = {
+          facebookUrl: currentSocialMedia.find((s: any) => s.name === 'url_facebook')?.url || "",
+          instagramUrl: currentSocialMedia.find((s: any) => s.name === 'url_instagram')?.url || "",
+          linkedinUrl: currentSocialMedia.find((s: any) => s.name === 'url_linkedin')?.url || "",
+          pinterestUrl: currentSocialMedia.find((s: any) => s.name === 'url_pinterest')?.url || "",
+          tiktokUrl: currentSocialMedia.find((s: any) => s.name === 'url_tiktok')?.url || "",
+          twitterUrl: currentSocialMedia.find((s: any) => s.name === 'url_twitter')?.url || "",
+          youtubeUrl: currentSocialMedia.find((s: any) => s.name === 'url_youtube')?.url || "",
+        };
+        setSocialMediaUrls(socialMediaData);
+        setValue('facebookUrl', socialMediaData.facebookUrl);
+        setValue('instagramUrl', socialMediaData.instagramUrl);
+        setValue('linkedinUrl', socialMediaData.linkedinUrl);
+        setValue('pinterestUrl', socialMediaData.pinterestUrl);
+        setValue('tiktokUrl', socialMediaData.tiktokUrl);
+        setValue('twitterUrl', socialMediaData.twitterUrl);
+        setValue('youtubeUrl', socialMediaData.youtubeUrl);
+        
+        // Set individual day hours
+        setHours({
+          monday: businessToUse.mondayHours || "09:00-18:00",
+          tuesday: businessToUse.tuesdayHours || "09:00-18:00",
+          wednesday: businessToUse.wednesdayHours || "09:00-18:00",
+          thursday: businessToUse.thursdayHours || "09:00-18:00",
+          friday: businessToUse.fridayHours || "09:00-18:00",
+          saturday: businessToUse.saturdayHours || "10:00-14:00",
+          sunday: businessToUse.sundayHours ?? null
+        });
+
+        // Set cover photo
+        setCoverPhoto(businessToUse.coverPhoto || '');
+      } else if (!business) {
+        // Reset for new business
+        reset();
+        setCoverPhoto('');
+        setHours({
+          monday: "09:00-18:00",
+          tuesday: "09:00-18:00",
+          wednesday: "09:00-18:00",
+          thursday: "09:00-18:00",
+          friday: "09:00-18:00",
+          saturday: "10:00-14:00",
+          sunday: null
+        });
+      }
+    };
+
+    loadBusinessData();
+  }, [business, setValue, reset, open]);
 
   const onSubmit = async (data: BusinessFormData) => {
     if (!user) return;
