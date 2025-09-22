@@ -35,8 +35,13 @@ serve(async (req) => {
       throw new Error('SERVICE_ACCOUNT_KEY not found in secrets')
     }
 
-    // Parse the service account key
-    const serviceAccount = JSON.parse(serviceAccountKey)
+    // Parse the service account key - expect full JSON service account file
+    let serviceAccount
+    try {
+      serviceAccount = JSON.parse(serviceAccountKey)
+    } catch (error) {
+      throw new Error('SERVICE_ACCOUNT_KEY must be a valid JSON service account file, not just the private key. Please upload the complete service account JSON file.')
+    }
     
     // Download the file from Supabase Storage
     const { data: fileData, error: downloadError } = await supabase.storage

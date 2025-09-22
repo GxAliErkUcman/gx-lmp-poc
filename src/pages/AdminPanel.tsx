@@ -64,6 +64,7 @@ const AdminPanel = () => {
   const [userSearchQuery, setUserSearchQuery] = useState('');
   const [userManagementLoading, setUserManagementLoading] = useState(false);
   const [clientFileNames, setClientFileNames] = useState<{[clientId: string]: string}>({});
+  const [syncAllLoading, setSyncAllLoading] = useState(false);
   
   const [newUser, setNewUser] = useState({
     firstName: '',
@@ -233,6 +234,76 @@ const AdminPanel = () => {
       });
     } finally {
       setExportLoading(null);
+    }
+  };
+
+  const handleSyncAllToGcp = async () => {
+    setSyncAllLoading(true);
+    try {
+      // Get all JSON files from the json-exports bucket (excluding manual exports)
+      const { data: files, error: listError } = await supabase.storage
+        .from('json-exports')
+        .list('', { 
+          limit: 100,
+          sortBy: { column: 'created_at', order: 'desc' }
+        });
+
+      if (listError) throw listError;
+
+      // Filter out manual exports - only sync CRUD update versions
+      const crudFiles = files?.filter(file => 
+        file.name.endsWith('.json') && !file.name.startsWith('manualexport-')
+      ) || [];
+
+      if (crudFiles.length === 0) {
+        toast({
+          title: "No Files to Sync",
+          description: "No CRUD update files found to sync to GCP.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      let syncedCount = 0;
+      let failedCount = 0;
+
+      // Sync each file to GCP
+      for (const file of crudFiles) {
+        try {
+          const { error } = await supabase.functions.invoke('sync-to-gcp', {
+            body: {
+              fileName: file.name,
+              bucketName: 'json-exports'
+            }
+          });
+
+          if (error) {
+            console.error(`Failed to sync ${file.name}:`, error);
+            failedCount++;
+          } else {
+            syncedCount++;
+          }
+        } catch (error) {
+          console.error(`Error syncing ${file.name}:`, error);
+          failedCount++;
+        }
+      }
+
+      toast({
+        title: "Sync Complete",
+        description: `Synced ${syncedCount} files to GCP. ${failedCount > 0 ? `${failedCount} failed.` : ''}`,
+        variant: failedCount > 0 ? "destructive" : "default",
+      });
+
+    } catch (error: any) {
+      console.error('Error syncing all to GCP:', error);
+      toast({
+        title: "Sync Failed",
+        description: error.message || "Failed to sync files to GCP",
+        variant: "destructive",
+      });
+    } finally {
+      setSyncAllLoading(false);
     }
   };
 
@@ -444,6 +515,18 @@ const AdminPanel = () => {
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Admin Panel</h1>
         <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={handleSyncAllToGcp}
+            disabled={syncAllLoading}
+          >
+            {syncAllLoading ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Download className="w-4 h-4 mr-2" />
+            )}
+            Sync All to GCP
+          </Button>
           <Dialog open={isCreateClientDialogOpen} onOpenChange={setIsCreateClientDialogOpen}>
             <DialogTrigger asChild>
               <Button variant="outline">
