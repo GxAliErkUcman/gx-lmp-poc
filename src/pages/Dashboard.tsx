@@ -31,6 +31,11 @@ const Dashboard = () => {
   const [userLogo, setUserLogo] = useState<string | null>(null);
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
 
+  const handleLogoUploaded = () => {
+    // Refresh businesses to get updated logo
+    fetchBusinesses();
+  };
+
 // Auth redirect handled below after hooks
 
   const fetchBusinesses = async () => {

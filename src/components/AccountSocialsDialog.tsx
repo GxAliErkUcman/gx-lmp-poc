@@ -118,10 +118,17 @@ const AccountSocialsDialog = ({ open, onOpenChange, onSuccess }: AccountSocialsD
     if (!user) return;
 
     try {
+      // Get current user's client_id
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('client_id')
+        .eq('user_id', user.id)
+        .single();
+
       const { data: businesses, error } = await supabase
         .from('businesses')
         .select('socialMediaUrls')
-        .eq('user_id', user.id);
+        .or(`user_id.eq.${user.id}${profile?.client_id ? `,client_id.eq.${profile.client_id}` : ''}`);
 
       if (error) throw error;
 
@@ -200,11 +207,18 @@ const AccountSocialsDialog = ({ open, onOpenChange, onSuccess }: AccountSocialsD
         return;
       }
 
-      // Update all businesses for this user
+      // Get current user's client_id
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('client_id')
+        .eq('user_id', user.id)
+        .single();
+
+      // Update all businesses for this user or client
       const { error } = await supabase
         .from('businesses')
         .update({ socialMediaUrls })
-        .eq('user_id', user.id);
+        .or(`user_id.eq.${user.id}${profile?.client_id ? `,client_id.eq.${profile.client_id}` : ''}`);
 
       if (error) throw error;
 
@@ -233,11 +247,18 @@ const AccountSocialsDialog = ({ open, onOpenChange, onSuccess }: AccountSocialsD
     
     setLoading(true);
     try {
+      // Get current user's client_id
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('client_id')
+        .eq('user_id', user.id)
+        .single();
+
       // Get current social media URLs for all businesses
       const { data: businesses, error: fetchError } = await supabase
         .from('businesses')
         .select('id, socialMediaUrls')
-        .eq('user_id', user.id);
+        .or(`user_id.eq.${user.id}${profile?.client_id ? `,client_id.eq.${profile.client_id}` : ''}`);
 
       if (fetchError) throw fetchError;
 

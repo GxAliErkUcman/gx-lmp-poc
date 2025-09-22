@@ -25,6 +25,7 @@ import { Upload } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 const multiEditFormSchema = z.object({
+  businessName: z.string().optional(),
   primaryPhone: z.string().optional(),
   website: z.string().url().optional().or(z.literal('')),
   fromTheBusiness: z.string().optional(),
@@ -54,6 +55,7 @@ const MultiEditDialog = ({ open, onOpenChange, selectedIds, onSuccess }: MultiEd
   const form = useForm<MultiEditFormValues>({
     resolver: zodResolver(multiEditFormSchema),
     defaultValues: {
+      businessName: '',
       primaryPhone: '',
       website: '',
       fromTheBusiness: '',
@@ -72,7 +74,7 @@ const MultiEditDialog = ({ open, onOpenChange, selectedIds, onSuccess }: MultiEd
     setLoading(true);
     try {
       // Filter out empty values for regular fields
-      const regularFields = ['primaryPhone', 'website', 'fromTheBusiness', 'primaryCategory'];
+      const regularFields = ['businessName', 'primaryPhone', 'website', 'fromTheBusiness', 'primaryCategory'];
       const socialMediaFields = ['facebookUrl', 'instagramUrl', 'linkedinUrl', 'pinterestUrl', 'tiktokUrl', 'twitterUrl', 'youtubeUrl'];
       
       const updateData = Object.fromEntries(
@@ -131,15 +133,124 @@ const MultiEditDialog = ({ open, onOpenChange, selectedIds, onSuccess }: MultiEd
     }
   };
 
+  const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `logo-${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const filePath = `${user.id}/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('business-photos')
+        .upload(filePath, file);
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      const { data } = supabase.storage
+        .from('business-photos')
+        .getPublicUrl(filePath);
+
+      // Update all selected businesses with the new logo
+      const { error: updateError } = await supabase
+        .from('businesses')
+        .update({ logoPhoto: data.publicUrl })
+        .in('id', selectedIds);
+
+      if (updateError) {
+        throw updateError;
+      }
+
+      toast({
+        title: "Success",
+        description: "Logo uploaded to all selected businesses",
+      });
+      
+      onSuccess();
+    } catch (error) {
+      console.error('Error uploading logo:', error);
+      toast({
+        title: "Error",
+        description: "Failed to upload logo",
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleCoverPhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `cover-${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const filePath = `${user.id}/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('business-photos')
+        .upload(filePath, file);
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      const { data } = supabase.storage
+        .from('business-photos')
+        .getPublicUrl(filePath);
+
+      // Update all selected businesses with the new cover photo
+      const { error: updateError } = await supabase
+        .from('businesses')
+        .update({ coverPhoto: data.publicUrl })
+        .in('id', selectedIds);
+
+      if (updateError) {
+        throw updateError;
+      }
+
+      toast({
+        title: "Success",
+        description: "Cover photo uploaded to all selected businesses",
+      });
+      
+      onSuccess();
+    } catch (error) {
+      console.error('Error uploading cover photo:', error);
+      toast({
+        title: "Error",
+        description: "Failed to upload cover photo",
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const handlePhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
     setUploading(true);
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
       const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}.${fileExt}`;
-      const filePath = `business-photos/${fileName}`;
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const filePath = `${user.id}/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from('business-photos')
@@ -148,7 +259,7 @@ const MultiEditDialog = ({ open, onOpenChange, selectedIds, onSuccess }: MultiEd
       if (uploadError) throw uploadError;
 
       // Get public URL
-      const { data: { publicUrl } } = supabase.storage
+      const { data } = supabase.storage
         .from('business-photos')
         .getPublicUrl(filePath);
 
@@ -162,7 +273,7 @@ const MultiEditDialog = ({ open, onOpenChange, selectedIds, onSuccess }: MultiEd
       const updatePromises = selectedIds.map(async (businessId) => {
         const existingBusiness = existingBusinesses?.find(b => (b as any).id === businessId);
         const existingPhotos = existingBusiness?.otherPhotos ? existingBusiness.otherPhotos.split(',') : [];
-        const newPhotos = [...existingPhotos, publicUrl].join(',');
+        const newPhotos = [...existingPhotos, data.publicUrl].join(',');
         
         return supabase
           .from('businesses')
@@ -200,6 +311,20 @@ const MultiEditDialog = ({ open, onOpenChange, selectedIds, onSuccess }: MultiEd
         <ScrollArea className="max-h-[60vh] pr-4">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="businessName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Business Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Leave empty to skip" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <FormField
               control={form.control}
               name="primaryPhone"
@@ -361,34 +486,105 @@ const MultiEditDialog = ({ open, onOpenChange, selectedIds, onSuccess }: MultiEd
             </div>
 
             {/* Photo Upload Section */}
-            <div className="space-y-2">
-              <FormLabel>Upload Shared Photo</FormLabel>
-              <div className="flex items-center gap-2">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handlePhotoUpload}
-                  disabled={uploading}
-                  className="hidden"
-                  id="photo-upload"
-                />
-                <label htmlFor="photo-upload">
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    disabled={uploading}
-                    className="cursor-pointer"
-                    asChild
-                  >
-                    <div>
-                      <Upload className="w-4 h-4 mr-2" />
-                      {uploading ? 'Uploading...' : 'Upload Photo'}
-                    </div>
-                  </Button>
-                </label>
-                <span className="text-sm text-muted-foreground">
-                  Will be applied to all selected businesses
-                </span>
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Photo Management</h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Logo Photo Upload */}
+                <div className="space-y-2">
+                  <FormLabel>Change Logo Photo</FormLabel>
+                  <div className="flex flex-col gap-2">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleLogoUpload}
+                      disabled={uploading}
+                      className="hidden"
+                      id="logo-upload"
+                    />
+                    <label htmlFor="logo-upload">
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        disabled={uploading}
+                        className="cursor-pointer w-full"
+                        asChild
+                      >
+                        <div>
+                          <Upload className="w-4 h-4 mr-2" />
+                          {uploading ? 'Uploading...' : 'Upload Logo'}
+                        </div>
+                      </Button>
+                    </label>
+                    <span className="text-xs text-muted-foreground text-center">
+                      Logo for all selected businesses
+                    </span>
+                  </div>
+                </div>
+
+                {/* Cover Photo Upload */}
+                <div className="space-y-2">
+                  <FormLabel>Change Cover Photo</FormLabel>
+                  <div className="flex flex-col gap-2">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleCoverPhotoUpload}
+                      disabled={uploading}
+                      className="hidden"
+                      id="cover-upload"
+                    />
+                    <label htmlFor="cover-upload">
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        disabled={uploading}
+                        className="cursor-pointer w-full"
+                        asChild
+                      >
+                        <div>
+                          <Upload className="w-4 h-4 mr-2" />
+                          {uploading ? 'Uploading...' : 'Upload Cover'}
+                        </div>
+                      </Button>
+                    </label>
+                    <span className="text-xs text-muted-foreground text-center">
+                      Cover photo for all selected businesses
+                    </span>
+                  </div>
+                </div>
+
+                {/* Additional Photo Upload */}
+                <div className="space-y-2">
+                  <FormLabel>Add Additional Photo</FormLabel>
+                  <div className="flex flex-col gap-2">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleCoverPhotoUpload}
+                      disabled={uploading}
+                      className="hidden"
+                      id="additional-upload"
+                    />
+                    <label htmlFor="additional-upload">
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        disabled={uploading}
+                        className="cursor-pointer w-full"
+                        asChild
+                      >
+                        <div>
+                          <Upload className="w-4 h-4 mr-2" />
+                          {uploading ? 'Uploading...' : 'Upload Photo'}
+                        </div>
+                      </Button>
+                    </label>
+                    <span className="text-xs text-muted-foreground text-center">
+                      Additional photo for all selected businesses
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
 
