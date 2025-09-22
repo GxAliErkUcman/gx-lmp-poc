@@ -33,7 +33,8 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit }: Busine
     { key: 'primaryCategory', label: 'Category', visible: true },
     { key: 'city', label: 'City', visible: true },
     { key: 'country', label: 'Country', visible: true },
-    { key: 'primaryPhone', label: 'Phone', visible: true },
+    { key: 'postalCode', label: 'Postal Code', visible: true },
+    { key: 'primaryPhone', label: 'Phone', visible: false },
     { key: 'website', label: 'Website', visible: false },
     { key: 'labels', label: 'Labels', visible: false },
   ]);
@@ -315,6 +316,9 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit }: Busine
                     )}
                     {column.key === 'country' && (
                       <span className="text-sm">{business.country || '-'}</span>
+                    )}
+                    {column.key === 'postalCode' && (
+                      <span className="text-sm">{business.postalCode || '-'}</span>
                     )}
                     {column.key === 'primaryPhone' && (
                       <span className="text-sm">{business.primaryPhone || '-'}</span>

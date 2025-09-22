@@ -6,9 +6,11 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Settings } from 'lucide-react';
+import { Settings, Clock, Link } from 'lucide-react';
 import LogoUpload from './LogoUpload';
 import AccountSocialsDialog from './AccountSocialsDialog';
+import AccountOpeningHoursDialog from './AccountOpeningHoursDialog';
+import AccountServiceUrlsDialog from './AccountServiceUrlsDialog';
 import { Button } from '@/components/ui/button';
 
 interface SettingsDialogProps {
@@ -19,10 +21,22 @@ interface SettingsDialogProps {
 
 const SettingsDialog = ({ open, onOpenChange, onLogoUploaded }: SettingsDialogProps) => {
   const [socialsDialogOpen, setSocialsDialogOpen] = useState(false);
+  const [openingHoursDialogOpen, setOpeningHoursDialogOpen] = useState(false);
+  const [serviceUrlsDialogOpen, setServiceUrlsDialogOpen] = useState(false);
 
   const handleSocialsSuccess = () => {
     setSocialsDialogOpen(false);
     // Trigger refresh in parent component
+    onLogoUploaded(); // This callback will refresh the businesses data
+  };
+
+  const handleOpeningHoursSuccess = () => {
+    setOpeningHoursDialogOpen(false);
+    onLogoUploaded(); // This callback will refresh the businesses data
+  };
+
+  const handleServiceUrlsSuccess = () => {
+    setServiceUrlsDialogOpen(false);
     onLogoUploaded(); // This callback will refresh the businesses data
   };
 
@@ -68,6 +82,44 @@ const SettingsDialog = ({ open, onOpenChange, onLogoUploaded }: SettingsDialogPr
                   </Button>
                 </CardContent>
               </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Opening Hours</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground mb-4">
+                    Set opening hours that will be applied to all your business locations.
+                  </p>
+                  <Button 
+                    onClick={() => setOpeningHoursDialogOpen(true)}
+                    variant="outline"
+                    className="w-full flex items-center gap-2"
+                  >
+                    <Clock className="w-4 h-4" />
+                    Manage Opening Hours
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Service URLs</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground mb-4">
+                    Set service URLs (appointments, menu, reservations, order ahead) for all locations.
+                  </p>
+                  <Button 
+                    onClick={() => setServiceUrlsDialogOpen(true)}
+                    variant="outline"
+                    className="w-full flex items-center gap-2"
+                  >
+                    <Link className="w-4 h-4" />
+                    Manage Service URLs
+                  </Button>
+                </CardContent>
+              </Card>
             </div>
           </div>
         </DialogContent>
@@ -77,6 +129,18 @@ const SettingsDialog = ({ open, onOpenChange, onLogoUploaded }: SettingsDialogPr
         open={socialsDialogOpen}
         onOpenChange={setSocialsDialogOpen}
         onSuccess={handleSocialsSuccess}
+      />
+
+      <AccountOpeningHoursDialog
+        open={openingHoursDialogOpen}
+        onOpenChange={setOpeningHoursDialogOpen}
+        onSuccess={handleOpeningHoursSuccess}
+      />
+
+      <AccountServiceUrlsDialog
+        open={serviceUrlsDialogOpen}
+        onOpenChange={setServiceUrlsDialogOpen}
+        onSuccess={handleServiceUrlsSuccess}
       />
     </>
   );

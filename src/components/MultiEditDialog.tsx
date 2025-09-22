@@ -30,6 +30,13 @@ const multiEditFormSchema = z.object({
   website: z.string().url().optional().or(z.literal('')),
   fromTheBusiness: z.string().optional(),
   primaryCategory: z.string().optional(),
+  mondayHours: z.string().optional(),
+  tuesdayHours: z.string().optional(),
+  wednesdayHours: z.string().optional(),
+  thursdayHours: z.string().optional(),
+  fridayHours: z.string().optional(),
+  saturdayHours: z.string().optional(),
+  sundayHours: z.string().optional(),
   facebookUrl: z.string().optional(),
   instagramUrl: z.string().optional(),
   linkedinUrl: z.string().optional(),
@@ -60,6 +67,13 @@ const MultiEditDialog = ({ open, onOpenChange, selectedIds, onSuccess }: MultiEd
       website: '',
       fromTheBusiness: '',
       primaryCategory: '',
+      mondayHours: '',
+      tuesdayHours: '',
+      wednesdayHours: '',
+      thursdayHours: '',
+      fridayHours: '',
+      saturdayHours: '',
+      sundayHours: '',
       facebookUrl: '',
       instagramUrl: '',
       linkedinUrl: '',
@@ -75,11 +89,14 @@ const MultiEditDialog = ({ open, onOpenChange, selectedIds, onSuccess }: MultiEd
     try {
       // Filter out empty values for regular fields
       const regularFields = ['businessName', 'primaryPhone', 'website', 'fromTheBusiness', 'primaryCategory'];
+      const hoursFields = ['mondayHours', 'tuesdayHours', 'wednesdayHours', 'thursdayHours', 'fridayHours', 'saturdayHours', 'sundayHours'];
       const socialMediaFields = ['facebookUrl', 'instagramUrl', 'linkedinUrl', 'pinterestUrl', 'tiktokUrl', 'twitterUrl', 'youtubeUrl'];
       
+      const allUpdateFields = [...regularFields, ...hoursFields];
+
       const updateData = Object.fromEntries(
         Object.entries(values)
-          .filter(([key, value]) => regularFields.includes(key) && value !== '' && value !== undefined)
+          .filter(([key, value]) => allUpdateFields.includes(key) && value !== '' && value !== undefined)
       );
 
       // Handle social media URLs separately
@@ -382,6 +399,110 @@ const MultiEditDialog = ({ open, onOpenChange, selectedIds, onSuccess }: MultiEd
             />
 
             <div className="space-y-4">
+              <h3 className="text-lg font-medium">Opening Hours</h3>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="mondayHours"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Monday Hours</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., 09:00-17:00 or Closed" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="tuesdayHours"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Tuesday Hours</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., 09:00-17:00 or Closed" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="wednesdayHours"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Wednesday Hours</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., 09:00-17:00 or Closed" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="thursdayHours"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Thursday Hours</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., 09:00-17:00 or Closed" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="fridayHours"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Friday Hours</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., 09:00-17:00 or Closed" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="saturdayHours"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Saturday Hours</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., 09:00-17:00 or Closed" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="sundayHours"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Sunday Hours</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., 09:00-17:00 or Closed" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-4">
               <h3 className="text-lg font-medium">Social Media Links</h3>
               
               <div className="grid grid-cols-2 gap-4">
@@ -588,22 +709,20 @@ const MultiEditDialog = ({ open, onOpenChange, selectedIds, onSuccess }: MultiEd
               </div>
             </div>
 
+            <div className="flex justify-end gap-2 pt-4 border-t">
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                Cancel
+              </Button>
+              <Button 
+                type="submit" 
+                disabled={loading}
+              >
+                {loading ? 'Updating...' : `Update ${selectedIds.length} Businesses`}
+              </Button>
+            </div>
             </form>
           </Form>
         </ScrollArea>
-        
-        <div className="flex justify-end gap-2 pt-4 border-t">
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button 
-            type="submit" 
-            disabled={loading}
-            onClick={form.handleSubmit(onSubmit)}
-          >
-            {loading ? 'Updating...' : `Update ${selectedIds.length} Businesses`}
-          </Button>
-        </div>
       </DialogContent>
     </Dialog>
   );
