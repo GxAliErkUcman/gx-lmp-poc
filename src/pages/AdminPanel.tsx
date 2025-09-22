@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Users, MapPin, Clock, Download, UserPlus, Plus, Trash2, Settings } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import GcpSyncButton from '@/components/GcpSyncButton';
 
 
 interface Client {
@@ -62,6 +63,7 @@ const AdminPanel = () => {
   const [clientUsers, setClientUsers] = useState<User[]>([]);
   const [userSearchQuery, setUserSearchQuery] = useState('');
   const [userManagementLoading, setUserManagementLoading] = useState(false);
+  const [clientFileNames, setClientFileNames] = useState<{[clientId: string]: string}>({});
   
   const [newUser, setNewUser] = useState({
     firstName: '',
@@ -211,6 +213,12 @@ const AdminPanel = () => {
       });
 
       if (error) throw error;
+
+      // Store the generated fileName for this client
+      setClientFileNames(prev => ({
+        ...prev,
+        [clientId]: data.fileName
+      }));
 
       toast({
         title: "Export Generated",
@@ -589,19 +597,26 @@ const AdminPanel = () => {
                     {client.last_updated ? new Date(client.last_updated).toLocaleDateString() : 'Never'}
                   </TableCell>
                   <TableCell className="text-center">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleManualExport(client.id)}
-                      disabled={exportLoading === client.id}
-                    >
-                      {exportLoading === client.id ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <Download className="w-4 h-4" />
-                      )}
-                      Export
-                    </Button>
+                    <div className="flex items-center justify-center gap-1">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleManualExport(client.id)}
+                        disabled={exportLoading === client.id}
+                      >
+                        {exportLoading === client.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Download className="w-4 h-4" />
+                        )}
+                        Export
+                      </Button>
+                      <GcpSyncButton 
+                        fileName={clientFileNames[client.id]}
+                        variant="outline"
+                        size="sm"
+                      />
+                    </div>
                   </TableCell>
                   <TableCell className="text-center">
                     <Button
