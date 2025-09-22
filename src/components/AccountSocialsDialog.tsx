@@ -315,7 +315,7 @@ const AccountSocialsDialog = ({ open, onOpenChange, onSuccess }: AccountSocialsD
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[800px] max-h-[90vh]">
+      <DialogContent className="sm:max-w-[1200px] max-h-[90vh]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Share2 className="w-5 h-5" />
@@ -546,44 +546,75 @@ const AccountSocialsDialog = ({ open, onOpenChange, onSuccess }: AccountSocialsD
                   Set multiple social media links at once. Empty fields will remove existing links on those platforms.
                 </p>
               </CardHeader>
-              <ScrollArea className="max-h-[50vh]">
+              <ScrollArea className="max-h-[60vh]">
                 <CardContent>
                   <Form {...allForm}>
-                    <form onSubmit={allForm.handleSubmit(onSubmitAll)} className="space-y-4">
-                      <div className="grid gap-4">
-                        {SOCIAL_PLATFORMS.map((platform) => (
-                          <FormField
-                            key={platform.key}
-                            control={allForm.control}
-                            name={platform.key as keyof AccountSocialsFormValues}
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>{platform.label} URL</FormLabel>
-                                <FormControl>
-                                  <Input
-                                    placeholder={`${platform.baseUrl}yourname`}
-                                    {...field}
-                                    value={field.value || ''}
-                                    onFocus={(e) => {
-                                      if (!field.value || field.value === platform.baseUrl) {
-                                        field.onChange(platform.baseUrl);
-                                        setTimeout(() => {
-                                          e.target.setSelectionRange(platform.baseUrl.length, platform.baseUrl.length);
-                                        }, 0);
-                                      }
-                                    }}
-                                    onBlur={() => {
-                                      if (field.value === platform.baseUrl) {
-                                        field.onChange('');
-                                      }
-                                    }}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        ))}
+                    <form onSubmit={allForm.handleSubmit(onSubmitAll)} className="space-y-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4">
+                        {SOCIAL_PLATFORMS.map((platform) => {
+                          const platformStats = socialStats.find(stat => stat.platform === platform.key);
+                          return (
+                            <Card key={platform.key} className="p-4 bg-card/50 hover:bg-card/70 transition-colors">
+                              <FormField
+                                control={allForm.control}
+                                name={platform.key as keyof AccountSocialsFormValues}
+                                render={({ field }) => (
+                                  <FormItem className="space-y-3">
+                                    <div className="flex items-center justify-between mb-2">
+                                      <FormLabel className="text-sm font-medium">{platform.label}</FormLabel>
+                                      {platformStats && (
+                                        <Badge 
+                                          variant={platformStats.locationsWithSocial > 0 ? "default" : "secondary"} 
+                                          className="text-[10px] px-1 py-0.5"
+                                        >
+                                          {platformStats.locationsWithSocial}/{platformStats.totalLocations}
+                                        </Badge>
+                                      )}
+                                    </div>
+                                    
+                                    <FormControl>
+                                      <Input
+                                        placeholder={`${platform.baseUrl}yourname`}
+                                        className="text-sm"
+                                        {...field}
+                                        value={field.value || ''}
+                                        onFocus={(e) => {
+                                          if (!field.value || field.value === platform.baseUrl) {
+                                            field.onChange(platform.baseUrl);
+                                            setTimeout(() => {
+                                              e.target.setSelectionRange(platform.baseUrl.length, platform.baseUrl.length);
+                                            }, 0);
+                                          }
+                                        }}
+                                        onBlur={() => {
+                                          if (field.value === platform.baseUrl) {
+                                            field.onChange('');
+                                          }
+                                        }}
+                                      />
+                                    </FormControl>
+                                    
+                                    {platformStats?.mostCommonUrl && (
+                                      <div className="text-[10px] text-blue-600 break-all">
+                                        Current: {platformStats.mostCommonUrl.length > 25 ? 
+                                          platformStats.mostCommonUrl.substring(0, 25) + '...' : 
+                                          platformStats.mostCommonUrl
+                                        }
+                                        {platformStats.urlVariations > 1 && (
+                                          <div className="text-[10px] text-amber-600 mt-1">
+                                            ⚠️ {platformStats.urlVariations} variants
+                                          </div>
+                                        )}
+                                      </div>
+                                    )}
+                                    
+                                    <FormMessage className="text-[10px]" />
+                                  </FormItem>
+                                )}
+                              />
+                            </Card>
+                          );
+                        })}
                       </div>
 
                       <div className="flex justify-end gap-2 pt-4">
