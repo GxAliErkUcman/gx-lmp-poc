@@ -50,13 +50,15 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit }: Busine
   };
 
   const handleCategoryFilter = (category: string) => {
-    setCategoryFilter(category);
-    applyFilters(searchTerm, category, cityFilter);
+    const filterValue = category === "all" ? "" : category;
+    setCategoryFilter(filterValue);
+    applyFilters(searchTerm, filterValue, cityFilter);
   };
 
   const handleCityFilter = (city: string) => {
-    setCityFilter(city);
-    applyFilters(searchTerm, categoryFilter, city);
+    const filterValue = city === "all" ? "" : city;
+    setCityFilter(filterValue);
+    applyFilters(searchTerm, categoryFilter, filterValue);
   };
 
   const applyFilters = (search: string, category: string, city: string) => {
@@ -203,7 +205,7 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit }: Busine
                 <SelectValue placeholder="All categories" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All categories</SelectItem>
+                <SelectItem value="all">All categories</SelectItem>
                 {uniqueCategories.map(category => (
                   <SelectItem key={category} value={category}>
                     {category}
@@ -220,7 +222,7 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit }: Busine
                 <SelectValue placeholder="All cities" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All cities</SelectItem>
+                <SelectItem value="all">All cities</SelectItem>
                 {uniqueCities.map(city => (
                   <SelectItem key={city} value={city}>
                     {city}
