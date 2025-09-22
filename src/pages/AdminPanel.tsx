@@ -250,15 +250,22 @@ const AdminPanel = () => {
 
       if (listError) throw listError;
 
-      // Filter out manual exports - only sync CRUD update versions
-      const crudFiles = files?.filter(file => 
-        file.name.endsWith('.json') && !file.name.startsWith('manualexport-')
-      ) || [];
+      // Filter to non-forced exports that start with the current user's name
+      const emailPrefix = (user?.email || '').split('@')[0]?.toLowerCase()
+      const first = (user?.user_metadata?.first_name || '').toLowerCase().replace(/\s+/g, '-')
+      const last = (user?.user_metadata?.last_name || '').toLowerCase().replace(/\s+/g, '-')
+      const nameCandidates = [emailPrefix, [first, last].filter(Boolean).join('.')].filter(Boolean) as string[]
+
+      const crudFiles = (files || []).filter(file => {
+        if (!file.name.endsWith('.json') || file.name.startsWith('manualexport-')) return false
+        if (nameCandidates.length === 0) return true // fallback: include all non-forced exports
+        return nameCandidates.some(prefix => file.name.toLowerCase().startsWith(prefix))
+      })
 
       if (crudFiles.length === 0) {
         toast({
           title: "No Files to Sync",
-          description: "No CRUD update files found to sync to GCP.",
+          description: "No user-prefixed non-forced exports found to sync to GCP.",
           variant: "destructive",
         });
         return;

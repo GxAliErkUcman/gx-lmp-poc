@@ -70,16 +70,21 @@ serve(async (req) => {
       iat: now
     }
 
-    // Import the private key
-    const privateKeyPem = serviceAccount.private_key
+    // Import the private key (PKCS8 DER from PEM)
+    const privateKeyPem = serviceAccount.private_key as string
+    const pemBody = privateKeyPem
+      .replace('-----BEGIN PRIVATE KEY-----', '')
+      .replace('-----END PRIVATE KEY-----', '')
+      .replace(/\s/g, '')
+    const binaryDer = atob(pemBody)
+    const derBytes = new Uint8Array(binaryDer.length)
+    for (let i = 0; i < binaryDer.length; i++) {
+      derBytes[i] = binaryDer.charCodeAt(i)
+    }
+
     const privateKey = await crypto.subtle.importKey(
       'pkcs8',
-      new TextEncoder().encode(
-        privateKeyPem
-          .replace('-----BEGIN PRIVATE KEY-----', '')
-          .replace('-----END PRIVATE KEY-----', '')
-          .replace(/\s/g, '')
-      ),
+      derBytes.buffer,
       {
         name: 'RSASSA-PKCS1-v1_5',
         hash: 'SHA-256'
