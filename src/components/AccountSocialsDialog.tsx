@@ -22,10 +22,11 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { Share2, Globe } from 'lucide-react';
+import { Share2, Globe, BarChart3 } from 'lucide-react';
 
 const accountSocialsSchema = z.object({
   facebookUrl: z.string().optional(),
@@ -61,9 +62,20 @@ interface AccountSocialsDialogProps {
   onSuccess: () => void;
 }
 
+interface SocialStats {
+  platform: string;
+  platformLabel: string;
+  totalLocations: number;
+  locationsWithSocial: number;
+  mostCommonUrl?: string;
+  urlVariations: number;
+  allUrls: { url: string; count: number }[];
+}
+
 const AccountSocialsDialog = ({ open, onOpenChange, onSuccess }: AccountSocialsDialogProps) => {
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState('single');
+  const [activeTab, setActiveTab] = useState('analytics');
+  const [socialStats, setSocialStats] = useState<SocialStats[]>([]);
   const { user } = useAuth();
 
   const allForm = useForm<AccountSocialsFormValues>({
@@ -100,6 +112,68 @@ const AccountSocialsDialog = ({ open, onOpenChange, onSuccess }: AccountSocialsD
     
     return () => subscription.unsubscribe();
   }, [singleForm]);
+
+  // Fetch existing social media statistics
+  const fetchSocialStats = async () => {
+    if (!user) return;
+
+    try {
+      const { data: businesses, error } = await supabase
+        .from('businesses')
+        .select('socialMediaUrls')
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      const totalLocations = businesses?.length || 0;
+      const stats: SocialStats[] = [];
+
+      SOCIAL_PLATFORMS.forEach(platform => {
+        const platformName = `url_${platform.key.replace('Url', '')}`;
+        const urls: { [url: string]: number } = {};
+        let locationsWithSocial = 0;
+
+        businesses?.forEach(business => {
+          const socialMediaUrls = Array.isArray(business.socialMediaUrls) ? business.socialMediaUrls : [];
+          const socialObj = socialMediaUrls.find((social: any) => 
+            social && typeof social === 'object' && social.name === platformName
+          ) as { name: string; url: string } | undefined;
+          
+          if (socialObj?.url && typeof socialObj.url === 'string') {
+            locationsWithSocial++;
+            urls[socialObj.url] = (urls[socialObj.url] || 0) + 1;
+          }
+        });
+
+        const allUrls = Object.entries(urls)
+          .map(([url, count]) => ({ url, count }))
+          .sort((a, b) => b.count - a.count);
+
+        const mostCommonUrl = allUrls.length > 0 ? allUrls[0].url : undefined;
+
+        stats.push({
+          platform: platform.key,
+          platformLabel: platform.label,
+          totalLocations,
+          locationsWithSocial,
+          mostCommonUrl,
+          urlVariations: allUrls.length,
+          allUrls
+        });
+      });
+
+      setSocialStats(stats);
+    } catch (error) {
+      console.error('Error fetching social stats:', error);
+    }
+  };
+
+  // Fetch stats when dialog opens
+  useEffect(() => {
+    if (open && user) {
+      fetchSocialStats();
+    }
+  }, [open, user]);
 
   const onSubmitAll = async (values: AccountSocialsFormValues) => {
     if (!user) return;
@@ -227,7 +301,11 @@ const AccountSocialsDialog = ({ open, onOpenChange, onSuccess }: AccountSocialsD
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="analytics" className="flex items-center gap-2">
+              <BarChart3 className="w-4 h-4" />
+              Current Status
+            </TabsTrigger>
             <TabsTrigger value="single" className="flex items-center gap-2">
               <Globe className="w-4 h-4" />
               Update Single Platform
@@ -239,6 +317,60 @@ const AccountSocialsDialog = ({ open, onOpenChange, onSuccess }: AccountSocialsD
           </TabsList>
 
           <ScrollArea className="max-h-[60vh] pr-4 mt-4">
+            <TabsContent value="analytics" className="mt-0">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Social Media Status</CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    Overview of social media links across all your business locations.
+                  </p>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {socialStats.map(stat => (
+                    <div key={stat.platform} className="p-4 border rounded-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="font-medium">{stat.platformLabel}</h4>
+                        <Badge variant={stat.locationsWithSocial > 0 ? "default" : "secondary"}>
+                          {stat.locationsWithSocial} of {stat.totalLocations} locations
+                        </Badge>
+                      </div>
+                      
+                      {stat.locationsWithSocial > 0 ? (
+                        <div className="space-y-2">
+                          {stat.mostCommonUrl && (
+                            <div className="text-sm">
+                              <span className="font-medium">Most common link:</span>
+                              <div className="text-muted-foreground break-all">{stat.mostCommonUrl}</div>
+                              {stat.allUrls[0] && (
+                                <div className="text-xs text-muted-foreground">
+                                  Used by {stat.allUrls[0].count} location{stat.allUrls[0].count > 1 ? 's' : ''}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                          
+                          {stat.urlVariations > 1 && (
+                            <div className="text-sm text-amber-600">
+                              <span className="font-medium">Note:</span> {stat.urlVariations} different links set across {stat.locationsWithSocial} locations
+                              {stat.allUrls.length > 1 && (
+                                <div className="mt-1 text-xs">
+                                  Other variants: {stat.allUrls.slice(1).map(url => `${url.url} (${url.count})`).join(', ')}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="text-sm text-muted-foreground">
+                          No {stat.platformLabel} links set for any locations
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
             <TabsContent value="single" className="mt-0">
               <Card>
                 <CardHeader>
@@ -283,6 +415,7 @@ const AccountSocialsDialog = ({ open, onOpenChange, onSuccess }: AccountSocialsD
                             const selectedPlatform = SOCIAL_PLATFORMS.find(
                               p => p.key === singleForm.watch('platform')
                             );
+                            const platformStats = socialStats.find(s => s.platform === selectedPlatform?.key);
                             
                             if (!selectedPlatform) return null;
                             
@@ -295,11 +428,12 @@ const AccountSocialsDialog = ({ open, onOpenChange, onSuccess }: AccountSocialsD
                                     {...field}
                                     value={field.value || ''}
                                     onFocus={(e) => {
-                                      // If empty or just base URL, set to base URL and position cursor
+                                      // If empty or just base URL, set to most common URL or base URL
                                       if (!field.value || field.value === selectedPlatform.baseUrl) {
-                                        field.onChange(selectedPlatform.baseUrl);
+                                        const suggestedUrl = platformStats?.mostCommonUrl || selectedPlatform.baseUrl;
+                                        field.onChange(suggestedUrl);
                                         setTimeout(() => {
-                                          e.target.setSelectionRange(selectedPlatform.baseUrl.length, selectedPlatform.baseUrl.length);
+                                          e.target.setSelectionRange(suggestedUrl.length, suggestedUrl.length);
                                         }, 0);
                                       }
                                     }}
@@ -311,6 +445,11 @@ const AccountSocialsDialog = ({ open, onOpenChange, onSuccess }: AccountSocialsD
                                     }}
                                   />
                                 </FormControl>
+                                {platformStats?.mostCommonUrl && (
+                                  <p className="text-xs text-blue-600">
+                                    Most used: {platformStats.mostCommonUrl} ({platformStats.allUrls[0]?.count} locations)
+                                  </p>
+                                )}
                                 <p className="text-xs text-muted-foreground">
                                   The base URL is pre-filled for convenience. Just add your username/page name.
                                 </p>
@@ -384,7 +523,7 @@ const AccountSocialsDialog = ({ open, onOpenChange, onSuccess }: AccountSocialsD
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          {activeTab === 'single' ? (
+          {activeTab === 'analytics' ? null : activeTab === 'single' ? (
             <Button 
               type="submit" 
               disabled={loading || !singleForm.watch('platform') || !singleForm.watch('url')}

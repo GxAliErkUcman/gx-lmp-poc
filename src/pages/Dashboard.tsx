@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Upload, Edit, Trash2, Grid, Table2, Share2 } from 'lucide-react';
+import { Plus, Upload, Edit, Trash2, Grid, Table2, Settings } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 import { toast } from '@/hooks/use-toast';
@@ -13,10 +13,8 @@ import BusinessDialog from '@/components/BusinessDialog';
 import ImportDialog from '@/components/ImportDialog';
 import BusinessTableView from '@/components/BusinessTableView';
 import MultiEditDialog from '@/components/MultiEditDialog';
-import { JsonExport } from '@/components/JsonExport';
 import type { Business } from '@/types/business';
-import LogoUpload from '@/components/LogoUpload';
-import AccountSocialsDialog from '@/components/AccountSocialsDialog';
+import SettingsDialog from '@/components/SettingsDialog';
 import jasonerLogo from '@/assets/jasoner-horizontal-logo.png';
 
 const Dashboard = () => {
@@ -26,12 +24,12 @@ const Dashboard = () => {
   const [businessDialogOpen, setBusinessDialogOpen] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [editingBusiness, setEditingBusiness] = useState<Business | null>(null);
-  const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
+  const [viewMode, setViewMode] = useState<'grid' | 'table'>('table');
   const [multiEditDialogOpen, setMultiEditDialogOpen] = useState(false);
   const [selectedBusinessIds, setSelectedBusinessIds] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState<'active' | 'pending'>('active');
   const [userLogo, setUserLogo] = useState<string | null>(null);
-  const [accountSocialsDialogOpen, setAccountSocialsDialogOpen] = useState(false);
+  const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
 
 // Auth redirect handled below after hooks
 
@@ -179,15 +177,14 @@ const Dashboard = () => {
             
             {/* Action Buttons - Symmetric Layout */}
             <div className="flex items-center gap-2">
-              <LogoUpload onLogoUploaded={fetchBusinesses} />
               <Button 
-                onClick={() => setAccountSocialsDialogOpen(true)}
+                onClick={() => setSettingsDialogOpen(true)}
                 variant="outline"
                 size="default"
                 className="shadow-modern"
               >
-                <Share2 className="w-4 h-4 mr-2" />
-                Set Socials
+                <Settings className="w-4 h-4 mr-2" />
+                Settings
               </Button>
               <Button 
                 onClick={() => setImportDialogOpen(true)}
@@ -198,7 +195,6 @@ const Dashboard = () => {
                 <Upload className="w-4 h-4 mr-2" />
                 Import
               </Button>
-              <JsonExport businesses={activeBusinesses} />
               <Button 
                 onClick={() => setBusinessDialogOpen(true)}
                 className="shadow-modern bg-gradient-primary hover:opacity-90"
@@ -443,13 +439,10 @@ const Dashboard = () => {
         }}
       />
 
-      <AccountSocialsDialog
-        open={accountSocialsDialogOpen}
-        onOpenChange={setAccountSocialsDialogOpen}
-        onSuccess={() => {
-          fetchBusinesses();
-          setAccountSocialsDialogOpen(false);
-        }}
+      <SettingsDialog
+        open={settingsDialogOpen}
+        onOpenChange={setSettingsDialogOpen}
+        onLogoUploaded={fetchBusinesses}
       />
     </div>
   );
