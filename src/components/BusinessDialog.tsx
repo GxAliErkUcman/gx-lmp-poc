@@ -225,13 +225,13 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
         
         // Set individual day hours
         setHours({
-          monday: businessToUse.mondayHours || "09:00-18:00",
-          tuesday: businessToUse.tuesdayHours || "09:00-18:00",
-          wednesday: businessToUse.wednesdayHours || "09:00-18:00",
-          thursday: businessToUse.thursdayHours || "09:00-18:00",
-          friday: businessToUse.fridayHours || "09:00-18:00",
-          saturday: businessToUse.saturdayHours || "10:00-14:00",
-          sunday: businessToUse.sundayHours ?? null
+          monday: businessToUse.mondayHours || null,
+          tuesday: businessToUse.tuesdayHours || null,
+          wednesday: businessToUse.wednesdayHours || null,
+          thursday: businessToUse.thursdayHours || null,
+          friday: businessToUse.fridayHours || null,
+          saturday: businessToUse.saturdayHours || null,
+          sunday: businessToUse.sundayHours || null
         });
 
         // Set cover photo
