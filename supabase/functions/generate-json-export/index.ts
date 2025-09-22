@@ -180,6 +180,31 @@ Deno.serve(async (req) => {
 
     console.log(`Successfully uploaded JSON export: ${fileName}`);
 
+    // Auto-sync with GCP
+    try {
+      console.log('Auto-syncing to GCP...');
+      const syncResponse = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/sync-to-gcp`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          fileName,
+          bucketName: 'json-exports'
+        })
+      });
+
+      const syncResult = await syncResponse.json();
+      if (syncResult.success) {
+        console.log(`Successfully synced to GCP: ${syncResult.gcpPath}`);
+      } else {
+        console.warn('GCP sync failed:', syncResult.error);
+      }
+    } catch (syncError) {
+      console.warn('GCP sync error (non-fatal):', syncError.message);
+    }
+
     return new Response(JSON.stringify({ 
       success: true, 
       fileName,

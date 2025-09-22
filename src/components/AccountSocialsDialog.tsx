@@ -31,9 +31,9 @@ import { Share2, Globe, BarChart3 } from 'lucide-react';
 const accountSocialsSchema = z.object({
   facebookUrl: z.string().optional(),
   instagramUrl: z.string().optional(),
+  tiktokUrl: z.string().optional(),
   linkedinUrl: z.string().optional(),
   pinterestUrl: z.string().optional(),
-  tiktokUrl: z.string().optional(),
   twitterUrl: z.string().optional(),
   youtubeUrl: z.string().optional(),
 });
@@ -49,10 +49,10 @@ type SingleSocialFormValues = z.infer<typeof singleSocialSchema>;
 const SOCIAL_PLATFORMS = [
   { key: 'facebookUrl', label: 'Facebook', baseUrl: 'https://facebook.com/' },
   { key: 'instagramUrl', label: 'Instagram', baseUrl: 'https://instagram.com/' },
+  { key: 'tiktokUrl', label: 'TikTok', baseUrl: 'https://tiktok.com/@' },
   { key: 'linkedinUrl', label: 'LinkedIn', baseUrl: 'https://linkedin.com/company/' },
   { key: 'twitterUrl', label: 'X (Twitter)', baseUrl: 'https://x.com/' },
   { key: 'youtubeUrl', label: 'YouTube', baseUrl: 'https://youtube.com/@' },
-  { key: 'tiktokUrl', label: 'TikTok', baseUrl: 'https://tiktok.com/@' },
   { key: 'pinterestUrl', label: 'Pinterest', baseUrl: 'https://pinterest.com/' },
 ] as const;
 
@@ -83,9 +83,9 @@ const AccountSocialsDialog = ({ open, onOpenChange, onSuccess }: AccountSocialsD
     defaultValues: {
       facebookUrl: '',
       instagramUrl: '',
+      tiktokUrl: '',
       linkedinUrl: '',
       pinterestUrl: '',
-      tiktokUrl: '',
       twitterUrl: '',
       youtubeUrl: '',
     },
@@ -191,9 +191,9 @@ const AccountSocialsDialog = ({ open, onOpenChange, onSuccess }: AccountSocialsD
       const socialMediaUrls = [
         { name: 'url_facebook', url: values.facebookUrl || null },
         { name: 'url_instagram', url: values.instagramUrl || null },
+        { name: 'url_tiktok', url: values.tiktokUrl || null },
         { name: 'url_linkedin', url: values.linkedinUrl || null },
         { name: 'url_pinterest', url: values.pinterestUrl || null },
-        { name: 'url_tiktok', url: values.tiktokUrl || null },
         { name: 'url_twitter', url: values.twitterUrl || null },
         { name: 'url_youtube', url: values.youtubeUrl || null },
       ].filter(item => item.url && item.url.trim() !== '');
