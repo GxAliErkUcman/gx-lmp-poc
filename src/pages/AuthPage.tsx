@@ -136,18 +136,6 @@ const AuthPage = () => {
                 {loading ? 'Processing...' : (isLogin ? 'Sign In' : 'Sign Up')}
               </Button>
             </form>
-            <div className="mt-4 text-center">
-              <Button
-                variant="link"
-                onClick={() => setIsLogin(!isLogin)}
-                className="text-sm"
-              >
-                {isLogin 
-                  ? "Don't have an account? Sign up" 
-                  : "Already have an account? Sign in"
-                }
-              </Button>
-            </div>
           </CardContent>
         </Card>
       </div>
