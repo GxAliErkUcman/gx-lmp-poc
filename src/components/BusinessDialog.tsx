@@ -260,6 +260,17 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
     loadBusinessData();
   }, [business, setValue, reset, open]);
 
+  // Clear validation errors when form values change
+  useEffect(() => {
+    const subscription = watch((value, { name, type }) => {
+      if (type === 'change' && validationErrors.length > 0) {
+        // Clear validation errors when user makes changes
+        setValidationErrors([]);
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [watch, validationErrors.length]);
+
   const onSubmit = async (data: BusinessFormData) => {
     if (!user) return;
 
