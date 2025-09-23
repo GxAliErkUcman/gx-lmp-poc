@@ -7,6 +7,7 @@ const socialUrlPattern = /^$|^(https?:\/\/)?(www\.)?(facebook|instagram|linkedin
 const multipleUrlsPattern = /^$|^(https?:\/\/)?(www\.)?[-A-ÿ0-9ZŠĐČĆŽzšđčćž@:%._\+~#=]{1,256}\.[A-ÿ0-9ZŠĐČĆŽzšđčćž()]{1,6}\b(?:[-A-ÿ0-9ZŠĐČĆŽzšđčćž()@:%_\+.~#?&\/=]*)((\s)*,(\s)*(https?:\/\/)?(www\.)?[-A-ÿ0-9ZŠĐČĆŽzšđčćž@:%._\+~#=]{1,256}\.[A-ÿ0-9ZŠĐČĆŽzšđčćž()]{1,6}\b(?:[-A-ÿ0-9ZŠĐČĆŽzšđčćž()@:%_\+.~#?&\/=]*)){0,}$/;
 const phonePattern = /^\(?[+]?[0-9a-zA-Z  ()./–-]*$/;
 const additionalPhonesPattern = /^(\(?[+]?[0-9a-zA-Z  ()./–-]*, ?)*(\(?[+]?[0-9a-zA-Z  ()./–-]*)$/;
+const specialHoursPattern = /^(([0-9]{4}-[0-9]{2}-[0-9]{2}: ?(([0-9]{1,2}:[0-9]{2} ?- ?[0-9]{1,2}:[0-9]{2})|x), ?)*([0-9]{4}-[0-9]{2}-[0-9]{2}: ?(([0-9]{1,2}:[0-9]{2} ?- ?[0-9]{1,2}:[0-9]{2})|x))|x|)$/;
 
 // Social media URL schema
 const socialMediaUrlSchema = z.object({
@@ -76,7 +77,9 @@ export const businessValidationSchema = z.object({
   fridayHours: z.string().nullable().refine((val) => !val || dayOpeningHoursPattern.test(val), "Invalid Friday hours format").optional(),
   saturdayHours: z.string().nullable().refine((val) => !val || dayOpeningHoursPattern.test(val), "Invalid Saturday hours format").optional(),
   sundayHours: z.string().nullable().refine((val) => !val || dayOpeningHoursPattern.test(val), "Invalid Sunday hours format").optional(),
-  specialHours: z.string().nullable().optional(),
+  specialHours: z.string().nullable().refine((val) => !val || specialHoursPattern.test(val), {
+    message: "Invalid special hours format. Use format: 'YYYY-MM-DD: HH:MM-HH:MM' or 'YYYY-MM-DD: x' for closed days. Multiple entries separated by commas."
+  }).optional(),
   moreHours: z.array(moreHoursSchema).nullable().optional(),
   
   // Status
@@ -134,6 +137,7 @@ function getFieldSuggestion(field: string, message: string): string {
     website: "Use full URL format: https://www.example.com",
     primaryPhone: "Use format with country code: +43-1-236-2933 or local: 01 236 2933",
     mondayHours: "Use format: '09:00-17:00' or '09:00-12:00,13:00-17:00' or 'x' for closed",
+    specialHours: "Use format: '2025-12-25: x, 2025-01-01: 10:00-15:00' - ONLY use 'x' for closed (not 'y' or other letters)",
     latitude: "Must be between -90 and 90 degrees",
     longitude: "Must be between -180 and 180 degrees"
   };
@@ -163,4 +167,54 @@ export function generateStoreCode(businessName: string, existingCodes: string[])
       baseCode = 'STORE';
     }
   }
+}
+
+export function validateSpecialHours(specialHours: string): { isValid: boolean; errors: string[] } {
+  if (!specialHours || specialHours.trim() === '') {
+    return { isValid: true, errors: [] };
+  }
+
+  const errors: string[] = [];
+  
+  // Check overall format first
+  if (!specialHoursPattern.test(specialHours)) {
+    // Parse individual entries to provide specific feedback
+    const entries = specialHours.split(',').map(entry => entry.trim());
+    
+    for (let i = 0; i < entries.length; i++) {
+      const entry = entries[i];
+      
+      // Check date format (YYYY-MM-DD)
+      if (!entry.match(/^[0-9]{4}-[0-9]{2}-[0-9]{2}:/)) {
+        errors.push(`Entry ${i + 1}: Date must be in YYYY-MM-DD format (e.g., "2025-12-25:")`);
+        continue;
+      }
+      
+      const [datePart, timePart] = entry.split(':').map(part => part.trim());
+      
+      // Validate date format
+      if (!datePart.match(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/)) {
+        errors.push(`Entry ${i + 1}: Invalid date format "${datePart}". Use YYYY-MM-DD`);
+      }
+      
+      // Validate time part
+      if (!timePart) {
+        errors.push(`Entry ${i + 1}: Missing time after date. Use "x" for closed or "HH:MM-HH:MM" for hours`);
+      } else if (timePart !== 'x' && !timePart.match(/^[0-9]{1,2}:[0-9]{2} ?- ?[0-9]{1,2}:[0-9]{2}$/)) {
+        if (timePart.toLowerCase() === 'y' || timePart.match(/^[a-zA-Z]$/)) {
+          errors.push(`Entry ${i + 1}: Use "x" (lowercase) for closed days, not "${timePart}"`);
+        } else {
+          errors.push(`Entry ${i + 1}: Invalid time format "${timePart}". Use "x" for closed or "HH:MM-HH:MM" format`);
+        }
+      }
+    }
+    
+    if (errors.length === 0) {
+      errors.push("Invalid special hours format. Please check the overall structure.");
+    }
+    
+    return { isValid: false, errors };
+  }
+  
+  return { isValid: true, errors: [] };
 }

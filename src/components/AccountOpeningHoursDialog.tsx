@@ -12,6 +12,7 @@ import { Clock } from 'lucide-react';
 import OpeningHours from './OpeningHours';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { validateSpecialHours } from '@/lib/validation';
 
 interface Hours {
   monday: string | null;
@@ -40,9 +41,20 @@ const AccountOpeningHoursDialog = ({ open, onOpenChange, onSuccess }: AccountOpe
     sunday: null,
   });
   const [specialHours, setSpecialHours] = React.useState('');
+  const [specialHoursErrors, setSpecialHoursErrors] = React.useState<string[]>([]);
   const [loading, setLoading] = React.useState(false);
 
   const handleApplyToAll = async () => {
+    // Check for special hours validation errors before submitting
+    if (specialHoursErrors.length > 0) {
+      toast({
+        title: "Validation Error",
+        description: "Please fix special hours format errors before saving",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -109,16 +121,36 @@ const AccountOpeningHoursDialog = ({ open, onOpenChange, onSuccess }: AccountOpe
             <Input
               id="specialHours"
               value={specialHours}
-              onChange={(e) => setSpecialHours(e.target.value)}
-              placeholder="e.g., Holiday hours: Dec 25 - Closed"
+              onChange={(e) => {
+                const value = e.target.value;
+                setSpecialHours(value);
+                
+                // Validate special hours in real-time
+                const validation = validateSpecialHours(value);
+                setSpecialHoursErrors(validation.errors);
+              }}
+              placeholder="2025-12-25: x, 2025-01-01: 10:00-15:00"
+              className={specialHoursErrors.length > 0 ? "border-destructive" : ""}
             />
+            <p className="text-xs text-muted-foreground">
+              Format: YYYY-MM-DD: HH:MM-HH:MM or YYYY-MM-DD: x (for closed). Use "x" for closed days.
+            </p>
+            {specialHoursErrors.length > 0 && (
+              <div className="mt-2 space-y-1">
+                {specialHoursErrors.map((error, index) => (
+                  <p key={index} className="text-xs text-destructive">
+                    {error}
+                  </p>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="flex justify-end gap-3">
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button onClick={handleApplyToAll} disabled={loading}>
+            <Button onClick={handleApplyToAll} disabled={loading || specialHoursErrors.length > 0}>
               {loading ? 'Applying...' : 'Apply to All Locations'}
             </Button>
           </div>

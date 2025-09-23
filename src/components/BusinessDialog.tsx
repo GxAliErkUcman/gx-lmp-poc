@@ -14,7 +14,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import { ValidationErrors } from '@/components/ValidationErrors';
-import { validateBusiness, generateStoreCode } from '@/lib/validation';
+import { validateBusiness, generateStoreCode, validateSpecialHours } from '@/lib/validation';
 import { Business } from '@/types/business';
 import PhotoUpload from '@/components/PhotoUpload';
 import OpeningHours from '@/components/OpeningHours';
@@ -96,6 +96,7 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
     sunday: null as string | null
   });
   const [specialHours, setSpecialHours] = useState('');
+  const [specialHoursErrors, setSpecialHoursErrors] = useState<string[]>([]);
 
   const [socialMediaUrls, setSocialMediaUrls] = useState({
     facebookUrl: "",
@@ -263,6 +264,16 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
 
   const onSubmit = async (data: BusinessFormData) => {
     if (!user) return;
+
+    // Check for special hours validation errors before submitting
+    if (specialHoursErrors.length > 0) {
+      toast({
+        title: "Validation Error",
+        description: "Please fix special hours format errors before saving",
+        variant: "destructive",
+      });
+      return;
+    }
 
     // Normalize opening hours: convert 'Closed' to null
     const normalizeHour = (v: string | null | undefined) =>
@@ -727,11 +738,29 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
                   id="specialHours"
                   value={specialHours}
                   onChange={(e) => {
-                    setSpecialHours(e.target.value);
-                    setValue('specialHours', e.target.value);
+                    const value = e.target.value;
+                    setSpecialHours(value);
+                    setValue('specialHours', value);
+                    
+                    // Validate special hours in real-time
+                    const validation = validateSpecialHours(value);
+                    setSpecialHoursErrors(validation.errors);
                   }}
-                  placeholder="e.g., Holiday hours: Dec 25 - Closed"
+                  placeholder="2025-12-25: x, 2025-01-01: 10:00-15:00"
+                  className={specialHoursErrors.length > 0 ? "border-destructive" : ""}
                 />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Format: YYYY-MM-DD: HH:MM-HH:MM or YYYY-MM-DD: x (for closed). Use "x" for closed days.
+                </p>
+                {specialHoursErrors.length > 0 && (
+                  <div className="mt-2 space-y-1">
+                    {specialHoursErrors.map((error, index) => (
+                      <p key={index} className="text-xs text-destructive">
+                        {error}
+                      </p>
+                    ))}
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
