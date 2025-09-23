@@ -13,6 +13,7 @@ import OpeningHours from './OpeningHours';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { validateSpecialHours } from '@/lib/validation';
+import SpecialHours, { SpecialHourEntry, parseSpecialHoursFromSchema, formatSpecialHoursToSchema } from './SpecialHours';
 
 interface Hours {
   monday: string | null;
@@ -40,20 +41,10 @@ const AccountOpeningHoursDialog = ({ open, onOpenChange, onSuccess }: AccountOpe
     saturday: null,
     sunday: null,
   });
-  const [specialHours, setSpecialHours] = React.useState('');
-  const [specialHoursErrors, setSpecialHoursErrors] = React.useState<string[]>([]);
+  const [specialHours, setSpecialHours] = React.useState<SpecialHourEntry[]>([]);
   const [loading, setLoading] = React.useState(false);
 
   const handleApplyToAll = async () => {
-    // Check for special hours validation errors before submitting
-    if (specialHoursErrors.length > 0) {
-      toast({
-        title: "Validation Error",
-        description: "Please fix special hours format errors before saving",
-        variant: "destructive",
-      });
-      return;
-    }
 
     setLoading(true);
     try {
@@ -69,7 +60,7 @@ const AccountOpeningHoursDialog = ({ open, onOpenChange, onSuccess }: AccountOpe
         fridayHours: hours.friday,
         saturdayHours: hours.saturday,
         sundayHours: hours.sunday,
-        specialHours: specialHours || null,
+        specialHours: formatSpecialHoursToSchema(specialHours) || null,
       };
 
       const { error } = await supabase
@@ -116,41 +107,16 @@ const AccountOpeningHoursDialog = ({ open, onOpenChange, onSuccess }: AccountOpe
 
           <OpeningHours hours={hours} onHoursChange={setHours} />
 
-          <div className="space-y-2">
-            <Label htmlFor="specialHours">Special Hours</Label>
-            <Input
-              id="specialHours"
-              value={specialHours}
-              onChange={(e) => {
-                const value = e.target.value;
-                setSpecialHours(value);
-                
-                // Validate special hours in real-time
-                const validation = validateSpecialHours(value);
-                setSpecialHoursErrors(validation.errors);
-              }}
-              placeholder="2025-12-25: x, 2025-01-01: 10:00-15:00"
-              className={specialHoursErrors.length > 0 ? "border-destructive" : ""}
-            />
-            <p className="text-xs text-muted-foreground">
-              Format: YYYY-MM-DD: HH:MM-HH:MM or YYYY-MM-DD: x (for closed). Use "x" for closed days.
-            </p>
-            {specialHoursErrors.length > 0 && (
-              <div className="mt-2 space-y-1">
-                {specialHoursErrors.map((error, index) => (
-                  <p key={index} className="text-xs text-destructive">
-                    {error}
-                  </p>
-                ))}
-              </div>
-            )}
-          </div>
+          <SpecialHours 
+            specialHours={specialHours}
+            onSpecialHoursChange={setSpecialHours}
+          />
 
           <div className="flex justify-end gap-3">
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button onClick={handleApplyToAll} disabled={loading || specialHoursErrors.length > 0}>
+            <Button onClick={handleApplyToAll} disabled={loading}>
               {loading ? 'Applying...' : 'Apply to All Locations'}
             </Button>
           </div>
