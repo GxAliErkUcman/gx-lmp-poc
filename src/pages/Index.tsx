@@ -50,9 +50,6 @@ const Index = () => {
               <Button size="lg" className="w-full" asChild>
                 <a href="/auth">Sign In</a>
               </Button>
-              <Button size="lg" variant="outline" className="w-full" asChild>
-                <a href="/auth">Create Account</a>
-              </Button>
             </CardContent>
           </Card>
         </div>

@@ -6,6 +6,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Clock } from 'lucide-react';
 import OpeningHours from './OpeningHours';
 import { supabase } from '@/integrations/supabase/client';
@@ -37,6 +39,7 @@ const AccountOpeningHoursDialog = ({ open, onOpenChange, onSuccess }: AccountOpe
     saturday: null,
     sunday: null,
   });
+  const [specialHours, setSpecialHours] = React.useState('');
   const [loading, setLoading] = React.useState(false);
 
   const handleApplyToAll = async () => {
@@ -54,6 +57,7 @@ const AccountOpeningHoursDialog = ({ open, onOpenChange, onSuccess }: AccountOpe
         fridayHours: hours.friday,
         saturdayHours: hours.saturday,
         sundayHours: hours.sunday,
+        specialHours: specialHours || null,
       };
 
       const { error } = await supabase
@@ -99,6 +103,16 @@ const AccountOpeningHoursDialog = ({ open, onOpenChange, onSuccess }: AccountOpe
           </p>
 
           <OpeningHours hours={hours} onHoursChange={setHours} />
+
+          <div className="space-y-2">
+            <Label htmlFor="specialHours">Special Hours</Label>
+            <Input
+              id="specialHours"
+              value={specialHours}
+              onChange={(e) => setSpecialHours(e.target.value)}
+              placeholder="e.g., Holiday hours: Dec 25 - Closed"
+            />
+          </div>
 
           <div className="flex justify-end gap-3">
             <Button variant="outline" onClick={() => onOpenChange(false)}>

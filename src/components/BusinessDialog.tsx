@@ -61,6 +61,7 @@ const businessSchema = z.object({
   menuURL: z.string().optional(),
   reservationsURL: z.string().optional(),
   orderAheadURL: z.string().optional(),
+  specialHours: z.string().optional(),
   // Social Media URLs
   facebookUrl: z.string().optional(),
   instagramUrl: z.string().optional(),
@@ -94,6 +95,7 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
     saturday: "10:00-14:00",
     sunday: null as string | null
   });
+  const [specialHours, setSpecialHours] = useState('');
 
   const [socialMediaUrls, setSocialMediaUrls] = useState({
     facebookUrl: "",
@@ -202,6 +204,8 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
         setValue('menuURL', businessToUse.menuURL || '');
         setValue('reservationsURL', businessToUse.reservationsURL || '');
         setValue('orderAheadURL', businessToUse.orderAheadURL || '');
+        setValue('specialHours', businessToUse.specialHours || '');
+        setSpecialHours(businessToUse.specialHours || '');
         
         // Set social media URLs
         const currentSocialMedia = businessToUse.socialMediaUrls || [];
@@ -236,10 +240,12 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
 
         // Set cover photo
         setCoverPhoto(businessToUse.coverPhoto || '');
+        setSpecialHours(businessToUse.specialHours || '');
       } else if (!business) {
         // Reset for new business
         reset();
         setCoverPhoto('');
+        setSpecialHours('');
         setHours({
           monday: "09:00-18:00",
           tuesday: "09:00-18:00",
@@ -367,6 +373,7 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
         fridayHours: normalizedHours.fridayHours,
         saturdayHours: normalizedHours.saturdayHours,
         sundayHours: normalizedHours.sundayHours,
+        specialHours: data.specialHours || null,
         temporarilyClosed: data.temporarilyClosed || false,
         logoPhoto: data.logoPhoto || null,
         coverPhoto: data.coverPhoto || null,
@@ -706,6 +713,28 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
             hours={hours}
             onHoursChange={setHours}
           />
+
+          {/* Special Hours */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Special Hours</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div>
+                <Label htmlFor="specialHours">Special Hours</Label>
+                <Input
+                  {...register('specialHours')}
+                  id="specialHours"
+                  value={specialHours}
+                  onChange={(e) => {
+                    setSpecialHours(e.target.value);
+                    setValue('specialHours', e.target.value);
+                  }}
+                  placeholder="e.g., Holiday hours: Dec 25 - Closed"
+                />
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Cover Photo Upload */}
           <Card>

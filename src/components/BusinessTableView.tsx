@@ -288,13 +288,13 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit }: Busine
               </TableHead>
               {visibleColumns.map((column) => (
                 <TableHead key={column.key}>
-                  {column.key === 'storeCode' ? (
+                  {['storeCode', 'businessName', 'primaryCategory', 'city'].includes(column.key) ? (
                     <div
                       className="flex items-center gap-1 cursor-pointer text-gray-700 dark:text-gray-300"
-                      onClick={() => handleSort('storeCode')}
+                      onClick={() => handleSort(column.key as keyof Business)}
                     >
                       <span>{column.label}</span>
-                      {currentSort?.key === 'storeCode' && (
+                      {currentSort?.key === column.key && (
                         currentSort.direction === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />
                       )}
                     </div>
