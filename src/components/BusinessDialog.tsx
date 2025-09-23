@@ -417,21 +417,16 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
         } else if (error.message?.includes('foreign key')) {
           errorMessage = 'Invalid reference data detected';
         } else if (error.message?.includes('null value')) {
-          errorMessage = 'Required field is missing. Please check all required fields are filled.';
-        } else if (error.code === '23505') {
-          errorMessage = 'Duplicate entry detected - Store code must be unique';
-        } else if (error.code === '23503') {
-          errorMessage = 'Referenced data not found';
-        } else if (error.code === '23514') {
-          errorMessage = 'Data validation failed - Please check field formats';
-        } else if (error.code === '23502') {
-          errorMessage = 'Required field is missing';
-        } else if (error.message) {
-          // Include the actual error message for debugging
-          errorMessage = `${errorMessage}: ${error.message}`;
+          errorMessage = 'A required field is missing';
         }
         
-        throw new Error(errorMessage);
+        toast({
+          title: "Error",
+          description: errorMessage,
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
       }
 
       toast({
@@ -439,13 +434,13 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
         description: `Business ${business ? 'updated' : 'created'} successfully`,
       });
 
-      setValidationErrors([]);
       onSuccess();
-    } catch (error: any) {
+      onOpenChange(false);
+    } catch (error) {
       console.error('Error saving business:', error);
       toast({
         title: "Error",
-        description: error.message || `Failed to ${business ? 'update' : 'create'} business`,
+        description: `Failed to ${business ? 'update' : 'create'} business`,
         variant: "destructive",
       });
     } finally {
@@ -453,92 +448,85 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
     }
   };
 
-  const handleLocationChange = (lat: number | null, lng: number | null) => {
-    try {
-      setValue('latitude', lat);
-      setValue('longitude', lng);
-      
-      // Clear any previous location-related validation errors
-      setValidationErrors(prev => prev.filter(err => 
-        !['latitude', 'longitude', 'location'].includes(err.field.toLowerCase())
-      ));
-    } catch (error) {
-      console.error('Error updating location:', error);
-      toast({
-        title: "Location Update Error",
-        description: "Failed to update location coordinates",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleCoverPhotoChange = (photos: string[]) => {
-    const photoUrl = photos[0] || '';
-    setCoverPhoto(photoUrl);
-    setValue('coverPhoto', photoUrl);
-  };
-
-  const getCurrentAddress = () => {
-    const addressLine1 = watch('addressLine1') || '';
-    const city = watch('city') || '';
-    const state = watch('state') || '';
-    const country = watch('country') || '';
-    
-    return [addressLine1, city, state, country].filter(Boolean).join(', ');
-  };
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>
-            {business ? 'Edit Business' : 'Add New Business'}
-          </DialogTitle>
+          <DialogTitle>{business ? 'Edit Business' : 'Add New Business'}</DialogTitle>
           <DialogDescription>
-            {business ? 'Update business information and location details.' : 'Create a new business listing with all required information.'}
+            {business ? 'Update business information' : 'Enter the details for your new business location'}
           </DialogDescription>
         </DialogHeader>
 
-        {validationErrors.length > 0 && (
-          <ValidationErrors errors={validationErrors} className="mb-4" />
-        )}
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          {validationErrors.length > 0 && (
+            <ValidationErrors errors={validationErrors} />
+          )}
 
-        <form onSubmit={handleSubmit(onSubmit, (formErrors: any) => {
-          try {
-            const collected = Object.entries(formErrors || {}).map(([field, err]: any) => ({
-              field,
-              message: err?.message || 'Invalid value'
-            }));
-            setValidationErrors(collected);
-            toast({
-              title: 'Validation Error',
-              description: 'Please review the highlighted fields and try again.',
-              variant: 'destructive',
-            });
-          } catch (e) {
-            console.error('Validation parse error:', e);
-          }
-        })} className="space-y-6">
-          {/* Required Fields */}
+          {/* Basic Information */}
           <Card>
             <CardHeader>
-              <CardTitle>Required Information</CardTitle>
+              <CardTitle>Basic Information</CardTitle>
             </CardHeader>
-            <CardContent className="grid gap-4 md:grid-cols-2">
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="storeCode">Store Code *</Label>
+                  <Input {...register('storeCode')} id="storeCode" />
+                  {errors.storeCode && (
+                    <p className="text-sm text-destructive mt-1">{errors.storeCode.message}</p>
+                  )}
+                </div>
+                <div>
+                  <Label htmlFor="businessName">Business Name *</Label>
+                  <Input {...register('businessName')} id="businessName" />
+                  {errors.businessName && (
+                    <p className="text-sm text-destructive mt-1">{errors.businessName.message}</p>
+                  )}
+                </div>
+              </div>
+
               <div>
-                <Label htmlFor="storeCode">Store Code *</Label>
-                <Input {...register('storeCode')} id="storeCode" />
-                {errors.storeCode && (
-                  <p className="text-sm text-destructive mt-1">{errors.storeCode.message}</p>
+                <Label htmlFor="fromTheBusiness">From the Business</Label>
+                <Textarea 
+                  {...register('fromTheBusiness')} 
+                  id="fromTheBusiness"
+                  placeholder="Brief description of your business (max 750 characters)"
+                  className="min-h-[100px]"
+                />
+                {errors.fromTheBusiness && (
+                  <p className="text-sm text-destructive mt-1">{errors.fromTheBusiness.message}</p>
                 )}
               </div>
+
               <div>
-                <Label htmlFor="businessName">Business Name *</Label>
-                <Input {...register('businessName')} id="businessName" />
-                {errors.businessName && (
-                  <p className="text-sm text-destructive mt-1">{errors.businessName.message}</p>
+                <Label htmlFor="labels">Labels</Label>
+                <Input 
+                  {...register('labels')} 
+                  id="labels" 
+                  placeholder="e.g., Family-friendly, Organic, Free Wi-Fi (comma-separated)"
+                />
+                {errors.labels && (
+                  <p className="text-sm text-destructive mt-1">{errors.labels.message}</p>
                 )}
               </div>
+
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="temporarilyClosed"
+                  {...register('temporarilyClosed')}
+                />
+                <Label htmlFor="temporarilyClosed">Temporarily Closed</Label>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Address Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Address Information</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
               <div>
                 <Label htmlFor="addressLine1">Street Address *</Label>
                 <Input {...register('addressLine1')} id="addressLine1" />
@@ -546,77 +534,125 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
                   <p className="text-sm text-destructive mt-1">{errors.addressLine1.message}</p>
                 )}
               </div>
-              <div>
-                <Label htmlFor="country">Country *</Label>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="addressLine2">Address Line 2</Label>
+                  <Input {...register('addressLine2')} id="addressLine2" />
+                </div>
+                <div>
+                  <Label htmlFor="addressLine3">Address Line 3</Label>
+                  <Input {...register('addressLine3')} id="addressLine3" />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="addressLine4">Address Line 4</Label>
+                  <Input {...register('addressLine4')} id="addressLine4" />
+                </div>
+                <div>
+                  <Label htmlFor="addressLine5">Address Line 5</Label>
+                  <Input {...register('addressLine5')} id="addressLine5" />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <Label htmlFor="postalCode">Postal Code</Label>
+                  <Input {...register('postalCode')} id="postalCode" />
+                </div>
+                <div>
+                  <Label htmlFor="district">District</Label>
+                  <Input {...register('district')} id="district" />
+                </div>
+                <CitySelect
+                  value={watch('city') || ''}
+                  onValueChange={(value) => setValue('city', value)}
+                  countryCode={watch('country')}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="state">State/Province</Label>
+                  <Input {...register('state')} id="state" />
+                </div>
                 <CountrySelect
-                  value={watch('country')}
-                  onValueChange={(value) => {
-                    setValue('country', value, { shouldValidate: true, shouldTouch: true });
-                  }}
-                  placeholder="Select country..."
-                  required
+                  value={watch('country') || ''}
+                  onValueChange={(value) => setValue('country', value)}
                 />
                 {errors.country && (
                   <p className="text-sm text-destructive mt-1">{errors.country.message}</p>
                 )}
               </div>
-              <div className="md:col-span-2">
-                <Label htmlFor="primaryCategory">Primary Category *</Label>
-                <CategorySelect
-                  value={watch('primaryCategory')}
-                  onValueChange={(value) => setValue('primaryCategory', value)}
-                  placeholder="Select primary category..."
-                  required
-                />
-                {errors.primaryCategory && (
-                  <p className="text-sm text-destructive mt-1">{errors.primaryCategory.message}</p>
-                )}
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="latitude">Latitude</Label>
+                  <Input 
+                    {...register('latitude', { valueAsNumber: true })} 
+                    id="latitude" 
+                    type="number" 
+                    step="any"
+                    placeholder="e.g., 40.7128"
+                  />
+                  {errors.latitude && (
+                    <p className="text-sm text-destructive mt-1">{errors.latitude.message}</p>
+                  )}
+                </div>
+                <div>
+                  <Label htmlFor="longitude">Longitude</Label>
+                  <Input 
+                    {...register('longitude', { valueAsNumber: true })} 
+                    id="longitude" 
+                    type="number" 
+                    step="any"
+                    placeholder="e.g., -74.0060"
+                  />
+                  {errors.longitude && (
+                    <p className="text-sm text-destructive mt-1">{errors.longitude.message}</p>
+                  )}
+                </div>
               </div>
+
+              <LocationMap 
+                latitude={watch('latitude')} 
+                longitude={watch('longitude')}
+                onLocationChange={(lat, lng) => {
+                  setValue('latitude', lat);
+                  setValue('longitude', lng);
+                }}
+              />
             </CardContent>
           </Card>
 
-          {/* Additional Address Fields */}
+          {/* Categories */}
           <Card>
             <CardHeader>
-              <CardTitle>Additional Address Information</CardTitle>
+              <CardTitle>Categories</CardTitle>
             </CardHeader>
-            <CardContent className="grid gap-4 md:grid-cols-2">
+            <CardContent className="space-y-4">
+              <CategorySelect
+                value={watch('primaryCategory') || ''}
+                onValueChange={(value) => setValue('primaryCategory', value)}
+                placeholder="Select primary category"
+                required
+              />
+              {errors.primaryCategory && (
+                <p className="text-sm text-destructive mt-1">{errors.primaryCategory.message}</p>
+              )}
+
               <div>
-                <Label htmlFor="addressLine2">Address Line 2</Label>
-                <Input {...register('addressLine2')} id="addressLine2" placeholder="Suite, building, floor" />
-              </div>
-              <div>
-                <Label htmlFor="addressLine3">Address Line 3</Label>
-                <Input {...register('addressLine3')} id="addressLine3" placeholder="Additional address info" />
-              </div>
-              <div>
-                <Label htmlFor="addressLine4">Address Line 4</Label>
-                <Input {...register('addressLine4')} id="addressLine4" placeholder="Additional address info" />
-              </div>
-              <div>
-                <Label htmlFor="addressLine5">Address Line 5</Label>
-                <Input {...register('addressLine5')} id="addressLine5" placeholder="Additional address info" />
-              </div>
-              <div>
-                <Label htmlFor="city">City</Label>
-                <CitySelect
-                  value={watch('city')}
-                  onValueChange={(value) => setValue('city', value)}
-                  countryCode={watch('country')}
-                  placeholder="Select city..."
+                <Label htmlFor="additionalCategories">Additional Categories</Label>
+                <Input 
+                  {...register('additionalCategories')} 
+                  id="additionalCategories" 
+                  placeholder="Comma-separated additional categories (max 10)"
                 />
-              </div>
-              <div>
-                <Label htmlFor="state">State/Region</Label>
-                <Input {...register('state')} id="state" />
-              </div>
-              <div>
-                <Label htmlFor="postalCode">Postal Code</Label>
-                <Input {...register('postalCode')} id="postalCode" />
-              </div>
-              <div>
-                <Label htmlFor="district">District</Label>
-                <Input {...register('district')} id="district" placeholder="Neighborhood, borough" />
+                {errors.additionalCategories && (
+                  <p className="text-sm text-destructive mt-1">{errors.additionalCategories.message}</p>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -626,92 +662,155 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
             <CardHeader>
               <CardTitle>Contact Information</CardTitle>
             </CardHeader>
-            <CardContent className="grid gap-4 md:grid-cols-2">
-              <div>
-                <Label htmlFor="primaryPhone">Primary Phone</Label>
-                <Input {...register('primaryPhone')} id="primaryPhone" placeholder="+43-1-236-2933" />
-              </div>
-              <div>
-                <Label htmlFor="additionalPhones">Additional Phones</Label>
-                <Input {...register('additionalPhones')} id="additionalPhones" placeholder="Comma-separated" />
-              </div>
-              <div>
-                <Label htmlFor="website">Website</Label>
-                <Input {...register('website')} id="website" placeholder="https://www.example.com" />
-              </div>
-              <div>
-                <Label htmlFor="adwords">Google Ads Phone</Label>
-                <Input {...register('adwords')} id="adwords" placeholder="Internal use only" />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Business Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Business Information</CardTitle>
-            </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="fromTheBusiness">Description (From the Business)</Label>
-                <Textarea 
-                  {...register('fromTheBusiness')} 
-                  id="fromTheBusiness" 
-                  placeholder="Brief description of your business (max 750 characters)"
-                  maxLength={750}
+                <Label htmlFor="website">Website</Label>
+                <Input 
+                  {...register('website')} 
+                  id="website" 
+                  type="url" 
+                  placeholder="https://www.example.com"
                 />
+                {errors.website && (
+                  <p className="text-sm text-destructive mt-1">{errors.website.message}</p>
+                )}
               </div>
-              <div className="grid gap-4 md:grid-cols-2">
+
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="additionalCategories">Additional Categories</Label>
-                  <CategorySelect
-                    value={watch('additionalCategories')}
-                    onValueChange={(value) => setValue('additionalCategories', value)}
-                    placeholder="Select additional category..."
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="labels">Labels</Label>
-                  <Input {...register('labels')} id="labels" placeholder="Internal labels (comma-separated)" />
-                </div>
-                <div>
-                  <Label htmlFor="openingDate">Opening Date</Label>
+                  <Label htmlFor="primaryPhone">Primary Phone</Label>
                   <Input 
-                    {...register('openingDate')} 
-                    id="openingDate" 
-                    type="date" 
-                    max={new Date().toISOString().split('T')[0]}
+                    {...register('primaryPhone')} 
+                    id="primaryPhone" 
+                    placeholder="+1-555-123-4567"
                   />
-                  {errors.openingDate && (
-                    <p className="text-sm text-destructive mt-1">{errors.openingDate.message}</p>
+                  {errors.primaryPhone && (
+                    <p className="text-sm text-destructive mt-1">{errors.primaryPhone.message}</p>
                   )}
                 </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox {...register('temporarilyClosed')} id="temporarilyClosed" />
-                  <Label htmlFor="temporarilyClosed">Temporarily Closed</Label>
+                <div>
+                  <Label htmlFor="additionalPhones">Additional Phones</Label>
+                  <Input 
+                    {...register('additionalPhones')} 
+                    id="additionalPhones" 
+                    placeholder="Comma-separated phone numbers"
+                  />
+                  {errors.additionalPhones && (
+                    <p className="text-sm text-destructive mt-1">{errors.additionalPhones.message}</p>
+                  )}
                 </div>
+              </div>
+
+              <div>
+                <Label htmlFor="adwords">AdWords Phone</Label>
+                <Input 
+                  {...register('adwords')} 
+                  id="adwords" 
+                  placeholder="+1-555-123-4567"
+                />
+                {errors.adwords && (
+                  <p className="text-sm text-destructive mt-1">{errors.adwords.message}</p>
+                )}
               </div>
             </CardContent>
           </Card>
 
-          {/* Location Coordinates */}
-          <LocationMap
-            latitude={watch('latitude') as any}
-            longitude={watch('longitude') as any}
-            onLocationChange={handleLocationChange}
-            address={getCurrentAddress()}
-            addressLine1={watch('addressLine1')}
-            city={watch('city')}
-            state={watch('state')}
-            country={watch('country')}
-            postalCode={watch('postalCode')}
-          />
+          {/* Social Media URLs */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Social Media</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="facebookUrl">Facebook URL</Label>
+                  <Input 
+                    {...register('facebookUrl')} 
+                    id="facebookUrl" 
+                    placeholder="https://facebook.com/yourpage"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="instagramUrl">Instagram URL</Label>
+                  <Input 
+                    {...register('instagramUrl')} 
+                    id="instagramUrl" 
+                    placeholder="https://instagram.com/yourpage"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="linkedinUrl">LinkedIn URL</Label>
+                  <Input 
+                    {...register('linkedinUrl')} 
+                    id="linkedinUrl" 
+                    placeholder="https://linkedin.com/company/yourcompany"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="pinterestUrl">Pinterest URL</Label>
+                  <Input 
+                    {...register('pinterestUrl')} 
+                    id="pinterestUrl" 
+                    placeholder="https://pinterest.com/yourpage"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="tiktokUrl">TikTok URL</Label>
+                  <Input 
+                    {...register('tiktokUrl')} 
+                    id="tiktokUrl" 
+                    placeholder="https://tiktok.com/@yourpage"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="twitterUrl">Twitter/X URL</Label>
+                  <Input 
+                    {...register('twitterUrl')} 
+                    id="twitterUrl" 
+                    placeholder="https://twitter.com/yourpage"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="youtubeUrl">YouTube URL</Label>
+                <Input 
+                  {...register('youtubeUrl')} 
+                  id="youtubeUrl" 
+                  placeholder="https://youtube.com/@yourchannel"
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Business Dates */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Business Dates</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div>
+                <Label htmlFor="openingDate">Opening Date</Label>
+                <Input 
+                  {...register('openingDate')} 
+                  id="openingDate" 
+                  type="date"
+                />
+                {errors.openingDate && (
+                  <p className="text-sm text-destructive mt-1">{errors.openingDate.message}</p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Opening Hours */}
-          <OpeningHours
-            hours={hours}
-            onHoursChange={setHours}
-          />
+          <OpeningHours hours={hours} onHoursChange={setHours} />
 
           {/* Special Hours */}
           <SpecialHours 
@@ -727,46 +826,23 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
             <CardContent>
               <PhotoUpload
                 photos={coverPhoto ? [coverPhoto] : []}
-                onPhotosChange={handleCoverPhotoChange}
+                onPhotosChange={(photos) => setCoverPhoto(photos[0] || '')}
                 maxPhotos={1}
               />
             </CardContent>
           </Card>
 
-          {/* Social Media Links */}
+          {/* Logo Photo Upload */}
           <Card>
             <CardHeader>
-              <CardTitle>Social Media Links</CardTitle>
+              <CardTitle>Logo Photo</CardTitle>
             </CardHeader>
-            <CardContent className="grid gap-4 md:grid-cols-2">
-              <div>
-                <Label htmlFor="facebookUrl">Facebook URL</Label>
-                <Input {...register('facebookUrl')} id="facebookUrl" placeholder="https://www.facebook.com/yourpage" />
-              </div>
-              <div>
-                <Label htmlFor="instagramUrl">Instagram URL</Label>
-                <Input {...register('instagramUrl')} id="instagramUrl" placeholder="https://www.instagram.com/youraccount" />
-              </div>
-              <div>
-                <Label htmlFor="linkedinUrl">LinkedIn URL</Label>
-                <Input {...register('linkedinUrl')} id="linkedinUrl" placeholder="https://www.linkedin.com/in/yourprofile" />
-              </div>
-              <div>
-                <Label htmlFor="pinterestUrl">Pinterest URL</Label>
-                <Input {...register('pinterestUrl')} id="pinterestUrl" placeholder="https://www.pinterest.com/youraccount" />
-              </div>
-              <div>
-                <Label htmlFor="tiktokUrl">TikTok URL</Label>
-                <Input {...register('tiktokUrl')} id="tiktokUrl" placeholder="https://www.tiktok.com/@youraccount" />
-              </div>
-              <div>
-                <Label htmlFor="twitterUrl">X (Twitter) URL</Label>
-                <Input {...register('twitterUrl')} id="twitterUrl" placeholder="https://www.x.com/youraccount" />
-              </div>
-              <div className="md:col-span-2">
-                <Label htmlFor="youtubeUrl">YouTube URL</Label>
-                <Input {...register('youtubeUrl')} id="youtubeUrl" placeholder="https://www.youtube.com/channel/yourchannel" />
-              </div>
+            <CardContent>
+              <PhotoUpload
+                photos={watch('logoPhoto') ? [watch('logoPhoto')] : []}
+                onPhotosChange={(photos) => setValue('logoPhoto', photos[0] || '')}
+                maxPhotos={1}
+              />
             </CardContent>
           </Card>
 
@@ -775,22 +851,41 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
             <CardHeader>
               <CardTitle>Service URLs</CardTitle>
             </CardHeader>
-            <CardContent className="grid gap-4 md:grid-cols-2">
+            <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="appointmentURL">Appointment URLs</Label>
-                <Input {...register('appointmentURL')} id="appointmentURL" placeholder="Comma-separated URLs" />
+                <Label htmlFor="appointmentURL">Appointment URL</Label>
+                <Input 
+                  {...register('appointmentURL')} 
+                  id="appointmentURL" 
+                  placeholder="https://booking.example.com"
+                />
               </div>
+
               <div>
                 <Label htmlFor="menuURL">Menu URL</Label>
-                <Input {...register('menuURL')} id="menuURL" placeholder="Single URL" />
+                <Input 
+                  {...register('menuURL')} 
+                  id="menuURL" 
+                  placeholder="https://menu.example.com"
+                />
               </div>
+
               <div>
-                <Label htmlFor="reservationsURL">Reservations URLs</Label>
-                <Input {...register('reservationsURL')} id="reservationsURL" placeholder="Comma-separated URLs" />
+                <Label htmlFor="reservationsURL">Reservations URL</Label>
+                <Input 
+                  {...register('reservationsURL')} 
+                  id="reservationsURL" 
+                  placeholder="https://reservations.example.com"
+                />
               </div>
+
               <div>
-                <Label htmlFor="orderAheadURL">Order Ahead URLs</Label>
-                <Input {...register('orderAheadURL')} id="orderAheadURL" placeholder="Comma-separated URLs" />
+                <Label htmlFor="orderAheadURL">Order Ahead URL</Label>
+                <Input 
+                  {...register('orderAheadURL')} 
+                  id="orderAheadURL" 
+                  placeholder="https://order.example.com"
+                />
               </div>
             </CardContent>
           </Card>
