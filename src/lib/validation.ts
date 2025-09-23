@@ -66,7 +66,14 @@ export const businessValidationSchema = z.object({
   additionalPhones: z.string().nullable().refine((val) => !val || additionalPhonesPattern.test(val), "Invalid additional phones format").optional(),
   adwords: z.string().nullable().refine((val) => !val || /^[+]?[0-9a-zA-Z  ()./–-]*$/.test(val), "Invalid adwords phone format").optional(),
   openingDate: z.string().nullable().refine((val) => !val || /^([0-9]{4})-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])$/.test(val), "Invalid opening date format (YYYY-MM-DD)").optional(),
-  fromTheBusiness: z.string().max(750).nullable().optional(),
+  fromTheBusiness: z.string().max(750).nullable().refine((val) => {
+    if (!val) return true;
+    // Check for URLs (http://, https://, www., or domain patterns)
+    const urlPattern = /(https?:\/\/|www\.|[a-zA-Z0-9-]+\.[a-zA-Z]{2,})/i;
+    return !urlPattern.test(val);
+  }, {
+    message: "Business description cannot contain URLs. Please provide a description of your business without web addresses, as this violates Google My Business guidelines."
+  }).optional(),
   labels: z.string().nullable().refine((val) => !val || /^(?:[^,]{1,50},){0,9}[^,]{1,50}$|^$/.test(val), "Invalid labels format (max 10 labels, 50 chars each)").optional(),
   
   // Opening hours
