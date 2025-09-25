@@ -522,6 +522,30 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
                 )}
               </div>
 
+              <div>
+                <CategorySelect
+                  value={watch('primaryCategory') || ''}
+                  onValueChange={(value) => setValue('primaryCategory', value)}
+                  placeholder="Select primary category *"
+                  required
+                />
+                {errors.primaryCategory && (
+                  <p className="text-sm text-destructive mt-1">{errors.primaryCategory.message}</p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="additionalCategories">Additional Categories</Label>
+                <Input 
+                  {...register('additionalCategories')} 
+                  id="additionalCategories" 
+                  placeholder="Comma-separated additional categories (max 10)"
+                />
+                {errors.additionalCategories && (
+                  <p className="text-sm text-destructive mt-1">{errors.additionalCategories.message}</p>
+                )}
+              </div>
+
               <div className="flex items-center space-x-2">
                 <Checkbox 
                   id="temporarilyClosed"
@@ -538,6 +562,15 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
               <CardTitle>Address Information</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              <CountrySelect
+                value={watch('country') || ''}
+                onValueChange={(value) => setValue('country', value)}
+                placeholder="Select country *"
+              />
+              {errors.country && (
+                <p className="text-sm text-destructive mt-1">{errors.country.message}</p>
+              )}
+
               <div>
                 <Label htmlFor="addressLine1">Street Address *</Label>
                 <Input {...register('addressLine1')} id="addressLine1" />
@@ -584,18 +617,9 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="state">State/Province</Label>
-                  <Input {...register('state')} id="state" />
-                </div>
-                <CountrySelect
-                  value={watch('country') || ''}
-                  onValueChange={(value) => setValue('country', value)}
-                />
-                {errors.country && (
-                  <p className="text-sm text-destructive mt-1">{errors.country.message}</p>
-                )}
+              <div>
+                <Label htmlFor="state">State/Province</Label>
+                <Input {...register('state')} id="state" />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -638,35 +662,6 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
             </CardContent>
           </Card>
 
-          {/* Categories */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Categories</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <CategorySelect
-                value={watch('primaryCategory') || ''}
-                onValueChange={(value) => setValue('primaryCategory', value)}
-                placeholder="Select primary category"
-                required
-              />
-              {errors.primaryCategory && (
-                <p className="text-sm text-destructive mt-1">{errors.primaryCategory.message}</p>
-              )}
-
-              <div>
-                <Label htmlFor="additionalCategories">Additional Categories</Label>
-                <Input 
-                  {...register('additionalCategories')} 
-                  id="additionalCategories" 
-                  placeholder="Comma-separated additional categories (max 10)"
-                />
-                {errors.additionalCategories && (
-                  <p className="text-sm text-destructive mt-1">{errors.additionalCategories.message}</p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
 
           {/* Contact Information */}
           <Card>
