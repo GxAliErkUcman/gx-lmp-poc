@@ -549,7 +549,8 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
               <div className="flex items-center space-x-2">
                 <Checkbox 
                   id="temporarilyClosed"
-                  {...register('temporarilyClosed')}
+                  checked={watch('temporarilyClosed') || false}
+                  onCheckedChange={(checked) => setValue('temporarilyClosed', Boolean(checked))}
                 />
                 <Label htmlFor="temporarilyClosed">Temporarily Closed</Label>
               </div>
