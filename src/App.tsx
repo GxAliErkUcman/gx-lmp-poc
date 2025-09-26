@@ -28,7 +28,7 @@ const App = () => (
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/admin" element={<AdminPanel />} />
             <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/set-password" element={<SetPassword />} />
+            <Route path="/set-password/*" element={<SetPassword />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
