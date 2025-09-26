@@ -248,8 +248,11 @@ const AdminPanel = () => {
 
   const handleSendPasswordRecovery = async (email: string) => {
     try {
+      // Explicitly construct the redirect URL to ensure it goes to reset-password
+      const redirectUrl = 'https://gx-lmp.lovable.app/reset-password';
+      
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`
+        redirectTo: redirectUrl
       });
 
       if (error) throw error;
