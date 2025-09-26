@@ -70,7 +70,25 @@ const ResetPassword = () => {
     setLoading(true);
     try {
       const { error } = await supabase.auth.updateUser({ password: newPassword });
-      if (error) throw error;
+      if (error) {
+        // Handle specific error cases
+        if (error.message?.includes('New password should be different from the old password')) {
+          toast({ 
+            title: 'Password unchanged', 
+            description: 'Your new password must be different from your current password.', 
+            variant: 'destructive' 
+          });
+          return;
+        } else if (error.message?.includes('same as the old password')) {
+          toast({ 
+            title: 'Password unchanged', 
+            description: 'Please choose a different password than your current one.', 
+            variant: 'destructive' 
+          });
+          return;
+        }
+        throw error;
+      }
       toast({ title: 'Password updated', description: 'You can now sign in with your new password.' });
       navigate('/auth', { replace: true });
     } catch (err: any) {
