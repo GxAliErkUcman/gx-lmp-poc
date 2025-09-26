@@ -48,15 +48,6 @@ const AuthPage = () => {
     handleUserRedirect();
   }, [user, checkAdminAccess, navigate, redirect, checkingAdmin, isRecoveryMode, location.hash, location.search]);
 
-  // Show loading while checking admin status
-  if (user && checkingAdmin) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg">Redirecting...</div>
-      </div>
-    );
-  }
-
   // Detect password recovery mode from URL and auth events
   useEffect(() => {
     // Hash params from Supabase links (e.g., #access_token=...&type=recovery)
@@ -80,6 +71,15 @@ const AuthPage = () => {
 
     return () => subscription.unsubscribe();
   }, [location.hash, location.search]);
+
+  // Show loading while checking admin status
+  if (user && checkingAdmin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-lg">Redirecting...</div>
+      </div>
+    );
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
