@@ -23,7 +23,7 @@ const SetPassword = () => {
     const init = async () => {
       const search = new URLSearchParams(location.search);
       const hash = location.hash || '';
-      const hasRecoveryType = hash.includes('type=recovery') || location.search.includes('type=recovery');
+      const hasInviteType = hash.includes('type=invite') || location.search.includes('type=invite');
       const code = search.get('code');
 
       try {
@@ -35,7 +35,7 @@ const SetPassword = () => {
           return;
         }
         // Implicit/hash flow: token is already in the URL fragment
-        if (hasRecoveryType) {
+        if (hasInviteType) {
           setValidLink(true);
         }
       } catch (e) {
@@ -46,7 +46,7 @@ const SetPassword = () => {
 
     // Also listen for auth events – Supabase sets a temporary session
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'SIGNED_IN' || event === 'PASSWORD_RECOVERY') {
+      if (event === 'SIGNED_IN' || event === 'PASSWORD_RECOVERY' || event === 'TOKEN_REFRESHED') {
         setValidLink(true);
       }
     });
