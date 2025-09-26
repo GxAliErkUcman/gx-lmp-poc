@@ -10,7 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Users, MapPin, Clock, Download, UserPlus, Plus, Trash2, Settings } from 'lucide-react';
+import { Loader2, Users, MapPin, Clock, Download, UserPlus, Plus, Trash2, Settings, Mail, RefreshCw, Edit } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useNavigate } from 'react-router-dom';
 import GcpSyncButton from '@/components/GcpSyncButton';
 
@@ -35,6 +36,7 @@ interface User {
   last_name: string;
   email: string;
   client_id?: string;
+  client_name?: string;
 }
 
 const AdminPanel = () => {
@@ -65,6 +67,10 @@ const AdminPanel = () => {
   const [userManagementLoading, setUserManagementLoading] = useState(false);
   const [clientFileNames, setClientFileNames] = useState<{[clientId: string]: string}>({});
   const [syncAllLoading, setSyncAllLoading] = useState(false);
+  const [allUsers, setAllUsers] = useState<User[]>([]);
+  const [usersLoading, setUsersLoading] = useState(false);
+  const [editingClientId, setEditingClientId] = useState<string | null>(null);
+  const [editClientName, setEditClientName] = useState('');
   
   const [newUser, setNewUser] = useState({
     firstName: '',
@@ -149,6 +155,9 @@ const AdminPanel = () => {
       if (clientsError) throw clientsError;
 
       setClientOptions(allClients || []);
+      
+      // Fetch all users for the Users tab
+      await fetchAllUsers();
     } catch (error) {
       console.error('Error fetching data:', error);
       toast({
@@ -158,6 +167,180 @@ const AdminPanel = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchAllUsers = async () => {
+    try {
+      setUsersLoading(true);
+      
+      const { data: users, error } = await supabase
+        .from('profiles')
+        .select(`
+          user_id, 
+          first_name, 
+          last_name, 
+          email, 
+          client_id,
+          clients (
+            name
+          )
+        `)
+        .neq('role', 'admin');
+
+      if (error) throw error;
+
+      const mappedUsers = (users || []).map(user => ({
+        ...user,
+        client_name: user.clients?.name || null
+      }));
+
+      setAllUsers(mappedUsers);
+    } catch (error: any) {
+      console.error('Error fetching all users:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load users.",
+        variant: "destructive"
+      });
+    } finally {
+      setUsersLoading(false);
+    }
+  };
+
+  const handleDeleteUser = async (userId: string, userName: string) => {
+    if (!window.confirm(`Are you sure you want to delete ${userName}? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      // First delete the profile
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('user_id', userId);
+
+      if (profileError) throw profileError;
+
+      // Then delete the auth user using edge function
+      const { error: deleteError } = await supabase.functions.invoke('delete-user', {
+        body: { userId }
+      });
+
+      if (deleteError) throw deleteError;
+
+      toast({
+        title: "User Deleted",
+        description: `${userName} has been deleted successfully.`,
+      });
+
+      fetchAllUsers();
+      fetchData();
+    } catch (error: any) {
+      console.error('Error deleting user:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete user.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleSendPasswordRecovery = async (email: string) => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth`
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Password Recovery Sent",
+        description: `Password recovery email sent to ${email}.`,
+      });
+    } catch (error: any) {
+      console.error('Error sending password recovery:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to send password recovery email.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleReassignUser = async (userId: string, userName: string) => {
+    const clientId = window.prompt(`Enter new client ID for ${userName}:`);
+    if (!clientId) return;
+
+    // Check if client exists
+    const clientExists = clientOptions.find(c => c.id === clientId);
+    if (!clientExists) {
+      toast({
+        title: "Error",
+        description: "Client ID not found.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ client_id: clientId })
+        .eq('user_id', userId);
+
+      if (error) throw error;
+
+      toast({
+        title: "User Reassigned",
+        description: `${userName} has been reassigned to ${clientExists.name}.`,
+      });
+
+      fetchAllUsers();
+      fetchData();
+    } catch (error: any) {
+      console.error('Error reassigning user:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to reassign user.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleEditClientName = async (clientId: string) => {
+    if (!editClientName.trim()) {
+      toast({
+        title: "Error",
+        description: "Client name cannot be empty.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('clients')
+        .update({ name: editClientName.trim() })
+        .eq('id', clientId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Client Updated",
+        description: "Client name updated successfully.",
+      });
+
+      setEditingClientId(null);
+      setEditClientName('');
+      fetchData();
+    } catch (error: any) {
+      console.error('Error updating client:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update client.",
+        variant: "destructive"
+      });
     }
   };
 
@@ -631,105 +814,233 @@ const AdminPanel = () => {
         </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="w-5 h-5" />
-            Client Overview
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Client Name</TableHead>
-                <TableHead className="text-center">Users</TableHead>
-                <TableHead className="text-center">Active Locations</TableHead>
-                <TableHead className="text-center">Pending Locations</TableHead>
-                <TableHead className="text-center">Last Updated</TableHead>
-                <TableHead className="text-center">Actions</TableHead>
-                <TableHead className="text-center">Settings</TableHead>
-                <TableHead className="text-center">Manage</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {clients.map((client) => (
-                <TableRow key={client.id}>
-                  <TableCell className="font-medium">{client.name}</TableCell>
-                  <TableCell className="text-center">
-                    <div className="flex items-center justify-center gap-1">
-                      <Users className="w-4 h-4" />
-                      {client.user_count}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <div className="flex items-center justify-center gap-1">
-                      <MapPin className="w-4 h-4 text-green-600" />
-                      {client.active_locations}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <div className="flex items-center justify-center gap-1">
-                      <Clock className="w-4 h-4 text-yellow-600" />
-                      {client.pending_locations}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    {client.last_updated ? new Date(client.last_updated).toLocaleDateString() : 'Never'}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <div className="flex items-center justify-center gap-1">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleManualExport(client.id)}
-                        disabled={exportLoading === client.id}
-                      >
-                        {exportLoading === client.id ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
+      <Tabs defaultValue="clients" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="clients">Client Overview</TabsTrigger>
+          <TabsTrigger value="users">Users</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="clients">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="w-5 h-5" />
+                Client Overview
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Client Name</TableHead>
+                    <TableHead className="text-center">Users</TableHead>
+                    <TableHead className="text-center">Active Locations</TableHead>
+                    <TableHead className="text-center">Pending Locations</TableHead>
+                    <TableHead className="text-center">Last Updated</TableHead>
+                    <TableHead className="text-center">Actions</TableHead>
+                    <TableHead className="text-center">Settings</TableHead>
+                    <TableHead className="text-center">Manage</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {clients.map((client) => (
+                    <TableRow key={client.id}>
+                      <TableCell className="font-medium">
+                        {editingClientId === client.id ? (
+                          <div className="flex items-center gap-2">
+                            <Input
+                              value={editClientName}
+                              onChange={(e) => setEditClientName(e.target.value)}
+                              className="max-w-[200px]"
+                            />
+                            <Button
+                              size="sm"
+                              onClick={() => handleEditClientName(client.id)}
+                            >
+                              Save
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                setEditingClientId(null);
+                                setEditClientName('');
+                              }}
+                            >
+                              Cancel
+                            </Button>
+                          </div>
                         ) : (
-                          <Download className="w-4 h-4" />
+                          <div className="flex items-center gap-2">
+                            {client.name}
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => {
+                                setEditingClientId(client.id);
+                                setEditClientName(client.name);
+                              }}
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                          </div>
                         )}
-                        Export
-                      </Button>
-                      <GcpSyncButton 
-                        fileName={clientFileNames[client.id]}
-                        variant="outline"
-                        size="sm"
-                      />
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => openUserManagement(client)}
-                    >
-                      <Settings className="w-4 h-4" />
-                      Users
-                    </Button>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      onClick={() => openDeleteDialog(client)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                      Delete
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          {clients.length === 0 && (
-            <div className="text-center py-8 text-muted-foreground">
-              No clients found
-            </div>
-          )}
-        </CardContent>
-        </Card>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <div className="flex items-center justify-center gap-1">
+                          <Users className="w-4 h-4" />
+                          {client.user_count}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <div className="flex items-center justify-center gap-1">
+                          <MapPin className="w-4 h-4 text-green-600" />
+                          {client.active_locations}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <div className="flex items-center justify-center gap-1">
+                          <Clock className="w-4 h-4 text-yellow-600" />
+                          {client.pending_locations}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {client.last_updated ? new Date(client.last_updated).toLocaleDateString() : 'Never'}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <div className="flex items-center justify-center gap-1">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleManualExport(client.id)}
+                            disabled={exportLoading === client.id}
+                          >
+                            {exportLoading === client.id ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <Download className="w-4 h-4" />
+                            )}
+                            Export
+                          </Button>
+                          <GcpSyncButton 
+                            fileName={clientFileNames[client.id]}
+                            variant="outline"
+                            size="sm"
+                          />
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => openUserManagement(client)}
+                        >
+                          <Settings className="w-4 h-4" />
+                          Users
+                        </Button>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => openDeleteDialog(client)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          Delete
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              {clients.length === 0 && (
+                <div className="text-center py-8 text-muted-foreground">
+                  No clients found
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="users">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="w-5 h-5" />
+                User Management
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {usersLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-8 w-8 animate-spin" />
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Email Address</TableHead>
+                      <TableHead>Client</TableHead>
+                      <TableHead className="text-center">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {allUsers.map((user) => (
+                      <TableRow key={user.user_id}>
+                        <TableCell className="font-medium">
+                          {user.first_name} {user.last_name}
+                        </TableCell>
+                        <TableCell>{user.email}</TableCell>
+                        <TableCell>
+                          {user.client_name || (
+                            <span className="text-muted-foreground italic">
+                              Unassigned
+                            </span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <div className="flex items-center justify-center gap-1">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleSendPasswordRecovery(user.email)}
+                            >
+                              <Mail className="w-4 h-4" />
+                              Recovery
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleReassignUser(user.user_id, `${user.first_name} ${user.last_name}`)}
+                            >
+                              <RefreshCw className="w-4 h-4" />
+                              Reassign
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => handleDeleteUser(user.user_id, `${user.first_name} ${user.last_name}`)}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                              Delete
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+              {allUsers.length === 0 && !usersLoading && (
+                <div className="text-center py-8 text-muted-foreground">
+                  No users found
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
         {/* User Management Dialog */}
         <Dialog open={isUserManagementDialogOpen} onOpenChange={setIsUserManagementDialogOpen}>

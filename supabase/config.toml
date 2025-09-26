@@ -21,3 +21,6 @@ verify_jwt = false
 
 [functions.delete-client]
 verify_jwt = true
+
+[functions.delete-user]
+verify_jwt = true

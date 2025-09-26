@@ -60,7 +60,7 @@ const handler = async (req: Request): Promise<Response> => {
         last_name: lastName,
         client_id: clientId
       },
-      redirectTo: `${Deno.env.get('SUPABASE_URL')?.replace('.supabase.co', '')}/auth/callback`
+      redirectTo: `https://gx-lmp.lovable.app/auth`
     });
 
     if (createError) {
