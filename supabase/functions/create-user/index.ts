@@ -60,7 +60,7 @@ const handler = async (req: Request): Promise<Response> => {
         last_name: lastName,
         client_id: clientId
       },
-      redirectTo: `https://gx-lmp.lovable.app/set-password`
+      redirectTo: `https://gx-lmp.lovable.app/set-password?email=${encodeURIComponent(email)}`
     });
 
     if (createError) {
