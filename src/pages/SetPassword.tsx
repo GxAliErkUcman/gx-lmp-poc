@@ -17,24 +17,18 @@ const SetPassword = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [validLink, setValidLink] = useState<boolean>(false);
-  const [expired, setExpired] = useState(false);
-  const [email, setEmail] = useState<string>('');
 
-  // Detect recovery token presence and establish a session (supports hash and code flows)
+  // Detect recovery or invite token presence and establish a session (supports hash and code flows)
   useEffect(() => {
     const init = async () => {
       const search = new URLSearchParams(location.search);
       const hash = location.hash || '';
-      setEmail(search.get('email') || '');
-      const hasInviteOrRecovery = hash.includes('type=invite') || location.search.includes('type=invite') || hash.includes('type=recovery') || location.search.includes('type=recovery');
+      const hasTokenType =
+        hash.includes('type=invite') ||
+        location.search.includes('type=invite') ||
+        hash.includes('type=recovery') ||
+        location.search.includes('type=recovery');
       const code = search.get('code');
-      const hashParams = new URLSearchParams(hash.replace('#', ''));
-      const errorCode = hashParams.get('error_code');
-      if (errorCode === 'otp_expired') {
-        setExpired(true);
-        setValidLink(false);
-        return;
-      }
 
       try {
         // PKCE/code flow: exchange the code for a session
@@ -45,7 +39,7 @@ const SetPassword = () => {
           return;
         }
         // Implicit/hash flow: token is already in the URL fragment
-        if (hasInviteOrRecovery) {
+        if (hasTokenType) {
           setValidLink(true);
         }
       } catch (e) {
@@ -56,7 +50,7 @@ const SetPassword = () => {
 
     // Also listen for auth events – Supabase sets a temporary session
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'SIGNED_IN' || event === 'PASSWORD_RECOVERY' || event === 'TOKEN_REFRESHED') {
+      if (event === 'SIGNED_IN' || event === 'PASSWORD_RECOVERY') {
         setValidLink(true);
       }
     });
@@ -66,29 +60,6 @@ const SetPassword = () => {
     return () => subscription.unsubscribe();
   }, [location.hash, location.search]);
 
-  const handleGenerateNewLink = async () => {
-    if (!email) {
-      toast({ title: 'Missing email', description: 'Please ask your admin to resend the invite.', variant: 'destructive' });
-      return;
-    }
-    setLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('generate-invite-link', {
-        body: { email },
-      });
-      if (error) throw error as any;
-      const action_link = (data as any)?.action_link || (data as any)?.properties?.action_link;
-      if (action_link) {
-        window.location.href = action_link as string;
-        return;
-      }
-      throw new Error('No invite link returned');
-    } catch (e: any) {
-      toast({ title: 'Could not generate invite', description: e.message || 'Please contact support.', variant: 'destructive' });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -105,10 +76,18 @@ const SetPassword = () => {
     try {
       const { error } = await supabase.auth.updateUser({ password: newPassword });
       if (error) {
+        if (error.message?.includes('New password should be different from the old password') || error.message?.includes('same as the old password')) {
+          toast({ 
+            title: 'Password unchanged', 
+            description: 'Please choose a different password than your current one.', 
+            variant: 'destructive' 
+          });
+          return;
+        }
         throw error;
       }
-      toast({ title: 'Account created successfully!', description: 'Welcome to Jasoner! You can now sign in with your new password.' });
-      navigate('/dashboard', { replace: true });
+      toast({ title: 'Password set', description: 'You can now sign in with your new password.' });
+      navigate('/auth', { replace: true });
     } catch (err: any) {
       toast({ title: 'Setup failed', description: err.message || 'Could not set up your account.', variant: 'destructive' });
     } finally {
@@ -125,9 +104,9 @@ const SetPassword = () => {
             <div className="flex justify-center mb-4">
               <img src={jasonerMascot} alt="Jasoner Mascot" className="w-20 h-20 object-contain" />
             </div>
-            <CardTitle className="text-2xl font-semibold text-gray-900">Welcome to Jasoner!</CardTitle>
+            <CardTitle className="text-2xl font-semibold text-gray-900">Set up your account</CardTitle>
             <CardDescription className="text-gray-600">
-              {validLink ? 'Please create your password to complete your account setup.' : 'This invitation link is invalid or expired. Please request a new invitation.'}
+              {validLink ? 'Enter your new password to finish setting up your account.' : 'This link is invalid or expired. Request a new one.'}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -142,20 +121,12 @@ const SetPassword = () => {
                   <Input id="confirm-password" type="password" placeholder="Confirm your password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? 'Creating Account...' : 'Create Your Account'}
+                  {loading ? 'Setting Password...' : 'Set Password'}
                 </Button>
               </form>
             ) : (
               <div className="space-y-4">
-                {expired && (
-                  <>
-                    <p className="text-sm text-gray-600">Your invitation link has expired. Click below to generate a fresh link.</p>
-                    <Button className="w-full" onClick={handleGenerateNewLink} disabled={loading || !email}>
-                      {loading ? 'Generating...' : 'Get a new invite link'}
-                    </Button>
-                  </>
-                )}
-                <Button variant="outline" className="w-full" onClick={() => navigate('/auth')}>Back to Sign In</Button>
+                <Button className="w-full" onClick={() => navigate('/auth')}>Back to Sign In</Button>
               </div>
             )}
           </CardContent>
