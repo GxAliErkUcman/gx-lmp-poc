@@ -249,7 +249,7 @@ const AdminPanel = () => {
   const handleSendPasswordRecovery = async (email: string) => {
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth`
+        redirectTo: `${window.location.origin}/auth?recovery=1`
       });
 
       if (error) throw error;

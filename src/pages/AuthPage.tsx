@@ -27,10 +27,14 @@ const AuthPage = () => {
   const params = new URLSearchParams(location.search);
   const redirect = params.get('redirect') || '/dashboard';
 
-  // Check if user is admin and redirect accordingly
+  // Check if user is admin and redirect accordingly (skip during recovery)
   useEffect(() => {
     const handleUserRedirect = async () => {
-      if (user && !checkingAdmin) {
+      const hasRecoveryIndicator = (location.hash || '').includes('type=recovery')
+        || location.search.includes('recovery=1')
+        || location.search.includes('type=recovery');
+
+      if (user && !checkingAdmin && !isRecoveryMode && !hasRecoveryIndicator) {
         setCheckingAdmin(true);
         const isAdmin = await checkAdminAccess();
         if (isAdmin) {
@@ -42,7 +46,7 @@ const AuthPage = () => {
     };
 
     handleUserRedirect();
-  }, [user, checkAdminAccess, navigate, redirect, checkingAdmin]);
+  }, [user, checkAdminAccess, navigate, redirect, checkingAdmin, isRecoveryMode, location.hash, location.search]);
 
   // Show loading while checking admin status
   if (user && checkingAdmin) {
@@ -58,7 +62,13 @@ const AuthPage = () => {
     // Hash params from Supabase links (e.g., #access_token=...&type=recovery)
     const hash = location.hash || '';
     const hashParams = new URLSearchParams(hash.replace('#', '?'));
-    if (hashParams.get('type') === 'recovery') {
+    const searchParams = new URLSearchParams(location.search);
+
+    if (
+      hashParams.get('type') === 'recovery' ||
+      searchParams.get('type') === 'recovery' ||
+      searchParams.get('recovery') === '1'
+    ) {
       setIsRecoveryMode(true);
     }
 
@@ -69,7 +79,7 @@ const AuthPage = () => {
     });
 
     return () => subscription.unsubscribe();
-  }, [location.hash]);
+  }, [location.hash, location.search]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -137,7 +147,7 @@ const AuthPage = () => {
     }
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth`,
+        redirectTo: `${window.location.origin}/auth?recovery=1`,
       });
       if (error) throw error;
       toast({ title: 'Email sent', description: 'Check your inbox for the recovery link.' });
@@ -163,15 +173,16 @@ const AuthPage = () => {
                 className="w-20 h-20 object-contain"
               />
             </div>
-            <CardTitle className="text-2xl font-semibold text-gray-900">
-              {isLogin ? 'Welcome Back' : 'Join Jasoner'}
-            </CardTitle>
-            <CardDescription className="text-gray-600">
-              {isLogin 
+          <CardTitle className="text-2xl font-semibold text-gray-900">
+            {isRecoveryMode ? 'Reset Your Password' : isLogin ? 'Welcome Back' : 'Join Jasoner'}
+          </CardTitle>
+          <CardDescription className="text-gray-600">
+            {isRecoveryMode
+              ? 'Enter your new password below.'
+              : isLogin 
                 ? 'Sign in to manage your location data' 
-                : 'Get started streamlining your locations'
-              }
-            </CardDescription>
+                : 'Get started streamlining your locations'}
+          </CardDescription>
           </CardHeader>
           <CardContent>
             {isRecoveryMode ? (
