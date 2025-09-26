@@ -18,13 +18,31 @@ const ResetPassword = () => {
   const [loading, setLoading] = useState(false);
   const [validLink, setValidLink] = useState<boolean>(false);
 
-  // Detect recovery token presence and ensure session is established
+  // Detect recovery token presence and establish a session (supports hash and code flows)
   useEffect(() => {
-    const hash = location.hash || '';
-    const hasRecoveryType = hash.includes('type=recovery') || location.search.includes('type=recovery');
-    if (hasRecoveryType) {
-      setValidLink(true);
-    }
+    const init = async () => {
+      const search = new URLSearchParams(location.search);
+      const hash = location.hash || '';
+      const hasRecoveryType = hash.includes('type=recovery') || location.search.includes('type=recovery');
+      const code = search.get('code');
+
+      try {
+        // PKCE/code flow: exchange the code for a session
+        if (code) {
+          const { error } = await supabase.auth.exchangeCodeForSession(code);
+          if (error) throw error;
+          setValidLink(true);
+          return;
+        }
+        // Implicit/hash flow: token is already in the URL fragment
+        if (hasRecoveryType) {
+          setValidLink(true);
+        }
+      } catch (e) {
+        console.error('Recovery init failed', e);
+        setValidLink(false);
+      }
+    };
 
     // Also listen for auth events – Supabase sets a temporary session
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
@@ -32,6 +50,9 @@ const ResetPassword = () => {
         setValidLink(true);
       }
     });
+
+    init();
+
     return () => subscription.unsubscribe();
   }, [location.hash, location.search]);
 
