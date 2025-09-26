@@ -17,9 +17,6 @@ const AuthPage = () => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [checkingAdmin, setCheckingAdmin] = useState(false);
-  const [isRecoveryMode, setIsRecoveryMode] = useState(false);
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const { signIn, signUp, user } = useAuth();
   const { checkAdminAccess } = useAdmin();
   const location = useLocation();
@@ -27,14 +24,10 @@ const AuthPage = () => {
   const params = new URLSearchParams(location.search);
   const redirect = params.get('redirect') || '/dashboard';
 
-  // Check if user is admin and redirect accordingly (skip during recovery)
+  // Check if user is admin and redirect accordingly
   useEffect(() => {
     const handleUserRedirect = async () => {
-      const hasRecoveryIndicator = (location.hash || '').includes('type=recovery')
-        || location.search.includes('recovery=1')
-        || location.search.includes('type=recovery');
-
-      if (user && !checkingAdmin && !isRecoveryMode && !hasRecoveryIndicator) {
+      if (user && !checkingAdmin) {
         setCheckingAdmin(true);
         const isAdmin = await checkAdminAccess();
         if (isAdmin) {
@@ -46,31 +39,8 @@ const AuthPage = () => {
     };
 
     handleUserRedirect();
-  }, [user, checkAdminAccess, navigate, redirect, checkingAdmin, isRecoveryMode, location.hash, location.search]);
+  }, [user, checkAdminAccess, navigate, redirect, checkingAdmin]);
 
-  // Detect password recovery mode from URL and auth events
-  useEffect(() => {
-    // Hash params from Supabase links (e.g., #access_token=...&type=recovery)
-    const hash = location.hash || '';
-    const hashParams = new URLSearchParams(hash.replace('#', '?'));
-    const searchParams = new URLSearchParams(location.search);
-
-    if (
-      hashParams.get('type') === 'recovery' ||
-      searchParams.get('type') === 'recovery' ||
-      searchParams.get('recovery') === '1'
-    ) {
-      setIsRecoveryMode(true);
-    }
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'PASSWORD_RECOVERY') {
-        setIsRecoveryMode(true);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [location.hash, location.search]);
 
   // Show loading while checking admin status
   if (user && checkingAdmin) {
@@ -113,32 +83,6 @@ const AuthPage = () => {
     }
   };
 
-  const handleResetPassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (newPassword.length < 8) {
-      toast({ title: 'Password too short', description: 'Use at least 8 characters.', variant: 'destructive' });
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      toast({ title: 'Passwords do not match', description: 'Please re-enter matching passwords.', variant: 'destructive' });
-      return;
-    }
-    setLoading(true);
-    try {
-      const { data, error } = await supabase.auth.updateUser({ password: newPassword });
-      if (error) throw error;
-      toast({ title: 'Password updated', description: 'You can now sign in with your new password.' });
-      setIsRecoveryMode(false);
-      setIsLogin(true);
-      setNewPassword('');
-      setConfirmPassword('');
-      navigate('/auth');
-    } catch (err: any) {
-      toast({ title: 'Update failed', description: err.message || 'Could not update password.', variant: 'destructive' });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleSendRecovery = async () => {
     if (!email) {
@@ -173,85 +117,52 @@ const AuthPage = () => {
                 className="w-20 h-20 object-contain"
               />
             </div>
-          <CardTitle className="text-2xl font-semibold text-gray-900">
-            {isRecoveryMode ? 'Reset Your Password' : isLogin ? 'Welcome Back' : 'Join Jasoner'}
-          </CardTitle>
-          <CardDescription className="text-gray-600">
-            {isRecoveryMode
-              ? 'Enter your new password below.'
-              : isLogin 
-                ? 'Sign in to manage your location data' 
-                : 'Get started streamlining your locations'}
-          </CardDescription>
+           <CardTitle className="text-2xl font-semibold text-gray-900">
+             {isLogin ? 'Welcome Back' : 'Join Jasoner'}
+           </CardTitle>
+           <CardDescription className="text-gray-600">
+             {isLogin 
+               ? 'Sign in to manage your location data' 
+               : 'Get started streamlining your locations'}
+           </CardDescription>
           </CardHeader>
-          <CardContent>
-            {isRecoveryMode ? (
-              <form onSubmit={handleResetPassword} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="new-password">New Password</Label>
-                  <Input
-                    id="new-password"
-                    type="password"
-                    placeholder="Enter new password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="confirm-password">Confirm Password</Label>
-                  <Input
-                    id="confirm-password"
-                    type="password"
-                    placeholder="Re-enter new password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    required
-                  />
-                </div>
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? 'Updating...' : 'Set New Password'}
-                </Button>
-              </form>
-            ) : (
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="Enter your email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="Enter your password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <button type="button" onClick={handleSendRecovery} className="text-primary hover:underline">
-                    Forgot password?
-                  </button>
-                  <button type="button" onClick={() => setIsLogin(!isLogin)} className="text-muted-foreground hover:underline">
-                    {isLogin ? 'Need an account? Sign up' : 'Already have an account? Sign in'}
-                  </button>
-                </div>
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? 'Processing...' : (isLogin ? 'Sign In' : 'Sign Up')}
-                </Button>
-              </form>
-            )}
-
-          </CardContent>
+           <CardContent>
+             <form onSubmit={handleSubmit} className="space-y-4">
+               <div className="space-y-2">
+                 <Label htmlFor="email">Email</Label>
+                 <Input
+                   id="email"
+                   type="email"
+                   placeholder="Enter your email"
+                   value={email}
+                   onChange={(e) => setEmail(e.target.value)}
+                   required
+                 />
+               </div>
+               <div className="space-y-2">
+                 <Label htmlFor="password">Password</Label>
+                 <Input
+                   id="password"
+                   type="password"
+                   placeholder="Enter your password"
+                   value={password}
+                   onChange={(e) => setPassword(e.target.value)}
+                   required
+                 />
+               </div>
+               <div className="flex items-center justify-between text-sm">
+                 <button type="button" onClick={handleSendRecovery} className="text-primary hover:underline">
+                   Forgot password?
+                 </button>
+                 <button type="button" onClick={() => setIsLogin(!isLogin)} className="text-muted-foreground hover:underline">
+                   {isLogin ? 'Need an account? Sign up' : 'Already have an account? Sign in'}
+                 </button>
+               </div>
+               <Button type="submit" className="w-full" disabled={loading}>
+                 {loading ? 'Processing...' : (isLogin ? 'Sign In' : 'Sign Up')}
+               </Button>
+             </form>
+           </CardContent>
         </Card>
       </div>
     </div>
