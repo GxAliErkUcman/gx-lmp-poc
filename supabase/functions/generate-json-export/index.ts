@@ -202,7 +202,8 @@ Deno.serve(async (req) => {
         console.warn('GCP sync failed:', syncResult.error);
       }
     } catch (syncError) {
-      console.warn('GCP sync error (non-fatal):', syncError.message);
+      const msg = (syncError as any)?.message || String(syncError);
+      console.warn('GCP sync error (non-fatal):', msg);
     }
 
     return new Response(JSON.stringify({ 
@@ -216,7 +217,8 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     console.error('Error in generate-json-export:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    const msg = (error as any)?.message || String(error);
+    return new Response(JSON.stringify({ error: msg }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
