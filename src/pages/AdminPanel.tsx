@@ -71,6 +71,7 @@ const AdminPanel = () => {
   const [usersLoading, setUsersLoading] = useState(false);
   const [editingClientId, setEditingClientId] = useState<string | null>(null);
   const [editClientName, setEditClientName] = useState('');
+  const [editClientId, setEditClientId] = useState('');
   
   const [newUser, setNewUser] = useState({
     firstName: '',
@@ -311,7 +312,7 @@ const AdminPanel = () => {
     }
   };
 
-  const handleEditClientName = async (clientId: string) => {
+  const handleEditClient = async (currentClientId: string) => {
     if (!editClientName.trim()) {
       toast({
         title: "Error",
@@ -321,29 +322,66 @@ const AdminPanel = () => {
       return;
     }
 
-    try {
-      const { error } = await supabase
-        .from('clients')
-        .update({ name: editClientName.trim() })
-        .eq('id', clientId);
+    // If only name changed, use simple update
+    if (!editClientId.trim() || editClientId === currentClientId) {
+      try {
+        const { error } = await supabase
+          .from('clients')
+          .update({ name: editClientName.trim() })
+          .eq('id', currentClientId);
 
-      if (error) throw error;
+        if (error) throw error;
 
-      toast({
-        title: "Client Updated",
-        description: "Client name updated successfully.",
-      });
+        toast({
+          title: "Client Updated",
+          description: "Client name updated successfully.",
+        });
 
-      setEditingClientId(null);
-      setEditClientName('');
-      fetchData();
-    } catch (error: any) {
-      console.error('Error updating client:', error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update client.",
-        variant: "destructive"
-      });
+        setEditingClientId(null);
+        setEditClientName('');
+        setEditClientId('');
+        fetchData();
+      } catch (error: any) {
+        console.error('Error updating client:', error);
+        toast({
+          title: "Error",
+          description: error.message || "Failed to update client.",
+          variant: "destructive"
+        });
+      }
+      return;
+    }
+
+    // If ID changed, use the comprehensive update function
+    if (editClientId !== currentClientId) {
+      try {
+        const { data, error } = await supabase.functions.invoke('update-client-id', {
+          body: {
+            currentClientId,
+            newClientId: editClientId.trim(),
+            clientName: editClientName.trim()
+          }
+        });
+
+        if (error) throw error;
+
+        toast({
+          title: "Client Updated",
+          description: "Client ID and name updated successfully. Old JSON files have been cleaned up.",
+        });
+
+        setEditingClientId(null);
+        setEditClientName('');
+        setEditClientId('');
+        fetchData();
+      } catch (error: any) {
+        console.error('Error updating client ID:', error);
+        toast({
+          title: "Error",
+          description: error.message || "Failed to update client ID.",
+          variant: "destructive"
+        });
+      }
     }
   };
 
@@ -848,47 +886,71 @@ const AdminPanel = () => {
                 <TableBody>
                   {clients.map((client) => (
                     <TableRow key={client.id}>
-                      <TableCell className="font-medium">
-                        {editingClientId === client.id ? (
-                          <div className="flex items-center gap-2">
-                            <Input
-                              value={editClientName}
-                              onChange={(e) => setEditClientName(e.target.value)}
-                              className="max-w-[200px]"
-                            />
-                            <Button
-                              size="sm"
-                              onClick={() => handleEditClientName(client.id)}
-                            >
-                              Save
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => {
-                                setEditingClientId(null);
-                                setEditClientName('');
-                              }}
-                            >
-                              Cancel
-                            </Button>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-2">
-                            {client.name}
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => {
-                                setEditingClientId(client.id);
-                                setEditClientName(client.name);
-                              }}
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        )}
-                      </TableCell>
+                       <TableCell className="font-medium">
+                         {editingClientId === client.id ? (
+                           <div className="space-y-2">
+                             <div className="flex items-center gap-2">
+                               <div className="flex flex-col gap-1">
+                                 <Label htmlFor="clientName" className="text-xs">Name</Label>
+                                 <Input
+                                   id="clientName"
+                                   value={editClientName}
+                                   onChange={(e) => setEditClientName(e.target.value)}
+                                   className="max-w-[200px]"
+                                   placeholder="Client name"
+                                 />
+                               </div>
+                               <div className="flex flex-col gap-1">
+                                 <Label htmlFor="clientId" className="text-xs">ID</Label>
+                                 <Input
+                                   id="clientId"
+                                   value={editClientId}
+                                   onChange={(e) => setEditClientId(e.target.value)}
+                                   className="max-w-[200px]"
+                                   placeholder="Client ID (leave empty to keep current)"
+                                 />
+                               </div>
+                             </div>
+                             <div className="flex gap-2">
+                               <Button
+                                 size="sm"
+                                 onClick={() => handleEditClient(client.id)}
+                               >
+                                 Save
+                               </Button>
+                               <Button
+                                 size="sm"
+                                 variant="outline"
+                                 onClick={() => {
+                                   setEditingClientId(null);
+                                   setEditClientName('');
+                                   setEditClientId('');
+                                 }}
+                               >
+                                 Cancel
+                               </Button>
+                             </div>
+                           </div>
+                         ) : (
+                           <div className="flex items-center gap-2">
+                             <div className="flex flex-col">
+                               <span className="font-medium">{client.name}</span>
+                               <span className="text-xs text-muted-foreground">ID: {client.id}</span>
+                             </div>
+                             <Button
+                               size="sm"
+                               variant="ghost"
+                               onClick={() => {
+                                 setEditingClientId(client.id);
+                                 setEditClientName(client.name);
+                                 setEditClientId(client.id);
+                               }}
+                             >
+                               <Edit className="w-4 h-4" />
+                             </Button>
+                           </div>
+                         )}
+                       </TableCell>
                       <TableCell className="text-center">
                         <div className="flex items-center justify-center gap-1">
                           <Users className="w-4 h-4" />

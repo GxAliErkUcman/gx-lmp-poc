@@ -27,3 +27,9 @@ verify_jwt = true
 
 [functions.generate-invite-link]
 verify_jwt = false
+
+[functions.update-client-id]
+verify_jwt = true
+
+[functions.sync-to-gcp]
+verify_jwt = false
