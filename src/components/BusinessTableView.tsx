@@ -15,9 +15,10 @@ interface BusinessTableViewProps {
   onEdit: (business: Business) => void;
   onDelete: (id: string) => void;
   onMultiEdit: (selectedIds: string[]) => void;
+  onMultiDelete: (selectedIds: string[]) => void;
 }
 
-const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit }: BusinessTableViewProps) => {
+const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiDelete }: BusinessTableViewProps) => {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredBusinesses, setFilteredBusinesses] = useState(businesses);
@@ -201,6 +202,13 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit }: Busine
               onClick={() => onMultiEdit(selectedIds)}
             >
               Edit Selected
+            </Button>
+            <Button 
+              variant="destructive" 
+              size="sm"
+              onClick={() => onMultiDelete(selectedIds)}
+            >
+              Delete Selected
             </Button>
           </div>
         )}

@@ -15,6 +15,7 @@ import BusinessTableView from '@/components/BusinessTableView';
 import MultiEditDialog from '@/components/MultiEditDialog';
 import type { Business } from '@/types/business';
 import SettingsDialog from '@/components/SettingsDialog';
+import DeleteConfirmationDialog from '@/components/DeleteConfirmationDialog';
 import jasonerLogo from '@/assets/jasoner-horizontal-logo.png';
 
 const Dashboard = () => {
@@ -30,6 +31,8 @@ const Dashboard = () => {
   const [activeTab, setActiveTab] = useState<'active' | 'pending'>('active');
   const [userLogo, setUserLogo] = useState<string | null>(null);
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
+  const [deleteConfirmDialogOpen, setDeleteConfirmDialogOpen] = useState(false);
+  const [businessesToDelete, setBusinessesToDelete] = useState<string[]>([]);
 
   const handleLogoUploaded = () => {
     // Refresh businesses to get updated logo
@@ -107,6 +110,37 @@ const Dashboard = () => {
   const handleMultiEdit = (selectedIds: string[]) => {
     setSelectedBusinessIds(selectedIds);
     setMultiEditDialogOpen(true);
+  };
+
+  const handleMultiDelete = (selectedIds: string[]) => {
+    setBusinessesToDelete(selectedIds);
+    setDeleteConfirmDialogOpen(true);
+  };
+
+  const confirmMultiDelete = async () => {
+    try {
+      const { error } = await supabase
+        .from('businesses')
+        .delete()
+        .in('id', businessesToDelete);
+
+      if (error) throw error;
+
+      setBusinesses(businesses.filter(b => !businessesToDelete.includes(b.id)));
+      toast({
+        title: "Success",
+        description: `${businessesToDelete.length} businesses deleted successfully`,
+      });
+      
+      setBusinessesToDelete([]);
+    } catch (error) {
+      console.error('Error deleting businesses:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete businesses",
+        variant: "destructive",
+      });
+    }
   };
 
   const activeBusinesses = businesses.filter(b => (b as any).status === 'active');
@@ -264,6 +298,7 @@ const Dashboard = () => {
                   onEdit={handleEditBusiness}
                   onDelete={handleDeleteBusiness}
                   onMultiEdit={handleMultiEdit}
+                  onMultiDelete={handleMultiDelete}
                 />
               ) : (
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -338,6 +373,7 @@ const Dashboard = () => {
                   onEdit={handleEditBusiness}
                   onDelete={handleDeleteBusiness}
                   onMultiEdit={handleMultiEdit}
+                  onMultiDelete={handleMultiDelete}
                 />
               ) : (
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -448,6 +484,14 @@ const Dashboard = () => {
         open={settingsDialogOpen}
         onOpenChange={setSettingsDialogOpen}
         onLogoUploaded={fetchBusinesses}
+      />
+
+      <DeleteConfirmationDialog
+        open={deleteConfirmDialogOpen}
+        onOpenChange={setDeleteConfirmDialogOpen}
+        onConfirm={confirmMultiDelete}
+        itemCount={businessesToDelete.length}
+        itemType="businesses"
       />
     </div>
   );
