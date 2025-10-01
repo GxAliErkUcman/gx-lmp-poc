@@ -1,13 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, Plus, Trash2, Clock } from 'lucide-react';
-import { format } from 'date-fns';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { CalendarIcon, Plus, Trash2, Clock, CalendarRange } from 'lucide-react';
+import { format, eachDayOfInterval } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { DateRange } from 'react-day-picker';
 
 export interface SpecialHourEntry {
   date: Date;
@@ -63,12 +65,42 @@ export function formatSpecialHoursToSchema(specialHours: SpecialHourEntry[]): st
 }
 
 const SpecialHours = ({ specialHours, onSpecialHoursChange }: SpecialHoursProps) => {
+  const [dateRangeDialogOpen, setDateRangeDialogOpen] = useState(false);
+  const [dateRange, setDateRange] = useState<DateRange | undefined>();
+  const [rangeHours, setRangeHours] = useState({ open: '09:00', close: '17:00', isClosed: true });
+
   const addSpecialHour = () => {
     const newEntry: SpecialHourEntry = {
       date: new Date(),
       hours: 'x' // Closed by default
     };
     onSpecialHoursChange([...specialHours, newEntry]);
+  };
+
+  const openDateRangeDialog = () => {
+    setDateRange(undefined);
+    setRangeHours({ open: '09:00', close: '17:00', isClosed: true });
+    setDateRangeDialogOpen(true);
+  };
+
+  const applyDateRange = () => {
+    if (!dateRange?.from || !dateRange?.to) return;
+
+    // Generate all dates in the range
+    const datesInRange = eachDayOfInterval({
+      start: dateRange.from,
+      end: dateRange.to
+    });
+
+    // Create special hour entries for each date
+    const newEntries: SpecialHourEntry[] = datesInRange.map(date => ({
+      date,
+      hours: rangeHours.isClosed ? 'x' : `${rangeHours.open}-${rangeHours.close}`
+    }));
+
+    // Add to existing special hours
+    onSpecialHoursChange([...specialHours, ...newEntries]);
+    setDateRangeDialogOpen(false);
   };
 
   const removeSpecialHour = (index: number) => {
@@ -219,15 +251,26 @@ const SpecialHours = ({ specialHours, onSpecialHoursChange }: SpecialHoursProps)
           </div>
         )}
 
-        <Button
-          type="button"
-          variant="outline"
-          onClick={addSpecialHour}
-          className="w-full"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Add Special Hours
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={addSpecialHour}
+            className="flex-1"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Add Single Date
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={openDateRangeDialog}
+            className="flex-1"
+          >
+            <CalendarRange className="w-4 h-4 mr-2" />
+            Add Date Range
+          </Button>
+        </div>
 
         {/* Preview of generated format */}
         {specialHours.length > 0 && (
@@ -238,6 +281,83 @@ const SpecialHours = ({ specialHours, onSpecialHoursChange }: SpecialHoursProps)
             </code>
           </div>
         )}
+
+        {/* Date Range Dialog */}
+        <Dialog open={dateRangeDialogOpen} onOpenChange={setDateRangeDialogOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <CalendarRange className="w-5 h-5" />
+                Add Special Hours for Date Range
+              </DialogTitle>
+            </DialogHeader>
+
+            <div className="space-y-4">
+              <div>
+                <Label className="mb-2 block">Select Date Range</Label>
+                <Calendar
+                  mode="range"
+                  selected={dateRange}
+                  onSelect={setDateRange}
+                  numberOfMonths={2}
+                  className="p-3 pointer-events-auto border rounded-lg"
+                />
+                {dateRange?.from && dateRange?.to && (
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Selected: {format(dateRange.from, "PPP")} - {format(dateRange.to, "PPP")} 
+                    ({eachDayOfInterval({ start: dateRange.from, end: dateRange.to }).length} days)
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-3">
+                <Label>Hours for All Selected Days</Label>
+                <div className="flex items-center gap-3">
+                  <div className="flex-1 flex items-center gap-2">
+                    <Input
+                      type="time"
+                      value={rangeHours.open}
+                      onChange={(e) => setRangeHours({ ...rangeHours, open: e.target.value, isClosed: false })}
+                      disabled={rangeHours.isClosed}
+                      className="text-sm"
+                      placeholder="Open"
+                    />
+                    <span className="text-muted-foreground">-</span>
+                    <Input
+                      type="time"
+                      value={rangeHours.close}
+                      onChange={(e) => setRangeHours({ ...rangeHours, close: e.target.value, isClosed: false })}
+                      disabled={rangeHours.isClosed}
+                      className="text-sm"
+                      placeholder="Close"
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    variant={rangeHours.isClosed ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setRangeHours({ ...rangeHours, isClosed: !rangeHours.isClosed })}
+                  >
+                    {rangeHours.isClosed ? 'Closed' : 'Open'}
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setDateRangeDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button 
+                type="button" 
+                onClick={applyDateRange}
+                disabled={!dateRange?.from || !dateRange?.to}
+              >
+                Apply to All Dates
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </CardContent>
     </Card>
   );
