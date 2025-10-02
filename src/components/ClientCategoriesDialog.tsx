@@ -201,19 +201,20 @@ export function ClientCategoriesDialog({ open, onOpenChange, clientId, clientNam
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-full p-0" align="start">
+                <PopoverContent className="w-[600px] p-0" align="start">
                   <Command>
                     <CommandInput 
                       placeholder="Search categories..." 
                       value={searchValue}
                       onValueChange={setSearchValue}
                     />
-                    <CommandList>
+                    <CommandList className="max-h-[300px]">
                       <CommandEmpty>No categories found.</CommandEmpty>
                       <CommandGroup>
                         {filteredCategories.map((category) => (
                           <CommandItem
                             key={category.id}
+                            value={category.category_name}
                             onSelect={() => handleAddExistingCategory(category)}
                           >
                             <Check className="mr-2 h-4 w-4 opacity-0" />
