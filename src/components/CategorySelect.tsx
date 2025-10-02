@@ -45,13 +45,52 @@ export function CategorySelect({
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const { data, error } = await supabase
-          .from('categories')
-          .select('id, category_name')
-          .order('category_name');
+        // Get the current user's profile to find their client_id
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (!user) {
+          setLoading(false);
+          return;
+        }
 
-        if (error) throw error;
-        setCategories(data || []);
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('client_id')
+          .eq('user_id', user.id)
+          .single();
+
+        let categoriesData = null;
+
+        // If user has a client_id, try to get client-specific categories
+        if (profile?.client_id) {
+          const { data: clientCats, error: clientCatsError } = await supabase
+            .from('client_categories')
+            .select('id, category_name, source_category_id')
+            .eq('client_id', profile.client_id)
+            .order('category_name');
+
+          // If client has custom categories, use them
+          if (!clientCatsError && clientCats && clientCats.length > 0) {
+            // Map client_categories to match the Category interface
+            categoriesData = clientCats.map(cat => ({
+              id: cat.source_category_id || cat.id, // Use source_category_id if available, otherwise use the client_category id
+              category_name: cat.category_name
+            }));
+          }
+        }
+
+        // If no client-specific categories found, fall back to default categories
+        if (!categoriesData) {
+          const { data, error } = await supabase
+            .from('categories')
+            .select('id, category_name')
+            .order('category_name');
+
+          if (error) throw error;
+          categoriesData = data || [];
+        }
+
+        setCategories(categoriesData);
       } catch (error) {
         console.error('Error fetching categories:', error);
       } finally {

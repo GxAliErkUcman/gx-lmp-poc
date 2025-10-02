@@ -10,10 +10,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Users, MapPin, Clock, Download, UserPlus, Plus, Trash2, Settings, Mail, RefreshCw, Edit } from 'lucide-react';
+import { Loader2, Users, MapPin, Clock, Download, UserPlus, Plus, Trash2, Settings, Mail, RefreshCw, Edit, Handshake } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useNavigate } from 'react-router-dom';
 import GcpSyncButton from '@/components/GcpSyncButton';
+import { ClientCategoriesDialog } from '@/components/ClientCategoriesDialog';
 
 
 interface Client {
@@ -72,6 +73,8 @@ const AdminPanel = () => {
   const [editingClientId, setEditingClientId] = useState<string | null>(null);
   const [editClientName, setEditClientName] = useState('');
   const [editClientId, setEditClientId] = useState('');
+  const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
+  const [categoryManagementClient, setCategoryManagementClient] = useState<Client | null>(null);
   
   const [newUser, setNewUser] = useState({
     firstName: '',
@@ -987,11 +990,17 @@ const AdminPanel = () => {
                             )}
                             Export
                           </Button>
-                          <GcpSyncButton 
-                            fileName={clientFileNames[client.id]}
-                            variant="outline"
+                           <Button
                             size="sm"
-                          />
+                            variant="outline"
+                            onClick={() => {
+                              setCategoryManagementClient(client);
+                              setCategoryDialogOpen(true);
+                            }}
+                          >
+                            <Handshake className="w-4 h-4" />
+                            Categories
+                          </Button>
                         </div>
                       </TableCell>
                       <TableCell className="text-center">
@@ -1291,9 +1300,19 @@ const AdminPanel = () => {
               </div>
             </div>
           </DialogContent>
-        </Dialog>
-      </div>
-    );
-  };
-  
-  export default AdminPanel;
+      </Dialog>
+
+      {/* Client Categories Dialog */}
+      {categoryManagementClient && (
+        <ClientCategoriesDialog
+          open={categoryDialogOpen}
+          onOpenChange={setCategoryDialogOpen}
+          clientId={categoryManagementClient.id}
+          clientName={categoryManagementClient.name}
+        />
+      )}
+    </div>
+  );
+};
+
+export default AdminPanel;

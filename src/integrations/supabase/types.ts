@@ -193,6 +193,45 @@ export type Database = {
         }
         Relationships: []
       }
+      client_categories: {
+        Row: {
+          category_name: string
+          client_id: string
+          created_at: string | null
+          id: string
+          source_category_id: number | null
+        }
+        Insert: {
+          category_name: string
+          client_id: string
+          created_at?: string | null
+          id?: string
+          source_category_id?: number | null
+        }
+        Update: {
+          category_name?: string
+          client_id?: string
+          created_at?: string | null
+          id?: string
+          source_category_id?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_categories_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_categories_source_category_id_fkey"
+            columns: ["source_category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clients: {
         Row: {
           created_at: string
