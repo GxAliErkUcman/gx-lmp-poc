@@ -8,10 +8,12 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
-import { Upload, FileText, CheckCircle, AlertCircle, AlertTriangle } from 'lucide-react';
+import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
+import { Upload, FileText, CheckCircle, AlertCircle, AlertTriangle, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
+import { validateBusiness, ValidationError } from '@/lib/validation';
 
 interface ImportDialogProps {
   open: boolean;
@@ -46,6 +48,7 @@ const ImportDialog = ({ open, onOpenChange, onSuccess }: ImportDialogProps) => {
   const [overrideConfirmation, setOverrideConfirmation] = useState('');
   const [allowOverride, setAllowOverride] = useState(false);
   const [activeTab, setActiveTab] = useState<'review' | 'duplicates'>('review');
+  const [validationErrors, setValidationErrors] = useState<Map<number, ValidationError[]>>(new Map());
 
   // Field mappings aligned with database schema - ordered by specificity
   const fieldMappings: Record<string, string[]> = {
@@ -405,6 +408,24 @@ const ImportDialog = ({ open, onOpenChange, onSuccess }: ImportDialogProps) => {
 
   const previewImport = () => {
     if (!validateMappings()) return;
+    
+    // Validate each business and store errors
+    const errorsMap = new Map<number, ValidationError[]>();
+    parsedData.forEach((row, index) => {
+      const mappedRow: any = {};
+      columnMappings.forEach(mapping => {
+        if (mapping.mapped) {
+          mappedRow[mapping.mapped] = row[mapping.original];
+        }
+      });
+      
+      const validation = validateBusiness(mappedRow);
+      if (!validation.isValid) {
+        errorsMap.set(index, validation.errors);
+      }
+    });
+    
+    setValidationErrors(errorsMap);
     checkForDuplicates();
   };
 
@@ -653,6 +674,16 @@ const ImportDialog = ({ open, onOpenChange, onSuccess }: ImportDialogProps) => {
                           ))}
                         </select>
                       </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => updateMapping(index, '')}
+                        className="h-8 w-8 p-0"
+                        title="Skip this column"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
                       <div className="w-8">
                         {mapping.mapped && mapping.required && (
                           <CheckCircle className="h-5 w-5 text-green-600" />
@@ -708,6 +739,7 @@ const ImportDialog = ({ open, onOpenChange, onSuccess }: ImportDialogProps) => {
                   <table className="w-full text-sm">
                     <thead className="bg-muted">
                       <tr>
+                        <th className="p-2 text-left w-8"></th>
                         {columnMappings
                           .filter(m => m.mapped)
                           .map(mapping => (
@@ -726,17 +758,43 @@ const ImportDialog = ({ open, onOpenChange, onSuccess }: ImportDialogProps) => {
                           return !duplicateBusinesses.some(d => d.storeCode === rowStoreCode);
                         })
                         .slice(0, 5)
-                        .map((row, index) => (
-                          <tr key={index} className="border-t">
-                            {columnMappings
-                              .filter(m => m.mapped)
-                              .map(mapping => (
-                                <td key={mapping.mapped} className="p-2">
-                                  {row[mapping.original] || '-'}
-                                </td>
-                              ))}
-                          </tr>
-                        ))}
+                        .map((row, index) => {
+                          const originalIndex = parsedData.indexOf(row);
+                          const rowErrors = validationErrors.get(originalIndex);
+                          return (
+                            <tr key={index} className="border-t">
+                              <td className="p-2">
+                                {rowErrors && rowErrors.length > 0 && (
+                                  <HoverCard>
+                                    <HoverCardTrigger>
+                                      <AlertCircle className="h-4 w-4 text-destructive cursor-help" />
+                                    </HoverCardTrigger>
+                                    <HoverCardContent className="w-80">
+                                      <div className="space-y-2">
+                                        <h4 className="text-sm font-semibold text-destructive">Validation Errors:</h4>
+                                        <ul className="text-xs space-y-1">
+                                          {rowErrors.map((error, errIdx) => (
+                                            <li key={errIdx} className="flex items-start gap-1">
+                                              <span className="font-medium">{error.field}:</span>
+                                              <span>{error.message}</span>
+                                            </li>
+                                          ))}
+                                        </ul>
+                                      </div>
+                                    </HoverCardContent>
+                                  </HoverCard>
+                                )}
+                              </td>
+                              {columnMappings
+                                .filter(m => m.mapped)
+                                .map(mapping => (
+                                  <td key={mapping.mapped} className="p-2">
+                                    {row[mapping.original] || '-'}
+                                  </td>
+                                ))}
+                            </tr>
+                          );
+                        })}
                     </tbody>
                   </table>
                   {(parsedData.length - duplicateBusinesses.length) > 5 && (

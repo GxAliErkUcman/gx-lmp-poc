@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Plus, Upload, Edit, Trash2, Grid, Table2, Settings } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
@@ -267,22 +268,41 @@ const Dashboard = () => {
         ) : (
           <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'active' | 'pending')}>
             <TabsList className="grid w-full grid-cols-2 mb-6">
-              <TabsTrigger value="active" className="flex items-center gap-2">
-                Active Locations
-                {activeBusinesses.length > 0 && (
-                  <Badge variant="secondary" className="ml-1">
-                    {activeBusinesses.length}
-                  </Badge>
-                )}
-              </TabsTrigger>
-              <TabsTrigger value="pending" className="flex items-center gap-2">
-                Need Attention
-                {pendingBusinesses.length > 0 && (
-                  <Badge variant="destructive" className="ml-1">
-                    {pendingBusinesses.length}
-                  </Badge>
-                )}
-              </TabsTrigger>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <TabsTrigger value="active" className="flex items-center gap-2">
+                      Active Locations
+                      {activeBusinesses.length > 0 && (
+                        <Badge variant="secondary" className="ml-1">
+                          {activeBusinesses.length}
+                        </Badge>
+                      )}
+                    </TabsTrigger>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>These locations are validated and sent to g-Xperts for publishing.</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <TabsTrigger value="pending" className="flex items-center gap-2">
+                      Need Attention
+                      {pendingBusinesses.length > 0 && (
+                        <Badge variant="destructive" className="ml-1">
+                          {pendingBusinesses.length}
+                        </Badge>
+                      )}
+                    </TabsTrigger>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>The locations here require further data input. They miss mandatory fields. These locations won't be published until these issues are addressed.</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </TabsList>
             
             <TabsContent value="active">

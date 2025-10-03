@@ -23,6 +23,7 @@ import LocationMap from '@/components/LocationMap';
 import { CategorySelect } from '@/components/CategorySelect';
 import { CountrySelect } from '@/components/CountrySelect';
 import { CitySelect } from '@/components/CitySelect';
+import CategoryNameChangeDialog from '@/components/CategoryNameChangeDialog';
 
 const businessSchema = z.object({
   storeCode: z.string().min(1, 'Store code is required'),
@@ -97,6 +98,10 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
     sunday: null as string | null
   });
   const [specialHours, setSpecialHours] = useState<SpecialHourEntry[]>([]);
+  const [initialBusinessName, setInitialBusinessName] = useState<string>('');
+  const [initialPrimaryCategory, setInitialPrimaryCategory] = useState<string>('');
+  const [categoryNameWarningOpen, setCategoryNameWarningOpen] = useState(false);
+  const [pendingFormData, setPendingFormData] = useState<any>(null);
 
   const [socialMediaUrls, setSocialMediaUrls] = useState({
     facebookUrl: "",
@@ -245,6 +250,8 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
         reset();
         setCoverPhoto('');
         setSpecialHours([]);
+        setInitialBusinessName('');
+        setInitialPrimaryCategory('');
         setHours({
           monday: "09:00-18:00",
           tuesday: "09:00-18:00",
@@ -272,6 +279,31 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
   }, [watch, validationErrors.length]);
 
   const onSubmit = async (data: BusinessFormData) => {
+    if (!user) return;
+
+    // Check if critical fields changed (only for editing existing businesses)
+    if (business) {
+      const changedFields: string[] = [];
+      if (data.businessName !== initialBusinessName) {
+        changedFields.push('Business Name');
+      }
+      if (data.primaryCategory !== initialPrimaryCategory) {
+        changedFields.push('Primary Category');
+      }
+
+      if (changedFields.length > 0) {
+        // Show warning dialog
+        setPendingFormData(data);
+        setCategoryNameWarningOpen(true);
+        return;
+      }
+    }
+
+    // Proceed with submission
+    await submitBusinessData(data);
+  };
+
+  const submitBusinessData = async (data: BusinessFormData) => {
     if (!user) return;
 
     // Normalize opening hours: convert 'Closed' to null
@@ -564,6 +596,7 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
             </CardHeader>
             <CardContent className="space-y-4">
               <CountrySelect
+                key={business?.id || 'new'}
                 value={watch('country') || ''}
                 onValueChange={(value) => setValue('country', value)}
                 placeholder="Select country *"
@@ -909,6 +942,25 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
           </div>
         </form>
       </DialogContent>
+
+      <CategoryNameChangeDialog
+        open={categoryNameWarningOpen}
+        onOpenChange={setCategoryNameWarningOpen}
+        onConfirm={() => {
+          if (pendingFormData) {
+            submitBusinessData(pendingFormData);
+            setPendingFormData(null);
+          }
+        }}
+        changedFields={
+          pendingFormData
+            ? [
+                pendingFormData.businessName !== initialBusinessName && 'Business Name',
+                pendingFormData.primaryCategory !== initialPrimaryCategory && 'Primary Category',
+              ].filter(Boolean) as string[]
+            : []
+        }
+      />
     </Dialog>
   );
 };

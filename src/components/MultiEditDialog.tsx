@@ -23,6 +23,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { Upload } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { CategorySelect } from '@/components/CategorySelect';
+import { CountrySelect } from '@/components/CountrySelect';
 
 const multiEditFormSchema = z.object({
   businessName: z.string().optional(),
@@ -30,6 +32,7 @@ const multiEditFormSchema = z.object({
   website: z.string().url().optional().or(z.literal('')),
   fromTheBusiness: z.string().optional(),
   primaryCategory: z.string().optional(),
+  country: z.string().optional(),
   mondayHours: z.string().optional(),
   tuesdayHours: z.string().optional(),
   wednesdayHours: z.string().optional(),
@@ -67,6 +70,7 @@ const MultiEditDialog = ({ open, onOpenChange, selectedIds, onSuccess }: MultiEd
       website: '',
       fromTheBusiness: '',
       primaryCategory: '',
+      country: '',
       mondayHours: '',
       tuesdayHours: '',
       wednesdayHours: '',
@@ -88,7 +92,7 @@ const MultiEditDialog = ({ open, onOpenChange, selectedIds, onSuccess }: MultiEd
     setLoading(true);
     try {
       // Filter out empty values for regular fields
-      const regularFields = ['businessName', 'primaryPhone', 'website', 'fromTheBusiness', 'primaryCategory'];
+      const regularFields = ['businessName', 'primaryPhone', 'website', 'fromTheBusiness', 'primaryCategory', 'country'];
       const hoursFields = ['mondayHours', 'tuesdayHours', 'wednesdayHours', 'thursdayHours', 'fridayHours', 'saturdayHours', 'sundayHours'];
       const socialMediaFields = ['facebookUrl', 'instagramUrl', 'linkedinUrl', 'pinterestUrl', 'tiktokUrl', 'twitterUrl', 'youtubeUrl'];
       
@@ -378,6 +382,24 @@ const MultiEditDialog = ({ open, onOpenChange, selectedIds, onSuccess }: MultiEd
                   <FormLabel>Primary Category</FormLabel>
                   <FormControl>
                     <Input placeholder="Leave empty to skip" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="country"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Country</FormLabel>
+                  <FormControl>
+                    <CountrySelect
+                      value={field.value || ''}
+                      onValueChange={field.onChange}
+                      placeholder="Leave empty to skip"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
