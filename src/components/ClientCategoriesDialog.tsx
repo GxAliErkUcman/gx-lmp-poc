@@ -165,10 +165,13 @@ export function ClientCategoriesDialog({ open, onOpenChange, clientId, clientNam
     }
   };
 
-  const filteredCategories = allCategories.filter(cat =>
-    cat.category_name.toLowerCase().includes(searchValue.toLowerCase()) &&
-    !selectedCategories.some(sc => sc.category_name === cat.category_name)
-  );
+  // Filter categories based on search value and exclude already selected ones
+  const filteredCategories = allCategories.filter(cat => {
+    const matchesSearch = searchValue === '' || 
+      cat.category_name.toLowerCase().includes(searchValue.toLowerCase());
+    const notSelected = !selectedCategories.some(sc => sc.category_name === cat.category_name);
+    return matchesSearch && notSelected;
+  });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -202,7 +205,7 @@ export function ClientCategoriesDialog({ open, onOpenChange, clientId, clientNam
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-[600px] p-0" align="start">
-                  <Command>
+                  <Command shouldFilter={false}>
                     <CommandInput 
                       placeholder="Search categories..." 
                       value={searchValue}

@@ -20,6 +20,7 @@ import { ClientCategoriesDialog } from '@/components/ClientCategoriesDialog';
 interface Client {
   id: string;
   name: string;
+  lsc_id: number | null;
   user_count: number;
   active_locations: number;
   pending_locations: number;
@@ -72,7 +73,7 @@ const AdminPanel = () => {
   const [usersLoading, setUsersLoading] = useState(false);
   const [editingClientId, setEditingClientId] = useState<string | null>(null);
   const [editClientName, setEditClientName] = useState('');
-  const [editClientId, setEditClientId] = useState('');
+  const [editLscId, setEditLscId] = useState('');
   const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
   const [categoryManagementClient, setCategoryManagementClient] = useState<Client | null>(null);
   
@@ -133,10 +134,21 @@ const AdminPanel = () => {
 
       if (statsError) throw statsError;
 
+      // Fetch lsc_id for each client separately since it's not in the stats function
+      const { data: clientLscIds, error: lscError } = await supabase
+        .from('clients')
+        .select('id, lsc_id');
+
+      if (lscError) throw lscError;
+
+      // Create a map for quick lookup
+      const lscIdMap = new Map(clientLscIds?.map(c => [c.id, c.lsc_id]) || []);
+
       // Map the database response to match our Client interface
       const mappedClients = clientStats?.map((stat: any) => ({
         id: stat.client_id,
         name: stat.client_name,
+        lsc_id: lscIdMap.get(stat.client_id) || null,
         user_count: stat.user_count,
         active_locations: stat.active_locations,
         pending_locations: stat.pending_locations,
@@ -325,66 +337,46 @@ const AdminPanel = () => {
       return;
     }
 
-    // If only name changed, use simple update
-    if (!editClientId.trim() || editClientId === currentClientId) {
-      try {
-        const { error } = await supabase
-          .from('clients')
-          .update({ name: editClientName.trim() })
-          .eq('id', currentClientId);
-
-        if (error) throw error;
-
-        toast({
-          title: "Client Updated",
-          description: "Client name updated successfully.",
-        });
-
-        setEditingClientId(null);
-        setEditClientName('');
-        setEditClientId('');
-        fetchData();
-      } catch (error: any) {
-        console.error('Error updating client:', error);
-        toast({
-          title: "Error",
-          description: error.message || "Failed to update client.",
-          variant: "destructive"
-        });
+    try {
+      const updateData: any = { name: editClientName.trim() };
+      
+      // Add lsc_id to update if it was changed
+      if (editLscId.trim()) {
+        const lscIdNum = parseInt(editLscId.trim());
+        if (isNaN(lscIdNum)) {
+          toast({
+            title: "Error",
+            description: "LSC ID must be a valid number.",
+            variant: "destructive"
+          });
+          return;
+        }
+        updateData.lsc_id = lscIdNum;
       }
-      return;
-    }
 
-    // If ID changed, use the comprehensive update function
-    if (editClientId !== currentClientId) {
-      try {
-        const { data, error } = await supabase.functions.invoke('update-client-id', {
-          body: {
-            currentClientId,
-            newClientId: editClientId.trim(),
-            clientName: editClientName.trim()
-          }
-        });
+      const { error } = await supabase
+        .from('clients')
+        .update(updateData)
+        .eq('id', currentClientId);
 
-        if (error) throw error;
+      if (error) throw error;
 
-        toast({
-          title: "Client Updated",
-          description: "Client ID and name updated successfully. Old JSON files have been cleaned up.",
-        });
+      toast({
+        title: "Client Updated",
+        description: "Client information updated successfully.",
+      });
 
-        setEditingClientId(null);
-        setEditClientName('');
-        setEditClientId('');
-        fetchData();
-      } catch (error: any) {
-        console.error('Error updating client ID:', error);
-        toast({
-          title: "Error",
-          description: error.message || "Failed to update client ID.",
-          variant: "destructive"
-        });
-      }
+      setEditingClientId(null);
+      setEditClientName('');
+      setEditLscId('');
+      fetchData();
+    } catch (error: any) {
+      console.error('Error updating client:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update client.",
+        variant: "destructive"
+      });
     }
   };
 
@@ -904,13 +896,14 @@ const AdminPanel = () => {
                                  />
                                </div>
                                <div className="flex flex-col gap-1">
-                                 <Label htmlFor="clientId" className="text-xs">ID</Label>
+                                 <Label htmlFor="lscId" className="text-xs">LSC ID</Label>
                                  <Input
-                                   id="clientId"
-                                   value={editClientId}
-                                   onChange={(e) => setEditClientId(e.target.value)}
+                                   id="lscId"
+                                   type="number"
+                                   value={editLscId}
+                                   onChange={(e) => setEditLscId(e.target.value)}
                                    className="max-w-[200px]"
-                                   placeholder="Client ID (leave empty to keep current)"
+                                   placeholder="LSC ID (numeric)"
                                  />
                                </div>
                              </div>
@@ -927,7 +920,7 @@ const AdminPanel = () => {
                                  onClick={() => {
                                    setEditingClientId(null);
                                    setEditClientName('');
-                                   setEditClientId('');
+                                   setEditLscId('');
                                  }}
                                >
                                  Cancel
@@ -946,7 +939,7 @@ const AdminPanel = () => {
                                onClick={() => {
                                  setEditingClientId(client.id);
                                  setEditClientName(client.name);
-                                 setEditClientId(client.id);
+                                 setEditLscId(client.lsc_id?.toString() || '');
                                }}
                              >
                                <Edit className="w-4 h-4" />

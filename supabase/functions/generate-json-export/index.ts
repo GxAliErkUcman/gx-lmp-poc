@@ -136,6 +136,21 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
+    // Fetch client info to get LSC ID
+    const { data: clientData, error: clientError } = await supabase
+      .from('clients')
+      .select('lsc_id')
+      .eq('id', client_id)
+      .maybeSingle();
+
+    if (clientError) {
+      console.error('Error fetching client:', clientError);
+      return new Response(JSON.stringify({ error: 'Failed to fetch client information' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
     // Fetch all active businesses for the client
     const { data: businesses, error } = await supabase
       .from('businesses')
@@ -160,7 +175,11 @@ Deno.serve(async (req) => {
 
     // Generate JSON export as plain array (no metadata)
     const jsonContent = JSON.stringify(validBusinesses, null, 2);
-    const fileName = `client-${client_id}-businesses.json`;
+    
+    // Use LSC ID for filename if available, otherwise fall back to client ID
+    const fileName = clientData?.lsc_id 
+      ? `${clientData.lsc_id}.json`
+      : `client-${client_id}-businesses.json`;
 
     // Upload to storage bucket
     const { error: uploadError } = await supabase.storage
