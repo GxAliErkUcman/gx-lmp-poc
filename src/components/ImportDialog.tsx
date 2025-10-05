@@ -422,7 +422,16 @@ const ImportDialog = ({ open, onOpenChange, onSuccess }: ImportDialogProps) => {
       const mappedRow: any = {};
       columnMappings.forEach(mapping => {
         if (mapping.mapped) {
-          mappedRow[mapping.mapped] = row[mapping.original];
+          // Include the field even if empty to ensure validation catches missing required fields
+          const value = row[mapping.original];
+          mappedRow[mapping.mapped] = value !== undefined && value !== null ? value : '';
+        }
+      });
+      
+      // Also ensure all essential required fields exist in the object for validation
+      essentialFields.forEach(field => {
+        if (!(field in mappedRow)) {
+          mappedRow[field] = '';
         }
       });
       
@@ -793,12 +802,16 @@ const ImportDialog = ({ open, onOpenChange, onSuccess }: ImportDialogProps) => {
                                     </HoverCardTrigger>
                                     <HoverCardContent className="w-80">
                                       <div className="space-y-2">
-                                        <h4 className="text-sm font-semibold text-destructive">Validation Errors:</h4>
-                                        <ul className="text-xs space-y-1">
+                                        <h4 className="text-sm font-semibold text-destructive">
+                                          Validation Issues ({rowErrors.length}):
+                                        </h4>
+                                        <ul className="text-xs space-y-1.5">
                                           {rowErrors.map((error, errIdx) => (
-                                            <li key={errIdx} className="flex items-start gap-1">
-                                              <span className="font-medium">{error.field}:</span>
-                                              <span>{error.message}</span>
+                                            <li key={errIdx} className="flex flex-col gap-0.5">
+                                              <span className="font-medium text-destructive">
+                                                {error.field.replace(/([A-Z])/g, ' $1').trim().replace(/^./, str => str.toUpperCase())}
+                                              </span>
+                                              <span className="text-muted-foreground">{error.message}</span>
                                             </li>
                                           ))}
                                         </ul>

@@ -37,12 +37,42 @@ export function ClientCategoriesDialog({ open, onOpenChange, clientId, clientNam
   const [newCategoryName, setNewCategoryName] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchValue, setSearchValue] = useState('');
+  const [remoteResults, setRemoteResults] = useState<Category[] | null>(null);
+  const [searchLoading, setSearchLoading] = useState(false);
 
   useEffect(() => {
     if (open) {
       loadData();
     }
   }, [open, clientId]);
+
+  // Fetch remote filtered results when searching
+  useEffect(() => {
+    if (!searchValue) {
+      setRemoteResults(null);
+      return;
+    }
+    setSearchLoading(true);
+    const handler = setTimeout(async () => {
+      try {
+        const { data, error } = await supabase
+          .from('categories')
+          .select('id, category_name')
+          .ilike('category_name', `%${searchValue}%`)
+          .order('category_name')
+          .limit(5000);
+        if (error) throw error;
+        setRemoteResults(data || []);
+      } catch (e) {
+        console.error('Search fetch error:', e);
+        setRemoteResults([]);
+      } finally {
+        setSearchLoading(false);
+      }
+    }, 200);
+
+    return () => clearTimeout(handler);
+  }, [searchValue]);
 
   const loadData = async () => {
     setLoading(true);
@@ -165,13 +195,52 @@ export function ClientCategoriesDialog({ open, onOpenChange, clientId, clientNam
     }
   };
 
-  // Filter categories based on search value and exclude already selected ones
-  const filteredCategories = allCategories.filter(cat => {
-    const matchesSearch = searchValue === '' || 
-      cat.category_name.toLowerCase().includes(searchValue.toLowerCase());
-    const notSelected = !selectedCategories.some(sc => sc.category_name === cat.category_name);
-    return matchesSearch && notSelected;
-  });
+  // Advanced search with normalization and scoring
+  const getFilteredCategories = () => {
+    const source = remoteResults ?? allCategories;
+    
+    if (!searchValue) {
+      return source.filter(cat => !selectedCategories.some(sc => sc.category_name === cat.category_name));
+    }
+
+    const normalize = (s: string) =>
+      s
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '') // remove diacritics
+        .replace(/\s+/g, ' ') // collapse spaces
+        .trim()
+        .toLowerCase();
+
+    const escapeRegExp = (str: string) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+    const q = normalize(searchValue);
+    const wordRe = new RegExp(`\\b${escapeRegExp(q)}`, 'i');
+
+    const ranked = source
+      .map((c) => ({
+        c,
+        n: normalize(c.category_name),
+      }))
+      .filter((o) => o.n.includes(q))
+      .filter((o) => !selectedCategories.some(sc => sc.category_name === o.c.category_name))
+      .map((o) => {
+        let score = 0;
+        if (o.n === q) score = 400; // exact match
+        else if (o.n.startsWith(q)) score = 300; // starts with
+        else if (wordRe.test(o.n)) score = 200; // word boundary
+        else score = 100; // contains
+        return { ...o, score };
+      })
+      .sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score;
+        return a.c.category_name.localeCompare(b.c.category_name);
+      })
+      .map((o) => o.c);
+
+    return ranked;
+  };
+
+  const filteredCategories = getFilteredCategories();
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -212,7 +281,9 @@ export function ClientCategoriesDialog({ open, onOpenChange, clientId, clientNam
                       onValueChange={setSearchValue}
                     />
                     <CommandList className="max-h-[300px]">
-                      <CommandEmpty>No categories found.</CommandEmpty>
+                      <CommandEmpty>
+                        {loading || searchLoading ? (searchLoading ? "Searching..." : "Loading categories...") : "No categories found."}
+                      </CommandEmpty>
                       <CommandGroup>
                         {filteredCategories.map((category) => (
                           <CommandItem
