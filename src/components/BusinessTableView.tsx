@@ -213,23 +213,26 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
     
     // Multiple errors - show with hover card
     return (
-      <HoverCard>
+      <HoverCard openDelay={100} closeDelay={100}>
         <HoverCardTrigger asChild>
-          <Badge variant="destructive" className="flex items-center gap-1 cursor-help">
-            <AlertCircle className="w-3 h-3" />
-            There are validation problems.
-          </Badge>
+          <div className="inline-block">
+            <Badge variant="destructive" className="flex items-center gap-1 cursor-help">
+              <AlertCircle className="w-3 h-3" />
+              There are multiple issues with location validation
+            </Badge>
+          </div>
         </HoverCardTrigger>
-        <HoverCardContent className="w-80">
+        <HoverCardContent className="w-80 z-50" side="top" align="start">
           <div className="space-y-2">
-            <p className="text-sm font-semibold text-destructive">Validation Errors:</p>
-            <div className="space-y-1">
+            <p className="text-sm font-semibold text-destructive">Validation Issues:</p>
+            <ul className="space-y-1.5">
               {errors.map((error, idx) => (
-                <div key={idx} className="text-xs">
+                <li key={idx} className="text-xs flex items-start gap-1.5">
+                  <span className="text-destructive mt-0.5">•</span>
                   <span className="font-medium">{getUserFriendlyErrorMessage(error, business)}</span>
-                </div>
+                </li>
               ))}
-            </div>
+            </ul>
           </div>
         </HoverCardContent>
       </HoverCard>
