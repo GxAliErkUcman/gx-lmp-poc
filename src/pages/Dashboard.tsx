@@ -319,6 +319,7 @@ const Dashboard = () => {
                   onDelete={handleDeleteBusiness}
                   onMultiEdit={handleMultiEdit}
                   onMultiDelete={handleMultiDelete}
+                  showValidationErrors={false}
                 />
               ) : (
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -394,6 +395,7 @@ const Dashboard = () => {
                   onDelete={handleDeleteBusiness}
                   onMultiEdit={handleMultiEdit}
                   onMultiDelete={handleMultiDelete}
+                  showValidationErrors={true}
                 />
               ) : (
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">

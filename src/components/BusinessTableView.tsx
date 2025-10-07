@@ -18,9 +18,10 @@ interface BusinessTableViewProps {
   onDelete: (id: string) => void;
   onMultiEdit: (selectedIds: string[]) => void;
   onMultiDelete: (selectedIds: string[]) => void;
+  showValidationErrors?: boolean;
 }
 
-const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiDelete }: BusinessTableViewProps) => {
+const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiDelete, showValidationErrors = true }: BusinessTableViewProps) => {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredBusinesses, setFilteredBusinesses] = useState(businesses);
@@ -158,17 +159,54 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
     return errors;
   };
 
+  // Map validation errors to user-friendly messages
+  const getUserFriendlyErrorMessage = (error: ValidationError, business: Business): string => {
+    // Check for procedurally generated store code
+    if (error.field === 'storeCode' && /^STORE\d+/.test(business.storeCode || '')) {
+      return "Replace the Store Code";
+    }
+    
+    if (error.field === 'storeCode') {
+      return "Replace the Store Code";
+    }
+    
+    if (error.field === 'addressLine1') {
+      return "Please enter a valid address";
+    }
+    
+    if (error.field === 'fromTheBusiness' && error.message.toLowerCase().includes('url')) {
+      return "Please change the description";
+    }
+    
+    if (error.field === 'fromTheBusiness') {
+      return "Please change the description";
+    }
+    
+    if (error.field === 'primaryCategory') {
+      return "Please enter a valid business category";
+    }
+    
+    if (error.field === 'country') {
+      return "Please select a country and replace the address";
+    }
+    
+    return error.message; // fallback to original message
+  };
+
   // Render validation badge
   const renderValidationBadge = (business: Business) => {
+    if (!showValidationErrors) return null;
+    
     const errors = getValidationErrors(business);
     
     if (errors.length === 0) return null;
     
     if (errors.length === 1) {
+      const friendlyMessage = getUserFriendlyErrorMessage(errors[0], business);
       return (
         <Badge variant="destructive" className="flex items-center gap-1">
           <AlertCircle className="w-3 h-3" />
-          {errors[0].message}
+          {friendlyMessage}
         </Badge>
       );
     }
@@ -179,7 +217,7 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
         <HoverCardTrigger asChild>
           <Badge variant="destructive" className="flex items-center gap-1 cursor-help">
             <AlertCircle className="w-3 h-3" />
-            Multiple fields are missing!
+            There are validation problems.
           </Badge>
         </HoverCardTrigger>
         <HoverCardContent className="w-80">
@@ -188,8 +226,7 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
             <div className="space-y-1">
               {errors.map((error, idx) => (
                 <div key={idx} className="text-xs">
-                  <span className="font-medium">{error.field}:</span>{' '}
-                  <span className="text-muted-foreground">{error.message}</span>
+                  <span className="font-medium">{getUserFriendlyErrorMessage(error, business)}</span>
                 </div>
               ))}
             </div>
