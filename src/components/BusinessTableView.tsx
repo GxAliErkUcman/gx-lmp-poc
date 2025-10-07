@@ -5,9 +5,11 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Edit, Trash2, Search, ArrowUp, ArrowDown, Settings, Filter, X } from 'lucide-react';
+import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
+import { Edit, Trash2, Search, ArrowUp, ArrowDown, Settings, Filter, X, AlertCircle } from 'lucide-react';
 import { Business } from '@/types/business';
 import ManageColumnsDialog, { type ColumnConfig } from './ManageColumnsDialog';
+import { validateBusiness, ValidationError } from '@/lib/validation';
 
 
 interface BusinessTableViewProps {
@@ -149,6 +151,53 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
   }, [businesses, searchTerm, categoryFilter, cityFilter, countryFilter]);
 
   const visibleColumns = columns.filter(col => col.visible);
+
+  // Get validation errors for a business
+  const getValidationErrors = (business: Business): ValidationError[] => {
+    const { errors } = validateBusiness(business);
+    return errors;
+  };
+
+  // Render validation badge
+  const renderValidationBadge = (business: Business) => {
+    const errors = getValidationErrors(business);
+    
+    if (errors.length === 0) return null;
+    
+    if (errors.length === 1) {
+      return (
+        <Badge variant="destructive" className="flex items-center gap-1">
+          <AlertCircle className="w-3 h-3" />
+          {errors[0].message}
+        </Badge>
+      );
+    }
+    
+    // Multiple errors - show with hover card
+    return (
+      <HoverCard>
+        <HoverCardTrigger asChild>
+          <Badge variant="destructive" className="flex items-center gap-1 cursor-help">
+            <AlertCircle className="w-3 h-3" />
+            Multiple fields are missing!
+          </Badge>
+        </HoverCardTrigger>
+        <HoverCardContent className="w-80">
+          <div className="space-y-2">
+            <p className="text-sm font-semibold text-destructive">Validation Errors:</p>
+            <div className="space-y-1">
+              {errors.map((error, idx) => (
+                <div key={idx} className="text-xs">
+                  <span className="font-medium">{error.field}:</span>{' '}
+                  <span className="text-muted-foreground">{error.message}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </HoverCardContent>
+      </HoverCard>
+    );
+  };
 
   return (
     <div className="space-y-4">
@@ -336,9 +385,7 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
                     {column.key === 'businessName' && (
                       <div className="flex items-center gap-2">
                         <span className="font-medium">{business.businessName}</span>
-                        {/^(STORE)\d{6}$/.test(business.storeCode || '') && (
-                          <Badge variant="destructive">Replace store code</Badge>
-                        )}
+                        {renderValidationBadge(business)}
                       </div>
                     )}
                     {column.key === 'primaryCategory' && (
