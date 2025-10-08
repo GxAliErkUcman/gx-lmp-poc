@@ -60,6 +60,12 @@ export interface Business {
   customServices?: any[];
   socialMediaUrls?: any[];
   
+  // Relevant location relationship (parent location like mall/airport)
+  relevantLocation?: {
+    placeId: string;
+    relationType: 'DEPARTMENT_OF' | 'INDEPENDENT_ESTABLISHMENT_IN';
+  } | any | null;
+  
   // Metadata
   created_at: string;
   updated_at: string;

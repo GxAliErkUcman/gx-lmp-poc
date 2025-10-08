@@ -49,6 +49,7 @@ export type Database = {
           postalCode: string | null
           primaryCategory: string | null
           primaryPhone: string | null
+          relevantLocation: Json | null
           reservationsURL: string | null
           saturdayHours: string | null
           socialMediaUrls: Json | null
@@ -99,6 +100,7 @@ export type Database = {
           postalCode?: string | null
           primaryCategory?: string | null
           primaryPhone?: string | null
+          relevantLocation?: Json | null
           reservationsURL?: string | null
           saturdayHours?: string | null
           socialMediaUrls?: Json | null
@@ -149,6 +151,7 @@ export type Database = {
           postalCode?: string | null
           primaryCategory?: string | null
           primaryPhone?: string | null
+          relevantLocation?: Json | null
           reservationsURL?: string | null
           saturdayHours?: string | null
           socialMediaUrls?: Json | null
