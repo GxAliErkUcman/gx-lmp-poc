@@ -117,20 +117,39 @@ export interface ValidationError {
 }
 
 export function validateBusiness(data: any): { isValid: boolean; errors: ValidationError[] } {
+  const errors: ValidationError[] = [];
+  
   try {
     businessValidationSchema.parse(data);
-    return { isValid: true, errors: [] };
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const errors: ValidationError[] = error.issues.map((err) => ({
+      errors.push(...error.issues.map((err) => ({
         field: err.path.join('.'),
         message: err.message,
         suggestion: getFieldSuggestion(err.path[0] as string, err.message)
-      }));
-      return { isValid: false, errors };
+      })));
+    } else {
+      errors.push({ field: 'general', message: 'Unknown validation error' });
     }
-    return { isValid: false, errors: [{ field: 'general', message: 'Unknown validation error' }] };
   }
+  
+  // Additional check for procedurally generated store codes
+  if (data.storeCode && /^STORE\d+$/.test(data.storeCode)) {
+    // Check if this error already exists
+    const hasStoreCodeError = errors.some(err => err.field === 'storeCode');
+    if (!hasStoreCodeError) {
+      errors.push({
+        field: 'storeCode',
+        message: 'Store code appears to be auto-generated and needs to be replaced',
+        suggestion: "Replace with your actual store code"
+      });
+    }
+  }
+  
+  return { 
+    isValid: errors.length === 0, 
+    errors 
+  };
 }
 
 function getFieldSuggestion(field: string, message: string): string {

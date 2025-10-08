@@ -218,7 +218,7 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
           <div className="inline-block">
             <Badge variant="destructive" className="flex items-center gap-1 cursor-help">
               <AlertCircle className="w-3 h-3" />
-              There are multiple issues with location validation
+              Multiple Issues
             </Badge>
           </div>
         </HoverCardTrigger>
