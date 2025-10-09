@@ -25,6 +25,7 @@ import { Upload } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { CategorySelect } from '@/components/CategorySelect';
 import { CountrySelect } from '@/components/CountrySelect';
+import CategoryNameChangeDialog from '@/components/CategoryNameChangeDialog';
 
 const multiEditFormSchema = z.object({
   businessName: z.string().optional(),
@@ -61,6 +62,8 @@ interface MultiEditDialogProps {
 const MultiEditDialog = ({ open, onOpenChange, selectedIds, onSuccess }: MultiEditDialogProps) => {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [categoryNameWarningOpen, setCategoryNameWarningOpen] = useState(false);
+  const [pendingFormData, setPendingFormData] = useState<MultiEditFormValues | null>(null);
 
   const form = useForm<MultiEditFormValues>({
     resolver: zodResolver(multiEditFormSchema),
@@ -89,6 +92,27 @@ const MultiEditDialog = ({ open, onOpenChange, selectedIds, onSuccess }: MultiEd
   });
 
   const onSubmit = async (values: MultiEditFormValues) => {
+    // Check if critical fields are being changed
+    const changedFields: string[] = [];
+    if (values.businessName && values.businessName.trim() !== '') {
+      changedFields.push('Business Name');
+    }
+    if (values.primaryCategory && values.primaryCategory.trim() !== '') {
+      changedFields.push('Primary Category');
+    }
+
+    // If critical fields are being changed, show warning
+    if (changedFields.length > 0) {
+      setPendingFormData(values);
+      setCategoryNameWarningOpen(true);
+      return;
+    }
+
+    // Proceed with submission
+    await submitMultiEditData(values);
+  };
+
+  const submitMultiEditData = async (values: MultiEditFormValues) => {
     setLoading(true);
     try {
       // Filter out empty values for regular fields
@@ -746,6 +770,23 @@ const MultiEditDialog = ({ open, onOpenChange, selectedIds, onSuccess }: MultiEd
           </Form>
         </ScrollArea>
       </DialogContent>
+
+      <CategoryNameChangeDialog
+        open={categoryNameWarningOpen}
+        onOpenChange={setCategoryNameWarningOpen}
+        onConfirm={() => {
+          if (pendingFormData) {
+            submitMultiEditData(pendingFormData);
+            setPendingFormData(null);
+          }
+        }}
+        changedFields={
+          [
+            pendingFormData?.businessName && pendingFormData.businessName.trim() !== '' ? 'Business Name' : null,
+            pendingFormData?.primaryCategory && pendingFormData.primaryCategory.trim() !== '' ? 'Primary Category' : null,
+          ].filter(Boolean) as string[]
+        }
+      />
     </Dialog>
   );
 };
