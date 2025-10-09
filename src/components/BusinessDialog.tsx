@@ -245,6 +245,10 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
 
         // Set cover photo
         setCoverPhoto(businessToUse.coverPhoto || '');
+        
+        // Store initial values for critical field change detection
+        setInitialBusinessName(businessToUse.businessName || '');
+        setInitialPrimaryCategory(businessToUse.primaryCategory || '');
       } else if (!business) {
         // Reset for new business
         reset();
