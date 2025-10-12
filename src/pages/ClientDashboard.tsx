@@ -18,6 +18,7 @@ import SettingsDialog from '@/components/SettingsDialog';
 import DeleteConfirmationDialog from '@/components/DeleteConfirmationDialog';
 import jasonerLogo from '@/assets/jasoner-horizontal-logo.png';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { JsonExport } from '@/components/JsonExport';
 
 const ClientDashboard = () => {
   const { user, signOut } = useAuth();
@@ -298,6 +299,7 @@ const ClientDashboard = () => {
                     <Grid className="w-4 h-4" />
                   </Button>
                 </div>
+                <JsonExport businesses={businesses} />
                 <Button variant="outline" onClick={() => setSettingsDialogOpen(true)}>
                   <Settings className="w-4 h-4 mr-2" />
                   Settings
