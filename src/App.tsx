@@ -12,6 +12,8 @@ import AdminPanel from "./pages/AdminPanel";
 import ResetPassword from "./pages/ResetPassword";
 import SetPassword from "./pages/SetPassword";
 import NotFound from "./pages/NotFound";
+import ServiceUserHome from "./pages/ServiceUserHome";
+import ClientDashboard from "./pages/ClientDashboard";
 
 const queryClient = new QueryClient();
 
@@ -27,6 +29,8 @@ const App = () => (
             <Route path="/auth" element={<AuthPage />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/admin" element={<AdminPanel />} />
+            <Route path="/service-user-home" element={<ServiceUserHome />} />
+            <Route path="/client-dashboard" element={<ClientDashboard />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/set-password/*" element={<SetPassword />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

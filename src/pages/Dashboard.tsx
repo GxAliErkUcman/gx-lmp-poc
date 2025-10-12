@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { Navigate } from 'react-router-dom';
+import { useAdmin } from '@/hooks/use-admin';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -21,6 +22,8 @@ import jasonerLogo from '@/assets/jasoner-horizontal-logo.png';
 
 const Dashboard = () => {
   const { user, signOut } = useAuth();
+  const { hasRole } = useAdmin();
+  const navigate = useNavigate();
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [loading, setLoading] = useState(true);
   const [businessDialogOpen, setBusinessDialogOpen] = useState(false);
@@ -70,7 +73,17 @@ const Dashboard = () => {
 
   useEffect(() => {
     if (!user) return;
-    fetchBusinesses();
+    
+    const checkRoleAndRedirect = async () => {
+      const isServiceUser = await hasRole('service_user');
+      if (isServiceUser) {
+        navigate('/service-user-home', { replace: true });
+        return;
+      }
+      fetchBusinesses();
+    };
+    
+    checkRoleAndRedirect();
   }, [user]);
 
   if (!user) {

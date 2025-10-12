@@ -1,6 +1,7 @@
 export interface Business {
   id: string;
   user_id: string;
+  client_id?: string;
   
   // Required fields
   storeCode: string;
@@ -43,6 +44,7 @@ export interface Business {
   moreHours?: any[];
   
   // Status
+  status?: string;
   temporarilyClosed?: boolean;
   
   // Photos as URLs
