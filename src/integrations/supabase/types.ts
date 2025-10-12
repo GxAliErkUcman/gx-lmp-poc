@@ -390,12 +390,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_access_as_store_owner: {
+        Args: { _business_id: string; _user_id: string }
+        Returns: boolean
+      }
       can_access_business: {
         Args: { _business_id: string; _user_id: string }
         Returns: boolean
       }
       can_access_client: {
         Args: { _client_id: string; _user_id: string }
+        Returns: boolean
+      }
+      can_manage_store_owner_access: {
+        Args: { _business_id: string; _user_id: string }
         Returns: boolean
       }
       generate_store_code: {
