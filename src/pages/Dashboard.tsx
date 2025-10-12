@@ -80,6 +80,13 @@ const Dashboard = () => {
         navigate('/service-user-home', { replace: true });
         return;
       }
+      
+      const isClientAdmin = await hasRole('client_admin');
+      if (isClientAdmin) {
+        navigate('/client-admin', { replace: true });
+        return;
+      }
+      
       fetchBusinesses();
     };
     

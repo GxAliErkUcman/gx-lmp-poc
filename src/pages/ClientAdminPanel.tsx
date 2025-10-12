@@ -1,0 +1,376 @@
+import { useEffect, useState } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useAdmin } from '@/hooks/use-admin';
+import { Navigate, useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Plus, Users, Store } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
+import CreateUserDialog from '@/components/CreateUserDialog';
+import StoreOwnerAssignmentDialog from '@/components/StoreOwnerAssignmentDialog';
+import BusinessTableView from '@/components/BusinessTableView';
+import BusinessDialog from '@/components/BusinessDialog';
+import ImportDialog from '@/components/ImportDialog';
+import type { Business } from '@/types/business';
+import jasonerLogo from '@/assets/jasoner-horizontal-logo.png';
+
+interface UserProfile {
+  user_id: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  client_id: string;
+  role: string;
+}
+
+const ClientAdminPanel = () => {
+  const { user, signOut } = useAuth();
+  const { hasRole } = useAdmin();
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [users, setUsers] = useState<UserProfile[]>([]);
+  const [businesses, setBusinesses] = useState<Business[]>([]);
+  const [clientId, setClientId] = useState<string | null>(null);
+  const [clientName, setClientName] = useState<string>('');
+  const [createUserDialogOpen, setCreateUserDialogOpen] = useState(false);
+  const [storeAssignmentDialogOpen, setStoreAssignmentDialogOpen] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [businessDialogOpen, setBusinessDialogOpen] = useState(false);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [editingBusiness, setEditingBusiness] = useState<Business | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    
+    const checkRoleAndFetch = async () => {
+      const isClientAdmin = await hasRole('client_admin');
+      if (!isClientAdmin) {
+        navigate('/dashboard', { replace: true });
+        return;
+      }
+      await fetchData();
+    };
+    
+    checkRoleAndFetch();
+  }, [user]);
+
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      // Get current user's profile to find their client_id
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('client_id, clients(name)')
+        .eq('user_id', user?.id)
+        .single();
+
+      if (profileError) throw profileError;
+
+      const userClientId = profileData.client_id;
+      setClientId(userClientId);
+      setClientName((profileData as any).clients?.name || '');
+
+      // Fetch users for this client
+      const { data: usersData, error: usersError } = await supabase
+        .from('profiles')
+        .select(`
+          user_id,
+          email,
+          first_name,
+          last_name,
+          client_id,
+          user_roles(role)
+        `)
+        .eq('client_id', userClientId);
+
+      if (usersError) throw usersError;
+
+      // Transform the data to include role
+      const transformedUsers: UserProfile[] = (usersData || []).map((u: any) => ({
+        user_id: u.user_id,
+        email: u.email,
+        first_name: u.first_name,
+        last_name: u.last_name,
+        client_id: u.client_id,
+        role: u.user_roles?.[0]?.role || 'user',
+      }));
+
+      setUsers(transformedUsers);
+
+      // Fetch businesses for this client
+      const { data: businessData, error: businessError } = await supabase
+        .from('businesses')
+        .select('*')
+        .eq('client_id', userClientId)
+        .order('created_at', { ascending: false });
+
+      if (businessError) throw businessError;
+
+      setBusinesses((businessData || []) as Business[]);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load data',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleManageStores = (userId: string) => {
+    setSelectedUserId(userId);
+    setStoreAssignmentDialogOpen(true);
+  };
+
+  const handleEditBusiness = (business: Business) => {
+    setEditingBusiness(business);
+    setBusinessDialogOpen(true);
+  };
+
+  const handleDeleteBusiness = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this business?')) return;
+
+    try {
+      const { error } = await supabase.from('businesses').delete().eq('id', id);
+      if (error) throw error;
+
+      setBusinesses(businesses.filter((b) => b.id !== id));
+      toast({
+        title: 'Success',
+        description: 'Business deleted successfully',
+      });
+    } catch (error) {
+      console.error('Error deleting business:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete business',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  if (!user) {
+    return <Navigate to="/auth" replace />;
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-lg">Loading...</div>
+      </div>
+    );
+  }
+
+  const regularUsers = users.filter((u) => u.role === 'user');
+  const ownerUsers = users.filter((u) => u.role === 'store_owner');
+  const activeBusinesses = businesses.filter((b) => b.status === 'active');
+  const pendingBusinesses = businesses.filter((b) => b.status === 'pending');
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted/30 font-montserrat">
+      <header className="border-b bg-card/50 backdrop-blur-sm">
+        <div className="container mx-auto px-4 py-6 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="h-40 flex items-center justify-center">
+              <img
+                src={jasonerLogo}
+                alt="Jasoner Logo"
+                className="h-full w-auto object-contain"
+              />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold">{clientName}</h1>
+              <p className="text-sm text-muted-foreground">Client Admin Panel</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-muted-foreground">{user.email}</span>
+            <Button onClick={signOut} variant="outline" className="shadow-modern">
+              Sign Out
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      <main className="container mx-auto px-4 py-8">
+        <Tabs defaultValue="users" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="users" className="flex items-center gap-2">
+              <Users className="w-4 h-4" />
+              Users
+              <Badge variant="secondary">{users.length}</Badge>
+            </TabsTrigger>
+            <TabsTrigger value="stores" className="flex items-center gap-2">
+              <Store className="w-4 h-4" />
+              Stores
+              <Badge variant="secondary">{businesses.length}</Badge>
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="users" className="space-y-6">
+            <div className="flex justify-between items-center">
+              <div>
+                <h2 className="text-2xl font-bold">Team Management</h2>
+                <p className="text-muted-foreground">
+                  Manage users and store owners for {clientName}
+                </p>
+              </div>
+              <Button onClick={() => setCreateUserDialogOpen(true)}>
+                <Plus className="w-4 h-4 mr-2" />
+                Create User
+              </Button>
+            </div>
+
+            {/* Regular Users */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Client Users</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {regularUsers.length === 0 ? (
+                  <p className="text-muted-foreground text-center py-8">No users found</p>
+                ) : (
+                  <div className="space-y-2">
+                    {regularUsers.map((user) => (
+                      <div
+                        key={user.user_id}
+                        className="flex items-center justify-between p-4 border rounded-lg"
+                      >
+                        <div>
+                          <div className="font-medium">
+                            {user.first_name} {user.last_name}
+                          </div>
+                          <div className="text-sm text-muted-foreground">{user.email}</div>
+                        </div>
+                        <Badge variant="secondary">User</Badge>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Store Owners */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Store Owners</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {ownerUsers.length === 0 ? (
+                  <p className="text-muted-foreground text-center py-8">No owners found</p>
+                ) : (
+                  <div className="space-y-2">
+                    {ownerUsers.map((owner) => (
+                      <div
+                        key={owner.user_id}
+                        className="flex items-center justify-between p-4 border rounded-lg"
+                      >
+                        <div>
+                          <div className="font-medium">
+                            {owner.first_name} {owner.last_name}
+                          </div>
+                          <div className="text-sm text-muted-foreground">{owner.email}</div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="secondary">Owner</Badge>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleManageStores(owner.user_id)}
+                          >
+                            Manage Stores
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="stores" className="space-y-6">
+            <div className="flex justify-between items-center">
+              <div>
+                <h2 className="text-2xl font-bold">Store Management</h2>
+                <p className="text-muted-foreground">
+                  {activeBusinesses.length} active, {pendingBusinesses.length} pending
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => setImportDialogOpen(true)}>
+                  Import
+                </Button>
+                <Button onClick={() => setBusinessDialogOpen(true)}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Store
+                </Button>
+              </div>
+            </div>
+
+            {businesses.length === 0 ? (
+              <Card>
+                <CardContent className="py-16 text-center">
+                  <p className="text-muted-foreground">No stores found</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <BusinessTableView
+                businesses={businesses}
+                onEdit={handleEditBusiness}
+                onDelete={handleDeleteBusiness}
+                onMultiEdit={() => {}}
+                onMultiDelete={() => {}}
+                showValidationErrors={true}
+              />
+            )}
+          </TabsContent>
+        </Tabs>
+      </main>
+
+      <CreateUserDialog
+        open={createUserDialogOpen}
+        onOpenChange={setCreateUserDialogOpen}
+        clientId={clientId || ''}
+        onUserCreated={fetchData}
+      />
+
+      {selectedUserId && clientId && (
+        <StoreOwnerAssignmentDialog
+          open={storeAssignmentDialogOpen}
+          onOpenChange={setStoreAssignmentDialogOpen}
+          userId={selectedUserId}
+          clientId={clientId}
+          onAssigned={fetchData}
+        />
+      )}
+
+      <BusinessDialog
+        open={businessDialogOpen}
+        onOpenChange={(open) => {
+          setBusinessDialogOpen(open);
+          if (!open) {
+            setEditingBusiness(null);
+          }
+        }}
+        business={editingBusiness}
+        onSuccess={fetchData}
+        clientId={clientId || undefined}
+      />
+
+      <ImportDialog
+        open={importDialogOpen}
+        onOpenChange={setImportDialogOpen}
+        onSuccess={fetchData}
+        clientId={clientId || undefined}
+      />
+    </div>
+  );
+};
+
+export default ClientAdminPanel;
