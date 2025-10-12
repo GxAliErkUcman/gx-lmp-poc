@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Users, MapPin, Clock, Download, UserPlus, Plus, Trash2, Settings, Mail, RefreshCw, Edit, Handshake, Shield } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
 import GcpSyncButton from '@/components/GcpSyncButton';
 import { ClientCategoriesDialog } from '@/components/ClientCategoriesDialog';
@@ -40,6 +41,8 @@ interface User {
   email: string;
   client_id?: string;
   client_name?: string;
+  roles?: string[];
+  client_access_count?: number;
 }
 
 const AdminPanel = () => {
@@ -79,6 +82,7 @@ const AdminPanel = () => {
   const [categoryManagementClient, setCategoryManagementClient] = useState<Client | null>(null);
   const [roleDialogOpen, setRoleDialogOpen] = useState(false);
   const [selectedUserForRole, setSelectedUserForRole] = useState<User | null>(null);
+  const [roleFilter, setRoleFilter] = useState<string>('all');
   
   const [newUser, setNewUser] = useState({
     firstName: '',
@@ -208,9 +212,39 @@ const AdminPanel = () => {
 
       if (error) throw error;
 
+      // Fetch roles for all users
+      const { data: userRoles, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('user_id, role');
+
+      if (rolesError) throw rolesError;
+
+      // Fetch client access counts for service users
+      const { data: clientAccessData, error: accessError } = await supabase
+        .from('user_client_access')
+        .select('user_id, client_id');
+
+      if (accessError) throw accessError;
+
+      // Create maps for efficient lookup
+      const rolesMap = new Map<string, string[]>();
+      (userRoles || []).forEach(ur => {
+        if (!rolesMap.has(ur.user_id)) {
+          rolesMap.set(ur.user_id, []);
+        }
+        rolesMap.get(ur.user_id)!.push(ur.role);
+      });
+
+      const clientAccessMap = new Map<string, number>();
+      (clientAccessData || []).forEach(ca => {
+        clientAccessMap.set(ca.user_id, (clientAccessMap.get(ca.user_id) || 0) + 1);
+      });
+
       const mappedUsers = (users || []).map(user => ({
         ...user,
-        client_name: user.clients?.name || null
+        client_name: user.clients?.name || null,
+        roles: rolesMap.get(user.user_id) || [],
+        client_access_count: clientAccessMap.get(user.user_id) || 0
       }));
 
       setAllUsers(mappedUsers);
@@ -1033,10 +1067,28 @@ const AdminPanel = () => {
         <TabsContent value="users">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="w-5 h-5" />
-                User Management
-              </CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="w-5 h-5" />
+                  User Management
+                </CardTitle>
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="roleFilter" className="text-sm font-medium">Filter by Role:</Label>
+                  <Select value={roleFilter} onValueChange={setRoleFilter}>
+                    <SelectTrigger id="roleFilter" className="w-[180px]">
+                      <SelectValue placeholder="All Roles" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Roles</SelectItem>
+                      <SelectItem value="admin">Admin</SelectItem>
+                      <SelectItem value="service_user">Service User</SelectItem>
+                      <SelectItem value="client_admin">Client Admin</SelectItem>
+                      <SelectItem value="user">User</SelectItem>
+                      <SelectItem value="store_owner">Store Owner</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
               {usersLoading ? (
@@ -1049,19 +1101,51 @@ const AdminPanel = () => {
                     <TableRow>
                       <TableHead>Name</TableHead>
                       <TableHead>Email Address</TableHead>
+                      <TableHead>Roles</TableHead>
                       <TableHead>Client</TableHead>
                       <TableHead className="text-center">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {allUsers.map((user) => (
+                    {allUsers
+                      .filter(user => {
+                        if (roleFilter === 'all') return true;
+                        return user.roles?.includes(roleFilter);
+                      })
+                      .map((user) => (
                       <TableRow key={user.user_id}>
                         <TableCell className="font-medium">
                           {user.first_name} {user.last_name}
                         </TableCell>
                         <TableCell>{user.email}</TableCell>
                         <TableCell>
-                          {user.client_name || (
+                          <div className="flex flex-wrap gap-1">
+                            {user.roles && user.roles.length > 0 ? (
+                              user.roles.map(role => (
+                                <span 
+                                  key={role} 
+                                  className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-primary/10 text-primary"
+                                >
+                                  {role === 'admin' && 'Admin'}
+                                  {role === 'service_user' && 'Service User'}
+                                  {role === 'client_admin' && 'Client Admin'}
+                                  {role === 'user' && 'User'}
+                                  {role === 'store_owner' && 'Store Owner'}
+                                </span>
+                              ))
+                            ) : (
+                              <span className="text-muted-foreground italic text-sm">No roles</span>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {user.roles?.includes('service_user') && user.client_access_count && user.client_access_count > 0 ? (
+                            <span className="font-medium">
+                              {user.client_access_count} {user.client_access_count === 1 ? 'client' : 'clients'}
+                            </span>
+                          ) : user.client_name ? (
+                            user.client_name
+                          ) : (
                             <span className="text-muted-foreground italic">
                               Unassigned
                             </span>
@@ -1111,7 +1195,7 @@ const AdminPanel = () => {
                   </TableBody>
                 </Table>
               )}
-              {allUsers.length === 0 && !usersLoading && (
+              {allUsers.filter(user => roleFilter === 'all' || user.roles?.includes(roleFilter)).length === 0 && !usersLoading && (
                 <div className="text-center py-8 text-muted-foreground">
                   No users found
                 </div>
