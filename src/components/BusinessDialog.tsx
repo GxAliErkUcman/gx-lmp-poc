@@ -81,9 +81,10 @@ interface BusinessDialogProps {
   onOpenChange: (open: boolean) => void;
   business?: Business | null;
   onSuccess: () => void;
+  clientId?: string; // when provided, force new businesses to this client
 }
 
-const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDialogProps) => {
+const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: BusinessDialogProps) => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [validationErrors, setValidationErrors] = useState<any[]>([]);
@@ -369,18 +370,20 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
 
     setLoading(true);
     try {
-      // Get the user's profile to get their client_id (required for shared business model)
+      // Get the user's profile to get their default client_id (fallback for non-service flows)
       const { data: profile } = await supabase
         .from('profiles')
         .select('client_id')
         .eq('user_id', user.id)
         .maybeSingle();
 
+      const effectiveClientId = clientId || profile?.client_id;
+
       // For shared business model, client_id is required
-      if (!profile?.client_id) {
+      if (!effectiveClientId) {
         toast({
           title: "Error",
-          description: "You must be assigned to a client to create businesses. Please contact your administrator.",
+          description: "Please select a client before creating a business.",
           variant: "destructive",
         });
         setLoading(false);
@@ -429,7 +432,7 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess }: BusinessDia
         reservationsURL: data.reservationsURL || null,
         orderAheadURL: data.orderAheadURL || null,
         socialMediaUrls: socialMediaUrls.length > 0 ? socialMediaUrls : null,
-        client_id: profile.client_id, // Required for shared business model
+        client_id: effectiveClientId, // Force to selected client when provided
         status: newStatus,
       };
 
