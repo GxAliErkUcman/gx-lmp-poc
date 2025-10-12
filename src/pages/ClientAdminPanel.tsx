@@ -74,28 +74,35 @@ const ClientAdminPanel = () => {
       setClientName((profileData as any).clients?.name || '');
 
       // Fetch users for this client
-      const { data: usersData, error: usersError } = await supabase
+      const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
-        .select(`
-          user_id,
-          email,
-          first_name,
-          last_name,
-          client_id,
-          user_roles(role)
-        `)
+        .select('user_id, email, first_name, last_name, client_id')
         .eq('client_id', userClientId);
 
-      if (usersError) throw usersError;
+      if (profilesError) throw profilesError;
+
+      // Fetch roles for all users
+      const userIds = (profilesData || []).map((p) => p.user_id);
+      const { data: rolesData, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('user_id, role')
+        .in('user_id', userIds);
+
+      if (rolesError) throw rolesError;
+
+      // Create a map of user_id to role
+      const roleMap = new Map(
+        (rolesData || []).map((r) => [r.user_id, r.role])
+      );
 
       // Transform the data to include role
-      const transformedUsers: UserProfile[] = (usersData || []).map((u: any) => ({
+      const transformedUsers: UserProfile[] = (profilesData || []).map((u) => ({
         user_id: u.user_id,
         email: u.email,
         first_name: u.first_name,
         last_name: u.last_name,
         client_id: u.client_id,
-        role: u.user_roles?.[0]?.role || 'user',
+        role: roleMap.get(u.user_id) || 'user',
       }));
 
       setUsers(transformedUsers);
