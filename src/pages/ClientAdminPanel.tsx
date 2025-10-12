@@ -118,21 +118,35 @@ const ClientAdminPanel = () => {
       // Fetch service users who have access to this client
       const { data: serviceAccessData, error: serviceAccessError } = await supabase
         .from('user_client_access')
-        .select('user_id, profiles(user_id, email, first_name, last_name)')
+        .select('user_id')
         .eq('client_id', userClientId);
 
-      if (serviceAccessError) throw serviceAccessError;
+      if (serviceAccessError) {
+        console.error('Error fetching service access:', serviceAccessError);
+        setServiceUsers([]);
+      } else if (serviceAccessData && serviceAccessData.length > 0) {
+        // Fetch profiles for these service users
+        const serviceUserIds = serviceAccessData.map((sa) => sa.user_id);
+        const { data: serviceProfilesData, error: serviceProfilesError } = await supabase
+          .from('profiles')
+          .select('user_id, email, first_name, last_name')
+          .in('user_id', serviceUserIds);
 
-      const transformedServiceUsers: ServiceUser[] = (serviceAccessData || [])
-        .filter((sa: any) => sa.profiles)
-        .map((sa: any) => ({
-          user_id: sa.profiles.user_id,
-          email: sa.profiles.email,
-          first_name: sa.profiles.first_name,
-          last_name: sa.profiles.last_name,
-        }));
-
-      setServiceUsers(transformedServiceUsers);
+        if (serviceProfilesError) {
+          console.error('Error fetching service profiles:', serviceProfilesError);
+          setServiceUsers([]);
+        } else {
+          const transformedServiceUsers: ServiceUser[] = (serviceProfilesData || []).map((p) => ({
+            user_id: p.user_id,
+            email: p.email,
+            first_name: p.first_name,
+            last_name: p.last_name,
+          }));
+          setServiceUsers(transformedServiceUsers);
+        }
+      } else {
+        setServiceUsers([]);
+      }
 
       // Fetch businesses for this client
       const { data: businessData, error: businessError } = await supabase
