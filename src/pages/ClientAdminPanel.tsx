@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Users, Store } from 'lucide-react';
+import { Plus, Users, Store, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import CreateUserDialog from '@/components/CreateUserDialog';
@@ -26,12 +26,20 @@ interface UserProfile {
   role: string;
 }
 
+interface ServiceUser {
+  user_id: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+}
+
 const ClientAdminPanel = () => {
   const { user, signOut } = useAuth();
   const { hasRole } = useAdmin();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState<UserProfile[]>([]);
+  const [serviceUsers, setServiceUsers] = useState<ServiceUser[]>([]);
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [clientId, setClientId] = useState<string | null>(null);
   const [clientName, setClientName] = useState<string>('');
@@ -107,6 +115,25 @@ const ClientAdminPanel = () => {
 
       setUsers(transformedUsers);
 
+      // Fetch service users who have access to this client
+      const { data: serviceAccessData, error: serviceAccessError } = await supabase
+        .from('user_client_access')
+        .select('user_id, profiles(user_id, email, first_name, last_name)')
+        .eq('client_id', userClientId);
+
+      if (serviceAccessError) throw serviceAccessError;
+
+      const transformedServiceUsers: ServiceUser[] = (serviceAccessData || [])
+        .filter((sa: any) => sa.profiles)
+        .map((sa: any) => ({
+          user_id: sa.profiles.user_id,
+          email: sa.profiles.email,
+          first_name: sa.profiles.first_name,
+          last_name: sa.profiles.last_name,
+        }));
+
+      setServiceUsers(transformedServiceUsers);
+
       // Fetch businesses for this client
       const { data: businessData, error: businessError } = await supabase
         .from('businesses')
@@ -137,6 +164,31 @@ const ClientAdminPanel = () => {
   const handleEditBusiness = (business: Business) => {
     setEditingBusiness(business);
     setBusinessDialogOpen(true);
+  };
+
+  const handleDeleteUser = async (userId: string) => {
+    if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) return;
+
+    try {
+      const { data, error } = await supabase.functions.invoke('delete-user', {
+        body: { userId },
+      });
+
+      if (error) throw error;
+
+      setUsers(users.filter((u) => u.user_id !== userId));
+      toast({
+        title: 'Success',
+        description: 'User deleted successfully',
+      });
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete user',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleDeleteBusiness = async (id: string) => {
@@ -243,7 +295,7 @@ const ClientAdminPanel = () => {
                   <p className="text-muted-foreground text-center py-8">No users found</p>
                 ) : (
                   <div className="space-y-2">
-                    {regularUsers.map((user) => (
+                     {regularUsers.map((user) => (
                       <div
                         key={user.user_id}
                         className="flex items-center justify-between p-4 border rounded-lg"
@@ -254,7 +306,16 @@ const ClientAdminPanel = () => {
                           </div>
                           <div className="text-sm text-muted-foreground">{user.email}</div>
                         </div>
-                        <Badge variant="secondary">User</Badge>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="secondary">User</Badge>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleDeleteUser(user.user_id)}
+                          >
+                            <Trash2 className="w-4 h-4 text-destructive" />
+                          </Button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -292,7 +353,43 @@ const ClientAdminPanel = () => {
                           >
                             Manage Stores
                           </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleDeleteUser(owner.user_id)}
+                          >
+                            <Trash2 className="w-4 h-4 text-destructive" />
+                          </Button>
                         </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Service Users */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Service Users</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {serviceUsers.length === 0 ? (
+                  <p className="text-muted-foreground text-center py-8">No service users found</p>
+                ) : (
+                  <div className="space-y-2">
+                    {serviceUsers.map((serviceUser) => (
+                      <div
+                        key={serviceUser.user_id}
+                        className="flex items-center justify-between p-4 border rounded-lg bg-muted/30"
+                      >
+                        <div>
+                          <div className="font-medium">
+                            {serviceUser.first_name} {serviceUser.last_name}
+                          </div>
+                          <div className="text-sm text-muted-foreground">{serviceUser.email}</div>
+                        </div>
+                        <Badge>Service User</Badge>
                       </div>
                     ))}
                   </div>

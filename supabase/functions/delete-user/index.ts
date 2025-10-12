@@ -36,20 +36,67 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error('Authentication failed');
     }
 
-    // Check if user is admin
-    const { data: profile, error: profileError } = await supabaseAdmin
-      .from('profiles')
+    // Check if user is admin or client_admin
+    const { data: roles, error: rolesError } = await supabaseAdmin
+      .from('user_roles')
       .select('role')
-      .eq('user_id', user.id)
-      .single();
+      .eq('user_id', user.id);
 
-    if (!profile || profile.role !== 'admin') {
+    if (rolesError) {
+      throw new Error('Failed to fetch user roles');
+    }
+
+    const userRoles = roles?.map(r => r.role) || [];
+    const isAdmin = userRoles.includes('admin');
+    const isClientAdmin = userRoles.includes('client_admin');
+
+    if (!isAdmin && !isClientAdmin) {
       throw new Error('Insufficient permissions');
     }
 
     const { userId }: DeleteUserRequest = await req.json();
 
     console.log('Deleting user:', userId);
+
+    // Check the role of the user being deleted
+    const { data: targetRoles, error: targetRolesError } = await supabaseAdmin
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', userId);
+
+    if (targetRolesError) {
+      throw new Error('Failed to fetch target user roles');
+    }
+
+    const targetUserRoles = targetRoles?.map(r => r.role) || [];
+    
+    // Prevent deletion of service users
+    if (targetUserRoles.includes('service_user')) {
+      throw new Error('Cannot delete service users');
+    }
+
+    // If the requester is a client_admin, verify they can only delete users in their client
+    if (isClientAdmin && !isAdmin) {
+      const { data: requesterProfile, error: requesterError } = await supabaseAdmin
+        .from('profiles')
+        .select('client_id')
+        .eq('user_id', user.id)
+        .single();
+
+      const { data: targetProfile, error: targetError } = await supabaseAdmin
+        .from('profiles')
+        .select('client_id')
+        .eq('user_id', userId)
+        .single();
+
+      if (requesterError || targetError || !requesterProfile || !targetProfile) {
+        throw new Error('Failed to verify client permissions');
+      }
+
+      if (requesterProfile.client_id !== targetProfile.client_id) {
+        throw new Error('Cannot delete users from other clients');
+      }
+    }
 
     // Delete the user from auth.users
     const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(userId);
