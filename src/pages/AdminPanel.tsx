@@ -631,16 +631,51 @@ const AdminPanel = () => {
     try {
       setUserManagementLoading(true);
 
-      // Get all users (admin users can now see all profiles)
-      const { data: allUsers, error: usersError } = await supabase
+      // 1) Fetch all profiles (admins can view all)
+      const { data: profilesData, error: usersError } = await supabase
         .from('profiles')
         .select('user_id, first_name, last_name, email, client_id');
 
       if (usersError) throw usersError;
 
-      // Separate users assigned to this client vs available users
-      const assigned = (allUsers || []).filter(u => u.client_id === clientId);
-      const available = (allUsers || []).filter(u => u.client_id !== clientId);
+      const userIds = (profilesData || []).map(u => u.user_id);
+
+      // 2) Fetch roles for these users
+      const { data: rolesData, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('user_id, role')
+        .in('user_id', userIds);
+
+      if (rolesError) throw rolesError;
+
+      const rolesMap = new Map<string, string[]>();
+      (rolesData || []).forEach(r => {
+        const arr = rolesMap.get(r.user_id) || [];
+        arr.push(r.role);
+        rolesMap.set(r.user_id, arr);
+      });
+
+      // 3) Fetch service-user access for this client
+      const { data: accessData, error: accessError } = await supabase
+        .from('user_client_access')
+        .select('user_id')
+        .eq('client_id', clientId);
+
+      if (accessError) throw accessError;
+
+      const serviceUserIds = new Set((accessData || []).map(a => a.user_id));
+      const profileAssignedIds = new Set((profilesData || []).filter(u => u.client_id === clientId).map(u => u.user_id));
+
+      // Users assigned to this client are union of profile assignments and service-user access
+      const assignedIds = new Set<string>([...profileAssignedIds, ...serviceUserIds]);
+
+      const assigned = (profilesData || [])
+        .filter(u => assignedIds.has(u.user_id))
+        .map(u => ({ ...u, roles: rolesMap.get(u.user_id) || [] }));
+
+      const available = (profilesData || [])
+        .filter(u => !assignedIds.has(u.user_id))
+        .map(u => ({ ...u, roles: rolesMap.get(u.user_id) || [] }));
 
       setClientUsers(assigned);
       setAvailableUsers(available);
@@ -674,7 +709,10 @@ const AdminPanel = () => {
         // For service users, add to user_client_access instead of updating profile
         const { error } = await supabase
           .from('user_client_access')
-          .insert({ user_id: userId, client_id: selectedClient.id });
+          .upsert(
+            { user_id: userId, client_id: selectedClient.id },
+            { onConflict: 'user_id,client_id' }
+          );
 
         if (error) throw error;
 
@@ -708,7 +746,6 @@ const AdminPanel = () => {
       });
     }
   };
-
   const removeUserFromClient = async (userId: string) => {
     try {
       // Check if user is a service user
@@ -1336,7 +1373,7 @@ const AdminPanel = () => {
                                 {user.first_name} {user.last_name}
                               </div>
                               <div className="text-sm text-muted-foreground">{user.email}</div>
-                              {user.client_id && (
+                              {user.client_id && !(user.roles?.includes('service_user')) && (
                                 <div className="text-xs text-orange-600 mt-1 flex items-center">
                                   <Clock className="w-3 h-3 mr-1" />
                                   Currently assigned to another client
@@ -1349,7 +1386,7 @@ const AdminPanel = () => {
                               className="ml-4"
                             >
                               <UserPlus className="w-4 h-4 mr-2" />
-                              {user.client_id ? 'Reassign' : 'Assign'}
+                              {user.roles?.includes('service_user') ? 'Grant Access' : (user.client_id ? 'Reassign' : 'Assign')}
                             </Button>
                           </div>
                         ))}
