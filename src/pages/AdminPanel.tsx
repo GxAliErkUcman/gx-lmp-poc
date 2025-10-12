@@ -10,11 +10,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Users, MapPin, Clock, Download, UserPlus, Plus, Trash2, Settings, Mail, RefreshCw, Edit, Handshake } from 'lucide-react';
+import { Loader2, Users, MapPin, Clock, Download, UserPlus, Plus, Trash2, Settings, Mail, RefreshCw, Edit, Handshake, Shield } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useNavigate } from 'react-router-dom';
 import GcpSyncButton from '@/components/GcpSyncButton';
 import { ClientCategoriesDialog } from '@/components/ClientCategoriesDialog';
+import { RoleChangeDialog } from '@/components/RoleChangeDialog';
 
 
 interface Client {
@@ -76,6 +77,8 @@ const AdminPanel = () => {
   const [editLscId, setEditLscId] = useState('');
   const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
   const [categoryManagementClient, setCategoryManagementClient] = useState<Client | null>(null);
+  const [roleDialogOpen, setRoleDialogOpen] = useState(false);
+  const [selectedUserForRole, setSelectedUserForRole] = useState<User | null>(null);
   
   const [newUser, setNewUser] = useState({
     firstName: '',
@@ -1069,6 +1072,17 @@ const AdminPanel = () => {
                             <Button
                               size="sm"
                               variant="outline"
+                              onClick={() => {
+                                setSelectedUserForRole(user);
+                                setRoleDialogOpen(true);
+                              }}
+                            >
+                              <Shield className="w-4 h-4" />
+                              Roles
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
                               onClick={() => handleSendPasswordRecovery(user.email)}
                             >
                               <Mail className="w-4 h-4" />
@@ -1107,7 +1121,21 @@ const AdminPanel = () => {
         </TabsContent>
       </Tabs>
 
-        {/* User Management Dialog */}
+      {/* Role Change Dialog */}
+      {selectedUserForRole && (
+        <RoleChangeDialog
+          open={roleDialogOpen}
+          onOpenChange={setRoleDialogOpen}
+          userId={selectedUserForRole.user_id}
+          userName={`${selectedUserForRole.first_name} ${selectedUserForRole.last_name}`}
+          onRolesUpdated={() => {
+            fetchAllUsers();
+            fetchData();
+          }}
+        />
+      )}
+
+      {/* User Management Dialog */}
         <Dialog open={isUserManagementDialogOpen} onOpenChange={setIsUserManagementDialogOpen}>
           <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
             <DialogHeader>
