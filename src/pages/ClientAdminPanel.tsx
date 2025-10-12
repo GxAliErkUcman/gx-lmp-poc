@@ -36,6 +36,7 @@ interface ServiceUser {
 const ClientAdminPanel = () => {
   const { user, signOut } = useAuth();
   const { hasRole } = useAdmin();
+  const userId = user?.id;
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState<UserProfile[]>([]);
@@ -239,7 +240,7 @@ const ClientAdminPanel = () => {
     );
   }
 
-  const regularUsers = users.filter((u) => u.role === 'user');
+  const regularUsers = users.filter((u) => u.role === 'user' || u.role === 'client_admin');
   const ownerUsers = users.filter((u) => u.role === 'store_owner');
   const activeBusinesses = businesses.filter((b) => b.status === 'active');
   const pendingBusinesses = businesses.filter((b) => b.status === 'pending');
@@ -321,14 +322,18 @@ const ClientAdminPanel = () => {
                           <div className="text-sm text-muted-foreground">{user.email}</div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Badge variant="secondary">User</Badge>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleDeleteUser(user.user_id)}
-                          >
-                            <Trash2 className="w-4 h-4 text-destructive" />
-                          </Button>
+                          <Badge variant="secondary">
+                            {user.role === 'client_admin' ? 'Client Admin' : 'User'}
+                          </Badge>
+                          {user.user_id !== userId && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleDeleteUser(user.user_id)}
+                            >
+                              <Trash2 className="w-4 h-4 text-destructive" />
+                            </Button>
+                          )}
                         </div>
                       </div>
                     ))}
