@@ -424,11 +424,13 @@ const ClientDashboard = () => {
         onOpenChange={setBusinessDialogOpen}
         business={editingBusiness}
         onSuccess={fetchBusinesses}
+        clientId={selectedClientId}
       />
       <ImportDialog
         open={importDialogOpen}
         onOpenChange={setImportDialogOpen}
         onSuccess={fetchBusinesses}
+        clientId={selectedClientId}
       />
       <MultiEditDialog
         open={multiEditDialogOpen}
