@@ -17,6 +17,7 @@ import { useNavigate } from 'react-router-dom';
 import GcpSyncButton from '@/components/GcpSyncButton';
 import { ClientCategoriesDialog } from '@/components/ClientCategoriesDialog';
 import { RoleChangeDialog } from '@/components/RoleChangeDialog';
+import { UserReassignDialog } from '@/components/UserReassignDialog';
 
 
 interface Client {
@@ -83,6 +84,8 @@ const AdminPanel = () => {
   const [roleDialogOpen, setRoleDialogOpen] = useState(false);
   const [selectedUserForRole, setSelectedUserForRole] = useState<User | null>(null);
   const [roleFilter, setRoleFilter] = useState<string>('all');
+  const [reassignDialogOpen, setReassignDialogOpen] = useState(false);
+  const [selectedUserForReassign, setSelectedUserForReassign] = useState<User | null>(null);
   
   const [newUser, setNewUser] = useState({
     firstName: '',
@@ -323,44 +326,9 @@ const AdminPanel = () => {
     }
   };
 
-  const handleReassignUser = async (userId: string, userName: string) => {
-    const clientId = window.prompt(`Enter new client ID for ${userName}:`);
-    if (!clientId) return;
-
-    // Check if client exists
-    const clientExists = clientOptions.find(c => c.id === clientId);
-    if (!clientExists) {
-      toast({
-        title: "Error",
-        description: "Client ID not found.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ client_id: clientId })
-        .eq('user_id', userId);
-
-      if (error) throw error;
-
-      toast({
-        title: "User Reassigned",
-        description: `${userName} has been reassigned to ${clientExists.name}.`,
-      });
-
-      fetchAllUsers();
-      fetchData();
-    } catch (error: any) {
-      console.error('Error reassigning user:', error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to reassign user.",
-        variant: "destructive"
-      });
-    }
+  const handleReassignUser = (user: User) => {
+    setSelectedUserForReassign(user);
+    setReassignDialogOpen(true);
   };
 
   const handleEditClient = async (currentClientId: string) => {
@@ -692,17 +660,42 @@ const AdminPanel = () => {
     if (!selectedClient) return;
 
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ client_id: selectedClient.id })
+      // Check if user is a service user
+      const { data: roles, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('role')
         .eq('user_id', userId);
 
-      if (error) throw error;
+      if (rolesError) throw rolesError;
 
-      toast({
-        title: "User Assigned",
-        description: "User successfully assigned to client. Previous assignment removed.",
-      });
+      const isServiceUser = roles?.some(r => r.role === 'service_user');
+
+      if (isServiceUser) {
+        // For service users, add to user_client_access instead of updating profile
+        const { error } = await supabase
+          .from('user_client_access')
+          .insert({ user_id: userId, client_id: selectedClient.id });
+
+        if (error) throw error;
+
+        toast({
+          title: "Client Access Added",
+          description: "Service user can now access this client.",
+        });
+      } else {
+        // For regular users, update the client_id in profiles (replaces previous assignment)
+        const { error } = await supabase
+          .from('profiles')
+          .update({ client_id: selectedClient.id })
+          .eq('user_id', userId);
+
+        if (error) throw error;
+
+        toast({
+          title: "User Assigned",
+          description: "User successfully assigned to client.",
+        });
+      }
 
       await fetchUsersForClient(selectedClient.id);
       fetchData(); // Refresh client stats
@@ -710,7 +703,7 @@ const AdminPanel = () => {
       console.error('Error assigning user:', error);
       toast({
         title: "Error",
-        description: "Failed to assign user to client.",
+        description: error.message || "Failed to assign user to client.",
         variant: "destructive"
       });
     }
@@ -718,12 +711,34 @@ const AdminPanel = () => {
 
   const removeUserFromClient = async (userId: string) => {
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ client_id: null })
+      // Check if user is a service user
+      const { data: roles, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('role')
         .eq('user_id', userId);
 
-      if (error) throw error;
+      if (rolesError) throw rolesError;
+
+      const isServiceUser = roles?.some(r => r.role === 'service_user');
+
+      if (isServiceUser) {
+        // For service users, remove from user_client_access
+        const { error } = await supabase
+          .from('user_client_access')
+          .delete()
+          .eq('user_id', userId)
+          .eq('client_id', selectedClient!.id);
+
+        if (error) throw error;
+      } else {
+        // For regular users, set client_id to null
+        const { error } = await supabase
+          .from('profiles')
+          .update({ client_id: null })
+          .eq('user_id', userId);
+
+        if (error) throw error;
+      }
 
       toast({
         title: "User Removed",
@@ -1175,7 +1190,7 @@ const AdminPanel = () => {
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => handleReassignUser(user.user_id, `${user.first_name} ${user.last_name}`)}
+                              onClick={() => handleReassignUser(user)}
                             >
                               <RefreshCw className="w-4 h-4" />
                               Reassign
@@ -1213,6 +1228,21 @@ const AdminPanel = () => {
           userId={selectedUserForRole.user_id}
           userName={`${selectedUserForRole.first_name} ${selectedUserForRole.last_name}`}
           onRolesUpdated={() => {
+            fetchAllUsers();
+            fetchData();
+          }}
+        />
+      )}
+
+      {/* User Reassign Dialog */}
+      {selectedUserForReassign && (
+        <UserReassignDialog
+          open={reassignDialogOpen}
+          onOpenChange={setReassignDialogOpen}
+          userId={selectedUserForReassign.user_id}
+          userName={`${selectedUserForReassign.first_name} ${selectedUserForReassign.last_name}`}
+          userRoles={selectedUserForReassign.roles || []}
+          onReassigned={() => {
             fetchAllUsers();
             fetchData();
           }}
