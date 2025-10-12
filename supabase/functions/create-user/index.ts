@@ -11,6 +11,8 @@ interface CreateUserRequest {
   firstName: string;
   lastName: string;
   clientId: string;
+  role?: 'user' | 'store_owner';
+  storeIds?: string[];
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -66,9 +68,9 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
-    const { email, firstName, lastName, clientId }: CreateUserRequest = await req.json();
+    const { email, firstName, lastName, clientId, role, storeIds }: CreateUserRequest = await req.json();
 
-    console.log('Creating user:', { email, firstName, lastName, clientId });
+    console.log('Creating user:', { email, firstName, lastName, clientId, role, storeCount: storeIds?.length || 0 });
 
     // Create user using Supabase's built-in invite functionality
     const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
@@ -83,6 +85,54 @@ const handler = async (req: Request): Promise<Response> => {
     if (createError) {
       console.error('Error creating user:', createError);
       throw createError;
+    }
+
+    const newUserId = newUser.user?.id;
+    if (!newUserId) {
+      throw new Error('User ID missing after invite');
+    }
+
+    // Ensure profile exists (insert if missing)
+    const { data: existingProfile } = await supabaseAdmin
+      .from('profiles')
+      .select('user_id')
+      .eq('user_id', newUserId)
+      .maybeSingle();
+
+    if (!existingProfile) {
+      const { error: profileInsertError } = await supabaseAdmin
+        .from('profiles')
+        .insert({
+          user_id: newUserId,
+          first_name: firstName,
+          last_name: lastName,
+          email,
+          client_id: clientId,
+        });
+      if (profileInsertError) {
+        console.error('Error creating profile:', profileInsertError);
+      }
+    }
+
+    // Assign role if provided
+    if (role) {
+      const { error: roleInsertError } = await supabaseAdmin
+        .from('user_roles')
+        .insert({ user_id: newUserId, role });
+      if (roleInsertError) {
+        console.error('Error assigning role:', roleInsertError);
+      }
+    }
+
+    // Assign store access if owner with storeIds
+    if (role === 'store_owner' && storeIds && storeIds.length > 0) {
+      const accessRows = storeIds.map((business_id) => ({ user_id: newUserId, business_id }));
+      const { error: accessError } = await supabaseAdmin
+        .from('store_owner_access')
+        .insert(accessRows, { defaultToNull: false });
+      if (accessError) {
+        console.error('Error assigning store access:', accessError);
+      }
     }
 
     console.log('User created successfully:', newUser);
