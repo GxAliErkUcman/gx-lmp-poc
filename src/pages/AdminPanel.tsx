@@ -201,8 +201,7 @@ const AdminPanel = () => {
           clients (
             name
           )
-        `)
-        .neq('role', 'admin');
+        `);
 
       if (error) throw error;
 
@@ -630,8 +629,7 @@ const AdminPanel = () => {
       // Get all users (admin users can now see all profiles)
       const { data: allUsers, error: usersError } = await supabase
         .from('profiles')
-        .select('user_id, first_name, last_name, email, client_id')
-        .neq('role', 'admin'); // Exclude admin users
+        .select('user_id, first_name, last_name, email, client_id');
 
       if (usersError) throw usersError;
 

@@ -267,7 +267,6 @@ export type Database = {
           first_name: string
           id: string
           last_name: string
-          role: string
           updated_at: string
           user_id: string
         }
@@ -278,7 +277,6 @@ export type Database = {
           first_name: string
           id?: string
           last_name: string
-          role?: string
           updated_at?: string
           user_id: string
         }
@@ -289,7 +287,6 @@ export type Database = {
           first_name?: string
           id?: string
           last_name?: string
-          role?: string
           updated_at?: string
           user_id?: string
         }
@@ -303,11 +300,104 @@ export type Database = {
           },
         ]
       }
+      store_owner_access: {
+        Row: {
+          business_id: string
+          created_at: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          business_id: string
+          created_at?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          business_id?: string
+          created_at?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_owner_access_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_client_access: {
+        Row: {
+          client_id: string
+          created_at: string | null
+          id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string | null
+          id?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string | null
+          id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_client_access_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      can_access_business: {
+        Args: { _business_id: string; _user_id: string }
+        Returns: boolean
+      }
+      can_access_client: {
+        Args: { _client_id: string; _user_id: string }
+        Returns: boolean
+      }
       generate_store_code: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -323,12 +413,27 @@ export type Database = {
           user_count: number
         }[]
       }
+      get_user_accessible_clients: {
+        Args: { _user_id: string }
+        Returns: {
+          client_id: string
+        }[]
+      }
       get_user_client_id: {
         Args: Record<PropertyKey, never>
         Returns: string
       }
-      is_admin_user: {
-        Args: Record<PropertyKey, never>
+      get_user_roles: {
+        Args: { _user_id: string }
+        Returns: {
+          role: Database["public"]["Enums"]["app_role"]
+        }[]
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
         Returns: boolean
       }
       is_business_complete: {
@@ -343,7 +448,12 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      app_role:
+        | "admin"
+        | "service_user"
+        | "client_admin"
+        | "user"
+        | "store_owner"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -470,6 +580,14 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: [
+        "admin",
+        "service_user",
+        "client_admin",
+        "user",
+        "store_owner",
+      ],
+    },
   },
 } as const
