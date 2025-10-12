@@ -38,15 +38,32 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error('Unauthorized');
     }
 
-    // Check if user has admin role (you might want to implement this check)
-    const { data: profile } = await supabaseAdmin
-      .from('profiles')
+    // Check if user has admin or client_admin role
+    const { data: userRoles } = await supabaseAdmin
+      .from('user_roles')
       .select('role')
-      .eq('user_id', user.id)
-      .single();
+      .eq('user_id', user.id);
 
-    if (!profile || profile.role !== 'admin') {
+    const hasAdminRole = userRoles?.some(r => r.role === 'admin');
+    const hasClientAdminRole = userRoles?.some(r => r.role === 'client_admin');
+
+    if (!hasAdminRole && !hasClientAdminRole) {
       throw new Error('Insufficient permissions');
+    }
+
+    // If client_admin, verify they are creating user for their own client
+    if (hasClientAdminRole && !hasAdminRole) {
+      const { data: adminProfile } = await supabaseAdmin
+        .from('profiles')
+        .select('client_id')
+        .eq('user_id', user.id)
+        .single();
+
+      const requestedClientId = (await req.clone().json()).clientId;
+
+      if (!adminProfile || adminProfile.client_id !== requestedClientId) {
+        throw new Error('Cannot create users for other clients');
+      }
     }
 
     const { email, firstName, lastName, clientId }: CreateUserRequest = await req.json();
