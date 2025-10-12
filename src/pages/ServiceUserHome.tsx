@@ -90,7 +90,7 @@ const ServiceUserHome = () => {
         const active_locations = businessData.filter(b => b.status === 'active').length;
         const pending_locations = businessData.filter(b => b.status === 'pending').length;
 
-        // Fetch users (client_admin and below)
+        // Fetch users from profiles (client users)
         const { data: profilesData, error: profilesError } = await supabase
           .from('profiles')
           .select('user_id, first_name, last_name, email')
@@ -98,26 +98,56 @@ const ServiceUserHome = () => {
 
         if (profilesError) throw profilesError;
 
+        // Fetch service users assigned via user_client_access
+        const { data: serviceAccessData, error: serviceAccessError } = await supabase
+          .from('user_client_access')
+          .select('user_id')
+          .eq('client_id', client.id);
+
+        if (serviceAccessError) throw serviceAccessError;
+
+        const serviceUserIds = serviceAccessData.map(sa => sa.user_id);
+        
+        // Fetch service user profiles
+        let serviceUsersData: any[] = [];
+        if (serviceUserIds.length > 0) {
+          const { data: serviceProfiles, error: serviceProfilesError } = await supabase
+            .from('profiles')
+            .select('user_id, first_name, last_name, email')
+            .in('user_id', serviceUserIds);
+
+          if (serviceProfilesError) throw serviceProfilesError;
+          serviceUsersData = serviceProfiles || [];
+        }
+
+        // Combine all user IDs (deduplicate)
+        const allUserIds = [...new Set([
+          ...profilesData.map(p => p.user_id),
+          ...serviceUsersData.map(p => p.user_id)
+        ])];
+
         // For each user, fetch their roles
         const usersWithRoles = await Promise.all(
-          profilesData.map(async (profile) => {
+          allUserIds.map(async (userId) => {
+            // Find profile from either source
+            const profile = profilesData.find(p => p.user_id === userId) || 
+                          serviceUsersData.find(p => p.user_id === userId);
+            
+            if (!profile) return null;
+
             const { data: rolesData, error: rolesError } = await supabase
               .from('user_roles')
               .select('role')
-              .eq('user_id', profile.user_id);
+              .eq('user_id', userId);
 
             if (rolesError) throw rolesError;
 
             const roles = rolesData.map(r => r.role);
-            // Only include client_admin, user, and store_owner
-            const isRelevantUser = roles.some(r => 
-              ['client_admin', 'user', 'store_owner'].includes(r)
-            );
 
-            return isRelevantUser ? {
+            return {
               ...profile,
               roles
-            } : null;
+            };
           })
         );
 
@@ -254,27 +284,71 @@ const ServiceUserHome = () => {
                       <Badge variant="outline">{client.users.length}</Badge>
                     </div>
                     {client.users.length > 0 ? (
-                      <div className="space-y-2 max-h-48 overflow-y-auto">
-                        {client.users.map((user) => (
-                          <div
-                            key={user.user_id}
-                            className="p-2 rounded-lg bg-muted/50 text-sm"
-                          >
-                            <div className="font-medium">
-                              {user.first_name} {user.last_name}
+                      <div className="space-y-3 max-h-64 overflow-y-auto">
+                        {/* Service Team Section */}
+                        {(() => {
+                          const serviceUsers = client.users.filter(u => 
+                            u.roles.includes('service_user')
+                          );
+                          return serviceUsers.length > 0 && (
+                            <div>
+                              <div className="text-xs font-semibold text-muted-foreground mb-1.5">
+                                Service Team
+                              </div>
+                              <div className="space-y-1.5">
+                                {serviceUsers.map((user) => (
+                                  <div
+                                    key={user.user_id}
+                                    className="p-2 rounded-lg bg-muted/50 text-sm"
+                                  >
+                                    <div className="font-medium">
+                                      {user.first_name} {user.last_name}
+                                    </div>
+                                    <div className="text-xs text-muted-foreground truncate">
+                                      {user.email}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
                             </div>
-                            <div className="text-xs text-muted-foreground truncate">
-                              {user.email}
+                          );
+                        })()}
+                        
+                        {/* Client Users Section */}
+                        {(() => {
+                          const clientUsers = client.users.filter(u => 
+                            !u.roles.includes('service_user')
+                          );
+                          return clientUsers.length > 0 && (
+                            <div>
+                              <div className="text-xs font-semibold text-muted-foreground mb-1.5">
+                                Client
+                              </div>
+                              <div className="space-y-1.5">
+                                {clientUsers.map((user) => (
+                                  <div
+                                    key={user.user_id}
+                                    className="p-2 rounded-lg bg-muted/50 text-sm"
+                                  >
+                                    <div className="font-medium">
+                                      {user.first_name} {user.last_name}
+                                    </div>
+                                    <div className="text-xs text-muted-foreground truncate">
+                                      {user.email}
+                                    </div>
+                                    <div className="flex gap-1 mt-1 flex-wrap">
+                                      {user.roles.map((role) => (
+                                        <Badge key={role} variant="secondary" className="text-xs">
+                                          {role.replace('_', ' ')}
+                                        </Badge>
+                                      ))}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
                             </div>
-                            <div className="flex gap-1 mt-1 flex-wrap">
-                              {user.roles.map((role) => (
-                                <Badge key={role} variant="secondary" className="text-xs">
-                                  {role.replace('_', ' ')}
-                                </Badge>
-                              ))}
-                            </div>
-                          </div>
-                        ))}
+                          );
+                        })()}
                       </div>
                     ) : (
                       <p className="text-xs text-muted-foreground">No team members</p>
