@@ -695,6 +695,8 @@ const AdminPanel = () => {
     if (!selectedClient) return;
 
     try {
+      setUserManagementLoading(true);
+      
       // Check if user is a service user
       const { data: roles, error: rolesError } = await supabase
         .from('user_roles')
@@ -735,6 +737,9 @@ const AdminPanel = () => {
         });
       }
 
+      // Small delay to ensure database consistency
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       await fetchUsersForClient(selectedClient.id);
       fetchData(); // Refresh client stats
     } catch (error: any) {
@@ -744,10 +749,16 @@ const AdminPanel = () => {
         description: error.message || "Failed to assign user to client.",
         variant: "destructive"
       });
+    } finally {
+      setUserManagementLoading(false);
     }
   };
   const removeUserFromClient = async (userId: string) => {
+    if (!selectedClient) return;
+    
     try {
+      setUserManagementLoading(true);
+      
       // Check if user is a service user
       const { data: roles, error: rolesError } = await supabase
         .from('user_roles')
@@ -764,7 +775,7 @@ const AdminPanel = () => {
           .from('user_client_access')
           .delete()
           .eq('user_id', userId)
-          .eq('client_id', selectedClient!.id);
+          .eq('client_id', selectedClient.id);
 
         if (error) throw error;
       } else {
@@ -777,20 +788,27 @@ const AdminPanel = () => {
         if (error) throw error;
       }
 
+      // Small delay to ensure database consistency
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Refresh the user lists
+      await fetchUsersForClient(selectedClient.id);
+      
       toast({
         title: "User Removed",
         description: "User removed from client.",
       });
 
-      await fetchUsersForClient(selectedClient!.id);
       fetchData(); // Refresh client stats
     } catch (error: any) {
       console.error('Error removing user:', error);
       toast({
         title: "Error",
-        description: "Failed to remove user from client.",
+        description: error.message || "Failed to remove user from client.",
         variant: "destructive"
       });
+    } finally {
+      setUserManagementLoading(false);
     }
   };
 
