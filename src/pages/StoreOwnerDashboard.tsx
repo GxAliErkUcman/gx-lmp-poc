@@ -1,69 +1,71 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useAdmin } from '@/hooks/use-admin';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Plus, Upload, Edit, Trash2, Grid, Table2, Settings } from 'lucide-react';
+import { Grid, Table2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import type { Database } from '@/integrations/supabase/types';
 import { toast } from '@/hooks/use-toast';
 import BusinessDialog from '@/components/BusinessDialog';
-import ImportDialog from '@/components/ImportDialog';
 import BusinessTableView from '@/components/BusinessTableView';
 import MultiEditDialog from '@/components/MultiEditDialog';
 import type { Business } from '@/types/business';
-import SettingsDialog from '@/components/SettingsDialog';
 import DeleteConfirmationDialog from '@/components/DeleteConfirmationDialog';
 import jasonerLogo from '@/assets/jasoner-horizontal-logo.png';
 
-const Dashboard = () => {
+const StoreOwnerDashboard = () => {
   const { user, signOut } = useAuth();
-  const { hasRole } = useAdmin();
-  const navigate = useNavigate();
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [loading, setLoading] = useState(true);
   const [businessDialogOpen, setBusinessDialogOpen] = useState(false);
-  const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [editingBusiness, setEditingBusiness] = useState<Business | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('table');
   const [multiEditDialogOpen, setMultiEditDialogOpen] = useState(false);
   const [selectedBusinessIds, setSelectedBusinessIds] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState<'active' | 'pending'>('active');
   const [userLogo, setUserLogo] = useState<string | null>(null);
-  const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
   const [deleteConfirmDialogOpen, setDeleteConfirmDialogOpen] = useState(false);
   const [businessesToDelete, setBusinessesToDelete] = useState<string[]>([]);
 
-  const handleLogoUploaded = () => {
-    // Refresh businesses to get updated logo
-    fetchBusinesses();
-  };
-
-// Auth redirect handled below after hooks
-
   const fetchBusinesses = async () => {
     try {
+      // Fetch businesses that the store owner has access to via store_owner_access table
+      const { data: accessData, error: accessError } = await supabase
+        .from('store_owner_access')
+        .select('business_id')
+        .eq('user_id', user?.id);
+
+      if (accessError) throw accessError;
+
+      const businessIds = accessData?.map(a => a.business_id) || [];
+
+      if (businessIds.length === 0) {
+        setBusinesses([]);
+        setLoading(false);
+        return;
+      }
+
       const { data, error } = await supabase
         .from('businesses')
         .select('*')
+        .in('id', businessIds)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
       const businessList = (data || []) as Business[];
       setBusinesses(businessList);
       
-      // Get user's logo from any business (since it's account-wide)
+      // Get user's logo from any business
       const logoUrl = businessList.length > 0 ? businessList[0].logoPhoto : null;
       setUserLogo(logoUrl);
     } catch (error) {
       console.error('Error fetching businesses:', error);
       toast({
         title: "Error",
-        description: "Failed to load businesses",
+        description: "Failed to load your locations",
         variant: "destructive",
       });
     } finally {
@@ -73,30 +75,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     if (!user) return;
-    
-    const checkRoleAndRedirect = async () => {
-      const isServiceUser = await hasRole('service_user');
-      if (isServiceUser) {
-        navigate('/service-user-home', { replace: true });
-        return;
-      }
-      
-      const isClientAdmin = await hasRole('client_admin');
-      if (isClientAdmin) {
-        navigate('/client-admin', { replace: true });
-        return;
-      }
-      
-      const isStoreOwner = await hasRole('store_owner');
-      if (isStoreOwner) {
-        navigate('/store-owner', { replace: true });
-        return;
-      }
-      
-      fetchBusinesses();
-    };
-    
-    checkRoleAndRedirect();
+    fetchBusinesses();
   }, [user]);
 
   if (!user) {
@@ -104,7 +83,7 @@ const Dashboard = () => {
   }
 
   const handleDeleteBusiness = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this business?')) return;
+    if (!confirm('Are you sure you want to delete this location?')) return;
 
     try {
       const { error } = await supabase
@@ -117,13 +96,13 @@ const Dashboard = () => {
       setBusinesses(businesses.filter(b => b.id !== id));
       toast({
         title: "Success",
-        description: "Business deleted successfully",
+        description: "Location deleted successfully",
       });
     } catch (error) {
       console.error('Error deleting business:', error);
       toast({
         title: "Error",
-        description: "Failed to delete business",
+        description: "Failed to delete location",
         variant: "destructive",
       });
     }
@@ -156,7 +135,7 @@ const Dashboard = () => {
       setBusinesses(businesses.filter(b => !businessesToDelete.includes(b.id)));
       toast({
         title: "Success",
-        description: `${businessesToDelete.length} businesses deleted successfully`,
+        description: `${businessesToDelete.length} locations deleted successfully`,
       });
       
       setBusinessesToDelete([]);
@@ -164,7 +143,7 @@ const Dashboard = () => {
       console.error('Error deleting businesses:', error);
       toast({
         title: "Error",
-        description: "Failed to delete businesses",
+        description: "Failed to delete locations",
         variant: "destructive",
       });
     }
@@ -176,7 +155,7 @@ const Dashboard = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg">Loading your businesses...</div>
+        <div className="text-lg">Loading your locations...</div>
       </div>
     );
   }
@@ -240,55 +219,13 @@ const Dashboard = () => {
                 <Table2 className="w-4 h-4" />
               </Button>
             </div>
-            
-            {/* Action Buttons - Symmetric Layout */}
-            <div className="flex items-center gap-2">
-              <Button 
-                onClick={() => setSettingsDialogOpen(true)}
-                variant="outline"
-                size="default"
-                className="shadow-modern"
-              >
-                <Settings className="w-4 h-4 mr-2" />
-                Account Wide Settings
-              </Button>
-              <Button 
-                onClick={() => setImportDialogOpen(true)}
-                variant="outline"
-                size="default"
-                className="shadow-modern"
-              >
-                <Upload className="w-4 h-4 mr-2" />
-                Import
-              </Button>
-              <Button 
-                onClick={() => setBusinessDialogOpen(true)}
-                className="shadow-modern bg-gradient-primary hover:opacity-90"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Add Business
-              </Button>
-            </div>
           </div>
         </div>
 
         {businesses.length === 0 ? (
           <Card className="shadow-card">
             <CardContent className="py-16 text-center">
-              <div className="w-16 h-16 mx-auto mb-4 bg-gradient-primary rounded-full flex items-center justify-center">
-                <Plus className="w-8 h-8 text-primary-foreground" />
-              </div>
-              <div className="text-muted-foreground mb-6 space-y-1">
-                <p className="text-lg font-medium">No businesses found</p>
-                <p>Get started by adding your first business profile.</p>
-              </div>
-              <Button 
-                onClick={() => setBusinessDialogOpen(true)}
-                className="shadow-modern bg-gradient-primary hover:opacity-90"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Add Your First Business
-              </Button>
+              <p className="text-muted-foreground">No locations assigned to you yet.</p>
             </CardContent>
           </Card>
         ) : (
@@ -335,7 +272,7 @@ const Dashboard = () => {
               {activeBusinesses.length === 0 ? (
                 <Card className="shadow-card">
                   <CardContent className="py-16 text-center">
-                    <p className="text-muted-foreground">No active businesses found.</p>
+                    <p className="text-muted-foreground">No active locations found.</p>
                   </CardContent>
                 </Card>
               ) : viewMode === 'table' ? (
@@ -350,50 +287,29 @@ const Dashboard = () => {
               ) : (
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                   {activeBusinesses.map((business) => (
-                    <Card key={business.id} className="shadow-card hover:shadow-modern transition-shadow duration-300">
-                      <CardHeader>
-                        <CardTitle className="flex items-start justify-between">
-                          <span className="line-clamp-2">{business.businessName}</span>
-                          <div className="flex gap-1 ml-2">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleEditBusiness(business)}
-                              className="hover:bg-primary/10"
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleDeleteBusiness(business.id)}
-                              className="hover:bg-destructive/10 hover:text-destructive"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-2 text-sm">
+                    <Card key={business.id} className="shadow-card hover:shadow-modern transition-shadow duration-300 cursor-pointer" onClick={() => handleEditBusiness(business)}>
+                      <CardContent className="pt-6">
+                        <div className="space-y-2">
+                          <h3 className="font-semibold text-lg line-clamp-2">{business.businessName}</h3>
                           {business.primaryCategory && (
                             <Badge variant="secondary">{business.primaryCategory}</Badge>
                           )}
                           {business.city && business.state && (
-                            <div className="text-muted-foreground">
+                            <div className="text-muted-foreground text-sm">
                               {business.city}, {business.state}
                             </div>
                           )}
                           {business.primaryPhone && (
-                            <div className="text-muted-foreground">{business.primaryPhone}</div>
+                            <div className="text-muted-foreground text-sm">{business.primaryPhone}</div>
                           )}
                           {business.website && (
-                            <div className="text-muted-foreground truncate">
+                            <div className="text-muted-foreground text-sm truncate">
                               <a 
                                 href={business.website} 
                                 target="_blank" 
                                 rel="noopener noreferrer"
                                 className="hover:underline"
+                                onClick={(e) => e.stopPropagation()}
                               >
                                 {business.website}
                               </a>
@@ -411,7 +327,7 @@ const Dashboard = () => {
               {pendingBusinesses.length === 0 ? (
                 <Card className="shadow-card">
                   <CardContent className="py-16 text-center">
-                    <p className="text-muted-foreground">No pending businesses found.</p>
+                    <p className="text-muted-foreground">No pending locations found.</p>
                   </CardContent>
                 </Card>
               ) : viewMode === 'table' ? (
@@ -426,56 +342,32 @@ const Dashboard = () => {
               ) : (
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                   {pendingBusinesses.map((business) => (
-                    <Card key={business.id} className="shadow-card hover:shadow-modern transition-shadow duration-300 border-amber-200 bg-amber-50/50">
-                      <CardHeader>
-                        <CardTitle className="flex items-start justify-between">
-                          <div>
-                            <span className="line-clamp-2">{business.businessName}</span>
-                            <Badge variant="destructive" className="mt-2">Needs Attention</Badge>
+                    <Card key={business.id} className="shadow-card hover:shadow-modern transition-shadow duration-300 border-amber-200 bg-amber-50/50 cursor-pointer" onClick={() => handleEditBusiness(business)}>
+                      <CardContent className="pt-6">
+                        <div className="space-y-2">
+                          <div className="flex items-start justify-between gap-2">
+                            <h3 className="font-semibold text-lg line-clamp-2">{business.businessName}</h3>
+                            <Badge variant="destructive" className="shrink-0">Needs Attention</Badge>
                           </div>
-                          <div className="flex gap-1 ml-2">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleEditBusiness(business)}
-                              className="hover:bg-primary/10"
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleDeleteBusiness(business.id)}
-                              className="hover:bg-destructive/10 hover:text-destructive"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-2 text-sm">
                           {business.primaryCategory && (
                             <Badge variant="secondary">{business.primaryCategory}</Badge>
                           )}
-                          {/^(STORE)\d{6}$/.test(business.storeCode || '') && (
-                            <div className="text-destructive">Auto store code assigned — please set your store code</div>
-                          )}
                           {business.city && business.state && (
-                            <div className="text-muted-foreground">
+                            <div className="text-muted-foreground text-sm">
                               {business.city}, {business.state}
                             </div>
                           )}
                           {business.primaryPhone && (
-                            <div className="text-muted-foreground">{business.primaryPhone}</div>
+                            <div className="text-muted-foreground text-sm">{business.primaryPhone}</div>
                           )}
                           {business.website && (
-                            <div className="text-muted-foreground truncate">
+                            <div className="text-muted-foreground text-sm truncate">
                               <a 
                                 href={business.website} 
                                 target="_blank" 
                                 rel="noopener noreferrer"
                                 className="hover:underline"
+                                onClick={(e) => e.stopPropagation()}
                               >
                                 {business.website}
                               </a>
@@ -508,15 +400,6 @@ const Dashboard = () => {
         }}
       />
 
-      <ImportDialog
-        open={importDialogOpen}
-        onOpenChange={setImportDialogOpen}
-        onSuccess={() => {
-          fetchBusinesses();
-          setImportDialogOpen(false);
-        }}
-      />
-
       <MultiEditDialog
         open={multiEditDialogOpen}
         onOpenChange={setMultiEditDialogOpen}
@@ -528,21 +411,15 @@ const Dashboard = () => {
         }}
       />
 
-      <SettingsDialog
-        open={settingsDialogOpen}
-        onOpenChange={setSettingsDialogOpen}
-        onLogoUploaded={fetchBusinesses}
-      />
-
       <DeleteConfirmationDialog
         open={deleteConfirmDialogOpen}
         onOpenChange={setDeleteConfirmDialogOpen}
         onConfirm={confirmMultiDelete}
         itemCount={businessesToDelete.length}
-        itemType="businesses"
+        itemType="location"
       />
     </div>
   );
 };
 
-export default Dashboard;
+export default StoreOwnerDashboard;

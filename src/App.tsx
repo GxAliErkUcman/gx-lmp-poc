@@ -15,6 +15,7 @@ import NotFound from "./pages/NotFound";
 import ServiceUserHome from "./pages/ServiceUserHome";
 import ClientDashboard from "./pages/ClientDashboard";
 import ClientAdminPanel from "./pages/ClientAdminPanel";
+import StoreOwnerDashboard from "./pages/StoreOwnerDashboard";
 
 const queryClient = new QueryClient();
 
@@ -33,6 +34,7 @@ const App = () => (
             <Route path="/service-user-home" element={<ServiceUserHome />} />
             <Route path="/client-dashboard" element={<ClientDashboard />} />
             <Route path="/client-admin" element={<ClientAdminPanel />} />
+            <Route path="/store-owner" element={<StoreOwnerDashboard />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/set-password/*" element={<SetPassword />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
