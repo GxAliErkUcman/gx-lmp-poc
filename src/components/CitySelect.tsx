@@ -59,8 +59,15 @@ export const CitySelect = ({
 
   const cities = useMemo(() => {
     if (!countryCode) return [];
-    return CITIES_BY_COUNTRY[countryCode] || [];
-  }, [countryCode]);
+    const predefinedCities = CITIES_BY_COUNTRY[countryCode] || [];
+    
+    // If value exists and is not in the predefined list, add it
+    if (value && !predefinedCities.includes(value)) {
+      return [value, ...predefinedCities];
+    }
+    
+    return predefinedCities;
+  }, [countryCode, value]);
 
   const handleValueChange = (selectedValue: string) => {
     if (selectedValue === '__custom__') {
