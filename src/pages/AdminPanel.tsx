@@ -666,16 +666,28 @@ const AdminPanel = () => {
       const serviceUserIds = new Set((accessData || []).map(a => a.user_id));
       const profileAssignedIds = new Set((profilesData || []).filter(u => u.client_id === clientId).map(u => u.user_id));
 
-      // Users assigned to this client are union of profile assignments and service-user access
-      const assignedIds = new Set<string>([...profileAssignedIds, ...serviceUserIds]);
-
+      // Determine assignment per role:
+      // - service_user: assigned only if present in user_client_access for this client
+      // - everyone else: assigned if profile.client_id matches this client
       const assigned = (profilesData || [])
-        .filter(u => assignedIds.has(u.user_id))
-        .map(u => ({ ...u, roles: rolesMap.get(u.user_id) || [] }));
+        .map((u) => {
+          const r = rolesMap.get(u.user_id) || [];
+          const isService = r.includes('service_user');
+          const isAssigned = isService ? serviceUserIds.has(u.user_id) : u.client_id === clientId;
+          return { ...u, roles: r, __assigned: isAssigned } as any;
+        })
+        .filter((u: any) => u.__assigned)
+        .map(({ __assigned, ...rest }: any) => rest);
 
       const available = (profilesData || [])
-        .filter(u => !assignedIds.has(u.user_id))
-        .map(u => ({ ...u, roles: rolesMap.get(u.user_id) || [] }));
+        .map((u) => {
+          const r = rolesMap.get(u.user_id) || [];
+          const isService = r.includes('service_user');
+          const isAssigned = isService ? serviceUserIds.has(u.user_id) : u.client_id === clientId;
+          return { ...u, roles: r, __assigned: isAssigned } as any;
+        })
+        .filter((u: any) => !u.__assigned)
+        .map(({ __assigned, ...rest }: any) => rest);
 
       setClientUsers(assigned);
       setAvailableUsers(available);
