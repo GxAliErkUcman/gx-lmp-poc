@@ -247,6 +247,7 @@ const ClientAdminPanel = () => {
 
   const regularUsers = users.filter((u) => u.role === 'user' || u.role === 'client_admin');
   const ownerUsers = users.filter((u) => u.role === 'store_owner');
+  const clientUserCount = regularUsers.length + ownerUsers.length;
   const activeBusinesses = businesses.filter((b) => b.status === 'active');
   const pendingBusinesses = businesses.filter((b) => b.status === 'pending');
 
@@ -282,7 +283,7 @@ const ClientAdminPanel = () => {
             <TabsTrigger value="users" className="flex items-center gap-2">
               <Users className="w-4 h-4" />
               Users
-              <Badge variant="secondary">{users.length}</Badge>
+              <Badge variant="secondary">{clientUserCount}</Badge>
             </TabsTrigger>
             <TabsTrigger value="stores" className="flex items-center gap-2">
               <Store className="w-4 h-4" />
