@@ -19,6 +19,8 @@ import DeleteConfirmationDialog from '@/components/DeleteConfirmationDialog';
 import jasonerLogo from '@/assets/jasoner-horizontal-logo.png';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { JsonExport } from '@/components/JsonExport';
+import ServiceUserCreateDialog from '@/components/ServiceUserCreateDialog';
+import { UserPlus } from 'lucide-react';
 
 const ClientDashboard = () => {
   const { user, signOut } = useAuth();
@@ -41,6 +43,7 @@ const ClientDashboard = () => {
   const [isServiceUser, setIsServiceUser] = useState(false);
   const [accessibleClients, setAccessibleClients] = useState<{id: string; name: string}[]>([]);
   const [selectedClientId, setSelectedClientId] = useState<string>('');
+  const [createUserDialogOpen, setCreateUserDialogOpen] = useState(false);
 
   useEffect(() => {
     const checkRoleAndFetch = async () => {
@@ -217,6 +220,13 @@ const ClientDashboard = () => {
     setSearchParams({ client: clientId });
   };
 
+  const handleUserCreated = () => {
+    toast({
+      title: 'Success',
+      description: 'User created successfully',
+    });
+  };
+
   const activeBusinesses = businesses.filter(b => b.status === 'active');
   const pendingBusinesses = businesses.filter(b => b.status === 'pending');
 
@@ -283,22 +293,6 @@ const ClientDashboard = () => {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <div className="flex items-center gap-2 mr-4">
-                  <Button
-                    variant={viewMode === 'table' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setViewMode('table')}
-                  >
-                    <Table2 className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant={viewMode === 'grid' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setViewMode('grid')}
-                  >
-                    <Grid className="w-4 h-4" />
-                  </Button>
-                </div>
                 <JsonExport businesses={businesses} />
                 <Button variant="outline" onClick={() => setSettingsDialogOpen(true)}>
                   <Settings className="w-4 h-4 mr-2" />
@@ -314,6 +308,40 @@ const ClientDashboard = () => {
                 }}>
                   <Plus className="w-4 h-4 mr-2" />
                   Add Business
+                </Button>
+              </div>
+            </div>
+
+            {/* Create User Button - Prominent placement */}
+            <div className="mb-6">
+              <Button 
+                onClick={() => setCreateUserDialogOpen(true)}
+                size="lg"
+                className="w-full sm:w-auto"
+              >
+                <UserPlus className="w-5 h-5 mr-2" />
+                Create User for {selectedClient?.name}
+              </Button>
+              <p className="text-xs text-muted-foreground mt-2">
+                Create Client Admins, Users, or Store Owners for this client
+              </p>
+            </div>
+
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Button
+                  variant={viewMode === 'table' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setViewMode('table')}
+                >
+                  <Table2 className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant={viewMode === 'grid' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setViewMode('grid')}
+                >
+                  <Grid className="w-4 h-4" />
                 </Button>
               </div>
             </div>
@@ -452,6 +480,15 @@ const ClientDashboard = () => {
         itemCount={businessesToDelete.length}
         itemType="business"
       />
+      {selectedClient && (
+        <ServiceUserCreateDialog
+          open={createUserDialogOpen}
+          onOpenChange={setCreateUserDialogOpen}
+          clientId={selectedClientId}
+          clientName={selectedClient.name}
+          onUserCreated={handleUserCreated}
+        />
+      )}
     </div>
   );
 };

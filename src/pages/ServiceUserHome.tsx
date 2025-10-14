@@ -9,6 +9,8 @@ import { Badge } from '@/components/ui/badge';
 import { Eye, MapPin, Users, Loader2, LogOut } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import jasonerLogo from '@/assets/jasoner-horizontal-logo.png';
+import ServiceUserCreateDialog from '@/components/ServiceUserCreateDialog';
+import { UserPlus } from 'lucide-react';
 
 interface ClientInfo {
   id: string;
@@ -31,6 +33,8 @@ const ServiceUserHome = () => {
   const [clients, setClients] = useState<ClientInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [isServiceUser, setIsServiceUser] = useState(false);
+  const [createUserDialogOpen, setCreateUserDialogOpen] = useState(false);
+  const [selectedClientForUser, setSelectedClientForUser] = useState<{ id: string; name: string } | null>(null);
 
   useEffect(() => {
     const checkRoleAndFetch = async () => {
@@ -191,6 +195,15 @@ const ServiceUserHome = () => {
     navigate('/auth');
   };
 
+  const handleCreateUser = (clientId: string, clientName: string) => {
+    setSelectedClientForUser({ id: clientId, name: clientName });
+    setCreateUserDialogOpen(true);
+  };
+
+  const handleUserCreated = () => {
+    fetchClientData();
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -245,14 +258,24 @@ const ServiceUserHome = () => {
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <CardTitle className="text-xl">{client.name}</CardTitle>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleViewClient(client.id)}
-                    >
-                      <Eye className="w-4 h-4 mr-2" />
-                      View
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleCreateUser(client.id, client.name)}
+                      >
+                        <UserPlus className="w-4 h-4 mr-2" />
+                        Create User
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleViewClient(client.id)}
+                      >
+                        <Eye className="w-4 h-4 mr-2" />
+                        View
+                      </Button>
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -360,6 +383,17 @@ const ServiceUserHome = () => {
           </div>
         )}
       </main>
+
+      {/* Create User Dialog */}
+      {selectedClientForUser && (
+        <ServiceUserCreateDialog
+          open={createUserDialogOpen}
+          onOpenChange={setCreateUserDialogOpen}
+          clientId={selectedClientForUser.id}
+          clientName={selectedClientForUser.name}
+          onUserCreated={handleUserCreated}
+        />
+      )}
     </div>
   );
 };
