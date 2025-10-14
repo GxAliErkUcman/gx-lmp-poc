@@ -126,8 +126,9 @@ const ClientAdminPanel = () => {
         console.error('Error fetching service access:', serviceAccessError);
         setServiceUsers([]);
       } else if (serviceAccessData && serviceAccessData.length > 0) {
-        // Fetch profiles for these service users
         const serviceUserIds = serviceAccessData.map((sa) => sa.user_id);
+        
+        // Fetch profiles for these service users
         const { data: serviceProfilesData, error: serviceProfilesError } = await supabase
           .from('profiles')
           .select('user_id, email, first_name, last_name')
@@ -137,13 +138,29 @@ const ClientAdminPanel = () => {
           console.error('Error fetching service profiles:', serviceProfilesError);
           setServiceUsers([]);
         } else {
-          const transformedServiceUsers: ServiceUser[] = (serviceProfilesData || []).map((p) => ({
-            user_id: p.user_id,
-            email: p.email,
-            first_name: p.first_name,
-            last_name: p.last_name,
-          }));
-          setServiceUsers(transformedServiceUsers);
+          // Verify these users have the service_user role
+          const { data: serviceRolesData, error: serviceRolesError } = await supabase
+            .from('user_roles')
+            .select('user_id')
+            .in('user_id', serviceUserIds)
+            .eq('role', 'service_user');
+
+          if (serviceRolesError) {
+            console.error('Error fetching service roles:', serviceRolesError);
+            setServiceUsers([]);
+          } else {
+            // Only include users who have service_user role
+            const serviceRoleUserIds = new Set((serviceRolesData || []).map((r) => r.user_id));
+            const transformedServiceUsers: ServiceUser[] = (serviceProfilesData || [])
+              .filter((p) => serviceRoleUserIds.has(p.user_id))
+              .map((p) => ({
+                user_id: p.user_id,
+                email: p.email,
+                first_name: p.first_name,
+                last_name: p.last_name,
+              }));
+            setServiceUsers(transformedServiceUsers);
+          }
         }
       } else {
         setServiceUsers([]);
