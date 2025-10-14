@@ -11,7 +11,7 @@ interface CreateUserRequest {
   firstName: string;
   lastName: string;
   clientId: string;
-  role?: 'user' | 'store_owner';
+  role?: 'client_admin' | 'user' | 'store_owner';
   storeIds?: string[];
 }
 
@@ -27,7 +27,7 @@ const handler = async (req: Request): Promise<Response> => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Verify the request is from an authenticated admin user
+    // Verify the request is from an authenticated user
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       throw new Error('No authorization header');
@@ -40,35 +40,51 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error('Unauthorized');
     }
 
-    // Check if user has admin or client_admin role
+    // Check if user has admin, service_user, or client_admin role
     const { data: userRoles } = await supabaseAdmin
       .from('user_roles')
       .select('role')
       .eq('user_id', user.id);
 
     const hasAdminRole = userRoles?.some(r => r.role === 'admin');
+    const hasServiceUserRole = userRoles?.some(r => r.role === 'service_user');
     const hasClientAdminRole = userRoles?.some(r => r.role === 'client_admin');
 
-    if (!hasAdminRole && !hasClientAdminRole) {
+    if (!hasAdminRole && !hasServiceUserRole && !hasClientAdminRole) {
       throw new Error('Insufficient permissions');
     }
 
+    const requestBody: CreateUserRequest = await req.json();
+    const { clientId } = requestBody;
+
+    // If service_user, verify they have access to this client
+    if (hasServiceUserRole && !hasAdminRole) {
+      const { data: clientAccess } = await supabaseAdmin
+        .from('user_client_access')
+        .select('client_id')
+        .eq('user_id', user.id)
+        .eq('client_id', clientId)
+        .maybeSingle();
+
+      if (!clientAccess) {
+        throw new Error('Cannot create users for clients you do not have access to');
+      }
+    }
+
     // If client_admin, verify they are creating user for their own client
-    if (hasClientAdminRole && !hasAdminRole) {
+    if (hasClientAdminRole && !hasAdminRole && !hasServiceUserRole) {
       const { data: adminProfile } = await supabaseAdmin
         .from('profiles')
         .select('client_id')
         .eq('user_id', user.id)
         .single();
 
-      const requestedClientId = (await req.clone().json()).clientId;
-
-      if (!adminProfile || adminProfile.client_id !== requestedClientId) {
+      if (!adminProfile || adminProfile.client_id !== clientId) {
         throw new Error('Cannot create users for other clients');
       }
     }
 
-    const { email, firstName, lastName, clientId, role, storeIds }: CreateUserRequest = await req.json();
+    const { email, firstName, lastName, role, storeIds } = requestBody;
 
     console.log('Creating user:', { email, firstName, lastName, clientId, role, storeCount: storeIds?.length || 0 });
 
