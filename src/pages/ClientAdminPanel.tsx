@@ -392,34 +392,6 @@ const ClientAdminPanel = () => {
               </CardContent>
             </Card>
 
-            {/* Service Users */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Service Users</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {serviceUsers.length === 0 ? (
-                  <p className="text-muted-foreground text-center py-8">No service users found</p>
-                ) : (
-                  <div className="space-y-2">
-                    {serviceUsers.map((serviceUser) => (
-                      <div
-                        key={serviceUser.user_id}
-                        className="flex items-center justify-between p-4 border rounded-lg bg-muted/30"
-                      >
-                        <div>
-                          <div className="font-medium">
-                            {serviceUser.first_name} {serviceUser.last_name}
-                          </div>
-                          <div className="text-sm text-muted-foreground">{serviceUser.email}</div>
-                        </div>
-                        <Badge>Service User</Badge>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
           </TabsContent>
 
           <TabsContent value="stores" className="space-y-6">
