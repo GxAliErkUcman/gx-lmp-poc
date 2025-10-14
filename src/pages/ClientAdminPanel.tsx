@@ -138,29 +138,17 @@ const ClientAdminPanel = () => {
           console.error('Error fetching service profiles:', serviceProfilesError);
           setServiceUsers([]);
         } else {
-          // Verify these users have the service_user role
-          const { data: serviceRolesData, error: serviceRolesError } = await supabase
-            .from('user_roles')
-            .select('user_id')
-            .in('user_id', serviceUserIds)
-            .eq('role', 'service_user');
-
-          if (serviceRolesError) {
-            console.error('Error fetching service roles:', serviceRolesError);
-            setServiceUsers([]);
-          } else {
-            // Only include users who have service_user role
-            const serviceRoleUserIds = new Set((serviceRolesData || []).map((r) => r.user_id));
-            const transformedServiceUsers: ServiceUser[] = (serviceProfilesData || [])
-              .filter((p) => serviceRoleUserIds.has(p.user_id))
-              .map((p) => ({
-                user_id: p.user_id,
-                email: p.email,
-                first_name: p.first_name,
-                last_name: p.last_name,
-              }));
-            setServiceUsers(transformedServiceUsers);
-          }
+          // Due to RLS, client admins may not be able to read roles of service users
+          // (service users usually belong to a different client). For display
+          // purposes, treat anyone assigned via user_client_access as a Service User.
+          const transformedServiceUsers: ServiceUser[] = (serviceProfilesData || [])
+            .map((p) => ({
+              user_id: p.user_id,
+              email: p.email,
+              first_name: p.first_name,
+              last_name: p.last_name,
+            }));
+          setServiceUsers(transformedServiceUsers);
         }
       } else {
         setServiceUsers([]);
