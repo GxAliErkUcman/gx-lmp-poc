@@ -18,6 +18,7 @@ import GcpSyncButton from '@/components/GcpSyncButton';
 import { ClientCategoriesDialog } from '@/components/ClientCategoriesDialog';
 import { RoleChangeDialog } from '@/components/RoleChangeDialog';
 import { UserReassignDialog } from '@/components/UserReassignDialog';
+import { AllClientsView } from '@/components/AllClientsView';
 
 
 interface Client {
@@ -970,6 +971,7 @@ const AdminPanel = () => {
       <Tabs defaultValue="clients" className="space-y-6">
         <TabsList>
           <TabsTrigger value="clients">Client Overview</TabsTrigger>
+          <TabsTrigger value="all-clients">All Clients</TabsTrigger>
           <TabsTrigger value="users">Users</TabsTrigger>
         </TabsList>
 
@@ -1144,6 +1146,16 @@ const AdminPanel = () => {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="all-clients">
+          <div className="mb-6">
+            <h2 className="text-2xl font-semibold mb-2">All Clients View</h2>
+            <p className="text-muted-foreground">
+              Comprehensive view of all clients with locations and team members
+            </p>
+          </div>
+          <AllClientsView />
         </TabsContent>
 
         <TabsContent value="users">
