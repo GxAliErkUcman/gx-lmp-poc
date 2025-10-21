@@ -60,6 +60,7 @@ interface AccountSocialsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
+  clientId?: string;
 }
 
 interface SocialStats {
@@ -72,7 +73,7 @@ interface SocialStats {
   allUrls: { url: string; count: number }[];
 }
 
-const AccountSocialsDialog = ({ open, onOpenChange, onSuccess }: AccountSocialsDialogProps) => {
+const AccountSocialsDialog = ({ open, onOpenChange, onSuccess, clientId }: AccountSocialsDialogProps) => {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('analytics');
   const [socialStats, setSocialStats] = useState<SocialStats[]>([]);
@@ -118,17 +119,23 @@ const AccountSocialsDialog = ({ open, onOpenChange, onSuccess }: AccountSocialsD
     if (!user) return;
 
     try {
-      // Get current user's client_id
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('client_id')
-        .eq('user_id', user.id)
-        .single();
-
-      const { data: businesses, error } = await supabase
+      let query = supabase
         .from('businesses')
-        .select('socialMediaUrls')
-        .or(`user_id.eq.${user.id}${profile?.client_id ? `,client_id.eq.${profile.client_id}` : ''}`);
+        .select('socialMediaUrls');
+
+      if (clientId) {
+        query = query.eq('client_id', clientId);
+      } else {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('client_id')
+          .eq('user_id', user.id)
+          .single();
+
+        query = query.or(`user_id.eq.${user.id}${profile?.client_id ? `,client_id.eq.${profile.client_id}` : ''}`);
+      }
+
+      const { data: businesses, error } = await query;
 
       if (error) throw error;
 
@@ -207,18 +214,24 @@ const AccountSocialsDialog = ({ open, onOpenChange, onSuccess }: AccountSocialsD
         return;
       }
 
-      // Get current user's client_id
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('client_id')
-        .eq('user_id', user.id)
-        .single();
-
-      // Update all businesses for this user or client
-      const { error } = await supabase
+      // Update all businesses for the specified client or user's client
+      let updateQuery = supabase
         .from('businesses')
-        .update({ socialMediaUrls })
-        .or(`user_id.eq.${user.id}${profile?.client_id ? `,client_id.eq.${profile.client_id}` : ''}`);
+        .update({ socialMediaUrls });
+
+      if (clientId) {
+        updateQuery = updateQuery.eq('client_id', clientId);
+      } else {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('client_id')
+          .eq('user_id', user.id)
+          .single();
+
+        updateQuery = updateQuery.or(`user_id.eq.${user.id}${profile?.client_id ? `,client_id.eq.${profile.client_id}` : ''}`);
+      }
+
+      const { error } = await updateQuery;
 
       if (error) throw error;
 
@@ -248,18 +261,24 @@ const AccountSocialsDialog = ({ open, onOpenChange, onSuccess }: AccountSocialsD
     
     setLoading(true);
     try {
-      // Get current user's client_id
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('client_id')
-        .eq('user_id', user.id)
-        .single();
-
       // Get current social media URLs for all businesses
-      const { data: businesses, error: fetchError } = await supabase
+      let fetchQuery = supabase
         .from('businesses')
-        .select('id, socialMediaUrls')
-        .or(`user_id.eq.${user.id}${profile?.client_id ? `,client_id.eq.${profile.client_id}` : ''}`);
+        .select('id, socialMediaUrls');
+
+      if (clientId) {
+        fetchQuery = fetchQuery.eq('client_id', clientId);
+      } else {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('client_id')
+          .eq('user_id', user.id)
+          .single();
+
+        fetchQuery = fetchQuery.or(`user_id.eq.${user.id}${profile?.client_id ? `,client_id.eq.${profile.client_id}` : ''}`);
+      }
+
+      const { data: businesses, error: fetchError } = await fetchQuery;
 
       if (fetchError) throw fetchError;
 

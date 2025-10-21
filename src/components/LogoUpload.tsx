@@ -8,9 +8,10 @@ import { toast } from '@/hooks/use-toast';
 
 interface LogoUploadProps {
   onLogoUploaded: () => void;
+  clientId?: string;
 }
 
-const LogoUpload = ({ onLogoUploaded }: LogoUploadProps) => {
+const LogoUpload = ({ onLogoUploaded, clientId }: LogoUploadProps) => {
   const [uploading, setUploading] = useState(false);
   const { user } = useAuth();
 
@@ -46,18 +47,26 @@ const LogoUpload = ({ onLogoUploaded }: LogoUploadProps) => {
         .from('business-photos')
         .getPublicUrl(filePath);
 
-      // Get current user's client_id for shared business model
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('client_id')
-        .eq('user_id', user.id)
-        .single();
-
-      // Update all businesses for this user/client with the new logo
-      const { error: updateError } = await supabase
+      // Update all businesses for the specified client or user's client
+      let updateQuery = supabase
         .from('businesses')
-        .update({ logoPhoto: data.publicUrl })
-        .or(`user_id.eq.${user.id}${profile?.client_id ? `,client_id.eq.${profile.client_id}` : ''}`);
+        .update({ logoPhoto: data.publicUrl });
+
+      if (clientId) {
+        // If clientId is provided, update only that client's businesses
+        updateQuery = updateQuery.eq('client_id', clientId);
+      } else {
+        // Otherwise, use the user's client_id
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('client_id')
+          .eq('user_id', user.id)
+          .single();
+
+        updateQuery = updateQuery.or(`user_id.eq.${user.id}${profile?.client_id ? `,client_id.eq.${profile.client_id}` : ''}`);
+      }
+
+      const { error: updateError } = await updateQuery;
 
       if (updateError) {
         throw updateError;

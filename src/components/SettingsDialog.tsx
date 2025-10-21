@@ -17,9 +17,10 @@ interface SettingsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onLogoUploaded: () => void;
+  clientId?: string;
 }
 
-const SettingsDialog = ({ open, onOpenChange, onLogoUploaded }: SettingsDialogProps) => {
+const SettingsDialog = ({ open, onOpenChange, onLogoUploaded, clientId }: SettingsDialogProps) => {
   const [socialsDialogOpen, setSocialsDialogOpen] = useState(false);
   const [openingHoursDialogOpen, setOpeningHoursDialogOpen] = useState(false);
   const [serviceUrlsDialogOpen, setServiceUrlsDialogOpen] = useState(false);
@@ -61,7 +62,7 @@ const SettingsDialog = ({ open, onOpenChange, onLogoUploaded }: SettingsDialogPr
                   <p className="text-muted-foreground mb-3 text-sm">
                     Upload your company logo to display across all your business listings.
                   </p>
-                  <LogoUpload onLogoUploaded={onLogoUploaded} />
+                  <LogoUpload onLogoUploaded={onLogoUploaded} clientId={clientId} />
                 </CardContent>
               </Card>
 
@@ -132,18 +133,21 @@ const SettingsDialog = ({ open, onOpenChange, onLogoUploaded }: SettingsDialogPr
         open={socialsDialogOpen}
         onOpenChange={setSocialsDialogOpen}
         onSuccess={handleSocialsSuccess}
+        clientId={clientId}
       />
 
       <AccountOpeningHoursDialog
         open={openingHoursDialogOpen}
         onOpenChange={setOpeningHoursDialogOpen}
         onSuccess={handleOpeningHoursSuccess}
+        clientId={clientId}
       />
 
       <AccountServiceUrlsDialog
         open={serviceUrlsDialogOpen}
         onOpenChange={setServiceUrlsDialogOpen}
         onSuccess={handleServiceUrlsSuccess}
+        clientId={clientId}
       />
     </>
   );

@@ -263,7 +263,7 @@ const ClientDashboard = () => {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => navigate(isAdmin ? '/admin-panel' : '/service-user-home')}
+                onClick={() => navigate(isAdmin ? '/admin' : '/service-user-home')}
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back to Overview
@@ -494,6 +494,7 @@ const ClientDashboard = () => {
         open={settingsDialogOpen}
         onOpenChange={setSettingsDialogOpen}
         onLogoUploaded={fetchBusinesses}
+        clientId={selectedClientId}
       />
       <DeleteConfirmationDialog
         open={deleteConfirmDialogOpen}

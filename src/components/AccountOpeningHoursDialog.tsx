@@ -29,9 +29,10 @@ interface AccountOpeningHoursDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
+  clientId?: string;
 }
 
-const AccountOpeningHoursDialog = ({ open, onOpenChange, onSuccess }: AccountOpeningHoursDialogProps) => {
+const AccountOpeningHoursDialog = ({ open, onOpenChange, onSuccess, clientId }: AccountOpeningHoursDialogProps) => {
   const [hours, setHours] = React.useState<Hours>({
     monday: null,
     tuesday: null,
@@ -63,10 +64,24 @@ const AccountOpeningHoursDialog = ({ open, onOpenChange, onSuccess }: AccountOpe
         specialHours: formatSpecialHoursToSchema(specialHours) || null,
       };
 
-      const { error } = await supabase
+      // Update all businesses for the specified client or user's client
+      let updateQuery = supabase
         .from('businesses')
-        .update(updateData)
-        .eq('user_id', user.id);
+        .update(updateData);
+
+      if (clientId) {
+        updateQuery = updateQuery.eq('client_id', clientId);
+      } else {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('client_id')
+          .eq('user_id', user.id)
+          .single();
+
+        updateQuery = updateQuery.or(`user_id.eq.${user.id}${profile?.client_id ? `,client_id.eq.${profile.client_id}` : ''}`);
+      }
+
+      const { error } = await updateQuery;
 
       if (error) throw error;
 
