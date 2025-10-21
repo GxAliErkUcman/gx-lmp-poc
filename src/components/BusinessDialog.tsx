@@ -438,10 +438,12 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
 
       let error;
       if (business) {
+        // CRITICAL: Verify the business belongs to the correct client before updating
         ({ error } = await supabase
           .from('businesses')
           .update(businessData)
-          .eq('id', business.id));
+          .eq('id', business.id)
+          .eq('client_id', effectiveClientId)); // Prevent cross-client updates
       } else {
         ({ error } = await supabase
           .from('businesses')

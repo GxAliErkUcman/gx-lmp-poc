@@ -41,6 +41,7 @@ const ClientDashboard = () => {
   const [deleteConfirmDialogOpen, setDeleteConfirmDialogOpen] = useState(false);
   const [businessesToDelete, setBusinessesToDelete] = useState<string[]>([]);
   const [isServiceUser, setIsServiceUser] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [accessibleClients, setAccessibleClients] = useState<{id: string; name: string}[]>([]);
   const [selectedClientId, setSelectedClientId] = useState<string>('');
   const [createUserDialogOpen, setCreateUserDialogOpen] = useState(false);
@@ -49,15 +50,19 @@ const ClientDashboard = () => {
     const checkRoleAndFetch = async () => {
       if (!user) return;
 
+      const adminRole = await hasRole('admin');
       const serviceUserRole = await hasRole('service_user');
+      
+      setIsAdmin(adminRole);
       setIsServiceUser(serviceUserRole);
 
-      if (!serviceUserRole) {
+      // Allow both admins and service users
+      if (!adminRole && !serviceUserRole) {
         navigate('/dashboard');
         return;
       }
 
-      await fetchAccessibleClients();
+      await fetchAccessibleClients(adminRole);
     };
 
     checkRoleAndFetch();
@@ -78,31 +83,43 @@ const ClientDashboard = () => {
     }
   }, [selectedClientId]);
 
-  const fetchAccessibleClients = async () => {
+  const fetchAccessibleClients = async (isAdminUser: boolean) => {
     try {
-      const { data: accessData, error: accessError } = await supabase
-        .from('user_client_access')
-        .select('client_id')
-        .eq('user_id', user!.id);
+      if (isAdminUser) {
+        // Admins can access all clients
+        const { data: clientsData, error: clientsError } = await supabase
+          .from('clients')
+          .select('id, name')
+          .order('name');
 
-      if (accessError) throw accessError;
+        if (clientsError) throw clientsError;
+        setAccessibleClients(clientsData || []);
+      } else {
+        // Service users can only access assigned clients
+        const { data: accessData, error: accessError } = await supabase
+          .from('user_client_access')
+          .select('client_id')
+          .eq('user_id', user!.id);
 
-      const clientIds = accessData.map(a => a.client_id);
+        if (accessError) throw accessError;
 
-      if (clientIds.length === 0) {
-        setAccessibleClients([]);
-        return;
+        const clientIds = accessData.map(a => a.client_id);
+
+        if (clientIds.length === 0) {
+          setAccessibleClients([]);
+          return;
+        }
+
+        const { data: clientsData, error: clientsError } = await supabase
+          .from('clients')
+          .select('id, name')
+          .in('id', clientIds)
+          .order('name');
+
+        if (clientsError) throw clientsError;
+
+        setAccessibleClients(clientsData || []);
       }
-
-      const { data: clientsData, error: clientsError } = await supabase
-        .from('clients')
-        .select('id, name')
-        .in('id', clientIds)
-        .order('name');
-
-      if (clientsError) throw clientsError;
-
-      setAccessibleClients(clientsData);
     } catch (error) {
       console.error('Error fetching accessible clients:', error);
       toast({
@@ -144,7 +161,7 @@ const ClientDashboard = () => {
     return <Navigate to="/auth" replace />;
   }
 
-  if (!isServiceUser && !loading) {
+  if (!isServiceUser && !isAdmin && !loading) {
     return <Navigate to="/dashboard" replace />;
   }
 
@@ -152,10 +169,12 @@ const ClientDashboard = () => {
     if (!confirm('Are you sure you want to delete this business?')) return;
 
     try {
+      // CRITICAL: Only delete businesses from the current client
       const { error } = await supabase
         .from('businesses')
         .delete()
-        .eq('id', id);
+        .eq('id', id)
+        .eq('client_id', selectedClientId);
 
       if (error) throw error;
 
@@ -191,10 +210,12 @@ const ClientDashboard = () => {
 
   const confirmMultiDelete = async () => {
     try {
+      // CRITICAL: Only delete businesses from the current client
       const { error } = await supabase
         .from('businesses')
         .delete()
-        .in('id', businessesToDelete);
+        .in('id', businessesToDelete)
+        .eq('client_id', selectedClientId);
 
       if (error) throw error;
 
@@ -242,7 +263,7 @@ const ClientDashboard = () => {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => navigate('/service-user-home')}
+                onClick={() => navigate(isAdmin ? '/admin-panel' : '/service-user-home')}
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back to Overview
@@ -467,6 +488,7 @@ const ClientDashboard = () => {
         onOpenChange={setMultiEditDialogOpen}
         selectedIds={selectedBusinessIds}
         onSuccess={fetchBusinesses}
+        clientId={selectedClientId}
       />
       <SettingsDialog
         open={settingsDialogOpen}

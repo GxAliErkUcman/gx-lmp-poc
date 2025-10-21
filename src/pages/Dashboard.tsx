@@ -37,6 +37,7 @@ const Dashboard = () => {
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
   const [deleteConfirmDialogOpen, setDeleteConfirmDialogOpen] = useState(false);
   const [businessesToDelete, setBusinessesToDelete] = useState<string[]>([]);
+  const [clientId, setClientId] = useState<string | null>(null);
 
   const handleLogoUploaded = () => {
     // Refresh businesses to get updated logo
@@ -55,6 +56,19 @@ const Dashboard = () => {
       if (error) throw error;
       const businessList = (data || []) as Business[];
       setBusinesses(businessList);
+      
+      // Get user's client_id from their profile
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('client_id')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        
+        if (profile?.client_id) {
+          setClientId(profile.client_id);
+        }
+      }
       
       // Get user's logo from any business (since it's account-wide)
       const logoUrl = businessList.length > 0 ? businessList[0].logoPhoto : null;
@@ -526,6 +540,7 @@ const Dashboard = () => {
           setMultiEditDialogOpen(false);
           setSelectedBusinessIds([]);
         }}
+        clientId={clientId || undefined}
       />
 
       <SettingsDialog

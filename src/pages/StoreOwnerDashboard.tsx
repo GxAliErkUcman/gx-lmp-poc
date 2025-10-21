@@ -29,6 +29,7 @@ const StoreOwnerDashboard = () => {
   const [userLogo, setUserLogo] = useState<string | null>(null);
   const [deleteConfirmDialogOpen, setDeleteConfirmDialogOpen] = useState(false);
   const [businessesToDelete, setBusinessesToDelete] = useState<string[]>([]);
+  const [clientId, setClientId] = useState<string | null>(null);
 
   const fetchBusinesses = async () => {
     try {
@@ -57,6 +58,11 @@ const StoreOwnerDashboard = () => {
       if (error) throw error;
       const businessList = (data || []) as Business[];
       setBusinesses(businessList);
+      
+      // Get client_id from first business
+      if (businessList.length > 0 && businessList[0].client_id) {
+        setClientId(businessList[0].client_id);
+      }
       
       // Get user's logo from any business
       const logoUrl = businessList.length > 0 ? businessList[0].logoPhoto : null;
@@ -409,6 +415,7 @@ const StoreOwnerDashboard = () => {
           setMultiEditDialogOpen(false);
           setSelectedBusinessIds([]);
         }}
+        clientId={clientId || undefined}
       />
 
       <DeleteConfirmationDialog

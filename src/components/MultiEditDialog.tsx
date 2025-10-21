@@ -57,9 +57,10 @@ interface MultiEditDialogProps {
   onOpenChange: (open: boolean) => void;
   selectedIds: string[];
   onSuccess: () => void;
+  clientId?: string; // Add clientId to ensure operations are scoped
 }
 
-const MultiEditDialog = ({ open, onOpenChange, selectedIds, onSuccess }: MultiEditDialogProps) => {
+const MultiEditDialog = ({ open, onOpenChange, selectedIds, onSuccess, clientId }: MultiEditDialogProps) => {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [categoryNameWarningOpen, setCategoryNameWarningOpen] = useState(false);
@@ -152,10 +153,18 @@ const MultiEditDialog = ({ open, onOpenChange, selectedIds, onSuccess }: MultiEd
         return;
       }
 
-      const { error } = await supabase
+      // CRITICAL: Only update businesses belonging to the current client
+      const updateQuery = supabase
         .from('businesses')
         .update(updateData)
         .in('id', selectedIds);
+      
+      // If clientId is provided, ensure we only update businesses from that client
+      if (clientId) {
+        updateQuery.eq('client_id', clientId);
+      }
+
+      const { error } = await updateQuery;
 
       if (error) throw error;
 
@@ -204,10 +213,17 @@ const MultiEditDialog = ({ open, onOpenChange, selectedIds, onSuccess }: MultiEd
         .getPublicUrl(filePath);
 
       // Update all selected businesses with the new logo
-      const { error: updateError } = await supabase
+      // CRITICAL: Only update businesses from the current client
+      const updateQuery = supabase
         .from('businesses')
         .update({ logoPhoto: data.publicUrl })
         .in('id', selectedIds);
+      
+      if (clientId) {
+        updateQuery.eq('client_id', clientId);
+      }
+
+      const { error: updateError } = await updateQuery;
 
       if (updateError) {
         throw updateError;
@@ -257,10 +273,17 @@ const MultiEditDialog = ({ open, onOpenChange, selectedIds, onSuccess }: MultiEd
         .getPublicUrl(filePath);
 
       // Update all selected businesses with the new cover photo
-      const { error: updateError } = await supabase
+      // CRITICAL: Only update businesses from the current client
+      const updateQuery = supabase
         .from('businesses')
         .update({ coverPhoto: data.publicUrl })
         .in('id', selectedIds);
+      
+      if (clientId) {
+        updateQuery.eq('client_id', clientId);
+      }
+
+      const { error: updateError } = await updateQuery;
 
       if (updateError) {
         throw updateError;
