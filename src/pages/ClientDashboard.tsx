@@ -314,7 +314,7 @@ const ClientDashboard = () => {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <JsonExport businesses={businesses} />
+                <JsonExport businesses={businesses} clientName={selectedClient?.name} />
                 <Button variant="outline" onClick={() => setSettingsDialogOpen(true)}>
                   <Settings className="w-4 h-4 mr-2" />
                   Settings

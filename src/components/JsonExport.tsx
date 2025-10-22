@@ -10,9 +10,10 @@ import { toast } from '@/hooks/use-toast';
 
 interface JsonExportProps {
   businesses: Business[];
+  clientName?: string;
 }
 
-export const JsonExport = ({ businesses }: JsonExportProps) => {
+export const JsonExport = ({ businesses, clientName }: JsonExportProps) => {
   const [open, setOpen] = useState(false);
   const [validationResults, setValidationResults] = useState<Array<{ business: Business; isValid: boolean; errors: any[] }>>([]);
 
@@ -96,7 +97,9 @@ export const JsonExport = ({ businesses }: JsonExportProps) => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `business-locations-${new Date().toISOString().split('T')[0]}.json`;
+    const date = new Date().toISOString().split('T')[0];
+    const filename = clientName ? `${clientName} - ${date}.json` : `business-locations-${date}.json`;
+    a.download = filename;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
