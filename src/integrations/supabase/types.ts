@@ -406,12 +406,9 @@ export type Database = {
         Args: { _business_id: string; _user_id: string }
         Returns: boolean
       }
-      generate_store_code: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      generate_store_code: { Args: never; Returns: string }
       get_client_statistics: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           active_locations: number
           client_id: string
@@ -427,10 +424,7 @@ export type Database = {
           client_id: string
         }[]
       }
-      get_user_client_id: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      get_user_client_id: { Args: never; Returns: string }
       get_user_roles: {
         Args: { _user_id: string }
         Returns: {
@@ -450,10 +444,7 @@ export type Database = {
         }
         Returns: boolean
       }
-      validate_opening_hours: {
-        Args: { hours_text: string }
-        Returns: boolean
-      }
+      validate_opening_hours: { Args: { hours_text: string }; Returns: boolean }
     }
     Enums: {
       app_role:

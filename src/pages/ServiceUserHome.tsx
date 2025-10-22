@@ -6,11 +6,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Eye, MapPin, Users, Loader2, LogOut } from 'lucide-react';
+import { Eye, MapPin, Users, Loader2, LogOut, UserPlus, History as HistoryIcon } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import jasonerLogo from '@/assets/jasoner-horizontal-logo.png';
 import ServiceUserCreateDialog from '@/components/ServiceUserCreateDialog';
-import { UserPlus } from 'lucide-react';
+import { VersionHistoryDialog } from '@/components/VersionHistoryDialog';
 
 interface ClientInfo {
   id: string;
@@ -35,6 +35,7 @@ const ServiceUserHome = () => {
   const [isServiceUser, setIsServiceUser] = useState(false);
   const [createUserDialogOpen, setCreateUserDialogOpen] = useState(false);
   const [selectedClientForUser, setSelectedClientForUser] = useState<{ id: string; name: string } | null>(null);
+  const [versionHistoryOpen, setVersionHistoryOpen] = useState(false);
 
   useEffect(() => {
     const checkRoleAndFetch = async () => {
@@ -227,6 +228,10 @@ const ServiceUserHome = () => {
             </div>
             <div className="flex items-center gap-4">
               <span className="text-sm text-muted-foreground">{user.email}</span>
+              <Button variant="outline" size="sm" onClick={() => setVersionHistoryOpen(true)}>
+                <HistoryIcon className="w-4 h-4 mr-2" />
+                Version History
+              </Button>
               <Button variant="ghost" size="sm" onClick={handleSignOut}>
                 <LogOut className="w-4 h-4 mr-2" />
                 Sign Out
@@ -394,6 +399,13 @@ const ServiceUserHome = () => {
           onUserCreated={handleUserCreated}
         />
       )}
+
+      {/* Version History Dialog */}
+      <VersionHistoryDialog
+        open={versionHistoryOpen}
+        onOpenChange={setVersionHistoryOpen}
+        onImport={fetchClientData}
+      />
     </div>
   );
 };
