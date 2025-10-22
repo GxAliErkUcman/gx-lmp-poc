@@ -305,7 +305,7 @@ const ClientDashboard = () => {
             <div className="flex items-center justify-between mb-8">
               <div>
                 <h1 className="text-4xl font-bold mb-2">
-                  {selectedClient?.name || 'Client Dashboard'}
+                  {accessibleClients.find(c => c.id === selectedClientId)?.name || 'Client Dashboard'}
                 </h1>
                 <div className="flex gap-4 text-sm text-muted-foreground">
                   <span>Total: {businesses.length}</span>
@@ -314,7 +314,10 @@ const ClientDashboard = () => {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <JsonExport businesses={businesses} clientName={selectedClient?.name} />
+                <JsonExport 
+                  businesses={businesses} 
+                  clientName={accessibleClients.find(c => c.id === selectedClientId)?.name} 
+                />
                 <Button variant="outline" onClick={() => setSettingsDialogOpen(true)}>
                   <Settings className="w-4 h-4 mr-2" />
                   Settings
