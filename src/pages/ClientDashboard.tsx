@@ -20,7 +20,8 @@ import jasonerLogo from '@/assets/jasoner-horizontal-logo.png';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { JsonExport } from '@/components/JsonExport';
 import ServiceUserCreateDialog from '@/components/ServiceUserCreateDialog';
-import { UserPlus } from 'lucide-react';
+import { UserPlus, History as HistoryIcon } from 'lucide-react';
+import { VersionHistoryDialog } from '@/components/VersionHistoryDialog';
 
 const ClientDashboard = () => {
   const { user, signOut } = useAuth();
@@ -45,6 +46,7 @@ const ClientDashboard = () => {
   const [accessibleClients, setAccessibleClients] = useState<{id: string; name: string}[]>([]);
   const [selectedClientId, setSelectedClientId] = useState<string>('');
   const [createUserDialogOpen, setCreateUserDialogOpen] = useState(false);
+  const [versionHistoryOpen, setVersionHistoryOpen] = useState(false);
 
   useEffect(() => {
     const checkRoleAndFetch = async () => {
@@ -318,6 +320,13 @@ const ClientDashboard = () => {
                   businesses={businesses} 
                   clientName={accessibleClients.find(c => c.id === selectedClientId)?.name} 
                 />
+                <Button 
+                  variant="outline" 
+                  onClick={() => setVersionHistoryOpen(true)}
+                >
+                  <HistoryIcon className="w-4 h-4 mr-2" />
+                  Version History
+                </Button>
                 <Button variant="outline" onClick={() => setSettingsDialogOpen(true)}>
                   <Settings className="w-4 h-4 mr-2" />
                   Settings
@@ -515,6 +524,12 @@ const ClientDashboard = () => {
           onUserCreated={handleUserCreated}
         />
       )}
+      <VersionHistoryDialog
+        open={versionHistoryOpen}
+        onOpenChange={setVersionHistoryOpen}
+        clientId={selectedClientId}
+        onImport={fetchBusinesses}
+      />
     </div>
   );
 };

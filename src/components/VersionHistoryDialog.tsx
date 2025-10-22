@@ -6,6 +6,7 @@ import { Download, Upload, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { Badge } from '@/components/ui/badge';
 
 interface BackupFile {
   name: string;
@@ -13,6 +14,7 @@ interface BackupFile {
   updated_at: string;
   clientId: string;
   clientName: string;
+  folder: 'crud' | 'weekly';
   metadata?: {
     size?: number;
   };
@@ -54,17 +56,36 @@ export const VersionHistoryDialog = ({ open, onOpenChange, clientId, onImport }:
       for (const client of clientsData || []) {
         if (clientId && client.id !== clientId) continue;
 
-        const { data: files, error: listError } = await supabase.storage
+        // Fetch CRUD backups
+        const { data: crudFiles, error: crudError } = await supabase.storage
           .from('json-backups')
-          .list(client.id, {
+          .list(`${client.id}/crud`, {
             sortBy: { column: 'created_at', order: 'desc' },
           });
 
-        if (!listError && files) {
-          const filesWithClient = files.map(file => ({
+        if (!crudError && crudFiles) {
+          const filesWithClient = crudFiles.map(file => ({
             ...file,
             clientId: client.id,
             clientName: client.name,
+            folder: 'crud' as const,
+          }));
+          allBackups.push(...filesWithClient);
+        }
+
+        // Fetch Weekly backups
+        const { data: weeklyFiles, error: weeklyError } = await supabase.storage
+          .from('json-backups')
+          .list(`${client.id}/weekly`, {
+            sortBy: { column: 'created_at', order: 'desc' },
+          });
+
+        if (!weeklyError && weeklyFiles) {
+          const filesWithClient = weeklyFiles.map(file => ({
+            ...file,
+            clientId: client.id,
+            clientName: client.name,
+            folder: 'weekly' as const,
           }));
           allBackups.push(...filesWithClient);
         }
@@ -87,7 +108,7 @@ export const VersionHistoryDialog = ({ open, onOpenChange, clientId, onImport }:
     try {
       const { data, error } = await supabase.storage
         .from('json-backups')
-        .download(`${backup.clientId}/${backup.name}`);
+        .download(`${backup.clientId}/${backup.folder}/${backup.name}`);
 
       if (error) throw error;
 
@@ -118,7 +139,7 @@ export const VersionHistoryDialog = ({ open, onOpenChange, clientId, onImport }:
     try {
       const { data, error } = await supabase.storage
         .from('json-backups')
-        .download(`${backup.clientId}/${backup.name}`);
+        .download(`${backup.clientId}/${backup.folder}/${backup.name}`);
 
       if (error) throw error;
 
@@ -172,7 +193,7 @@ export const VersionHistoryDialog = ({ open, onOpenChange, clientId, onImport }:
     try {
       const { error } = await supabase.storage
         .from('json-backups')
-        .remove([`${backup.clientId}/${backup.name}`]);
+        .remove([`${backup.clientId}/${backup.folder}/${backup.name}`]);
 
       if (error) throw error;
 
@@ -225,6 +246,7 @@ export const VersionHistoryDialog = ({ open, onOpenChange, clientId, onImport }:
               <TableHeader>
                 <TableRow>
                   <TableHead>Client</TableHead>
+                  <TableHead>Type</TableHead>
                   <TableHead>File Name</TableHead>
                   <TableHead>Created</TableHead>
                   <TableHead>Size</TableHead>
@@ -233,8 +255,13 @@ export const VersionHistoryDialog = ({ open, onOpenChange, clientId, onImport }:
               </TableHeader>
               <TableBody>
                 {backups.map((backup) => (
-                  <TableRow key={`${backup.clientId}-${backup.name}`}>
+                  <TableRow key={`${backup.clientId}-${backup.folder}-${backup.name}`}>
                     <TableCell className="font-medium">{backup.clientName}</TableCell>
+                    <TableCell>
+                      <Badge variant={backup.folder === 'weekly' ? 'default' : 'secondary'}>
+                        {backup.folder === 'weekly' ? 'Weekly' : 'CRUD'}
+                      </Badge>
+                    </TableCell>
                     <TableCell>{backup.name}</TableCell>
                     <TableCell>{formatDate(backup.created_at)}</TableCell>
                     <TableCell>{formatSize(backup.metadata?.size)}</TableCell>

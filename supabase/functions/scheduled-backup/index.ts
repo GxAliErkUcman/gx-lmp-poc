@@ -149,9 +149,13 @@ Deno.serve(async (req) => {
         const jsonContent = JSON.stringify(validBusinesses, null, 2);
         const jsonBlob = new Blob([jsonContent], { type: 'application/json' });
 
-        // Generate filename: ClientName-YYYY-MM-DD.json
-        const timestamp = new Date().toISOString().split('T')[0];
-        const fileName = `${client.id}/${client.name}-${timestamp}.json`;
+        // Generate filename: ClientName-Weekly-DD.MM.YYYY.json
+        const now = new Date();
+        const day = String(now.getDate()).padStart(2, '0');
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const year = now.getFullYear();
+        const timestamp = `${day}.${month}.${year}`;
+        const fileName = `${client.id}/weekly/${client.name}-Weekly-${timestamp}.json`;
 
         // Upload to storage
         const { error: uploadError } = await supabase.storage
@@ -166,19 +170,19 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        // Cleanup: Keep only last 5 backups per client
+        // Cleanup: Keep only last 12 weekly backups per client (3 months)
         const { data: existingFiles } = await supabase.storage
           .from('json-backups')
-          .list(client.id, {
+          .list(`${client.id}/weekly`, {
             sortBy: { column: 'created_at', order: 'desc' },
           });
 
-        if (existingFiles && existingFiles.length > 5) {
-          const filesToDelete = existingFiles.slice(5).map(f => `${client.id}/${f.name}`);
+        if (existingFiles && existingFiles.length > 12) {
+          const filesToDelete = existingFiles.slice(12).map(f => `${client.id}/weekly/${f.name}`);
           await supabase.storage
             .from('json-backups')
             .remove(filesToDelete);
-          console.log(`Cleaned up ${filesToDelete.length} old backups for ${client.name}`);
+          console.log(`Cleaned up ${filesToDelete.length} old weekly backups for ${client.name}`);
         }
 
         results.push({

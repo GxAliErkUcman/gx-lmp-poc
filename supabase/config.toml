@@ -36,3 +36,6 @@ verify_jwt = false
 
 [functions.scheduled-backup]
 verify_jwt = false
+
+[functions.crud-backup]
+verify_jwt = false
