@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   Select,
   SelectContent,
@@ -73,6 +73,22 @@ export const CitySelect = ({
   // Ensure the current value is always in the cities list before rendering
   const isValueValid = !value || cities.includes(value);
 
+  // Grace period: bind Select value only when options are ready
+  const [bindValue, setBindValue] = useState<string | undefined>(undefined);
+  useEffect(() => {
+    let t: number | undefined;
+    if (isValueValid) {
+      setBindValue(value);
+    } else {
+      t = window.setTimeout(() => {
+        setBindValue(value && cities.includes(value) ? value : undefined);
+      }, 150);
+    }
+    return () => {
+      if (t) window.clearTimeout(t);
+    };
+  }, [value, isValueValid, cities]);
+
   const handleValueChange = (selectedValue: string) => {
     if (selectedValue === '__custom__') {
       setShowCustomInput(true);
@@ -134,11 +150,11 @@ export const CitySelect = ({
 
   if (!countryCode) {
     return (
-      <Select disabled>
-        <SelectTrigger>
-          <SelectValue placeholder="Select country first..." />
-        </SelectTrigger>
-      </Select>
+      <Input
+        value={value || ''}
+        placeholder="Select country first..."
+        readOnly
+      />
     );
   }
 
@@ -154,7 +170,7 @@ export const CitySelect = ({
 
   // Only pass value to Select when we're certain the SelectItem exists
   // This prevents timing issues with React rendering cycles
-  const selectValue = isValueValid ? value : undefined;
+  const selectValue = bindValue;
 
   return (
     <Select 
