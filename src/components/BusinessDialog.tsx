@@ -288,6 +288,46 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
 
     // Check if critical fields changed (only for editing existing businesses)
     if (business) {
+      // Check for data deletion (fields that had data are now empty)
+      const deletedFields: string[] = [];
+      const fieldsToCheck = [
+        { key: 'city', label: 'City', current: data.city, original: business.city },
+        { key: 'state', label: 'State', current: data.state, original: business.state },
+        { key: 'postalCode', label: 'Postal Code', current: data.postalCode, original: business.postalCode },
+        { key: 'district', label: 'District', current: data.district, original: business.district },
+        { key: 'website', label: 'Website', current: data.website, original: business.website },
+        { key: 'primaryPhone', label: 'Primary Phone', current: data.primaryPhone, original: business.primaryPhone },
+        { key: 'fromTheBusiness', label: 'Description', current: data.fromTheBusiness, original: business.fromTheBusiness },
+        { key: 'addressLine2', label: 'Address Line 2', current: data.addressLine2, original: business.addressLine2 },
+        { key: 'addressLine3', label: 'Address Line 3', current: data.addressLine3, original: business.addressLine3 },
+        { key: 'addressLine4', label: 'Address Line 4', current: data.addressLine4, original: business.addressLine4 },
+        { key: 'addressLine5', label: 'Address Line 5', current: data.addressLine5, original: business.addressLine5 },
+      ];
+
+      fieldsToCheck.forEach(field => {
+        const originalValue = field.original;
+        const currentValue = field.current;
+        const originalHasData = originalValue && String(originalValue).trim() !== '';
+        const currentIsEmpty = !currentValue || String(currentValue).trim() === '';
+        
+        if (originalHasData && currentIsEmpty) {
+          deletedFields.push(field.label);
+        }
+      });
+
+      if (deletedFields.length > 0) {
+        const confirmed = window.confirm(
+          `⚠️ Warning: You are deleting existing data!\n\n` +
+          `The following fields had data and are now empty:\n` +
+          deletedFields.map(f => `• ${f}`).join('\n') +
+          `\n\nAre you sure you want to proceed?`
+        );
+        
+        if (!confirmed) {
+          return;
+        }
+      }
+
       const changedFields: string[] = [];
       if (data.businessName !== initialBusinessName) {
         changedFields.push('Business Name');

@@ -504,6 +504,9 @@ const ImportDialog = ({ open, onOpenChange, onSuccess, clientId }: ImportDialogP
           if (mapping.mapped && row[mapping.original] !== undefined && row[mapping.original] !== null && String(row[mapping.original]).trim() !== '') {
             const value = row[mapping.original];
             
+            // CRITICAL: Do NOT clone addressLine2 to addressLine1 or perform any fallback logic
+            // If addressLine1 is missing, the business should be marked as incomplete (pending)
+            
             // Handle social media URL fields
             if (mapping.mapped.startsWith('url_')) {
               socialMediaUrls.push({

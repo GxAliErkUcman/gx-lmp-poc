@@ -93,6 +93,46 @@ const MultiEditDialog = ({ open, onOpenChange, selectedIds, onSuccess, clientId 
   });
 
   const onSubmit = async (values: MultiEditFormValues) => {
+    // Warn if any field is being set to empty (this would delete existing data)
+    const fieldsBeingCleared: string[] = [];
+    const fieldLabels: Record<string, string> = {
+      primaryPhone: 'Primary Phone',
+      website: 'Website',
+      fromTheBusiness: 'Description',
+      primaryCategory: 'Primary Category',
+      country: 'Country',
+      mondayHours: 'Monday Hours',
+      tuesdayHours: 'Tuesday Hours',
+      wednesdayHours: 'Wednesday Hours',
+      thursdayHours: 'Thursday Hours',
+      fridayHours: 'Friday Hours',
+      saturdayHours: 'Saturday Hours',
+      sundayHours: 'Sunday Hours',
+    };
+
+    // Check for fields that are explicitly set but empty
+    Object.entries(values).forEach(([key, value]) => {
+      if (key !== 'businessName' && value !== undefined && value !== null) {
+        const stringValue = String(value).trim();
+        if (stringValue === '' && fieldLabels[key]) {
+          fieldsBeingCleared.push(fieldLabels[key]);
+        }
+      }
+    });
+
+    if (fieldsBeingCleared.length > 0) {
+      const confirmed = window.confirm(
+        `⚠️ Warning: You are about to delete existing data for ${selectedIds.length} business(es)!\n\n` +
+        `The following fields will be cleared:\n` +
+        fieldsBeingCleared.map(f => `• ${f}`).join('\n') +
+        `\n\nThis will remove existing values from these fields. Are you sure you want to proceed?`
+      );
+      
+      if (!confirmed) {
+        return;
+      }
+    }
+
     // Check if critical fields are being changed
     const changedFields: string[] = [];
     if (values.businessName && values.businessName.trim() !== '') {
