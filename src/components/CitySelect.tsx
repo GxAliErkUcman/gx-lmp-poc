@@ -62,13 +62,16 @@ export const CitySelect = ({
     if (!countryCode) return [];
     const predefinedCities = CITIES_BY_COUNTRY[countryCode] || [];
     
-    // If value exists and is not in the predefined list, add it
-    if (value && !predefinedCities.includes(value)) {
+    // If value exists and is not in the predefined list, add it at the top
+    if (value && value.trim() && !predefinedCities.includes(value)) {
       return [value, ...predefinedCities];
     }
     
     return predefinedCities;
   }, [countryCode, value]);
+
+  // Ensure the current value is always in the cities list before rendering
+  const isValueValid = !value || cities.includes(value);
 
   const handleValueChange = (selectedValue: string) => {
     if (selectedValue === '__custom__') {
@@ -149,12 +152,18 @@ export const CitySelect = ({
     );
   }
 
+  // Only pass value to Select when we're certain the SelectItem exists
+  // This prevents timing issues with React rendering cycles
+  const selectValue = isValueValid ? value : undefined;
+
   return (
-    <Select value={value || undefined} onValueChange={handleValueChange}>
+    <Select 
+      key={`${countryCode}-${value}`} 
+      value={selectValue} 
+      onValueChange={handleValueChange}
+    >
       <SelectTrigger>
-        <SelectValue placeholder={placeholder}>
-          {value || placeholder}
-        </SelectValue>
+        <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent className="max-h-[200px] overflow-y-auto bg-background border z-50">
         {cities.map((city) => (
