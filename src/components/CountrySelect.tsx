@@ -9,7 +9,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 
-const COUNTRIES = [
+export const COUNTRIES = [
   { code: 'AD', name: 'Andorra' },
   { code: 'AE', name: 'United Arab Emirates' },
   { code: 'AF', name: 'Afghanistan' },
@@ -260,6 +260,33 @@ const COUNTRIES = [
   { code: 'ZM', name: 'Zambia' },
   { code: 'ZW', name: 'Zimbabwe' },
 ];
+
+// Helper function to convert country name to country code
+export const getCountryCode = (nameOrCode: string): string => {
+  if (!nameOrCode) return nameOrCode;
+  
+  const normalized = nameOrCode.trim();
+  
+  // Check if it's already a valid code
+  const isCode = COUNTRIES.some(c => c.code === normalized);
+  if (isCode) return normalized;
+  
+  // Try to find by name (case-insensitive exact match)
+  const exactMatch = COUNTRIES.find(c => 
+    c.name.toLowerCase() === normalized.toLowerCase()
+  );
+  if (exactMatch) return exactMatch.code;
+  
+  // Try partial match (for cases like "United States" vs "United States of America")
+  const partialMatch = COUNTRIES.find(c => 
+    c.name.toLowerCase().includes(normalized.toLowerCase()) ||
+    normalized.toLowerCase().includes(c.name.toLowerCase())
+  );
+  if (partialMatch) return partialMatch.code;
+  
+  // Return original if no match found
+  return nameOrCode;
+};
 
 interface CountrySelectProps {
   value?: string;

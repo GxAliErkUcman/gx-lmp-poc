@@ -21,7 +21,7 @@ import PhotoUpload from '@/components/PhotoUpload';
 import OpeningHours from '@/components/OpeningHours';
 import LocationMap from '@/components/LocationMap';
 import { CategorySelect } from '@/components/CategorySelect';
-import { CountrySelect } from '@/components/CountrySelect';
+import { CountrySelect, getCountryCode } from '@/components/CountrySelect';
 import { CitySelect } from '@/components/CitySelect';
 import CategoryNameChangeDialog from '@/components/CategoryNameChangeDialog';
 
@@ -183,7 +183,8 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
         setValue('storeCode', businessToUse.storeCode);
         setValue('businessName', businessToUse.businessName);
         setValue('addressLine1', businessToUse.addressLine1);
-        setValue('country', businessToUse.country);
+        // Convert country name to code if necessary (for imported data)
+        setValue('country', getCountryCode(businessToUse.country));
         setValue('primaryCategory', businessToUse.primaryCategory);
         setValue('addressLine2', businessToUse.addressLine2 || '');
         setValue('addressLine3', businessToUse.addressLine3 || '');
