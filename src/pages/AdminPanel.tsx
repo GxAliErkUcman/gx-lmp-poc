@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Users, MapPin, Clock, Download, UserPlus, Plus, Trash2, Settings, Mail, RefreshCw, Edit, Handshake, Shield } from 'lucide-react';
+import { Loader2, Users, MapPin, Clock, Download, UserPlus, Plus, Trash2, Settings, Mail, RefreshCw, Edit, Handshake, Shield, Eye, Copy } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
@@ -87,6 +87,8 @@ const AdminPanel = () => {
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [reassignDialogOpen, setReassignDialogOpen] = useState(false);
   const [selectedUserForReassign, setSelectedUserForReassign] = useState<User | null>(null);
+  const [userSearchTerm, setUserSearchTerm] = useState('');
+  const [clientFilter, setClientFilter] = useState<string>('all');
   
   const [newUser, setNewUser] = useState({
     firstName: '',
@@ -852,6 +854,19 @@ const AdminPanel = () => {
         <div className="flex gap-2">
           <Button
             variant="outline"
+            onClick={() => {
+              navigator.clipboard.writeText('https://console.cloud.google.com/storage/browser/jasoner;tab=objects?forceOnBucketsSortingFiltering=true&orgonly=true&project=jasoner&supportedpurview=organizationId');
+              toast({
+                title: "Link Copied",
+                description: "Jasoner Bucket URL copied to clipboard.",
+              });
+            }}
+          >
+            <Copy className="w-4 h-4 mr-2" />
+            Jasoner Bucket
+          </Button>
+          <Button
+            variant="outline"
             onClick={handleSyncAllToGcp}
             disabled={syncAllLoading}
           >
@@ -1092,15 +1107,10 @@ const AdminPanel = () => {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => handleManualExport(client.id)}
-                            disabled={exportLoading === client.id}
+                            onClick={() => navigate(`/client-dashboard?client=${client.id}`)}
                           >
-                            {exportLoading === client.id ? (
-                              <Loader2 className="w-4 h-4 animate-spin" />
-                            ) : (
-                              <Download className="w-4 h-4" />
-                            )}
-                            Export
+                            <Eye className="w-4 h-4" />
+                            View
                           </Button>
                            <Button
                             size="sm"
@@ -1161,26 +1171,54 @@ const AdminPanel = () => {
         <TabsContent value="users">
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="w-5 h-5" />
-                  User Management
-                </CardTitle>
-                <div className="flex items-center gap-2">
-                  <Label htmlFor="roleFilter" className="text-sm font-medium">Filter by Role:</Label>
-                  <Select value={roleFilter} onValueChange={setRoleFilter}>
-                    <SelectTrigger id="roleFilter" className="w-[180px]">
-                      <SelectValue placeholder="All Roles" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Roles</SelectItem>
-                      <SelectItem value="admin">Admin</SelectItem>
-                      <SelectItem value="service_user">Service User</SelectItem>
-                      <SelectItem value="client_admin">Client Admin</SelectItem>
-                      <SelectItem value="user">User</SelectItem>
-                      <SelectItem value="store_owner">Store Owner</SelectItem>
-                    </SelectContent>
-                  </Select>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="w-5 h-5" />
+                    User Management
+                  </CardTitle>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="flex-1">
+                    <Input
+                      placeholder="Search by name, email..."
+                      value={userSearchTerm}
+                      onChange={(e) => setUserSearchTerm(e.target.value)}
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="roleFilter" className="text-sm font-medium whitespace-nowrap">Role:</Label>
+                    <Select value={roleFilter} onValueChange={setRoleFilter}>
+                      <SelectTrigger id="roleFilter" className="w-[160px]">
+                        <SelectValue placeholder="All Roles" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Roles</SelectItem>
+                        <SelectItem value="admin">Admin</SelectItem>
+                        <SelectItem value="service_user">Service User</SelectItem>
+                        <SelectItem value="client_admin">Client Admin</SelectItem>
+                        <SelectItem value="user">User</SelectItem>
+                        <SelectItem value="store_owner">Store Owner</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="clientFilter" className="text-sm font-medium whitespace-nowrap">Client:</Label>
+                    <Select value={clientFilter} onValueChange={setClientFilter}>
+                      <SelectTrigger id="clientFilter" className="w-[180px]">
+                        <SelectValue placeholder="All Clients" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Clients</SelectItem>
+                        <SelectItem value="unassigned">Unassigned</SelectItem>
+                        {clientOptions.map((client) => (
+                          <SelectItem key={client.id} value={client.id}>
+                            {client.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </div>
             </CardHeader>
@@ -1203,8 +1241,33 @@ const AdminPanel = () => {
                   <TableBody>
                     {allUsers
                       .filter(user => {
-                        if (roleFilter === 'all') return true;
-                        return user.roles?.includes(roleFilter);
+                        // Role filter
+                        if (roleFilter !== 'all' && !user.roles?.includes(roleFilter)) {
+                          return false;
+                        }
+                        
+                        // Client filter
+                        if (clientFilter !== 'all') {
+                          if (clientFilter === 'unassigned') {
+                            if (user.client_id) return false;
+                          } else {
+                            if (user.client_id !== clientFilter) return false;
+                          }
+                        }
+                        
+                        // Search filter
+                        if (userSearchTerm) {
+                          const searchLower = userSearchTerm.toLowerCase();
+                          const fullName = `${user.first_name} ${user.last_name}`.toLowerCase();
+                          const email = user.email.toLowerCase();
+                          const clientName = user.client_name?.toLowerCase() || '';
+                          
+                          return fullName.includes(searchLower) || 
+                                 email.includes(searchLower) || 
+                                 clientName.includes(searchLower);
+                        }
+                        
+                        return true;
                       })
                       .map((user) => (
                       <TableRow key={user.user_id}>
@@ -1289,7 +1352,33 @@ const AdminPanel = () => {
                   </TableBody>
                 </Table>
               )}
-              {allUsers.filter(user => roleFilter === 'all' || user.roles?.includes(roleFilter)).length === 0 && !usersLoading && (
+              {allUsers.filter(user => {
+                // Role filter
+                if (roleFilter !== 'all' && !user.roles?.includes(roleFilter)) return false;
+                
+                // Client filter
+                if (clientFilter !== 'all') {
+                  if (clientFilter === 'unassigned') {
+                    if (user.client_id) return false;
+                  } else {
+                    if (user.client_id !== clientFilter) return false;
+                  }
+                }
+                
+                // Search filter
+                if (userSearchTerm) {
+                  const searchLower = userSearchTerm.toLowerCase();
+                  const fullName = `${user.first_name} ${user.last_name}`.toLowerCase();
+                  const email = user.email.toLowerCase();
+                  const clientName = user.client_name?.toLowerCase() || '';
+                  
+                  return fullName.includes(searchLower) || 
+                         email.includes(searchLower) || 
+                         clientName.includes(searchLower);
+                }
+                
+                return true;
+              }).length === 0 && !usersLoading && (
                 <div className="text-center py-8 text-muted-foreground">
                   No users found
                 </div>
