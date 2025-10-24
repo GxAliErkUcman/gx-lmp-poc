@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdmin } from '@/hooks/use-admin';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -43,6 +43,17 @@ const Dashboard = () => {
     // Refresh businesses to get updated logo
     fetchBusinesses();
   };
+
+// Recovery link safety redirect: if a recovery token lands on dashboard, send to reset-password
+const location = useLocation();
+useEffect(() => {
+  const search = location.search || '';
+  const hash = location.hash || '';
+  const params = new URLSearchParams(search);
+  if (params.get('type') === 'recovery' || hash.includes('type=recovery') || params.get('code')) {
+    navigate(`/reset-password${search}${hash}`, { replace: true });
+  }
+}, [location.search, location.hash, navigate]);
 
 // Auth redirect handled below after hooks
 
