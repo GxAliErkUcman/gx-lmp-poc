@@ -26,6 +26,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { CategorySelect } from '@/components/CategorySelect';
 import { CountrySelect } from '@/components/CountrySelect';
 import CategoryNameChangeDialog from '@/components/CategoryNameChangeDialog';
+import BusinessCustomServicesDialog from '@/components/BusinessCustomServicesDialog';
 
 const multiEditFormSchema = z.object({
   businessName: z.string().optional(),
@@ -65,6 +66,8 @@ const MultiEditDialog = ({ open, onOpenChange, selectedIds, onSuccess, clientId 
   const [uploading, setUploading] = useState(false);
   const [categoryNameWarningOpen, setCategoryNameWarningOpen] = useState(false);
   const [pendingFormData, setPendingFormData] = useState<MultiEditFormValues | null>(null);
+  const [customServicesDialogOpen, setCustomServicesDialogOpen] = useState(false);
+  const [customServices, setCustomServices] = useState<any[]>([]);
 
   const form = useForm<MultiEditFormValues>({
     resolver: zodResolver(multiEditFormSchema),
@@ -182,6 +185,11 @@ const MultiEditDialog = ({ open, onOpenChange, selectedIds, onSuccess, clientId 
       // Add social media to update data if any URLs are provided
       if (socialMediaUrls.length > 0) {
         (updateData as any).socialMediaUrls = socialMediaUrls;
+      }
+
+      // Add custom services if any are selected
+      if (customServices.length > 0) {
+        (updateData as any).customServices = customServices;
       }
 
       if (Object.keys(updateData).length === 0) {
@@ -818,7 +826,25 @@ const MultiEditDialog = ({ open, onOpenChange, selectedIds, onSuccess, clientId 
               </div>
             </div>
 
-            <div className="flex justify-end gap-2 pt-4 border-t">
+            {/* Custom Services */}
+            <div className="space-y-2 pt-4 border-t">
+              <h3 className="text-sm font-medium">Custom Services</h3>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setCustomServicesDialogOpen(true)}
+                className="w-full"
+              >
+                Select Custom Services to Apply
+              </Button>
+              {customServices.length > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  {customServices.length} service(s) selected
+                </p>
+              )}
+            </div>
+
+            <div className="flex justify-end gap-2 pt-4">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
@@ -849,6 +875,15 @@ const MultiEditDialog = ({ open, onOpenChange, selectedIds, onSuccess, clientId 
             pendingFormData?.primaryCategory && pendingFormData.primaryCategory.trim() !== '' ? 'Primary Category' : null,
           ].filter(Boolean) as string[]
         }
+      />
+
+      <BusinessCustomServicesDialog
+        open={customServicesDialogOpen}
+        onOpenChange={setCustomServicesDialogOpen}
+        clientId={clientId}
+        businessCategories={[]}
+        currentServices={customServices}
+        onSave={(services) => setCustomServices(services)}
       />
     </Dialog>
   );

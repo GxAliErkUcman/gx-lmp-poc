@@ -24,6 +24,7 @@ import { CategorySelect } from '@/components/CategorySelect';
 import { CountrySelect, getCountryCode } from '@/components/CountrySelect';
 import { CitySelect } from '@/components/CitySelect';
 import CategoryNameChangeDialog from '@/components/CategoryNameChangeDialog';
+import BusinessCustomServicesDialog from '@/components/BusinessCustomServicesDialog';
 
 const businessSchema = z.object({
   storeCode: z.string().min(1, 'Store code is required'),
@@ -103,6 +104,8 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
   const [initialPrimaryCategory, setInitialPrimaryCategory] = useState<string>('');
   const [categoryNameWarningOpen, setCategoryNameWarningOpen] = useState(false);
   const [pendingFormData, setPendingFormData] = useState<any>(null);
+  const [customServicesDialogOpen, setCustomServicesDialogOpen] = useState(false);
+  const [customServices, setCustomServices] = useState<any[]>([]);
 
   const [socialMediaUrls, setSocialMediaUrls] = useState({
     facebookUrl: "",
@@ -248,6 +251,9 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
         // Set cover photo
         setCoverPhoto(businessToUse.coverPhoto || '');
         
+        // Set custom services
+        setCustomServices(businessToUse.customServices || []);
+        
         // Store initial values for critical field change detection
         setInitialBusinessName(businessToUse.businessName || '');
         setInitialPrimaryCategory(businessToUse.primaryCategory || '');
@@ -256,6 +262,7 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
         reset();
         setCoverPhoto('');
         setSpecialHours([]);
+        setCustomServices([]);
         setInitialBusinessName('');
         setInitialPrimaryCategory('');
         setHours({
@@ -473,6 +480,7 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
         reservationsURL: data.reservationsURL || null,
         orderAheadURL: data.orderAheadURL || null,
         socialMediaUrls: socialMediaUrls.length > 0 ? socialMediaUrls : null,
+        customServices: customServices.length > 0 ? customServices : null,
         client_id: effectiveClientId, // Force to selected client when provided
         status: newStatus,
       };
@@ -980,6 +988,48 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
             </CardContent>
           </Card>
 
+          {/* Custom Services */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Custom Services</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                {customServices.length > 0 ? (
+                  <div className="space-y-2 mb-3">
+                    {customServices.map((service: any, index: number) => (
+                      <div key={index} className="p-3 bg-muted rounded-lg">
+                        <div className="font-semibold">{service.serviceName}</div>
+                        {service.serviceDescription && (
+                          <div className="text-sm text-muted-foreground mt-1">
+                            {service.serviceDescription}
+                          </div>
+                        )}
+                        {service.serviceCategoryId && (
+                          <div className="text-xs text-muted-foreground mt-1">
+                            Category: {service.serviceCategoryId}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground mb-3">
+                    No custom services assigned yet.
+                  </p>
+                )}
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setCustomServicesDialogOpen(true)}
+                  className="w-full"
+                >
+                  Manage Custom Services
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
           <Separator />
 
           <div className="flex justify-end gap-2">
@@ -1010,6 +1060,19 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
               ].filter(Boolean) as string[]
             : []
         }
+      />
+
+      <BusinessCustomServicesDialog
+        open={customServicesDialogOpen}
+        onOpenChange={setCustomServicesDialogOpen}
+        businessId={business?.id}
+        clientId={clientId || business?.client_id}
+        businessCategories={[
+          watch('primaryCategory'),
+          ...(watch('additionalCategories')?.split(',').map(c => c.trim()).filter(Boolean) || [])
+        ]}
+        currentServices={customServices}
+        onSave={(services) => setCustomServices(services)}
       />
     </Dialog>
   );

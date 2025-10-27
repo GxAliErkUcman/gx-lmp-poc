@@ -6,11 +6,12 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Settings, Clock, Link } from 'lucide-react';
+import { Settings, Clock, Link, Wrench } from 'lucide-react';
 import LogoUpload from './LogoUpload';
 import AccountSocialsDialog from './AccountSocialsDialog';
 import AccountOpeningHoursDialog from './AccountOpeningHoursDialog';
 import AccountServiceUrlsDialog from './AccountServiceUrlsDialog';
+import ClientCustomServicesDialog from './ClientCustomServicesDialog';
 import { Button } from '@/components/ui/button';
 
 interface SettingsDialogProps {
@@ -24,6 +25,7 @@ const SettingsDialog = ({ open, onOpenChange, onLogoUploaded, clientId }: Settin
   const [socialsDialogOpen, setSocialsDialogOpen] = useState(false);
   const [openingHoursDialogOpen, setOpeningHoursDialogOpen] = useState(false);
   const [serviceUrlsDialogOpen, setServiceUrlsDialogOpen] = useState(false);
+  const [customServicesDialogOpen, setCustomServicesDialogOpen] = useState(false);
 
   const handleSocialsSuccess = () => {
     setSocialsDialogOpen(false);
@@ -38,6 +40,11 @@ const SettingsDialog = ({ open, onOpenChange, onLogoUploaded, clientId }: Settin
 
   const handleServiceUrlsSuccess = () => {
     setServiceUrlsDialogOpen(false);
+    onLogoUploaded(); // This callback will refresh the businesses data
+  };
+
+  const handleCustomServicesSuccess = () => {
+    setCustomServicesDialogOpen(false);
     onLogoUploaded(); // This callback will refresh the businesses data
   };
 
@@ -124,6 +131,26 @@ const SettingsDialog = ({ open, onOpenChange, onLogoUploaded, clientId }: Settin
                   </Button>
                 </CardContent>
               </Card>
+
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base">Custom Services</CardTitle>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <p className="text-muted-foreground mb-3 text-sm">
+                    Configure custom services that can be assigned to your business locations.
+                  </p>
+                  <Button 
+                    onClick={() => setCustomServicesDialogOpen(true)}
+                    variant="outline"
+                    size="sm"
+                    className="w-full flex items-center gap-2"
+                  >
+                    <Wrench className="w-4 h-4" />
+                    Manage Custom Services
+                  </Button>
+                </CardContent>
+              </Card>
             </div>
           </div>
         </DialogContent>
@@ -148,6 +175,13 @@ const SettingsDialog = ({ open, onOpenChange, onLogoUploaded, clientId }: Settin
         onOpenChange={setServiceUrlsDialogOpen}
         onSuccess={handleServiceUrlsSuccess}
         clientId={clientId}
+      />
+
+      <ClientCustomServicesDialog
+        open={customServicesDialogOpen}
+        onOpenChange={setCustomServicesDialogOpen}
+        clientId={clientId}
+        onSuccess={handleCustomServicesSuccess}
       />
     </>
   );
