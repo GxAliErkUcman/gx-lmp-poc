@@ -20,8 +20,9 @@ import jasonerLogo from '@/assets/jasoner-horizontal-logo.png';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { JsonExport } from '@/components/JsonExport';
 import ServiceUserCreateDialog from '@/components/ServiceUserCreateDialog';
-import { UserPlus, History as HistoryIcon } from 'lucide-react';
+import { UserPlus, History as HistoryIcon, Wrench } from 'lucide-react';
 import { VersionHistoryDialog } from '@/components/VersionHistoryDialog';
+import ClientCustomServicesDialog from '@/components/ClientCustomServicesDialog';
 
 const ClientDashboard = () => {
   const { user, signOut } = useAuth();
@@ -47,6 +48,7 @@ const ClientDashboard = () => {
   const [selectedClientId, setSelectedClientId] = useState<string>('');
   const [createUserDialogOpen, setCreateUserDialogOpen] = useState(false);
   const [versionHistoryOpen, setVersionHistoryOpen] = useState(false);
+  const [customServicesDialogOpen, setCustomServicesDialogOpen] = useState(false);
 
   useEffect(() => {
     const checkRoleAndFetch = async () => {
@@ -331,6 +333,10 @@ const ClientDashboard = () => {
                   <Settings className="w-4 h-4 mr-2" />
                   Settings
                 </Button>
+                <Button variant="outline" onClick={() => setCustomServicesDialogOpen(true)}>
+                  <Wrench className="w-4 h-4 mr-2" />
+                  Custom Services
+                </Button>
                 <Button variant="outline" onClick={() => setImportDialogOpen(true)}>
                   <Upload className="w-4 h-4 mr-2" />
                   Import
@@ -529,6 +535,12 @@ const ClientDashboard = () => {
         onOpenChange={setVersionHistoryOpen}
         clientId={selectedClientId}
         onImport={fetchBusinesses}
+      />
+
+      <ClientCustomServicesDialog
+        open={customServicesDialogOpen}
+        onOpenChange={setCustomServicesDialogOpen}
+        clientId={selectedClientId}
       />
     </div>
   );

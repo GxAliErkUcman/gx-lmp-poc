@@ -1078,27 +1078,27 @@ const AdminPanel = () => {
                            </div>
                          )}
                        </TableCell>
-                      <TableCell className="text-center">
-                        <div className="grid grid-cols-2 gap-2 text-xs">
-                          <div className="flex items-center gap-1 justify-center bg-muted/50 rounded p-1.5">
-                            <Users className="w-3 h-3" />
-                            <span className="font-medium">{client.user_count}</span>
-                          </div>
-                          <div className="flex items-center gap-1 justify-center bg-green-500/10 rounded p-1.5">
-                            <MapPin className="w-3 h-3 text-green-600" />
-                            <span className="font-medium text-green-600">{client.active_locations}</span>
-                          </div>
-                          <div className="flex items-center gap-1 justify-center bg-yellow-500/10 rounded p-1.5">
-                            <Clock className="w-3 h-3 text-yellow-600" />
-                            <span className="font-medium text-yellow-600">{client.pending_locations}</span>
-                          </div>
-                          <div className="flex items-center gap-1 justify-center bg-muted/50 rounded p-1.5">
-                            <span className="text-muted-foreground text-[10px]">
-                              {client.last_updated ? new Date(client.last_updated).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Never'}
-                            </span>
-                          </div>
-                        </div>
-                      </TableCell>
+                       <TableCell className="text-center">
+                         <div className="grid grid-cols-2 gap-2 text-xs">
+                           <div className="flex items-center gap-1 justify-center bg-muted/50 rounded p-1.5">
+                             <Users className="w-3 h-3" />
+                             <span className="font-medium">{client.user_count}</span>
+                           </div>
+                           <div className="flex items-center gap-1 justify-center bg-muted/50 rounded p-1.5">
+                             <span className="text-muted-foreground text-[10px]">
+                               {client.last_updated ? new Date(client.last_updated).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Never'}
+                             </span>
+                           </div>
+                           <div className="flex items-center gap-1 justify-center bg-green-500/10 rounded p-1.5">
+                             <MapPin className="w-3 h-3 text-green-600" />
+                             <span className="font-medium text-green-600">{client.active_locations}</span>
+                           </div>
+                           <div className="flex items-center gap-1 justify-center bg-yellow-500/10 rounded p-1.5">
+                             <Clock className="w-3 h-3 text-yellow-600" />
+                             <span className="font-medium text-yellow-600">{client.pending_locations}</span>
+                           </div>
+                         </div>
+                       </TableCell>
                       <TableCell className="text-center">
                         <div className="flex flex-wrap items-center justify-center gap-1">
                           <Button
