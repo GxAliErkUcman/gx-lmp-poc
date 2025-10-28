@@ -6,11 +6,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Users, Store, Trash2 } from 'lucide-react';
+import { Plus, Users, Store, Trash2, Settings } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import CreateUserDialog from '@/components/CreateUserDialog';
 import StoreOwnerAssignmentDialog from '@/components/StoreOwnerAssignmentDialog';
+import SettingsDialog from '@/components/SettingsDialog';
 import BusinessTableView from '@/components/BusinessTableView';
 import BusinessDialog from '@/components/BusinessDialog';
 import ImportDialog from '@/components/ImportDialog';
@@ -50,6 +51,7 @@ const ClientAdminPanel = () => {
   const [businessDialogOpen, setBusinessDialogOpen] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [editingBusiness, setEditingBusiness] = useState<Business | null>(null);
+  const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -269,6 +271,13 @@ const ClientAdminPanel = () => {
             </div>
           </div>
           <div className="flex items-center gap-4">
+            <Button 
+              onClick={() => setSettingsDialogOpen(true)} 
+              variant="outline"
+            >
+              <Settings className="w-4 h-4 mr-2" />
+              Settings
+            </Button>
             <span className="text-sm text-muted-foreground">{user.email}</span>
             <Button onClick={signOut} variant="outline" className="shadow-modern">
               Sign Out
@@ -468,6 +477,13 @@ const ClientAdminPanel = () => {
         open={importDialogOpen}
         onOpenChange={setImportDialogOpen}
         onSuccess={fetchData}
+        clientId={clientId || undefined}
+      />
+
+      <SettingsDialog
+        open={settingsDialogOpen}
+        onOpenChange={setSettingsDialogOpen}
+        onLogoUploaded={fetchData}
         clientId={clientId || undefined}
       />
     </div>

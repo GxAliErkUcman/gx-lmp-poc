@@ -10,12 +10,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Users, MapPin, Clock, Download, UserPlus, Plus, Trash2, Settings, Mail, RefreshCw, Edit, Handshake, Shield, Eye, Copy } from 'lucide-react';
+import { Loader2, Users, MapPin, Clock, Download, UserPlus, Plus, Trash2, Settings, Mail, RefreshCw, Edit, Handshake, Shield, Eye, Copy, Wrench } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
 import GcpSyncButton from '@/components/GcpSyncButton';
 import { ClientCategoriesDialog } from '@/components/ClientCategoriesDialog';
+import ClientCustomServicesDialog from '@/components/ClientCustomServicesDialog';
 import { RoleChangeDialog } from '@/components/RoleChangeDialog';
 import { UserReassignDialog } from '@/components/UserReassignDialog';
 import { AllClientsView } from '@/components/AllClientsView';
@@ -82,6 +83,7 @@ const AdminPanel = () => {
   const [editLscId, setEditLscId] = useState('');
   const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
   const [categoryManagementClient, setCategoryManagementClient] = useState<Client | null>(null);
+  const [customServicesDialogOpen, setCustomServicesDialogOpen] = useState(false);
   const [roleDialogOpen, setRoleDialogOpen] = useState(false);
   const [selectedUserForRole, setSelectedUserForRole] = useState<User | null>(null);
   const [roleFilter, setRoleFilter] = useState<string>('all');
@@ -1007,9 +1009,11 @@ const AdminPanel = () => {
                     <TableHead className="text-center">Active Locations</TableHead>
                     <TableHead className="text-center">Pending Locations</TableHead>
                     <TableHead className="text-center">Last Updated</TableHead>
-                    <TableHead className="text-center">Actions</TableHead>
-                    <TableHead className="text-center">Settings</TableHead>
-                    <TableHead className="text-center">Manage</TableHead>
+                    <TableHead className="text-center">View</TableHead>
+                    <TableHead className="text-center">Categories</TableHead>
+                    <TableHead className="text-center">Custom Services</TableHead>
+                    <TableHead className="text-center">Users</TableHead>
+                    <TableHead className="text-center">Delete</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -1103,27 +1107,40 @@ const AdminPanel = () => {
                         {client.last_updated ? new Date(client.last_updated).toLocaleDateString() : 'Never'}
                       </TableCell>
                       <TableCell className="text-center">
-                        <div className="flex items-center justify-center gap-1">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => navigate(`/client-dashboard?client=${client.id}`)}
-                          >
-                            <Eye className="w-4 h-4" />
-                            View
-                          </Button>
-                           <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => {
-                              setCategoryManagementClient(client);
-                              setCategoryDialogOpen(true);
-                            }}
-                          >
-                            <Handshake className="w-4 h-4" />
-                            Categories
-                          </Button>
-                        </div>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => navigate(`/client-dashboard?client=${client.id}`)}
+                        >
+                          <Eye className="w-4 h-4" />
+                          View
+                        </Button>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setCategoryManagementClient(client);
+                            setCategoryDialogOpen(true);
+                          }}
+                        >
+                          <Handshake className="w-4 h-4" />
+                          Categories
+                        </Button>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setCategoryManagementClient(client);
+                            setCustomServicesDialogOpen(true);
+                          }}
+                        >
+                          <Wrench className="w-4 h-4" />
+                          Custom Services
+                        </Button>
                       </TableCell>
                       <TableCell className="text-center">
                         <Button
@@ -1610,6 +1627,15 @@ const AdminPanel = () => {
           onOpenChange={setCategoryDialogOpen}
           clientId={categoryManagementClient.id}
           clientName={categoryManagementClient.name}
+        />
+      )}
+
+      {/* Client Custom Services Dialog */}
+      {categoryManagementClient && (
+        <ClientCustomServicesDialog
+          open={customServicesDialogOpen}
+          onOpenChange={setCustomServicesDialogOpen}
+          clientId={categoryManagementClient.id}
         />
       )}
     </div>

@@ -52,13 +52,16 @@ const BusinessCustomServicesDialog = ({
 
   useEffect(() => {
     // Initialize selected services from currentServices
-    if (currentServices && currentServices.length > 0) {
+    if (currentServices && currentServices.length > 0 && availableServices.length > 0) {
       const selectedIds = availableServices
         .filter(service =>
           currentServices.some(cs => cs.serviceName === service.service_name)
         )
         .map(s => s.id);
       setSelectedServiceIds(selectedIds);
+    } else if (!currentServices || currentServices.length === 0) {
+      // Clear selection when no services are assigned
+      setSelectedServiceIds([]);
     }
   }, [currentServices, availableServices]);
 
