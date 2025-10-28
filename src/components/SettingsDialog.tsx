@@ -51,7 +51,7 @@ const SettingsDialog = ({ open, onOpenChange, onLogoUploaded, clientId }: Settin
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[600px] max-h-[90vh]">
+        <DialogContent className="sm:max-w-[900px] max-h-[90vh]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Settings className="w-5 h-5" />
@@ -60,97 +60,103 @@ const SettingsDialog = ({ open, onOpenChange, onLogoUploaded, clientId }: Settin
           </DialogHeader>
 
           <div className="mt-4">
-            <div className="space-y-3">
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base">Account Logo</CardTitle>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <p className="text-muted-foreground mb-3 text-sm">
-                    Upload your company logo to display across all your business listings.
-                  </p>
-                  <LogoUpload onLogoUploaded={onLogoUploaded} clientId={clientId} />
-                </CardContent>
-              </Card>
+            <div className="grid grid-cols-2 gap-4">
+              {/* Left Column */}
+              <div className="space-y-3">
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base">Service URLs</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <p className="text-muted-foreground mb-3 text-sm">
+                      Set service URLs (appointments, menu, reservations, order ahead) for all locations.
+                    </p>
+                    <Button 
+                      onClick={() => setServiceUrlsDialogOpen(true)}
+                      variant="outline"
+                      size="sm"
+                      className="w-full flex items-center gap-2"
+                    >
+                      <Link className="w-4 h-4" />
+                      Manage Service URLs
+                    </Button>
+                  </CardContent>
+                </Card>
 
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base">Social Media Links</CardTitle>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <p className="text-muted-foreground mb-3 text-sm">
-                    Manage social media links that will be applied across all your business locations.
-                  </p>
-                  <Button 
-                    onClick={() => setSocialsDialogOpen(true)}
-                    variant="outline"
-                    size="sm"
-                    className="w-full"
-                  >
-                    Manage Social Media Links
-                  </Button>
-                </CardContent>
-              </Card>
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base">Custom Services</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <p className="text-muted-foreground mb-3 text-sm">
+                      Configure custom services that can be assigned to your business locations.
+                    </p>
+                    <Button 
+                      onClick={() => setCustomServicesDialogOpen(true)}
+                      variant="outline"
+                      size="sm"
+                      className="w-full flex items-center gap-2"
+                    >
+                      <Wrench className="w-4 h-4" />
+                      Manage Custom Services
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
 
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base">Opening Hours</CardTitle>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <p className="text-muted-foreground mb-3 text-sm">
-                    Set opening hours that will be applied to all your business locations.
-                  </p>
-                  <Button 
-                    onClick={() => setOpeningHoursDialogOpen(true)}
-                    variant="outline"
-                    size="sm"
-                    className="w-full flex items-center gap-2"
-                  >
-                    <Clock className="w-4 h-4" />
-                    Manage Opening Hours
-                  </Button>
-                </CardContent>
-              </Card>
+              {/* Right Column */}
+              <div className="space-y-3">
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base">Social Media Links</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <p className="text-muted-foreground mb-3 text-sm">
+                      Manage social media links that will be applied across all your business locations.
+                    </p>
+                    <Button 
+                      onClick={() => setSocialsDialogOpen(true)}
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                    >
+                      Manage Social Media Links
+                    </Button>
+                  </CardContent>
+                </Card>
 
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base">Service URLs</CardTitle>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <p className="text-muted-foreground mb-3 text-sm">
-                    Set service URLs (appointments, menu, reservations, order ahead) for all locations.
-                  </p>
-                  <Button 
-                    onClick={() => setServiceUrlsDialogOpen(true)}
-                    variant="outline"
-                    size="sm"
-                    className="w-full flex items-center gap-2"
-                  >
-                    <Link className="w-4 h-4" />
-                    Manage Service URLs
-                  </Button>
-                </CardContent>
-              </Card>
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base">Account Logo</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <p className="text-muted-foreground mb-3 text-sm">
+                      Upload your company logo to display across all your business listings.
+                    </p>
+                    <LogoUpload onLogoUploaded={onLogoUploaded} clientId={clientId} />
+                  </CardContent>
+                </Card>
 
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base">Custom Services</CardTitle>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <p className="text-muted-foreground mb-3 text-sm">
-                    Configure custom services that can be assigned to your business locations.
-                  </p>
-                  <Button 
-                    onClick={() => setCustomServicesDialogOpen(true)}
-                    variant="outline"
-                    size="sm"
-                    className="w-full flex items-center gap-2"
-                  >
-                    <Wrench className="w-4 h-4" />
-                    Manage Custom Services
-                  </Button>
-                </CardContent>
-              </Card>
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base">Opening Hours</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <p className="text-muted-foreground mb-3 text-sm">
+                      Set opening hours that will be applied to all your business locations.
+                    </p>
+                    <Button 
+                      onClick={() => setOpeningHoursDialogOpen(true)}
+                      variant="outline"
+                      size="sm"
+                      className="w-full flex items-center gap-2"
+                    >
+                      <Clock className="w-4 h-4" />
+                      Manage Opening Hours
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           </div>
         </DialogContent>

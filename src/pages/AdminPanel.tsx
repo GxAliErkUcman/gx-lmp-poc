@@ -1005,15 +1005,8 @@ const AdminPanel = () => {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Client Name</TableHead>
-                    <TableHead className="text-center">Users</TableHead>
-                    <TableHead className="text-center">Active Locations</TableHead>
-                    <TableHead className="text-center">Pending Locations</TableHead>
-                    <TableHead className="text-center">Last Updated</TableHead>
-                    <TableHead className="text-center">View</TableHead>
-                    <TableHead className="text-center">Categories</TableHead>
-                    <TableHead className="text-center">Custom Services</TableHead>
-                    <TableHead className="text-center">Users</TableHead>
-                    <TableHead className="text-center">Delete</TableHead>
+                    <TableHead className="text-center">Stats</TableHead>
+                    <TableHead className="text-center">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -1086,81 +1079,80 @@ const AdminPanel = () => {
                          )}
                        </TableCell>
                       <TableCell className="text-center">
-                        <div className="flex items-center justify-center gap-1">
-                          <Users className="w-4 h-4" />
-                          {client.user_count}
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          <div className="flex items-center gap-1 justify-center bg-muted/50 rounded p-1.5">
+                            <Users className="w-3 h-3" />
+                            <span className="font-medium">{client.user_count}</span>
+                          </div>
+                          <div className="flex items-center gap-1 justify-center bg-green-500/10 rounded p-1.5">
+                            <MapPin className="w-3 h-3 text-green-600" />
+                            <span className="font-medium text-green-600">{client.active_locations}</span>
+                          </div>
+                          <div className="flex items-center gap-1 justify-center bg-yellow-500/10 rounded p-1.5">
+                            <Clock className="w-3 h-3 text-yellow-600" />
+                            <span className="font-medium text-yellow-600">{client.pending_locations}</span>
+                          </div>
+                          <div className="flex items-center gap-1 justify-center bg-muted/50 rounded p-1.5">
+                            <span className="text-muted-foreground text-[10px]">
+                              {client.last_updated ? new Date(client.last_updated).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Never'}
+                            </span>
+                          </div>
                         </div>
                       </TableCell>
                       <TableCell className="text-center">
-                        <div className="flex items-center justify-center gap-1">
-                          <MapPin className="w-4 h-4 text-green-600" />
-                          {client.active_locations}
+                        <div className="flex flex-wrap items-center justify-center gap-1">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => navigate(`/client-dashboard?client=${client.id}`)}
+                            className="h-auto py-1.5 px-2 flex flex-col items-center gap-0.5 min-w-[60px]"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                            <span className="text-[10px] leading-none">View</span>
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              setCategoryManagementClient(client);
+                              setCategoryDialogOpen(true);
+                            }}
+                            className="h-auto py-1.5 px-2 flex flex-col items-center gap-0.5 min-w-[60px]"
+                          >
+                            <Handshake className="w-3.5 h-3.5" />
+                            <span className="text-[10px] leading-none">Categories</span>
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              setCategoryManagementClient(client);
+                              setCustomServicesDialogOpen(true);
+                            }}
+                            className="h-auto py-1.5 px-2 flex flex-col items-center gap-0.5 min-w-[60px]"
+                          >
+                            <Wrench className="w-3.5 h-3.5" />
+                            <span className="text-[10px] leading-none">Services</span>
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => openUserManagement(client)}
+                            className="h-auto py-1.5 px-2 flex flex-col items-center gap-0.5 min-w-[60px]"
+                          >
+                            <Settings className="w-3.5 h-3.5" />
+                            <span className="text-[10px] leading-none">Users</span>
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => openDeleteDialog(client)}
+                            className="h-auto py-1.5 px-2 flex flex-col items-center gap-0.5 min-w-[60px]"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            <span className="text-[10px] leading-none">Delete</span>
+                          </Button>
                         </div>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <div className="flex items-center justify-center gap-1">
-                          <Clock className="w-4 h-4 text-yellow-600" />
-                          {client.pending_locations}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        {client.last_updated ? new Date(client.last_updated).toLocaleDateString() : 'Never'}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => navigate(`/client-dashboard?client=${client.id}`)}
-                        >
-                          <Eye className="w-4 h-4" />
-                          View
-                        </Button>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            setCategoryManagementClient(client);
-                            setCategoryDialogOpen(true);
-                          }}
-                        >
-                          <Handshake className="w-4 h-4" />
-                          Categories
-                        </Button>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            setCategoryManagementClient(client);
-                            setCustomServicesDialogOpen(true);
-                          }}
-                        >
-                          <Wrench className="w-4 h-4" />
-                          Custom Services
-                        </Button>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => openUserManagement(client)}
-                        >
-                          <Settings className="w-4 h-4" />
-                          Users
-                        </Button>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => openDeleteDialog(client)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                          Delete
-                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}
