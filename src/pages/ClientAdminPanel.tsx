@@ -6,12 +6,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Users, Store, Trash2, Settings } from 'lucide-react';
+import { Plus, Users, Store, Trash2, Settings, Wrench } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import CreateUserDialog from '@/components/CreateUserDialog';
 import StoreOwnerAssignmentDialog from '@/components/StoreOwnerAssignmentDialog';
 import SettingsDialog from '@/components/SettingsDialog';
+import ClientCustomServicesDialog from '@/components/ClientCustomServicesDialog';
 import BusinessTableView from '@/components/BusinessTableView';
 import BusinessDialog from '@/components/BusinessDialog';
 import ImportDialog from '@/components/ImportDialog';
@@ -52,6 +53,7 @@ const ClientAdminPanel = () => {
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [editingBusiness, setEditingBusiness] = useState<Business | null>(null);
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
+  const [customServicesDialogOpen, setCustomServicesDialogOpen] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -278,6 +280,13 @@ const ClientAdminPanel = () => {
               <Settings className="w-4 h-4 mr-2" />
               Settings
             </Button>
+            <Button 
+              onClick={() => setCustomServicesDialogOpen(true)} 
+              variant="outline"
+            >
+              <Wrench className="w-4 h-4 mr-2" />
+              Custom Services
+            </Button>
             <span className="text-sm text-muted-foreground">{user.email}</span>
             <Button onClick={signOut} variant="outline" className="shadow-modern">
               Sign Out
@@ -485,6 +494,13 @@ const ClientAdminPanel = () => {
         onOpenChange={setSettingsDialogOpen}
         onLogoUploaded={fetchData}
         clientId={clientId || undefined}
+      />
+
+      <ClientCustomServicesDialog
+        open={customServicesDialogOpen}
+        onOpenChange={setCustomServicesDialogOpen}
+        clientId={clientId || ''}
+        onSuccess={fetchData}
       />
     </div>
   );
