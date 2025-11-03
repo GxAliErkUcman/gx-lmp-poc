@@ -89,7 +89,7 @@ interface BusinessDialogProps {
 
 const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: BusinessDialogProps) => {
   const { user } = useAuth();
-  const { isFieldLocked, loading: permissionsLoading } = useFieldPermissions(clientId || business?.client_id);
+  const { isFieldLocked, isGroupLocked, loading: permissionsLoading } = useFieldPermissions(clientId || business?.client_id);
   const [loading, setLoading] = useState(false);
   const [validationErrors, setValidationErrors] = useState<any[]>([]);
   const [coverPhoto, setCoverPhoto] = useState<string>('');
@@ -945,7 +945,16 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
           </Card>
 
           {/* Opening Hours */}
-          <OpeningHours hours={hours} onHoursChange={setHours} />
+          <LockedFieldWrapper 
+            isLocked={isGroupLocked('opening_hours')}
+            fieldName="Opening Hours"
+          >
+            <OpeningHours 
+              hours={hours} 
+              onHoursChange={setHours} 
+              disabled={isGroupLocked('opening_hours')}
+            />
+          </LockedFieldWrapper>
 
           {/* Special Hours */}
           <SpecialHours 

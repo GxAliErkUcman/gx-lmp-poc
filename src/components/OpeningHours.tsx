@@ -18,6 +18,7 @@ interface Hours {
 interface OpeningHoursProps {
   hours: Hours;
   onHoursChange: (hours: Hours) => void;
+  disabled?: boolean;
 }
 
 const daysOfWeek = [
@@ -30,7 +31,7 @@ const daysOfWeek = [
   { key: 'sunday', label: 'Sunday' },
 ] as const;
 
-const OpeningHours = ({ hours, onHoursChange }: OpeningHoursProps) => {
+const OpeningHours = ({ hours, onHoursChange, disabled = false }: OpeningHoursProps) => {
   const updateHour = (day: keyof Hours, value: string) => {
     // Convert "Closed" to null for database storage
     const dbValue = value.toLowerCase() === 'closed' ? null : value;
@@ -98,6 +99,7 @@ const OpeningHours = ({ hours, onHoursChange }: OpeningHoursProps) => {
             variant="outline"
             size="sm"
             onClick={() => setAllWeekdays('09:00-18:00')}
+            disabled={disabled}
           >
             Weekdays 9-6
           </Button>
@@ -106,6 +108,7 @@ const OpeningHours = ({ hours, onHoursChange }: OpeningHoursProps) => {
             variant="outline"
             size="sm"
             onClick={() => setAllWeekdays('08:00-17:00')}
+            disabled={disabled}
           >
             Weekdays 8-5
           </Button>
@@ -114,6 +117,7 @@ const OpeningHours = ({ hours, onHoursChange }: OpeningHoursProps) => {
             variant="outline"
             size="sm"
             onClick={() => setAllWeekend('10:00-14:00')}
+            disabled={disabled}
           >
             Weekend 10-2
           </Button>
@@ -122,6 +126,7 @@ const OpeningHours = ({ hours, onHoursChange }: OpeningHoursProps) => {
             variant="outline"
             size="sm"
             onClick={() => setAllWeekend('Closed')}
+            disabled={disabled}
           >
             Close Weekends
           </Button>
@@ -144,7 +149,7 @@ const OpeningHours = ({ hours, onHoursChange }: OpeningHoursProps) => {
                       const newValue = formatHourRange(e.target.value, close, false);
                       updateHour(key, newValue);
                     }}
-                    disabled={isClosed}
+                    disabled={isClosed || disabled}
                     className="text-sm"
                   />
                 </div>
@@ -157,7 +162,7 @@ const OpeningHours = ({ hours, onHoursChange }: OpeningHoursProps) => {
                       const newValue = formatHourRange(open, e.target.value, false);
                       updateHour(key, newValue);
                     }}
-                    disabled={isClosed}
+                    disabled={isClosed || disabled}
                     className="text-sm"
                   />
                 </div>
@@ -171,6 +176,7 @@ const OpeningHours = ({ hours, onHoursChange }: OpeningHoursProps) => {
                       const newValue = isClosed ? '09:00-18:00' : 'Closed';
                       updateHour(key, newValue);
                     }}
+                    disabled={disabled}
                   >
                     {isClosed ? 'Closed' : 'Close'}
                   </Button>
@@ -194,6 +200,7 @@ const OpeningHours = ({ hours, onHoursChange }: OpeningHoursProps) => {
                   onChange={(e) => updateHour(key, e.target.value)}
                   placeholder="e.g., 09:00-18:00 or Closed"
                   className="text-xs col-span-2"
+                  disabled={disabled}
                 />
               </div>
             ))}
