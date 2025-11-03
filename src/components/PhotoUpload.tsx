@@ -11,9 +11,10 @@ interface PhotoUploadProps {
   photos: string[];
   onPhotosChange: (photos: string[]) => void;
   maxPhotos?: number;
+  disabled?: boolean;
 }
 
-const PhotoUpload = ({ photos, onPhotosChange, maxPhotos = 10 }: PhotoUploadProps) => {
+const PhotoUpload = ({ photos, onPhotosChange, maxPhotos = 10, disabled = false }: PhotoUploadProps) => {
   const [uploading, setUploading] = useState(false);
   const { user } = useAuth();
 
@@ -93,14 +94,14 @@ const PhotoUpload = ({ photos, onPhotosChange, maxPhotos = 10 }: PhotoUploadProp
 
   return (
     <div className="space-y-4">
-      {photos.length < maxPhotos && (
+      {photos.length < maxPhotos && !disabled && (
         <div
           {...getRootProps()}
           className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
             isDragActive ? 'border-primary bg-primary/5' : 'border-muted-foreground/25'
           }`}
         >
-          <input {...getInputProps()} />
+          <input {...getInputProps()} disabled={disabled} />
           <Upload className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
           <p className="text-sm font-medium">
             {isDragActive ? 'Drop photos here' : 'Drag & drop photos here, or click to select'}
@@ -129,6 +130,7 @@ const PhotoUpload = ({ photos, onPhotosChange, maxPhotos = 10 }: PhotoUploadProp
                     variant="destructive"
                     className="absolute top-1 right-1 h-6 w-6 p-0"
                     onClick={() => removePhoto(index)}
+                    disabled={disabled}
                   >
                     <X className="h-3 w-3" />
                   </Button>

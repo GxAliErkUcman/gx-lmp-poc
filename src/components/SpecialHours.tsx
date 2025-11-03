@@ -19,6 +19,7 @@ export interface SpecialHourEntry {
 interface SpecialHoursProps {
   specialHours: SpecialHourEntry[];
   onSpecialHoursChange: (specialHours: SpecialHourEntry[]) => void;
+  disabled?: boolean;
 }
 
 // Convert from schema format "2025-12-25: x, 2025-01-01: 10:00-15:00" to UI format
@@ -64,7 +65,7 @@ export function formatSpecialHoursToSchema(specialHours: SpecialHourEntry[]): st
     .join(', ');
 }
 
-const SpecialHours = ({ specialHours, onSpecialHoursChange }: SpecialHoursProps) => {
+const SpecialHours = ({ specialHours, onSpecialHoursChange, disabled = false }: SpecialHoursProps) => {
   const [dateRangeDialogOpen, setDateRangeDialogOpen] = useState(false);
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [rangeHours, setRangeHours] = useState({ open: '09:00', close: '17:00', isClosed: true });
@@ -172,6 +173,7 @@ const SpecialHours = ({ specialHours, onSpecialHoursChange }: SpecialHoursProps)
                             "w-full justify-start text-left font-normal",
                             !entry.date && "text-muted-foreground"
                           )}
+                          disabled={disabled}
                         >
                           <CalendarIcon className="mr-2 h-4 w-4" />
                           {entry.date ? format(entry.date, "PPP") : <span>Pick a date</span>}
@@ -200,7 +202,7 @@ const SpecialHours = ({ specialHours, onSpecialHoursChange }: SpecialHoursProps)
                           const newValue = formatHourRange(e.target.value, close, false);
                           updateSpecialHour(index, 'hours', newValue);
                         }}
-                        disabled={isClosed}
+                        disabled={isClosed || disabled}
                         className="text-sm"
                         placeholder="Open"
                       />
@@ -212,7 +214,7 @@ const SpecialHours = ({ specialHours, onSpecialHoursChange }: SpecialHoursProps)
                           const newValue = formatHourRange(open, e.target.value, false);
                           updateSpecialHour(index, 'hours', newValue);
                         }}
-                        disabled={isClosed}
+                        disabled={isClosed || disabled}
                         className="text-sm"
                         placeholder="Close"
                       />
@@ -230,6 +232,7 @@ const SpecialHours = ({ specialHours, onSpecialHoursChange }: SpecialHoursProps)
                         const newValue = isClosed ? '09:00-17:00' : 'x';
                         updateSpecialHour(index, 'hours', newValue);
                       }}
+                      disabled={disabled}
                     >
                       {isClosed ? 'Closed' : 'Open'}
                     </Button>
@@ -242,6 +245,7 @@ const SpecialHours = ({ specialHours, onSpecialHoursChange }: SpecialHoursProps)
                     size="sm"
                     onClick={() => removeSpecialHour(index)}
                     className="text-destructive hover:text-destructive"
+                    disabled={disabled}
                   >
                     <Trash2 className="w-4 h-4" />
                   </Button>
@@ -257,6 +261,7 @@ const SpecialHours = ({ specialHours, onSpecialHoursChange }: SpecialHoursProps)
             variant="outline"
             onClick={addSpecialHour}
             className="flex-1"
+            disabled={disabled}
           >
             <Plus className="w-4 h-4 mr-2" />
             Add Single Date
@@ -266,6 +271,7 @@ const SpecialHours = ({ specialHours, onSpecialHoursChange }: SpecialHoursProps)
             variant="outline"
             onClick={openDateRangeDialog}
             className="flex-1"
+            disabled={disabled}
           >
             <CalendarRange className="w-4 h-4 mr-2" />
             Add Date Range

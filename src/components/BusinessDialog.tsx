@@ -793,156 +793,183 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
 
 
           {/* Contact Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Contact Information</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="website">Website</Label>
-                <Input 
-                  {...register('website')} 
-                  id="website" 
-                  type="url" 
-                  placeholder="https://www.example.com"
-                />
-                {errors.website && (
-                  <p className="text-sm text-destructive mt-1">{errors.website.message}</p>
-                )}
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
+          <LockedFieldWrapper 
+            isLocked={isGroupLocked('contact_information')}
+            fieldName="Contact Information"
+          >
+            <Card>
+              <CardHeader>
+                <CardTitle>Contact Information</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
                 <div>
-                  <Label htmlFor="primaryPhone">Primary Phone</Label>
+                  <Label htmlFor="website">Website</Label>
                   <Input 
-                    {...register('primaryPhone')} 
-                    id="primaryPhone" 
+                    {...register('website')} 
+                    id="website" 
+                    type="url" 
+                    placeholder="https://www.example.com"
+                    disabled={isGroupLocked('contact_information')}
+                  />
+                  {errors.website && (
+                    <p className="text-sm text-destructive mt-1">{errors.website.message}</p>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="primaryPhone">Primary Phone</Label>
+                    <Input 
+                      {...register('primaryPhone')} 
+                      id="primaryPhone" 
+                      placeholder="+1-555-123-4567"
+                      disabled={isGroupLocked('contact_information')}
+                    />
+                    {errors.primaryPhone && (
+                      <p className="text-sm text-destructive mt-1">{errors.primaryPhone.message}</p>
+                    )}
+                  </div>
+                  <div>
+                    <Label htmlFor="additionalPhones">Additional Phones</Label>
+                    <Input 
+                      {...register('additionalPhones')} 
+                      id="additionalPhones" 
+                      placeholder="Comma-separated phone numbers"
+                      disabled={isGroupLocked('contact_information')}
+                    />
+                    {errors.additionalPhones && (
+                      <p className="text-sm text-destructive mt-1">{errors.additionalPhones.message}</p>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="adwords">AdWords Phone</Label>
+                  <Input 
+                    {...register('adwords')} 
+                    id="adwords" 
                     placeholder="+1-555-123-4567"
+                    disabled={isGroupLocked('contact_information')}
                   />
-                  {errors.primaryPhone && (
-                    <p className="text-sm text-destructive mt-1">{errors.primaryPhone.message}</p>
+                  {errors.adwords && (
+                    <p className="text-sm text-destructive mt-1">{errors.adwords.message}</p>
                   )}
                 </div>
-                <div>
-                  <Label htmlFor="additionalPhones">Additional Phones</Label>
-                  <Input 
-                    {...register('additionalPhones')} 
-                    id="additionalPhones" 
-                    placeholder="Comma-separated phone numbers"
-                  />
-                  {errors.additionalPhones && (
-                    <p className="text-sm text-destructive mt-1">{errors.additionalPhones.message}</p>
-                  )}
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="adwords">AdWords Phone</Label>
-                <Input 
-                  {...register('adwords')} 
-                  id="adwords" 
-                  placeholder="+1-555-123-4567"
-                />
-                {errors.adwords && (
-                  <p className="text-sm text-destructive mt-1">{errors.adwords.message}</p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </LockedFieldWrapper>
 
           {/* Social Media URLs */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Social Media</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="facebookUrl">Facebook URL</Label>
-                  <Input 
-                    {...register('facebookUrl')} 
-                    id="facebookUrl" 
-                    placeholder="https://facebook.com/yourpage"
-                  />
+          <LockedFieldWrapper 
+            isLocked={isGroupLocked('social_media')}
+            fieldName="Social Media"
+          >
+            <Card>
+              <CardHeader>
+                <CardTitle>Social Media</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="facebookUrl">Facebook URL</Label>
+                    <Input 
+                      {...register('facebookUrl')} 
+                      id="facebookUrl" 
+                      placeholder="https://facebook.com/yourpage"
+                      disabled={isGroupLocked('social_media')}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="instagramUrl">Instagram URL</Label>
+                    <Input 
+                      {...register('instagramUrl')} 
+                      id="instagramUrl" 
+                      placeholder="https://instagram.com/yourpage"
+                      disabled={isGroupLocked('social_media')}
+                    />
+                  </div>
                 </div>
-                <div>
-                  <Label htmlFor="instagramUrl">Instagram URL</Label>
-                  <Input 
-                    {...register('instagramUrl')} 
-                    id="instagramUrl" 
-                    placeholder="https://instagram.com/yourpage"
-                  />
-                </div>
-              </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="linkedinUrl">LinkedIn URL</Label>
-                  <Input 
-                    {...register('linkedinUrl')} 
-                    id="linkedinUrl" 
-                    placeholder="https://linkedin.com/company/yourcompany"
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="linkedinUrl">LinkedIn URL</Label>
+                    <Input 
+                      {...register('linkedinUrl')} 
+                      id="linkedinUrl" 
+                      placeholder="https://linkedin.com/company/yourcompany"
+                      disabled={isGroupLocked('social_media')}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="pinterestUrl">Pinterest URL</Label>
+                    <Input 
+                      {...register('pinterestUrl')} 
+                      id="pinterestUrl" 
+                      placeholder="https://pinterest.com/yourpage"
+                      disabled={isGroupLocked('social_media')}
+                    />
+                  </div>
                 </div>
-                <div>
-                  <Label htmlFor="pinterestUrl">Pinterest URL</Label>
-                  <Input 
-                    {...register('pinterestUrl')} 
-                    id="pinterestUrl" 
-                    placeholder="https://pinterest.com/yourpage"
-                  />
-                </div>
-              </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="tiktokUrl">TikTok URL</Label>
-                  <Input 
-                    {...register('tiktokUrl')} 
-                    id="tiktokUrl" 
-                    placeholder="https://tiktok.com/@yourpage"
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="tiktokUrl">TikTok URL</Label>
+                    <Input 
+                      {...register('tiktokUrl')} 
+                      id="tiktokUrl" 
+                      placeholder="https://tiktok.com/@yourpage"
+                      disabled={isGroupLocked('social_media')}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="twitterUrl">Twitter/X URL</Label>
+                    <Input 
+                      {...register('twitterUrl')} 
+                      id="twitterUrl" 
+                      placeholder="https://twitter.com/yourpage"
+                      disabled={isGroupLocked('social_media')}
+                    />
+                  </div>
                 </div>
-                <div>
-                  <Label htmlFor="twitterUrl">Twitter/X URL</Label>
-                  <Input 
-                    {...register('twitterUrl')} 
-                    id="twitterUrl" 
-                    placeholder="https://twitter.com/yourpage"
-                  />
-                </div>
-              </div>
 
-              <div>
-                <Label htmlFor="youtubeUrl">YouTube URL</Label>
-                <Input 
-                  {...register('youtubeUrl')} 
-                  id="youtubeUrl" 
-                  placeholder="https://youtube.com/@yourchannel"
-                />
-              </div>
-            </CardContent>
-          </Card>
+                <div>
+                  <Label htmlFor="youtubeUrl">YouTube URL</Label>
+                  <Input 
+                    {...register('youtubeUrl')} 
+                    id="youtubeUrl" 
+                    placeholder="https://youtube.com/@yourchannel"
+                    disabled={isGroupLocked('social_media')}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </LockedFieldWrapper>
 
           {/* Business Dates */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Business Dates</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div>
-                <Label htmlFor="openingDate">Opening Date</Label>
-                <Input 
-                  {...register('openingDate')} 
-                  id="openingDate" 
-                  type="date"
-                />
-                {errors.openingDate && (
-                  <p className="text-sm text-destructive mt-1">{errors.openingDate.message}</p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+          <LockedFieldWrapper 
+            isLocked={isFieldLocked('opening_date')}
+            fieldName="Business Dates"
+          >
+            <Card>
+              <CardHeader>
+                <CardTitle>Business Dates</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div>
+                  <Label htmlFor="openingDate">Opening Date</Label>
+                  <Input 
+                    {...register('openingDate')} 
+                    id="openingDate" 
+                    type="date"
+                    disabled={isFieldLocked('opening_date')}
+                  />
+                  {errors.openingDate && (
+                    <p className="text-sm text-destructive mt-1">{errors.openingDate.message}</p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </LockedFieldWrapper>
 
           {/* Opening Hours */}
           <LockedFieldWrapper 
@@ -957,124 +984,157 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
           </LockedFieldWrapper>
 
           {/* Special Hours */}
-          <SpecialHours 
-            specialHours={specialHours}
-            onSpecialHoursChange={setSpecialHours}
-          />
+          <LockedFieldWrapper 
+            isLocked={isGroupLocked('special_hours')}
+            fieldName="Special Hours"
+          >
+            <SpecialHours 
+              specialHours={specialHours} 
+              onSpecialHoursChange={setSpecialHours}
+              disabled={isGroupLocked('special_hours')}
+            />
+          </LockedFieldWrapper>
 
           {/* Cover Photo Upload */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Cover Photo</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <PhotoUpload
-                photos={coverPhoto ? [coverPhoto] : []}
-                onPhotosChange={(photos) => setCoverPhoto(photos[0] || '')}
-                maxPhotos={1}
-              />
-            </CardContent>
-          </Card>
+          <LockedFieldWrapper 
+            isLocked={isFieldLocked('cover_photo')}
+            fieldName="Cover Photo"
+          >
+            <Card>
+              <CardHeader>
+                <CardTitle>Cover Photo</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <PhotoUpload
+                  photos={coverPhoto ? [coverPhoto] : []}
+                  onPhotosChange={(photos) => setCoverPhoto(photos[0] || '')}
+                  maxPhotos={1}
+                  disabled={isFieldLocked('cover_photo')}
+                />
+              </CardContent>
+            </Card>
+          </LockedFieldWrapper>
 
           {/* Logo Photo Upload */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Logo Photo</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <PhotoUpload
-                photos={watch('logoPhoto') ? [watch('logoPhoto')] : []}
-                onPhotosChange={(photos) => setValue('logoPhoto', photos[0] || '')}
-                maxPhotos={1}
-              />
-            </CardContent>
-          </Card>
+          <LockedFieldWrapper 
+            isLocked={isFieldLocked('logo_photo')}
+            fieldName="Logo Photo"
+          >
+            <Card>
+              <CardHeader>
+                <CardTitle>Logo Photo</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <PhotoUpload
+                  photos={watch('logoPhoto') ? [watch('logoPhoto')] : []}
+                  onPhotosChange={(photos) => setValue('logoPhoto', photos[0] || '')}
+                  maxPhotos={1}
+                  disabled={isFieldLocked('logo_photo')}
+                />
+              </CardContent>
+            </Card>
+          </LockedFieldWrapper>
 
           {/* Service URLs */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Service URLs</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="appointmentURL">Appointment URL</Label>
-                <Input 
-                  {...register('appointmentURL')} 
-                  id="appointmentURL" 
-                  placeholder="https://booking.example.com"
-                />
-              </div>
+          <LockedFieldWrapper 
+            isLocked={isGroupLocked('service_urls')}
+            fieldName="Service URLs"
+          >
+            <Card>
+              <CardHeader>
+                <CardTitle>Service URLs</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <Label htmlFor="appointmentURL">Appointment URL</Label>
+                  <Input 
+                    {...register('appointmentURL')} 
+                    id="appointmentURL" 
+                    placeholder="https://booking.example.com"
+                    disabled={isGroupLocked('service_urls')}
+                  />
+                </div>
 
-              <div>
-                <Label htmlFor="menuURL">Menu URL</Label>
-                <Input 
-                  {...register('menuURL')} 
-                  id="menuURL" 
-                  placeholder="https://menu.example.com"
-                />
-              </div>
+                <div>
+                  <Label htmlFor="menuURL">Menu URL</Label>
+                  <Input 
+                    {...register('menuURL')} 
+                    id="menuURL" 
+                    placeholder="https://menu.example.com"
+                    disabled={isGroupLocked('service_urls')}
+                  />
+                </div>
 
-              <div>
-                <Label htmlFor="reservationsURL">Reservations URL</Label>
-                <Input 
-                  {...register('reservationsURL')} 
-                  id="reservationsURL" 
-                  placeholder="https://reservations.example.com"
-                />
-              </div>
+                <div>
+                  <Label htmlFor="reservationsURL">Reservations URL</Label>
+                  <Input 
+                    {...register('reservationsURL')} 
+                    id="reservationsURL" 
+                    placeholder="https://reservations.example.com"
+                    disabled={isGroupLocked('service_urls')}
+                  />
+                </div>
 
-              <div>
-                <Label htmlFor="orderAheadURL">Order Ahead URL</Label>
-                <Input 
-                  {...register('orderAheadURL')} 
-                  id="orderAheadURL" 
-                  placeholder="https://order.example.com"
-                />
-              </div>
-            </CardContent>
-          </Card>
+                <div>
+                  <Label htmlFor="orderAheadURL">Order Ahead URL</Label>
+                  <Input 
+                    {...register('orderAheadURL')} 
+                    id="orderAheadURL" 
+                    placeholder="https://order.example.com"
+                    disabled={isGroupLocked('service_urls')}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </LockedFieldWrapper>
 
           {/* Custom Services */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Custom Services</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                {customServices.length > 0 ? (
-                  <div className="space-y-2 mb-3">
-                    {customServices.map((service: any, index: number) => (
-                      <div key={index} className="p-3 bg-muted rounded-lg">
-                        <div className="font-semibold">{service.serviceName}</div>
-                        {service.serviceDescription && (
-                          <div className="text-sm text-muted-foreground mt-1">
-                            {service.serviceDescription}
-                          </div>
-                        )}
-                        {service.serviceCategoryId && (
-                          <div className="text-xs text-muted-foreground mt-1">
-                            Category: {service.serviceCategoryId}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground mb-3">
-                    No custom services assigned yet.
-                  </p>
-                )}
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setCustomServicesDialogOpen(true)}
-                  className="w-full"
-                >
-                  Manage Custom Services
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          <LockedFieldWrapper 
+            isLocked={isGroupLocked('custom_services')}
+            fieldName="Custom Services"
+          >
+            <Card>
+              <CardHeader>
+                <CardTitle>Custom Services</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  {customServices.length > 0 ? (
+                    <div className="space-y-2 mb-3">
+                      {customServices.map((service: any, index: number) => (
+                        <div key={index} className="p-3 bg-muted rounded-lg">
+                          <div className="font-semibold">{service.serviceName}</div>
+                          {service.serviceDescription && (
+                            <div className="text-sm text-muted-foreground mt-1">
+                              {service.serviceDescription}
+                            </div>
+                          )}
+                          {service.serviceCategoryId && (
+                            <div className="text-xs text-muted-foreground mt-1">
+                              Category: {service.serviceCategoryId}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground mb-3">
+                      No custom services assigned yet.
+                    </p>
+                  )}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setCustomServicesDialogOpen(true)}
+                    className="w-full"
+                    disabled={isGroupLocked('custom_services')}
+                  >
+                    Manage Custom Services
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </LockedFieldWrapper>
 
           <Separator />
 

@@ -19,9 +19,20 @@ interface SettingsDialogProps {
   onOpenChange: (open: boolean) => void;
   onLogoUploaded: () => void;
   clientId?: string;
+  isServiceUrlsLocked?: boolean;
+  isCustomServicesLocked?: boolean;
+  isSocialMediaLocked?: boolean;
 }
 
-const SettingsDialog = ({ open, onOpenChange, onLogoUploaded, clientId }: SettingsDialogProps) => {
+const SettingsDialog = ({ 
+  open, 
+  onOpenChange, 
+  onLogoUploaded, 
+  clientId,
+  isServiceUrlsLocked = false,
+  isCustomServicesLocked = false,
+  isSocialMediaLocked = false
+}: SettingsDialogProps) => {
   const [socialsDialogOpen, setSocialsDialogOpen] = useState(false);
   const [openingHoursDialogOpen, setOpeningHoursDialogOpen] = useState(false);
   const [serviceUrlsDialogOpen, setServiceUrlsDialogOpen] = useState(false);
@@ -76,6 +87,7 @@ const SettingsDialog = ({ open, onOpenChange, onLogoUploaded, clientId }: Settin
                       variant="outline"
                       size="sm"
                       className="w-full flex items-center gap-2"
+                      disabled={isServiceUrlsLocked}
                     >
                       <Link className="w-4 h-4" />
                       Manage Service URLs
@@ -96,6 +108,7 @@ const SettingsDialog = ({ open, onOpenChange, onLogoUploaded, clientId }: Settin
                       variant="outline"
                       size="sm"
                       className="w-full flex items-center gap-2"
+                      disabled={isCustomServicesLocked}
                     >
                       <Wrench className="w-4 h-4" />
                       Manage Custom Services
@@ -119,6 +132,7 @@ const SettingsDialog = ({ open, onOpenChange, onLogoUploaded, clientId }: Settin
                       variant="outline"
                       size="sm"
                       className="w-full"
+                      disabled={isSocialMediaLocked}
                     >
                       Manage Social Media Links
                     </Button>
