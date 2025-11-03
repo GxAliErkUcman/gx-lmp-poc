@@ -17,6 +17,7 @@ import { useNavigate } from 'react-router-dom';
 import GcpSyncButton from '@/components/GcpSyncButton';
 import { ClientCategoriesDialog } from '@/components/ClientCategoriesDialog';
 import ClientCustomServicesDialog from '@/components/ClientCustomServicesDialog';
+import ClientFieldPermissionsDialog from '@/components/ClientFieldPermissionsDialog';
 import { RoleChangeDialog } from '@/components/RoleChangeDialog';
 import { UserReassignDialog } from '@/components/UserReassignDialog';
 import { AllClientsView } from '@/components/AllClientsView';
@@ -84,6 +85,7 @@ const AdminPanel = () => {
   const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
   const [categoryManagementClient, setCategoryManagementClient] = useState<Client | null>(null);
   const [customServicesDialogOpen, setCustomServicesDialogOpen] = useState(false);
+  const [fieldPermissionsDialogOpen, setFieldPermissionsDialogOpen] = useState(false);
   const [roleDialogOpen, setRoleDialogOpen] = useState(false);
   const [selectedUserForRole, setSelectedUserForRole] = useState<User | null>(null);
   const [roleFilter, setRoleFilter] = useState<string>('all');
@@ -1137,6 +1139,18 @@ const AdminPanel = () => {
                           <Button
                             size="sm"
                             variant="outline"
+                            onClick={() => {
+                              setCategoryManagementClient(client);
+                              setFieldPermissionsDialogOpen(true);
+                            }}
+                            className="h-auto py-1.5 px-2 flex flex-col items-center gap-0.5 min-w-[60px]"
+                          >
+                            <Shield className="w-3.5 h-3.5" />
+                            <span className="text-[10px] leading-none">Permissions</span>
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
                             onClick={() => openUserManagement(client)}
                             className="h-auto py-1.5 px-2 flex flex-col items-center gap-0.5 min-w-[60px]"
                           >
@@ -1628,6 +1642,16 @@ const AdminPanel = () => {
           open={customServicesDialogOpen}
           onOpenChange={setCustomServicesDialogOpen}
           clientId={categoryManagementClient.id}
+        />
+      )}
+
+      {/* Client Field Permissions Dialog */}
+      {categoryManagementClient && (
+        <ClientFieldPermissionsDialog
+          open={fieldPermissionsDialogOpen}
+          onOpenChange={setFieldPermissionsDialogOpen}
+          clientId={categoryManagementClient.id}
+          onSuccess={fetchData}
         />
       )}
     </div>

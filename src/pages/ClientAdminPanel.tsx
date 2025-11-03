@@ -6,16 +6,18 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Users, Store, Trash2, Settings, Wrench } from 'lucide-react';
+import { Plus, Users, Store, Trash2, Settings, Wrench, Shield } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import CreateUserDialog from '@/components/CreateUserDialog';
 import StoreOwnerAssignmentDialog from '@/components/StoreOwnerAssignmentDialog';
 import SettingsDialog from '@/components/SettingsDialog';
 import ClientCustomServicesDialog from '@/components/ClientCustomServicesDialog';
+import ClientFieldPermissionsDialog from '@/components/ClientFieldPermissionsDialog';
 import BusinessTableView from '@/components/BusinessTableView';
 import BusinessDialog from '@/components/BusinessDialog';
 import ImportDialog from '@/components/ImportDialog';
+import { useFieldPermissions } from '@/hooks/use-field-permissions';
 import type { Business } from '@/types/business';
 import jasonerLogo from '@/assets/jasoner-horizontal-logo.png';
 
@@ -54,6 +56,9 @@ const ClientAdminPanel = () => {
   const [editingBusiness, setEditingBusiness] = useState<Business | null>(null);
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
   const [customServicesDialogOpen, setCustomServicesDialogOpen] = useState(false);
+  const [fieldPermissionsDialogOpen, setFieldPermissionsDialogOpen] = useState(false);
+  
+  const { isImportDisabled } = useFieldPermissions(clientId || undefined);
 
   useEffect(() => {
     if (!user) return;
@@ -287,6 +292,13 @@ const ClientAdminPanel = () => {
               <Wrench className="w-4 h-4 mr-2" />
               Custom Services
             </Button>
+            <Button 
+              onClick={() => setFieldPermissionsDialogOpen(true)} 
+              variant="outline"
+            >
+              <Shield className="w-4 h-4 mr-2" />
+              Field Permissions
+            </Button>
             <span className="text-sm text-muted-foreground">{user.email}</span>
             <Button onClick={signOut} variant="outline" className="shadow-modern">
               Sign Out
@@ -422,9 +434,11 @@ const ClientAdminPanel = () => {
                 </p>
               </div>
               <div className="flex gap-2">
-                <Button variant="outline" onClick={() => setImportDialogOpen(true)}>
-                  Import
-                </Button>
+                {!isImportDisabled() && (
+                  <Button variant="outline" onClick={() => setImportDialogOpen(true)}>
+                    Import
+                  </Button>
+                )}
                 <Button onClick={() => setBusinessDialogOpen(true)}>
                   <Plus className="w-4 h-4 mr-2" />
                   Add Store
@@ -499,6 +513,13 @@ const ClientAdminPanel = () => {
       <ClientCustomServicesDialog
         open={customServicesDialogOpen}
         onOpenChange={setCustomServicesDialogOpen}
+        clientId={clientId || ''}
+        onSuccess={fetchData}
+      />
+
+      <ClientFieldPermissionsDialog
+        open={fieldPermissionsDialogOpen}
+        onOpenChange={setFieldPermissionsDialogOpen}
         clientId={clientId || ''}
         onSuccess={fetchData}
       />

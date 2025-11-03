@@ -25,6 +25,8 @@ import { CountrySelect, getCountryCode } from '@/components/CountrySelect';
 import { CitySelect } from '@/components/CitySelect';
 import CategoryNameChangeDialog from '@/components/CategoryNameChangeDialog';
 import BusinessCustomServicesDialog from '@/components/BusinessCustomServicesDialog';
+import { useFieldPermissions } from '@/hooks/use-field-permissions';
+import { LockedFieldWrapper } from '@/components/LockedFieldWrapper';
 
 const businessSchema = z.object({
   storeCode: z.string().min(1, 'Store code is required'),
@@ -87,6 +89,7 @@ interface BusinessDialogProps {
 
 const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: BusinessDialogProps) => {
   const { user } = useAuth();
+  const { isFieldLocked, loading: permissionsLoading } = useFieldPermissions(clientId || business?.client_id);
   const [loading, setLoading] = useState(false);
   const [validationErrors, setValidationErrors] = useState<any[]>([]);
   const [coverPhoto, setCoverPhoto] = useState<string>('');
@@ -573,14 +576,26 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="storeCode">Store Code *</Label>
-                  <Input {...register('storeCode')} id="storeCode" />
+                  <LockedFieldWrapper isLocked={isFieldLocked('storeCode')}>
+                    <Input 
+                      {...register('storeCode')} 
+                      id="storeCode" 
+                      disabled={isFieldLocked('storeCode')}
+                    />
+                  </LockedFieldWrapper>
                   {errors.storeCode && (
                     <p className="text-sm text-destructive mt-1">{errors.storeCode.message}</p>
                   )}
                 </div>
                 <div>
                   <Label htmlFor="businessName">Business Name *</Label>
-                  <Input {...register('businessName')} id="businessName" />
+                  <LockedFieldWrapper isLocked={isFieldLocked('businessName')}>
+                    <Input 
+                      {...register('businessName')} 
+                      id="businessName"
+                      disabled={isFieldLocked('businessName')}
+                    />
+                  </LockedFieldWrapper>
                   {errors.businessName && (
                     <p className="text-sm text-destructive mt-1">{errors.businessName.message}</p>
                   )}
@@ -589,12 +604,15 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
 
               <div>
                 <Label htmlFor="fromTheBusiness">From the Business</Label>
-                <Textarea 
-                  {...register('fromTheBusiness')} 
-                  id="fromTheBusiness"
-                  placeholder="Brief description of your business (max 750 characters)"
-                  className="min-h-[100px]"
-                />
+                <LockedFieldWrapper isLocked={isFieldLocked('fromTheBusiness')}>
+                  <Textarea 
+                    {...register('fromTheBusiness')} 
+                    id="fromTheBusiness"
+                    placeholder="Brief description of your business (max 750 characters)"
+                    className="min-h-[100px]"
+                    disabled={isFieldLocked('fromTheBusiness')}
+                  />
+                </LockedFieldWrapper>
                 {errors.fromTheBusiness && (
                   <p className="text-sm text-destructive mt-1">{errors.fromTheBusiness.message}</p>
                 )}
@@ -602,23 +620,28 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
 
               <div>
                 <Label htmlFor="labels">Labels</Label>
-                <Input 
-                  {...register('labels')} 
-                  id="labels" 
-                  placeholder="e.g., Family-friendly, Organic, Free Wi-Fi (comma-separated)"
-                />
+                <LockedFieldWrapper isLocked={isFieldLocked('labels')}>
+                  <Input 
+                    {...register('labels')} 
+                    id="labels" 
+                    placeholder="e.g., Family-friendly, Organic, Free Wi-Fi (comma-separated)"
+                    disabled={isFieldLocked('labels')}
+                  />
+                </LockedFieldWrapper>
                 {errors.labels && (
                   <p className="text-sm text-destructive mt-1">{errors.labels.message}</p>
                 )}
               </div>
 
               <div>
-                <CategorySelect
-                  value={watch('primaryCategory') || ''}
-                  onValueChange={(value) => setValue('primaryCategory', value)}
-                  placeholder="Select primary category *"
-                  required
-                />
+                <LockedFieldWrapper isLocked={isFieldLocked('primaryCategory')}>
+                  <CategorySelect
+                    value={watch('primaryCategory') || ''}
+                    onValueChange={(value) => !isFieldLocked('primaryCategory') && setValue('primaryCategory', value)}
+                    placeholder="Select primary category *"
+                    required
+                  />
+                </LockedFieldWrapper>
                 {errors.primaryCategory && (
                   <p className="text-sm text-destructive mt-1">{errors.primaryCategory.message}</p>
                 )}
@@ -626,22 +649,28 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
 
               <div>
                 <Label htmlFor="additionalCategories">Additional Categories</Label>
-                <Input 
-                  {...register('additionalCategories')} 
-                  id="additionalCategories" 
-                  placeholder="Comma-separated additional categories (max 10)"
-                />
+                <LockedFieldWrapper isLocked={isFieldLocked('additionalCategories')}>
+                  <Input 
+                    {...register('additionalCategories')} 
+                    id="additionalCategories" 
+                    placeholder="Comma-separated additional categories (max 10)"
+                    disabled={isFieldLocked('additionalCategories')}
+                  />
+                </LockedFieldWrapper>
                 {errors.additionalCategories && (
                   <p className="text-sm text-destructive mt-1">{errors.additionalCategories.message}</p>
                 )}
               </div>
 
               <div className="flex items-center space-x-2">
-                <Checkbox 
-                  id="temporarilyClosed"
-                  checked={watch('temporarilyClosed') || false}
-                  onCheckedChange={(checked) => setValue('temporarilyClosed', Boolean(checked))}
-                />
+                <LockedFieldWrapper isLocked={isFieldLocked('temporarilyClosed')}>
+                  <Checkbox 
+                    id="temporarilyClosed"
+                    checked={watch('temporarilyClosed') || false}
+                    onCheckedChange={(checked) => setValue('temporarilyClosed', Boolean(checked))}
+                    disabled={isFieldLocked('temporarilyClosed')}
+                  />
+                </LockedFieldWrapper>
                 <Label htmlFor="temporarilyClosed">Temporarily Closed</Label>
               </div>
             </CardContent>
@@ -653,19 +682,27 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
               <CardTitle>Address Information</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <CountrySelect
-                key={business?.id || 'new'}
-                value={watch('country') || ''}
-                onValueChange={(value) => setValue('country', value)}
-                placeholder="Select country *"
-              />
+              <LockedFieldWrapper isLocked={isFieldLocked('country')}>
+                <CountrySelect
+                  key={business?.id || 'new'}
+                  value={watch('country') || ''}
+                  onValueChange={(value) => !isFieldLocked('country') && setValue('country', value)}
+                  placeholder="Select country *"
+                />
+              </LockedFieldWrapper>
               {errors.country && (
                 <p className="text-sm text-destructive mt-1">{errors.country.message}</p>
               )}
 
               <div>
                 <Label htmlFor="addressLine1">Street Address *</Label>
-                <Input {...register('addressLine1')} id="addressLine1" />
+                <LockedFieldWrapper isLocked={isFieldLocked('addressLine1')}>
+                  <Input 
+                    {...register('addressLine1')} 
+                    id="addressLine1"
+                    disabled={isFieldLocked('addressLine1')}
+                  />
+                </LockedFieldWrapper>
                 {errors.addressLine1 && (
                   <p className="text-sm text-destructive mt-1">{errors.addressLine1.message}</p>
                 )}

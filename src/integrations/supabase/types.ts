@@ -273,6 +273,54 @@ export type Database = {
           },
         ]
       }
+      client_permissions: {
+        Row: {
+          client_id: string
+          created_at: string
+          field_id: string | null
+          id: string
+          locked_for_client_admin: boolean
+          locked_for_store_owner: boolean
+          locked_for_user: boolean
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          field_id?: string | null
+          id?: string
+          locked_for_client_admin?: boolean
+          locked_for_store_owner?: boolean
+          locked_for_user?: boolean
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          field_id?: string | null
+          id?: string
+          locked_for_client_admin?: boolean
+          locked_for_store_owner?: boolean
+          locked_for_user?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_permissions_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_permissions_field_id_fkey"
+            columns: ["field_id"]
+            isOneToOne: false
+            referencedRelation: "lockable_fields"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clients: {
         Row: {
           created_at: string
@@ -294,6 +342,33 @@ export type Database = {
           lsc_id?: number | null
           name?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      lockable_fields: {
+        Row: {
+          created_at: string
+          display_name: string
+          field_group: Database["public"]["Enums"]["field_group"]
+          field_name: string
+          id: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          display_name: string
+          field_group: Database["public"]["Enums"]["field_group"]
+          field_name: string
+          id?: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          display_name?: string
+          field_group?: Database["public"]["Enums"]["field_group"]
+          field_name?: string
+          id?: string
+          sort_order?: number
         }
         Relationships: []
       }
@@ -491,6 +566,20 @@ export type Database = {
         | "client_admin"
         | "user"
         | "store_owner"
+      field_group:
+        | "basic_info"
+        | "address_details"
+        | "location"
+        | "categories"
+        | "contact"
+        | "marketing"
+        | "opening_hours"
+        | "dates"
+        | "status"
+        | "photos"
+        | "service_urls"
+        | "additional_features"
+        | "import_function"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -624,6 +713,21 @@ export const Constants = {
         "client_admin",
         "user",
         "store_owner",
+      ],
+      field_group: [
+        "basic_info",
+        "address_details",
+        "location",
+        "categories",
+        "contact",
+        "marketing",
+        "opening_hours",
+        "dates",
+        "status",
+        "photos",
+        "service_urls",
+        "additional_features",
+        "import_function",
       ],
     },
   },

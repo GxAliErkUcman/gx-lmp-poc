@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdmin } from '@/hooks/use-admin';
+import { useFieldPermissions } from '@/hooks/use-field-permissions';
 import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -49,6 +50,8 @@ const ClientDashboard = () => {
   const [createUserDialogOpen, setCreateUserDialogOpen] = useState(false);
   const [versionHistoryOpen, setVersionHistoryOpen] = useState(false);
   const [customServicesDialogOpen, setCustomServicesDialogOpen] = useState(false);
+  
+  const { isImportDisabled } = useFieldPermissions(selectedClientId);
 
   useEffect(() => {
     const checkRoleAndFetch = async () => {
@@ -337,10 +340,12 @@ const ClientDashboard = () => {
                   <Wrench className="w-4 h-4 mr-2" />
                   Custom Services
                 </Button>
-                <Button variant="outline" onClick={() => setImportDialogOpen(true)}>
-                  <Upload className="w-4 h-4 mr-2" />
-                  Import
-                </Button>
+                {!isImportDisabled() && (
+                  <Button variant="outline" onClick={() => setImportDialogOpen(true)}>
+                    <Upload className="w-4 h-4 mr-2" />
+                    Import
+                  </Button>
+                )}
                 <Button onClick={() => {
                   setEditingBusiness(null);
                   setBusinessDialogOpen(true);
