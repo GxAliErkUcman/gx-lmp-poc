@@ -1010,6 +1010,7 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
                   onPhotosChange={(photos) => setCoverPhoto(photos[0] || '')}
                   maxPhotos={1}
                   disabled={isFieldLocked('cover_photo')}
+                  photoType="cover"
                 />
               </CardContent>
             </Card>
@@ -1030,6 +1031,7 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
                   onPhotosChange={(photos) => setValue('logoPhoto', photos[0] || '')}
                   maxPhotos={1}
                   disabled={isFieldLocked('logo_photo')}
+                  photoType="logo"
                 />
               </CardContent>
             </Card>

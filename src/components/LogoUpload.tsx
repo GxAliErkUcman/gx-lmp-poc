@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
+import { validateLogoImage } from '@/lib/imageValidation';
 
 interface LogoUploadProps {
   onLogoUploaded: () => void;
@@ -31,6 +32,17 @@ const LogoUpload = ({ onLogoUploaded, clientId }: LogoUploadProps) => {
     setUploading(true);
 
     try {
+      // Validate logo image
+      const validation = await validateLogoImage(file);
+      if (!validation.valid) {
+        toast({
+          title: "Validation Error",
+          description: validation.error,
+          variant: "destructive",
+        });
+        setUploading(false);
+        return;
+      }
       const fileExt = file.name.split('.').pop();
       const fileName = `logo-${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
       const filePath = `${user.id}/${fileName}`;

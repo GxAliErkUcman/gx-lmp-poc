@@ -6,15 +6,17 @@ import { Card, CardContent } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { validateCoverPhoto, validateOtherPhoto, validateLogoImage } from '@/lib/imageValidation';
 
 interface PhotoUploadProps {
   photos: string[];
   onPhotosChange: (photos: string[]) => void;
   maxPhotos?: number;
   disabled?: boolean;
+  photoType?: 'cover' | 'logo' | 'other'; // Type of photo for validation
 }
 
-const PhotoUpload = ({ photos, onPhotosChange, maxPhotos = 10, disabled = false }: PhotoUploadProps) => {
+const PhotoUpload = ({ photos, onPhotosChange, maxPhotos = 10, disabled = false, photoType = 'other' }: PhotoUploadProps) => {
   const [uploading, setUploading] = useState(false);
   const { user } = useAuth();
 
@@ -39,6 +41,33 @@ const PhotoUpload = ({ photos, onPhotosChange, maxPhotos = 10, disabled = false 
 
     setUploading(true);
     try {
+      // Validate images first
+      const validationPromises = acceptedFiles.map(async (file) => {
+        let validator;
+        if (photoType === 'cover') {
+          validator = validateCoverPhoto;
+        } else if (photoType === 'logo') {
+          validator = validateLogoImage;
+        } else {
+          validator = validateOtherPhoto;
+        }
+        return validator(file);
+      });
+
+      const validationResults = await Promise.all(validationPromises);
+      const failedValidation = validationResults.find(result => !result.valid);
+
+      if (failedValidation) {
+        toast({
+          title: "Validation Error",
+          description: failedValidation.error,
+          variant: "destructive",
+        });
+        setUploading(false);
+        return;
+      }
+
+      // All validations passed, proceed with upload
       const uploadPromises = acceptedFiles.map(async (file) => {
         const fileExt = file.name.split('.').pop();
         const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
@@ -77,7 +106,7 @@ const PhotoUpload = ({ photos, onPhotosChange, maxPhotos = 10, disabled = false 
     } finally {
       setUploading(false);
     }
-  }, [photos, onPhotosChange, maxPhotos, user]);
+  }, [photos, onPhotosChange, maxPhotos, user, photoType]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
