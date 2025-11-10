@@ -110,13 +110,47 @@ export function CategorySelect({
     setSearchLoading(true);
     const handler = setTimeout(async () => {
       try {
-        const { data, error } = await supabase
-          .from('categories')
-          .select('id, category_name')
-          .ilike('category_name', `%${searchValue}%`)
-          .limit(5000);
-        if (error) throw error;
-        setRemoteResults(data || []);
+        // Get user's client_id first
+        const { data: { user } } = await supabase.auth.getUser();
+        let searchData = null;
+        
+        if (user) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('client_id')
+            .eq('user_id', user.id)
+            .single();
+
+          // Search in client_categories if client has custom categories
+          if (profile?.client_id) {
+            const { data: clientCats } = await supabase
+              .from('client_categories')
+              .select('id, category_name, source_category_id')
+              .eq('client_id', profile.client_id)
+              .ilike('category_name', `%${searchValue}%`)
+              .limit(5000);
+
+            if (clientCats && clientCats.length > 0) {
+              searchData = clientCats.map(cat => ({
+                id: cat.source_category_id || cat.id,
+                category_name: cat.category_name
+              }));
+            }
+          }
+        }
+
+        // Fall back to global categories if no client-specific results
+        if (!searchData) {
+          const { data, error } = await supabase
+            .from('categories')
+            .select('id, category_name')
+            .ilike('category_name', `%${searchValue}%`)
+            .limit(5000);
+          if (error) throw error;
+          searchData = data || [];
+        }
+
+        setRemoteResults(searchData);
       } catch (e) {
         console.error('Search fetch error:', e);
         setRemoteResults([]);
