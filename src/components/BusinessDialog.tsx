@@ -640,6 +640,7 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
                     onValueChange={(value) => !isFieldLocked('primaryCategory') && setValue('primaryCategory', value)}
                     placeholder="Select primary category *"
                     required
+                    clientId={clientId || business?.client_id}
                   />
                 </LockedFieldWrapper>
                 {errors.primaryCategory && (

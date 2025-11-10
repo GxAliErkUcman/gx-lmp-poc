@@ -22,6 +22,7 @@ interface CategorySelectProps {
   onValueChange: (value: string) => void;
   placeholder?: string;
   required?: boolean;
+  clientId?: string;
 }
 
 interface Category {
@@ -33,7 +34,8 @@ export function CategorySelect({
   value, 
   onValueChange, 
   placeholder = "Select category...",
-  required = false
+  required = false,
+  clientId
 }: CategorySelectProps) {
   const [open, setOpen] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -45,35 +47,41 @@ export function CategorySelect({
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        // Get the current user's profile to find their client_id
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (!user) {
-          setLoading(false);
-          return;
-        }
+        let targetClientId = clientId;
 
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('client_id')
-          .eq('user_id', user.id)
-          .single();
+        // If no clientId prop provided, get it from user's profile
+        if (!targetClientId) {
+          const { data: { user } } = await supabase.auth.getUser();
+          
+          if (!user) {
+            setLoading(false);
+            return;
+          }
+
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('client_id')
+            .eq('user_id', user.id)
+            .single();
+
+          targetClientId = profile?.client_id;
+        }
 
         let categoriesData = null;
 
-        // If user has a client_id, try to get client-specific categories
-        if (profile?.client_id) {
+        // If we have a client_id, try to get client-specific categories
+        if (targetClientId) {
           const { data: clientCats, error: clientCatsError } = await supabase
             .from('client_categories')
             .select('id, category_name, source_category_id')
-            .eq('client_id', profile.client_id)
+            .eq('client_id', targetClientId)
             .order('category_name');
 
           // If client has custom categories, use them
           if (!clientCatsError && clientCats && clientCats.length > 0) {
             // Map client_categories to match the Category interface
             categoriesData = clientCats.map(cat => ({
-              id: cat.source_category_id || cat.id, // Use source_category_id if available, otherwise use the client_category id
+              id: cat.source_category_id || cat.id,
               category_name: cat.category_name
             }));
           }
@@ -99,7 +107,7 @@ export function CategorySelect({
     };
 
     fetchCategories();
-  }, []);
+  }, [clientId]);
 
   // Fetch remote filtered results when searching to include items beyond initial limit
   useEffect(() => {
@@ -110,32 +118,39 @@ export function CategorySelect({
     setSearchLoading(true);
     const handler = setTimeout(async () => {
       try {
-        // Get user's client_id first
-        const { data: { user } } = await supabase.auth.getUser();
+        let targetClientId = clientId;
+
+        // If no clientId prop provided, get it from user's profile
+        if (!targetClientId) {
+          const { data: { user } } = await supabase.auth.getUser();
+          
+          if (user) {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('client_id')
+              .eq('user_id', user.id)
+              .single();
+
+            targetClientId = profile?.client_id;
+          }
+        }
+
         let searchData = null;
-        
-        if (user) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('client_id')
-            .eq('user_id', user.id)
-            .single();
 
-          // Search in client_categories if client has custom categories
-          if (profile?.client_id) {
-            const { data: clientCats } = await supabase
-              .from('client_categories')
-              .select('id, category_name, source_category_id')
-              .eq('client_id', profile.client_id)
-              .ilike('category_name', `%${searchValue}%`)
-              .limit(5000);
+        // Search in client_categories if we have a client_id
+        if (targetClientId) {
+          const { data: clientCats } = await supabase
+            .from('client_categories')
+            .select('id, category_name, source_category_id')
+            .eq('client_id', targetClientId)
+            .ilike('category_name', `%${searchValue}%`)
+            .limit(5000);
 
-            if (clientCats && clientCats.length > 0) {
-              searchData = clientCats.map(cat => ({
-                id: cat.source_category_id || cat.id,
-                category_name: cat.category_name
-              }));
-            }
+          if (clientCats && clientCats.length > 0) {
+            searchData = clientCats.map(cat => ({
+              id: cat.source_category_id || cat.id,
+              category_name: cat.category_name
+            }));
           }
         }
 
@@ -160,7 +175,7 @@ export function CategorySelect({
     }, 200);
 
     return () => clearTimeout(handler);
-  }, [searchValue]);
+  }, [searchValue, clientId]);
 
   // Custom search with normalization and scoring: exact > startsWith > wordBoundary > contains
   const getFilteredCategories = () => {
