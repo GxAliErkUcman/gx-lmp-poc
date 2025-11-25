@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Users, MapPin, Clock, Download, UserPlus, Plus, Trash2, Settings, Mail, RefreshCw, Edit, Handshake, Shield, Eye, Copy, Wrench } from 'lucide-react';
+import { Loader2, Users, MapPin, Clock, Download, UserPlus, Plus, Trash2, Settings, Mail, RefreshCw, Edit, Handshake, Shield, Eye, Copy, Wrench, KeyRound } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
@@ -774,6 +774,28 @@ const AdminPanel = () => {
       setUserManagementLoading(false);
     }
   };
+  const handlePasswordRecovery = async (userEmail: string) => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(userEmail, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Password Reset Email Sent",
+        description: `A password reset link has been sent to ${userEmail}`,
+      });
+    } catch (error: any) {
+      console.error('Error sending password reset:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to send password reset email.",
+        variant: "destructive"
+      });
+    }
+  };
+
   const removeUserFromClient = async (userId: string) => {
     if (!selectedClient) return;
     
@@ -1468,8 +1490,24 @@ const AdminPanel = () => {
       {/* User Management Dialog */}
         <Dialog open={isUserManagementDialogOpen} onOpenChange={setIsUserManagementDialogOpen}>
           <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
-            <DialogHeader>
+            <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <DialogTitle className="text-xl">Manage Users - {selectedClient?.name}</DialogTitle>
+              <Button 
+                size="sm"
+                onClick={() => {
+                  setNewUser({ 
+                    firstName: '', 
+                    lastName: '', 
+                    email: '', 
+                    clientId: selectedClient?.id || '', 
+                    role: 'user' 
+                  });
+                  setIsCreateUserDialogOpen(true);
+                }}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Create User
+              </Button>
             </DialogHeader>
             
             {userManagementLoading ? (
@@ -1504,14 +1542,24 @@ const AdminPanel = () => {
                             </div>
                             <div className="text-sm text-muted-foreground">{user.email}</div>
                           </div>
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={() => removeUserFromClient(user.user_id)}
-                          >
-                            <Trash2 className="w-4 h-4 mr-2" />
-                            Remove
-                          </Button>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handlePasswordRecovery(user.email)}
+                            >
+                              <KeyRound className="w-4 h-4 mr-2" />
+                              Reset Password
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => removeUserFromClient(user.user_id)}
+                            >
+                              <Trash2 className="w-4 h-4 mr-2" />
+                              Remove
+                            </Button>
+                          </div>
                         </div>
                       ))}
                     </div>
