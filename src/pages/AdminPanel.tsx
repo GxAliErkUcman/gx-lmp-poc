@@ -98,7 +98,8 @@ const AdminPanel = () => {
     firstName: '',
     lastName: '',
     email: '',
-    clientId: ''
+    clientId: '',
+    role: 'user' as 'client_admin' | 'user' | 'store_owner' | 'service_user'
   });
 
   useEffect(() => {
@@ -409,7 +410,8 @@ const AdminPanel = () => {
           email: newUser.email,
           firstName: newUser.firstName,
           lastName: newUser.lastName,
-          clientId: newUser.clientId
+          clientId: newUser.clientId,
+          role: newUser.role
         }
       });
 
@@ -420,7 +422,7 @@ const AdminPanel = () => {
         description: "User invitation sent successfully. They will receive an email to set up their password.",
       });
 
-      setNewUser({ firstName: '', lastName: '', email: '', clientId: '' });
+      setNewUser({ firstName: '', lastName: '', email: '', clientId: '', role: 'user' });
       setIsCreateUserDialogOpen(false);
       fetchData(); // Refresh the data
     } catch (error: any) {
@@ -972,6 +974,29 @@ const AdminPanel = () => {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+              <div>
+                <Label htmlFor="role">Role</Label>
+                <Select value={newUser.role} onValueChange={(value) => setNewUser({ ...newUser, role: value as 'client_admin' | 'user' | 'store_owner' | 'service_user' })}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="service_user">Service User</SelectItem>
+                    <SelectItem value="client_admin">Client Admin</SelectItem>
+                    <SelectItem value="user">User</SelectItem>
+                    <SelectItem value="store_owner">Store Owner</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {newUser.role === 'service_user'
+                    ? 'Service Users can access multiple clients and manage their data'
+                    : newUser.role === 'client_admin'
+                    ? 'Client Admins can manage all users and stores for this client'
+                    : newUser.role === 'user'
+                    ? 'Users can view and manage all stores for this client'
+                    : 'Store Owners can only access stores assigned to them'}
+                </p>
               </div>
               <Button
                 onClick={handleCreateUser}
