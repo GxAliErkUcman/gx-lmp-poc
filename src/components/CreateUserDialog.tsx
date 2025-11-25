@@ -27,7 +27,7 @@ export default function CreateUserDialog({
   const [email, setEmail] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
-  const [role, setRole] = useState<'user' | 'store_owner'>('user');
+  const [role, setRole] = useState<'client_admin' | 'user' | 'store_owner' | 'service_user'>('user');
   const [loading, setLoading] = useState(false);
 
   // Store selection (only for owners)
@@ -154,19 +154,25 @@ export default function CreateUserDialog({
 
           <div className="space-y-2">
             <Label htmlFor="role">Role *</Label>
-            <Select value={role} onValueChange={(value) => setRole(value as 'user' | 'store_owner')}>
+            <Select value={role} onValueChange={(value) => setRole(value as 'client_admin' | 'user' | 'store_owner' | 'service_user')}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="service_user">Service User</SelectItem>
+                <SelectItem value="client_admin">Client Admin</SelectItem>
                 <SelectItem value="user">User</SelectItem>
-                <SelectItem value="store_owner">Owner</SelectItem>
+                <SelectItem value="store_owner">Store Owner</SelectItem>
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground">
-              {role === 'user'
+              {role === 'service_user'
+                ? 'Service Users can access multiple clients and manage their data'
+                : role === 'client_admin'
+                ? 'Client Admins can manage all users and stores for this client'
+                : role === 'user'
                 ? 'Users can view and manage all stores for this client'
-                : 'Owners can only access stores assigned to them'}
+                : 'Store Owners can only access stores assigned to them'}
             </p>
           </div>
 
