@@ -11,7 +11,7 @@ interface CreateUserRequest {
   firstName: string;
   lastName: string;
   clientId: string;
-  role?: 'client_admin' | 'user' | 'store_owner';
+  role?: 'client_admin' | 'user' | 'store_owner' | 'service_user';
   storeIds?: string[];
 }
 
@@ -148,6 +148,16 @@ const handler = async (req: Request): Promise<Response> => {
         .insert(accessRows, { defaultToNull: false });
       if (accessError) {
         console.error('Error assigning store access:', accessError);
+      }
+    }
+
+    // Assign client access if service_user
+    if (role === 'service_user') {
+      const { error: clientAccessError } = await supabaseAdmin
+        .from('user_client_access')
+        .insert({ user_id: newUserId, client_id: clientId });
+      if (clientAccessError) {
+        console.error('Error assigning client access:', clientAccessError);
       }
     }
 
