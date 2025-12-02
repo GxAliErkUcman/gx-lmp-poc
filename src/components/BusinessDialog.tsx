@@ -75,6 +75,8 @@ const businessSchema = z.object({
   tiktokUrl: z.string().optional(),
   twitterUrl: z.string().optional(),
   youtubeUrl: z.string().optional(),
+  // Goldmine - unstructured data (not included in JSON exports)
+  goldmine: z.string().optional(),
 });
 
 type BusinessFormData = z.infer<typeof businessSchema>;
@@ -136,6 +138,7 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
       tiktokUrl: "",
       twitterUrl: "",
       youtubeUrl: "",
+      goldmine: "",
     }
   });
 
@@ -218,6 +221,7 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
         setValue('menuURL', businessToUse.menuURL || '');
         setValue('reservationsURL', businessToUse.reservationsURL || '');
         setValue('orderAheadURL', businessToUse.orderAheadURL || '');
+        setValue('goldmine', businessToUse.goldmine || '');
         setSpecialHours(parseSpecialHoursFromSchema(businessToUse.specialHours));
         
         // Set social media URLs
@@ -484,6 +488,7 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
         orderAheadURL: data.orderAheadURL || null,
         socialMediaUrls: socialMediaUrls.length > 0 ? socialMediaUrls : null,
         customServices: customServices.length > 0 ? customServices : null,
+        goldmine: data.goldmine || null,
         client_id: effectiveClientId, // Force to selected client when provided
         status: newStatus,
       };
@@ -1138,6 +1143,27 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
               </CardContent>
             </Card>
           </LockedFieldWrapper>
+
+          {/* Data Goldmine */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Data Goldmine</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div>
+                <Label htmlFor="goldmine">Unstructured Data</Label>
+                <Textarea 
+                  {...register('goldmine')} 
+                  id="goldmine" 
+                  placeholder="Store unstructured data here (not included in JSON exports)"
+                  className="h-32 font-mono text-sm"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  This field is for storing raw/unstructured data and is excluded from all JSON exports.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
 
           <Separator />
 
