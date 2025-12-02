@@ -68,6 +68,9 @@ export interface Business {
     relationType: 'DEPARTMENT_OF' | 'INDEPENDENT_ESTABLISHMENT_IN';
   } | any | null;
   
+  // Goldmine - unstructured data storage (not included in JSON exports)
+  goldmine?: string;
+  
   // Metadata
   created_at: string;
   updated_at: string;

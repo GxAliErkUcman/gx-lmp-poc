@@ -35,6 +35,7 @@ export type Database = {
           district: string | null
           fridayHours: string | null
           fromTheBusiness: string | null
+          goldmine: string | null
           id: string
           labels: string | null
           latitude: number | null
@@ -86,6 +87,7 @@ export type Database = {
           district?: string | null
           fridayHours?: string | null
           fromTheBusiness?: string | null
+          goldmine?: string | null
           id?: string
           labels?: string | null
           latitude?: number | null
@@ -137,6 +139,7 @@ export type Database = {
           district?: string | null
           fridayHours?: string | null
           fromTheBusiness?: string | null
+          goldmine?: string | null
           id?: string
           labels?: string | null
           latitude?: number | null

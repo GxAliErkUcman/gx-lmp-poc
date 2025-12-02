@@ -42,6 +42,7 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
     { key: 'primaryPhone', label: 'Phone', visible: false },
     { key: 'website', label: 'Website', visible: false },
     { key: 'labels', label: 'Labels', visible: false },
+    { key: 'goldmine', label: 'Data Goldmine', visible: false },
   ]);
 
 
@@ -461,6 +462,11 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
                     )}
                     {column.key === 'labels' && (
                       <span className="text-sm">{business.labels || '-'}</span>
+                    )}
+                    {column.key === 'goldmine' && (
+                      <span className="text-sm text-muted-foreground truncate max-w-[200px] block" title={business.goldmine || ''}>
+                        {business.goldmine || '-'}
+                      </span>
                     )}
                   </TableCell>
                 ))}

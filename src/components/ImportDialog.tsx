@@ -105,7 +105,8 @@ const ImportDialog = ({ open, onOpenChange, onSuccess, clientId }: ImportDialogP
     'coverPhoto': ['cover photo', 'main image', 'cover'],
     'otherPhotos': ['other photos', 'photos', 'images'],
     'customServices': ['custom services', 'services'],
-    'moreHours': ['more hours', 'additional hours']
+    'moreHours': ['more hours', 'additional hours'],
+    'goldmine': ['goldmine', 'data goldmine', 'raw data', 'unstructured data', 'extra data']
   };
 
   const requiredFields = ['businessName'];
