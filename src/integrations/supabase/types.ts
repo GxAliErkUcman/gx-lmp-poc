@@ -14,6 +14,50 @@ export type Database = {
   }
   public: {
     Tables: {
+      business_field_history: {
+        Row: {
+          business_id: string
+          change_source: string | null
+          changed_at: string
+          changed_by: string | null
+          changed_by_email: string | null
+          field_name: string
+          id: string
+          new_value: string | null
+          old_value: string | null
+        }
+        Insert: {
+          business_id: string
+          change_source?: string | null
+          changed_at?: string
+          changed_by?: string | null
+          changed_by_email?: string | null
+          field_name: string
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+        }
+        Update: {
+          business_id?: string
+          change_source?: string | null
+          changed_at?: string
+          changed_by?: string | null
+          changed_by_email?: string | null
+          field_name?: string
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_field_history_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       businesses: {
         Row: {
           additionalCategories: string | null
