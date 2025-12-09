@@ -62,6 +62,7 @@ export const VersionHistoryDialog = ({ open, onOpenChange, clientId, onImport }:
   // Field history states
   const [fieldHistory, setFieldHistory] = useState<FieldHistoryRecord[]>([]);
   const [businessesWithChanges, setBusinessesWithChanges] = useState<BusinessWithChanges[]>([]);
+  const [businessLookup, setBusinessLookup] = useState<Map<string, { storeCode: string; businessName: string }>>(new Map());
   const [historyLoading, setHistoryLoading] = useState(false);
   
   // Business history view state
@@ -168,6 +169,16 @@ export const VersionHistoryDialog = ({ open, onOpenChange, clientId, onImport }:
           .in('id', businessIds);
 
         if (!businessesError && businessesData) {
+          // Create lookup map for business info
+          const lookup = new Map<string, { storeCode: string; businessName: string }>();
+          businessesData.forEach((b: any) => {
+            lookup.set(b.id, {
+              storeCode: b.storeCode || '',
+              businessName: b.businessName || 'Unnamed',
+            });
+          });
+          setBusinessLookup(lookup);
+
           // Calculate change counts per business
           const changeCounts = new Map<string, { count: number; lastChange: string }>();
           (historyData || []).forEach((h: any) => {
@@ -503,19 +514,25 @@ export const VersionHistoryDialog = ({ open, onOpenChange, clientId, onImport }:
                         className="border rounded-lg p-3 space-y-2"
                       >
                         <div className="flex flex-wrap items-center gap-2">
+                          <span className="font-mono text-xs bg-muted px-2 py-0.5 rounded">
+                            {businessLookup.get(record.business_id)?.storeCode || 'Unknown'}
+                          </span>
+                          <span className="font-medium text-sm">
+                            {businessLookup.get(record.business_id)?.businessName || 'Unknown Business'}
+                          </span>
+                          <span className="text-muted-foreground">•</span>
                           <span className="font-medium">
                             {getFieldDisplayName(record.field_name)}
                           </span>
                           <Badge variant={getSourceBadgeVariant(record.change_source)}>
                             {getChangeSourceDisplayName(record.change_source)}
                           </Badge>
-                          <span className="text-sm text-muted-foreground">
-                            {format(new Date(record.changed_at), 'MMM d, yyyy h:mm a')}
-                          </span>
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                          <span>{format(new Date(record.changed_at), 'MMM d, yyyy h:mm a')}</span>
                           {record.changed_by_email && (
-                            <span className="text-xs text-muted-foreground">
-                              by {record.changed_by_email}
-                            </span>
+                            <span>by {record.changed_by_email}</span>
                           )}
                         </div>
 
