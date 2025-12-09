@@ -1,12 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Download, Upload, Trash2 } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Download, Upload, Trash2, Eye, History } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { format } from 'date-fns';
+import { getFieldDisplayName, getChangeSourceDisplayName } from '@/lib/fieldHistory';
+import { BusinessHistoryView } from '@/components/BusinessHistoryView';
 
 interface BackupFile {
   name: string;
@@ -18,6 +23,26 @@ interface BackupFile {
   metadata?: {
     size?: number;
   };
+}
+
+interface FieldHistoryRecord {
+  id: string;
+  business_id: string;
+  field_name: string;
+  old_value: string | null;
+  new_value: string | null;
+  changed_by: string | null;
+  changed_at: string;
+  change_source: string;
+  changed_by_email: string | null;
+}
+
+interface BusinessWithChanges {
+  id: string;
+  businessName: string;
+  storeCode: string;
+  changeCount: number;
+  lastChange: string;
 }
 
 interface VersionHistoryDialogProps {
@@ -32,12 +57,25 @@ export const VersionHistoryDialog = ({ open, onOpenChange, clientId, onImport }:
   const [backups, setBackups] = useState<BackupFile[]>([]);
   const [loading, setLoading] = useState(false);
   const [clients, setClients] = useState<{ id: string; name: string }[]>([]);
+  const [activeTab, setActiveTab] = useState<'backups' | 'locations' | 'all'>('backups');
+  
+  // Field history states
+  const [fieldHistory, setFieldHistory] = useState<FieldHistoryRecord[]>([]);
+  const [businessesWithChanges, setBusinessesWithChanges] = useState<BusinessWithChanges[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  
+  // Business history view state
+  const [selectedBusinessId, setSelectedBusinessId] = useState<string | null>(null);
+  const [selectedBusinessName, setSelectedBusinessName] = useState<string>('');
 
   useEffect(() => {
     if (open) {
       fetchBackups();
+      if (activeTab === 'locations' || activeTab === 'all') {
+        fetchFieldHistory();
+      }
     }
-  }, [open, clientId]);
+  }, [open, clientId, activeTab]);
 
   const fetchBackups = async () => {
     setLoading(true);
@@ -101,6 +139,69 @@ export const VersionHistoryDialog = ({ open, onOpenChange, clientId, onImport }:
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchFieldHistory = async () => {
+    setHistoryLoading(true);
+    try {
+      // Build query for field history
+      let historyQuery = supabase
+        .from('business_field_history')
+        .select('*')
+        .order('changed_at', { ascending: false })
+        .limit(100);
+
+      const { data: historyData, error: historyError } = await historyQuery;
+
+      if (historyError) throw historyError;
+
+      setFieldHistory((historyData || []) as FieldHistoryRecord[]);
+
+      // Get businesses with changes
+      const businessIds = [...new Set((historyData || []).map((h: any) => h.business_id))];
+      
+      if (businessIds.length > 0) {
+        const { data: businessesData, error: businessesError } = await supabase
+          .from('businesses')
+          .select('id, businessName, storeCode')
+          .in('id', businessIds);
+
+        if (!businessesError && businessesData) {
+          // Calculate change counts per business
+          const changeCounts = new Map<string, { count: number; lastChange: string }>();
+          (historyData || []).forEach((h: any) => {
+            const existing = changeCounts.get(h.business_id);
+            if (!existing) {
+              changeCounts.set(h.business_id, { count: 1, lastChange: h.changed_at });
+            } else {
+              changeCounts.set(h.business_id, { 
+                count: existing.count + 1, 
+                lastChange: h.changed_at > existing.lastChange ? h.changed_at : existing.lastChange 
+              });
+            }
+          });
+
+          const businessesWithChanges: BusinessWithChanges[] = businessesData.map((b: any) => ({
+            id: b.id,
+            businessName: b.businessName || 'Unnamed',
+            storeCode: b.storeCode,
+            changeCount: changeCounts.get(b.id)?.count || 0,
+            lastChange: changeCounts.get(b.id)?.lastChange || '',
+          })).sort((a, b) => new Date(b.lastChange).getTime() - new Date(a.lastChange).getTime());
+
+          setBusinessesWithChanges(businessesWithChanges);
+        }
+      }
+    } catch (error: any) {
+      console.error('Error fetching field history:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch field history',
+        variant: 'destructive',
+      });
+    } finally {
+      setHistoryLoading(false);
     }
   };
 
@@ -225,78 +326,236 @@ export const VersionHistoryDialog = ({ open, onOpenChange, clientId, onImport }:
     return `${mb.toFixed(2)} MB`;
   };
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[80vh]">
-        <DialogHeader>
-          <DialogTitle>Version History - JSON Backups</DialogTitle>
-        </DialogHeader>
+  const getSourceBadgeVariant = (source: string) => {
+    switch (source) {
+      case 'import':
+        return 'secondary';
+      case 'multi_edit':
+        return 'outline';
+      case 'rollback':
+        return 'default';
+      default:
+        return 'outline';
+    }
+  };
 
-        <div className="overflow-auto">
-          {loading ? (
-            <div className="flex items-center justify-center py-8">
-              <p className="text-muted-foreground">Loading backups...</p>
-            </div>
-          ) : backups.length === 0 ? (
-            <div className="flex items-center justify-center py-8">
-              <p className="text-muted-foreground">No backups found</p>
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Client</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>File Name</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead>Size</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {backups.map((backup) => (
-                  <TableRow key={`${backup.clientId}-${backup.folder}-${backup.name}`}>
-                    <TableCell className="font-medium">{backup.clientName}</TableCell>
-                    <TableCell>
-                      <Badge variant={backup.folder === 'weekly' ? 'default' : 'secondary'}>
-                        {backup.folder === 'weekly' ? 'Weekly' : 'CRUD'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{backup.name}</TableCell>
-                    <TableCell>{formatDate(backup.created_at)}</TableCell>
-                    <TableCell>{formatSize(backup.metadata?.size)}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDownload(backup)}
-                        >
-                          <Download className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleImport(backup)}
-                        >
-                          <Upload className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDelete(backup)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+  const formatValue = (value: string | null): string => {
+    if (value === null || value === '') return '(empty)';
+    if (value.length > 50) return value.substring(0, 50) + '...';
+    return value;
+  };
+
+  const handleViewBusinessHistory = (businessId: string, businessName: string) => {
+    setSelectedBusinessId(businessId);
+    setSelectedBusinessName(businessName);
+  };
+
+  return (
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-5xl max-h-[85vh]">
+          <DialogHeader>
+            <DialogTitle>Version History</DialogTitle>
+          </DialogHeader>
+
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="backups">JSON Backups</TabsTrigger>
+              <TabsTrigger value="locations">Location Updates</TabsTrigger>
+              <TabsTrigger value="all">All Changes</TabsTrigger>
+            </TabsList>
+
+            {/* JSON Backups Tab */}
+            <TabsContent value="backups">
+              <ScrollArea className="max-h-[60vh]">
+                {loading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <p className="text-muted-foreground">Loading backups...</p>
+                  </div>
+                ) : backups.length === 0 ? (
+                  <div className="flex items-center justify-center py-8">
+                    <p className="text-muted-foreground">No backups found</p>
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Client</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead>File Name</TableHead>
+                        <TableHead>Created</TableHead>
+                        <TableHead>Size</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {backups.map((backup) => (
+                        <TableRow key={`${backup.clientId}-${backup.folder}-${backup.name}`}>
+                          <TableCell className="font-medium">{backup.clientName}</TableCell>
+                          <TableCell>
+                            <Badge variant={backup.folder === 'weekly' ? 'default' : 'secondary'}>
+                              {backup.folder === 'weekly' ? 'Weekly' : 'CRUD'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>{backup.name}</TableCell>
+                          <TableCell>{formatDate(backup.created_at)}</TableCell>
+                          <TableCell>{formatSize(backup.metadata?.size)}</TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-2">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDownload(backup)}
+                              >
+                                <Download className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleImport(backup)}
+                              >
+                                <Upload className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDelete(backup)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </ScrollArea>
+            </TabsContent>
+
+            {/* Location Updates Tab */}
+            <TabsContent value="locations">
+              <ScrollArea className="max-h-[60vh]">
+                {historyLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <p className="text-muted-foreground">Loading location updates...</p>
+                  </div>
+                ) : businessesWithChanges.length === 0 ? (
+                  <div className="flex items-center justify-center py-8">
+                    <p className="text-muted-foreground">No location updates found</p>
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Store Code</TableHead>
+                        <TableHead>Business Name</TableHead>
+                        <TableHead>Changes</TableHead>
+                        <TableHead>Last Update</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {businessesWithChanges.map((business) => (
+                        <TableRow key={business.id}>
+                          <TableCell className="font-mono text-sm">{business.storeCode}</TableCell>
+                          <TableCell className="font-medium">{business.businessName}</TableCell>
+                          <TableCell>
+                            <Badge variant="secondary">{business.changeCount} changes</Badge>
+                          </TableCell>
+                          <TableCell>
+                            {business.lastChange ? format(new Date(business.lastChange), 'MMM d, yyyy h:mm a') : '-'}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleViewBusinessHistory(business.id, business.businessName)}
+                            >
+                              <History className="h-4 w-4 mr-1" />
+                              View History
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </ScrollArea>
+            </TabsContent>
+
+            {/* All Changes Tab */}
+            <TabsContent value="all">
+              <ScrollArea className="max-h-[60vh]">
+                {historyLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <p className="text-muted-foreground">Loading changes...</p>
+                  </div>
+                ) : fieldHistory.length === 0 ? (
+                  <div className="flex items-center justify-center py-8">
+                    <p className="text-muted-foreground">No changes found</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {fieldHistory.map((record) => (
+                      <div
+                        key={record.id}
+                        className="border rounded-lg p-3 space-y-2"
+                      >
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="font-medium">
+                            {getFieldDisplayName(record.field_name)}
+                          </span>
+                          <Badge variant={getSourceBadgeVariant(record.change_source)}>
+                            {getChangeSourceDisplayName(record.change_source)}
+                          </Badge>
+                          <span className="text-sm text-muted-foreground">
+                            {format(new Date(record.changed_at), 'MMM d, yyyy h:mm a')}
+                          </span>
+                          {record.changed_by_email && (
+                            <span className="text-xs text-muted-foreground">
+                              by {record.changed_by_email}
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="flex gap-2 text-sm">
+                          <span className="text-destructive bg-destructive/10 px-2 py-1 rounded">
+                            {formatValue(record.old_value)}
+                          </span>
+                          <span className="text-muted-foreground">→</span>
+                          <span className="text-primary bg-primary/10 px-2 py-1 rounded">
+                            {formatValue(record.new_value)}
+                          </span>
+                        </div>
                       </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </div>
-      </DialogContent>
-    </Dialog>
+                    ))}
+                  </div>
+                )}
+              </ScrollArea>
+            </TabsContent>
+          </Tabs>
+        </DialogContent>
+      </Dialog>
+
+      {/* Business History View Dialog */}
+      {selectedBusinessId && (
+        <BusinessHistoryView
+          open={!!selectedBusinessId}
+          onOpenChange={(open) => {
+            if (!open) {
+              setSelectedBusinessId(null);
+              setSelectedBusinessName('');
+            }
+          }}
+          businessId={selectedBusinessId}
+          businessName={selectedBusinessName}
+          onRollback={() => {
+            fetchFieldHistory();
+            onImport?.();
+          }}
+        />
+      )}
+    </>
   );
 };

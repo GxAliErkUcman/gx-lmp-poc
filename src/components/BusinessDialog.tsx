@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -27,6 +27,7 @@ import CategoryNameChangeDialog from '@/components/CategoryNameChangeDialog';
 import BusinessCustomServicesDialog from '@/components/BusinessCustomServicesDialog';
 import { useFieldPermissions } from '@/hooks/use-field-permissions';
 import { LockedFieldWrapper } from '@/components/LockedFieldWrapper';
+import { trackFieldChanges } from '@/lib/fieldHistory';
 
 const businessSchema = z.object({
   storeCode: z.string().min(1, 'Store code is required'),
@@ -111,6 +112,9 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
   const [pendingFormData, setPendingFormData] = useState<any>(null);
   const [customServicesDialogOpen, setCustomServicesDialogOpen] = useState(false);
   const [customServices, setCustomServices] = useState<any[]>([]);
+  
+  // Store original business data for field history tracking
+  const originalBusinessDataRef = useRef<Record<string, any> | null>(null);
 
   const [socialMediaUrls, setSocialMediaUrls] = useState({
     facebookUrl: "",
@@ -264,6 +268,9 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
         // Store initial values for critical field change detection
         setInitialBusinessName(businessToUse.businessName || '');
         setInitialPrimaryCategory(businessToUse.primaryCategory || '');
+        
+        // Store original data for field history tracking
+        originalBusinessDataRef.current = { ...businessToUse };
       } else if (!business) {
         // Reset for new business
         reset();
@@ -281,6 +288,9 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
           saturday: "10:00-14:00",
           sunday: null
         });
+        
+        // Clear original data for new businesses
+        originalBusinessDataRef.current = null;
       }
     };
 
@@ -536,6 +546,17 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
         });
         setLoading(false);
         return;
+      }
+
+      // Track field changes for existing businesses
+      if (business && originalBusinessDataRef.current && user) {
+        trackFieldChanges(
+          business.id,
+          originalBusinessDataRef.current,
+          businessData,
+          user.id,
+          'manual_edit'
+        ).catch(err => console.error('Error tracking field changes:', err));
       }
 
       toast({
