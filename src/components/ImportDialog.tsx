@@ -119,6 +119,7 @@ const ImportDialog = ({ open, onOpenChange, onSuccess, clientId }: ImportDialogP
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
       'application/vnd.ms-excel': ['.xls'],
       'text/csv': ['.csv'],
+      'application/json': ['.json'],
     },
     onDrop: (acceptedFiles) => {
       if (acceptedFiles.length > 0) {
@@ -133,7 +134,60 @@ const ImportDialog = ({ open, onOpenChange, onSuccess, clientId }: ImportDialogP
     try {
       const buffer = await file.arrayBuffer();
       
-      // Handle different file types with proper encoding support
+      // Handle JSON files separately
+      if (file.name.toLowerCase().endsWith('.json')) {
+        const text = new TextDecoder('utf-8').decode(buffer);
+        const jsonData = JSON.parse(text);
+        
+        // Handle both array format and object with array property
+        let dataArray: any[];
+        if (Array.isArray(jsonData)) {
+          dataArray = jsonData;
+        } else if (jsonData.businesses && Array.isArray(jsonData.businesses)) {
+          dataArray = jsonData.businesses;
+        } else if (jsonData.locations && Array.isArray(jsonData.locations)) {
+          dataArray = jsonData.locations;
+        } else {
+          throw new Error('JSON must contain an array of businesses');
+        }
+        
+        if (dataArray.length === 0) {
+          throw new Error('No data found in JSON file');
+        }
+        
+        // Get all unique keys from the data
+        const allKeys = new Set<string>();
+        dataArray.forEach(item => {
+          Object.keys(item).forEach(key => allKeys.add(key));
+        });
+        
+        const headers = Array.from(allKeys);
+        
+        // Convert to ParsedData format
+        const parsedRows = dataArray.map(item => {
+          const obj: ParsedData = {};
+          headers.forEach(header => {
+            const value = item[header];
+            // Handle nested objects and arrays by stringifying them
+            if (value !== null && typeof value === 'object') {
+              obj[header] = JSON.stringify(value);
+            } else {
+              obj[header] = value !== undefined && value !== null ? String(value) : '';
+            }
+          });
+          return obj;
+        });
+        
+        setParsedData(parsedRows);
+        
+        // Auto-detect column mappings for JSON
+        const mappings = createColumnMappings(headers);
+        setColumnMappings(mappings);
+        setStep('mapping');
+        return;
+      }
+      
+      // Handle Excel/CSV files with proper encoding support
       let workbook: XLSX.WorkBook;
       if (file.name.toLowerCase().endsWith('.csv')) {
         // For CSV files, read as text with UTF-8 encoding first
@@ -177,149 +231,154 @@ const ImportDialog = ({ open, onOpenChange, onSuccess, clientId }: ImportDialogP
       });
 
       setParsedData(parsedRows);
-
-      // Auto-detect column mappings with improved precision and compact matching
-      const mappings: ColumnMapping[] = headers.map(header => {
-        const normalizedHeader = String(header).toLowerCase().trim();
-        const compactHeader = normalizedHeader.replace(/[\s_\-]/g, '');
-        
-        // Find matching field - use exact match (normal or compact), then partial
-        let mappedField = '';
-
-        // 0) Direct field-name equality (handles headers like "fromTheBusiness", "additionalPhones")
-        const fieldNameKeys = Object.keys(fieldMappings);
-        for (const key of fieldNameKeys) {
-          const keyCompact = key.toLowerCase().replace(/[\s_\-]/g, '');
-          if (compactHeader === keyCompact) {
-            mappedField = key;
-            break;
-          }
-        }
-
-        const matchAlias = (field: string, alias: string) => {
-          const aliasLower = alias.toLowerCase();
-          const aliasCompact = aliasLower.replace(/[\s_\-]/g, '');
-          return (
-            normalizedHeader === aliasLower ||
-            compactHeader === aliasCompact ||
-            normalizedHeader.includes(aliasLower) ||
-            compactHeader.includes(aliasCompact)
-          );
-        };
-
-        // Address line disambiguation helper on COMPACT header
-        const resolveAddressLine = () => {
-          // Try to extract a number after address/addr/al/addressline
-          const m = compactHeader.match(/^(?:addressline|address|addr|al)(\d)$/);
-          if (m) {
-            const n = m[1];
-            return `addressLine${n}`;
-          }
-          // If it's a generic address without number, prefer addressLine1
-          if (compactHeader === 'address' || compactHeader === 'streetaddress' || compactHeader === 'addressline') {
-            return 'addressLine1';
-          }
-          return '';
-        };
-
-        // First pass: explicit address-line number detection
-        if (compactHeader.startsWith('address') || compactHeader.startsWith('addr') || compactHeader.startsWith('al')) {
-          const addressField = resolveAddressLine();
-          if (addressField) mappedField = addressField;
-        }
-
-        // Second pass: specific field disambiguation for common conflicts
-        if (!mappedField) {
-          // Handle phone field conflicts - check for additional/secondary first
-          if (compactHeader.includes('phone') || compactHeader.includes('telephone') || compactHeader.includes('tel')) {
-            const isAdditional = (
-              compactHeader.includes('additional') ||
-              compactHeader.includes('other') ||
-              compactHeader.includes('secondary') ||
-              compactHeader.includes('alternate') ||
-              compactHeader.includes('alt') ||
-              /phone\d+/.test(compactHeader) && !/phone1\b/.test(compactHeader)
-            );
-            if (isAdditional) {
-              mappedField = 'additionalPhones';
-            } else if (compactHeader.includes('primary') || compactHeader === 'phone' || compactHeader === 'telephone' || compactHeader === 'tel' || compactHeader === 'mobile' || compactHeader === 'contact') {
-              mappedField = 'primaryPhone';
-            }
-          }
-          
-          // Handle business name vs from business conflicts
-          if (compactHeader.includes('business') && !mappedField) {
-            if (compactHeader.includes('from') || compactHeader.includes('description') || compactHeader.includes('about')) {
-              mappedField = 'fromTheBusiness';
-            } else if (compactHeader.includes('name') || compactHeader === 'business' || compactHeader === 'businessname' || compactHeader === 'companyname') {
-              mappedField = 'businessName';
-            }
-          }
-        }
-
-        // Third pass: standard alias matching if still not mapped
-        if (!mappedField) {
-          for (const [field, aliases] of Object.entries(fieldMappings)) {
-            for (const alias of aliases) {
-              if (matchAlias(field, alias)) {
-                // Additional guards for storeCode false positives
-                if (field === 'storeCode') {
-                  if (compactHeader.includes('postal') || compactHeader.includes('postcode') || compactHeader.includes('zip')) {
-                    continue;
-                  }
-                  const days = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
-                  if (days.some(day => compactHeader.includes(day)) && compactHeader.includes('hour')) {
-                    continue;
-                  }
-                }
-                
-                // Prevent generic 'address' mapping over numbered lines
-                if (field === 'addressLine1') {
-                  if (/(addressline|address|addr|al)[2345]/.test(compactHeader)) {
-                    continue;
-                  }
-                }
-
-                // Skip phone conflicts that should have been handled above
-                if ((field === 'primaryPhone' && (compactHeader.includes('additional') || compactHeader.includes('other') || compactHeader.includes('secondary') || compactHeader.includes('alternate') || compactHeader.includes('alt') || /phone\d+/.test(compactHeader))) ||
-                    (field === 'additionalPhones' && !(compactHeader.includes('additional') || compactHeader.includes('other') || compactHeader.includes('secondary') || compactHeader.includes('alternate') || compactHeader.includes('alt') || (/phone\d+/.test(compactHeader) && !/phone1\b/.test(compactHeader))))) {
-                  continue;
-                }
-
-                // Skip business conflicts that should have been handled above  
-                if ((field === 'businessName' && (compactHeader.includes('from') || compactHeader.includes('description') || compactHeader.includes('about') || compactHeader.includes('summary'))) ||
-                    (field === 'fromTheBusiness' && compactHeader.includes('name') && !compactHeader.includes('from'))) {
-                  continue;
-                }
-
-                mappedField = field;
-                break;
-              }
-            }
-            if (mappedField) break;
-          }
-        }
-
-        return {
-          original: header,
-          mapped: mappedField,
-          required: requiredFields.includes(mappedField),
-        };
-      });
-
+      
+      // Auto-detect column mappings
+      const mappings = createColumnMappings(headers);
       setColumnMappings(mappings);
       setStep('mapping');
     } catch (error) {
       console.error('Error parsing file:', error);
       toast({
         title: "Error",
-        description: "Failed to parse file. Please check the format.",
+        description: error instanceof Error ? error.message : "Failed to parse file. Please check the format.",
         variant: "destructive",
       });
     } finally {
       setLoading(false);
     }
   };
+
+  // Extract column mapping logic to reusable function
+  const createColumnMappings = (headers: string[]): ColumnMapping[] => {
+    return headers.map(header => {
+      const normalizedHeader = String(header).toLowerCase().trim();
+      const compactHeader = normalizedHeader.replace(/[\s_\-]/g, '');
+      
+      // Find matching field - use exact match (normal or compact), then partial
+      let mappedField = '';
+
+      // 0) Direct field-name equality (handles headers like "fromTheBusiness", "additionalPhones")
+      const fieldNameKeys = Object.keys(fieldMappings);
+      for (const key of fieldNameKeys) {
+        const keyCompact = key.toLowerCase().replace(/[\s_\-]/g, '');
+        if (compactHeader === keyCompact) {
+          mappedField = key;
+          break;
+        }
+      }
+
+      const matchAlias = (field: string, alias: string) => {
+        const aliasLower = alias.toLowerCase();
+        const aliasCompact = aliasLower.replace(/[\s_\-]/g, '');
+        return (
+          normalizedHeader === aliasLower ||
+          compactHeader === aliasCompact ||
+          normalizedHeader.includes(aliasLower) ||
+          compactHeader.includes(aliasCompact)
+        );
+      };
+
+      // Address line disambiguation helper on COMPACT header
+      const resolveAddressLine = () => {
+        // Try to extract a number after address/addr/al/addressline
+        const m = compactHeader.match(/^(?:addressline|address|addr|al)(\d)$/);
+        if (m) {
+          const n = m[1];
+          return `addressLine${n}`;
+        }
+        // If it's a generic address without number, prefer addressLine1
+        if (compactHeader === 'address' || compactHeader === 'streetaddress' || compactHeader === 'addressline') {
+          return 'addressLine1';
+        }
+        return '';
+      };
+
+      // First pass: explicit address-line number detection
+      if (compactHeader.startsWith('address') || compactHeader.startsWith('addr') || compactHeader.startsWith('al')) {
+        const addressField = resolveAddressLine();
+        if (addressField) mappedField = addressField;
+      }
+
+      // Second pass: specific field disambiguation for common conflicts
+      if (!mappedField) {
+        // Handle phone field conflicts - check for additional/secondary first
+        if (compactHeader.includes('phone') || compactHeader.includes('telephone') || compactHeader.includes('tel')) {
+          const isAdditional = (
+            compactHeader.includes('additional') ||
+            compactHeader.includes('other') ||
+            compactHeader.includes('secondary') ||
+            compactHeader.includes('alternate') ||
+            compactHeader.includes('alt') ||
+            /phone\d+/.test(compactHeader) && !/phone1\b/.test(compactHeader)
+          );
+          if (isAdditional) {
+            mappedField = 'additionalPhones';
+          } else if (compactHeader.includes('primary') || compactHeader === 'phone' || compactHeader === 'telephone' || compactHeader === 'tel' || compactHeader === 'mobile' || compactHeader === 'contact') {
+            mappedField = 'primaryPhone';
+          }
+        }
+        
+        // Handle business name vs from business conflicts
+        if (compactHeader.includes('business') && !mappedField) {
+          if (compactHeader.includes('from') || compactHeader.includes('description') || compactHeader.includes('about')) {
+            mappedField = 'fromTheBusiness';
+          } else if (compactHeader.includes('name') || compactHeader === 'business' || compactHeader === 'businessname' || compactHeader === 'companyname') {
+            mappedField = 'businessName';
+          }
+        }
+      }
+
+      // Third pass: standard alias matching if still not mapped
+      if (!mappedField) {
+        for (const [field, aliases] of Object.entries(fieldMappings)) {
+          for (const alias of aliases) {
+            if (matchAlias(field, alias)) {
+              // Additional guards for storeCode false positives
+              if (field === 'storeCode') {
+                if (compactHeader.includes('postal') || compactHeader.includes('postcode') || compactHeader.includes('zip')) {
+                  continue;
+                }
+                const days = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
+                if (days.some(day => compactHeader.includes(day)) && compactHeader.includes('hour')) {
+                  continue;
+                }
+              }
+              
+              // Prevent generic 'address' mapping over numbered lines
+              if (field === 'addressLine1') {
+                if (/(addressline|address|addr|al)[2345]/.test(compactHeader)) {
+                  continue;
+                }
+              }
+
+              // Skip phone conflicts that should have been handled above
+              if ((field === 'primaryPhone' && (compactHeader.includes('additional') || compactHeader.includes('other') || compactHeader.includes('secondary') || compactHeader.includes('alternate') || compactHeader.includes('alt') || /phone\d+/.test(compactHeader))) ||
+                  (field === 'additionalPhones' && !(compactHeader.includes('additional') || compactHeader.includes('other') || compactHeader.includes('secondary') || compactHeader.includes('alternate') || compactHeader.includes('alt') || (/phone\d+/.test(compactHeader) && !/phone1\b/.test(compactHeader))))) {
+                continue;
+              }
+
+              // Skip business conflicts that should have been handled above  
+              if ((field === 'businessName' && (compactHeader.includes('from') || compactHeader.includes('description') || compactHeader.includes('about') || compactHeader.includes('summary'))) ||
+                  (field === 'fromTheBusiness' && compactHeader.includes('name') && !compactHeader.includes('from'))) {
+                continue;
+              }
+
+              mappedField = field;
+              break;
+            }
+          }
+          if (mappedField) break;
+        }
+      }
+
+      return {
+        original: header,
+        mapped: mappedField,
+        required: requiredFields.includes(mappedField),
+      };
+    });
+  };
+
 
   const updateMapping = (index: number, newMapping: string) => {
     const newMappings = [...columnMappings];
@@ -649,7 +708,7 @@ const ImportDialog = ({ open, onOpenChange, onSuccess, clientId }: ImportDialogP
                     {isDragActive ? 'Drop the file here' : 'Drag & drop your file here'}
                   </p>
                   <p className="text-muted-foreground mb-4">
-                    Supports Excel (.xlsx, .xls) and CSV files
+                    Supports Excel (.xlsx, .xls), CSV, and JSON files
                   </p>
                   <Button variant="outline">Browse Files</Button>
                 </div>

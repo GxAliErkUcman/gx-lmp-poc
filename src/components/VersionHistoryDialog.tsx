@@ -3,12 +3,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Download, Upload, Trash2, Eye, History } from 'lucide-react';
+import { Download, Upload, Trash2, Eye, History, Search } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { format } from 'date-fns';
 import { getFieldDisplayName, getChangeSourceDisplayName } from '@/lib/fieldHistory';
 import { BusinessHistoryView } from '@/components/BusinessHistoryView';
@@ -64,6 +66,10 @@ export const VersionHistoryDialog = ({ open, onOpenChange, clientId, onImport }:
   const [businessesWithChanges, setBusinessesWithChanges] = useState<BusinessWithChanges[]>([]);
   const [businessLookup, setBusinessLookup] = useState<Map<string, { storeCode: string; businessName: string }>>(new Map());
   const [historyLoading, setHistoryLoading] = useState(false);
+  
+  // All Changes tab filters
+  const [allChangesSearch, setAllChangesSearch] = useState('');
+  const [allChangesBusinessFilter, setAllChangesBusinessFilter] = useState<string>('all');
   
   // Business history view state
   const [selectedBusinessId, setSelectedBusinessId] = useState<string | null>(null);
@@ -361,6 +367,39 @@ export const VersionHistoryDialog = ({ open, onOpenChange, clientId, onImport }:
     setSelectedBusinessName(businessName);
   };
 
+  // Filtered field history for All Changes tab
+  const filteredFieldHistory = useMemo(() => {
+    return fieldHistory.filter(record => {
+      // Business filter
+      if (allChangesBusinessFilter !== 'all' && record.business_id !== allChangesBusinessFilter) {
+        return false;
+      }
+      
+      // Search filter
+      if (allChangesSearch) {
+        const searchLower = allChangesSearch.toLowerCase();
+        const businessInfo = businessLookup.get(record.business_id);
+        const storeCode = businessInfo?.storeCode?.toLowerCase() || '';
+        const businessName = businessInfo?.businessName?.toLowerCase() || '';
+        const fieldName = getFieldDisplayName(record.field_name).toLowerCase();
+        const oldValue = record.old_value?.toLowerCase() || '';
+        const newValue = record.new_value?.toLowerCase() || '';
+        const email = record.changed_by_email?.toLowerCase() || '';
+        
+        return (
+          storeCode.includes(searchLower) ||
+          businessName.includes(searchLower) ||
+          fieldName.includes(searchLower) ||
+          oldValue.includes(searchLower) ||
+          newValue.includes(searchLower) ||
+          email.includes(searchLower)
+        );
+      }
+      
+      return true;
+    });
+  }, [fieldHistory, allChangesBusinessFilter, allChangesSearch, businessLookup]);
+
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
@@ -497,18 +536,46 @@ export const VersionHistoryDialog = ({ open, onOpenChange, clientId, onImport }:
 
             {/* All Changes Tab */}
             <TabsContent value="all">
-              <ScrollArea className="max-h-[60vh]">
+              {/* Filters */}
+              <div className="flex flex-wrap gap-3 mb-4">
+                <div className="relative flex-1 min-w-[200px]">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by store code, name, field, value..."
+                    value={allChangesSearch}
+                    onChange={(e) => setAllChangesSearch(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
+                <Select value={allChangesBusinessFilter} onValueChange={setAllChangesBusinessFilter}>
+                  <SelectTrigger className="w-[250px]">
+                    <SelectValue placeholder="Filter by business" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Businesses</SelectItem>
+                    {businessesWithChanges.map((business) => (
+                      <SelectItem key={business.id} value={business.id}>
+                        {business.storeCode} - {business.businessName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <ScrollArea className="h-[50vh]">
                 {historyLoading ? (
                   <div className="flex items-center justify-center py-8">
                     <p className="text-muted-foreground">Loading changes...</p>
                   </div>
-                ) : fieldHistory.length === 0 ? (
+                ) : filteredFieldHistory.length === 0 ? (
                   <div className="flex items-center justify-center py-8">
-                    <p className="text-muted-foreground">No changes found</p>
+                    <p className="text-muted-foreground">
+                      {fieldHistory.length === 0 ? 'No changes found' : 'No changes match your filters'}
+                    </p>
                   </div>
                 ) : (
-                  <div className="space-y-3">
-                    {fieldHistory.map((record) => (
+                  <div className="space-y-3 pr-4">
+                    {filteredFieldHistory.map((record) => (
                       <div
                         key={record.id}
                         className="border rounded-lg p-3 space-y-2"
