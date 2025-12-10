@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Download, Upload, Trash2, Eye, History, Search } from 'lucide-react';
+import { Download, Upload, Trash2, Eye, History, Search, PlusCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { format } from 'date-fns';
 import { getFieldDisplayName, getChangeSourceDisplayName } from '@/lib/fieldHistory';
 import { BusinessHistoryView } from '@/components/BusinessHistoryView';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface BackupFile {
   name: string;
@@ -47,6 +48,14 @@ interface BusinessWithChanges {
   lastChange: string;
 }
 
+interface NewLocationRecord {
+  id: string;
+  storeCode: string;
+  businessName: string;
+  addedAt: string;
+  addedBy: string | null;
+}
+
 interface VersionHistoryDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -74,6 +83,10 @@ export const VersionHistoryDialog = ({ open, onOpenChange, clientId, onImport }:
   // Business history view state
   const [selectedBusinessId, setSelectedBusinessId] = useState<string | null>(null);
   const [selectedBusinessName, setSelectedBusinessName] = useState<string>('');
+  
+  // New locations tracking
+  const [newLocations, setNewLocations] = useState<NewLocationRecord[]>([]);
+  const [showNewLocationsDialog, setShowNewLocationsDialog] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -152,12 +165,61 @@ export const VersionHistoryDialog = ({ open, onOpenChange, clientId, onImport }:
   const fetchFieldHistory = async () => {
     setHistoryLoading(true);
     try {
-      // Build query for field history
+      // First get all businesses for this client to filter history
+      let clientBusinessIds: string[] = [];
+      if (clientId) {
+        const { data: clientBusinesses, error: cbError } = await supabase
+          .from('businesses')
+          .select('id, businessName, storeCode, created_at, user_id')
+          .eq('client_id', clientId);
+        
+        if (cbError) throw cbError;
+        
+        clientBusinessIds = (clientBusinesses || []).map((b: any) => b.id);
+        
+        // Track new locations (created in last 30 days via field_name = 'business_created')
+        const { data: newLocationHistory } = await supabase
+          .from('business_field_history')
+          .select('*')
+          .eq('field_name', 'business_created')
+          .in('business_id', clientBusinessIds)
+          .order('changed_at', { ascending: false });
+        
+        if (newLocationHistory && newLocationHistory.length > 0) {
+          const newLocs: NewLocationRecord[] = newLocationHistory.map((h: any) => {
+            const biz = (clientBusinesses || []).find((b: any) => b.id === h.business_id);
+            return {
+              id: h.business_id,
+              storeCode: biz?.storeCode || '',
+              businessName: biz?.businessName || 'Unnamed',
+              addedAt: h.changed_at,
+              addedBy: h.changed_by_email,
+            };
+          });
+          setNewLocations(newLocs);
+        } else {
+          setNewLocations([]);
+        }
+      }
+
+      // Build query for field history - filter by client businesses
       let historyQuery = supabase
         .from('business_field_history')
         .select('*')
+        .neq('field_name', 'business_created') // Exclude new location markers from changes list
         .order('changed_at', { ascending: false })
-        .limit(100);
+        .limit(500);
+
+      // Filter by client businesses if clientId provided
+      if (clientId && clientBusinessIds.length > 0) {
+        historyQuery = historyQuery.in('business_id', clientBusinessIds);
+      } else if (clientId && clientBusinessIds.length === 0) {
+        // Client has no businesses
+        setFieldHistory([]);
+        setBusinessesWithChanges([]);
+        setHistoryLoading(false);
+        return;
+      }
 
       const { data: historyData, error: historyError } = await historyQuery;
 
@@ -209,6 +271,9 @@ export const VersionHistoryDialog = ({ open, onOpenChange, clientId, onImport }:
 
           setBusinessesWithChanges(businessesWithChanges);
         }
+      } else {
+        setBusinessesWithChanges([]);
+        setBusinessLookup(new Map());
       }
     } catch (error: any) {
       console.error('Error fetching field history:', error);
@@ -485,12 +550,44 @@ export const VersionHistoryDialog = ({ open, onOpenChange, clientId, onImport }:
 
             {/* Location Updates Tab */}
             <TabsContent value="locations">
-              <ScrollArea className="max-h-[60vh]">
+              {/* New Locations Banner */}
+              {newLocations.length > 0 && (
+                <div className="mb-4 p-3 bg-primary/10 border border-primary/20 rounded-lg flex items-center justify-between">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="flex items-center gap-2 cursor-help">
+                          <PlusCircle className="h-5 w-5 text-primary" />
+                          <span className="font-medium">{newLocations.length} new locations added</span>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom" className="max-w-xs">
+                        <div className="space-y-1 text-xs max-h-[200px] overflow-y-auto">
+                          {newLocations.slice(0, 10).map((loc) => (
+                            <div key={loc.id} className="flex gap-2">
+                              <span className="font-mono">{loc.storeCode}</span>
+                              <span className="truncate">{loc.businessName}</span>
+                            </div>
+                          ))}
+                          {newLocations.length > 10 && (
+                            <div className="text-muted-foreground">+{newLocations.length - 10} more...</div>
+                          )}
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  <Button variant="outline" size="sm" onClick={() => setShowNewLocationsDialog(true)}>
+                    View All
+                  </Button>
+                </div>
+              )}
+              
+              <ScrollArea className="max-h-[55vh]">
                 {historyLoading ? (
                   <div className="flex items-center justify-center py-8">
                     <p className="text-muted-foreground">Loading location updates...</p>
                   </div>
-                ) : businessesWithChanges.length === 0 ? (
+                ) : businessesWithChanges.length === 0 && newLocations.length === 0 ? (
                   <div className="flex items-center justify-center py-8">
                     <p className="text-muted-foreground">No location updates found</p>
                   </div>
@@ -536,6 +633,38 @@ export const VersionHistoryDialog = ({ open, onOpenChange, clientId, onImport }:
 
             {/* All Changes Tab */}
             <TabsContent value="all">
+              {/* New Locations Banner */}
+              {newLocations.length > 0 && (
+                <div className="mb-4 p-3 bg-primary/10 border border-primary/20 rounded-lg flex items-center justify-between">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="flex items-center gap-2 cursor-help">
+                          <PlusCircle className="h-5 w-5 text-primary" />
+                          <span className="font-medium">{newLocations.length} new locations added</span>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom" className="max-w-xs">
+                        <div className="space-y-1 text-xs max-h-[200px] overflow-y-auto">
+                          {newLocations.slice(0, 10).map((loc) => (
+                            <div key={loc.id} className="flex gap-2">
+                              <span className="font-mono">{loc.storeCode}</span>
+                              <span className="truncate">{loc.businessName}</span>
+                            </div>
+                          ))}
+                          {newLocations.length > 10 && (
+                            <div className="text-muted-foreground">+{newLocations.length - 10} more...</div>
+                          )}
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  <Button variant="outline" size="sm" onClick={() => setShowNewLocationsDialog(true)}>
+                    View All
+                  </Button>
+                </div>
+              )}
+              
               {/* Filters */}
               <div className="flex flex-wrap gap-3 mb-4">
                 <div className="relative flex-1 min-w-[200px]">
@@ -562,7 +691,7 @@ export const VersionHistoryDialog = ({ open, onOpenChange, clientId, onImport }:
                 </Select>
               </div>
 
-              <ScrollArea className="h-[50vh]">
+              <ScrollArea className="h-[45vh]">
                 {historyLoading ? (
                   <div className="flex items-center justify-center py-8">
                     <p className="text-muted-foreground">Loading changes...</p>
@@ -640,6 +769,44 @@ export const VersionHistoryDialog = ({ open, onOpenChange, clientId, onImport }:
           }}
         />
       )}
+
+      {/* New Locations Dialog */}
+      <Dialog open={showNewLocationsDialog} onOpenChange={setShowNewLocationsDialog}>
+        <DialogContent className="max-w-2xl max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle>
+              <div className="flex items-center gap-2">
+                <PlusCircle className="h-5 w-5 text-primary" />
+                New Locations Added ({newLocations.length})
+              </div>
+            </DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="h-[60vh]">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Store Code</TableHead>
+                  <TableHead>Business Name</TableHead>
+                  <TableHead>Added At</TableHead>
+                  <TableHead>Added By</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {newLocations.map((loc) => (
+                  <TableRow key={loc.id}>
+                    <TableCell className="font-mono text-sm">{loc.storeCode}</TableCell>
+                    <TableCell className="font-medium">{loc.businessName}</TableCell>
+                    <TableCell>
+                      {format(new Date(loc.addedAt), 'MMM d, yyyy h:mm a')}
+                    </TableCell>
+                    <TableCell>{loc.addedBy || '-'}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
