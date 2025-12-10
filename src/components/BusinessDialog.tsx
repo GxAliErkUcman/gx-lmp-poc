@@ -27,7 +27,7 @@ import CategoryNameChangeDialog from '@/components/CategoryNameChangeDialog';
 import BusinessCustomServicesDialog from '@/components/BusinessCustomServicesDialog';
 import { useFieldPermissions } from '@/hooks/use-field-permissions';
 import { LockedFieldWrapper } from '@/components/LockedFieldWrapper';
-import { trackFieldChanges } from '@/lib/fieldHistory';
+import { trackFieldChanges, trackBusinessCreated } from '@/lib/fieldHistory';
 
 const businessSchema = z.object({
   storeCode: z.string().min(1, 'Store code is required'),
@@ -512,11 +512,24 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
           .eq('id', business.id)
           .eq('client_id', effectiveClientId)); // Prevent cross-client updates
       } else {
-        ({ error } = await supabase
+        const { data: insertedData, error: insertError } = await supabase
           .from('businesses')
-          .insert([businessData]));
+          .insert([businessData])
+          .select('id, storeCode, businessName');
+        
+        error = insertError;
+        
+        // Track new business creation
+        if (!insertError && insertedData && insertedData[0] && user) {
+          trackBusinessCreated(
+            insertedData[0].id,
+            insertedData[0].storeCode,
+            insertedData[0].businessName,
+            user.id,
+            'crud'
+          ).catch(err => console.error('Error tracking business creation:', err));
+        }
       }
-
       if (error) {
         console.error('Database error:', error);
         
