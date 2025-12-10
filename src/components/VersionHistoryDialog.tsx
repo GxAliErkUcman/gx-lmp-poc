@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Download, Upload, Trash2, Eye, History, Search, PlusCircle, CalendarIcon } from 'lucide-react';
+import { Download, Upload, Trash2, Eye, History, Search, PlusCircle, MinusCircle, CalendarIcon } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -57,6 +57,16 @@ interface NewLocationRecord {
   businessName: string;
   addedAt: string;
   addedBy: string | null;
+  source: string;
+}
+
+interface DeletedLocationRecord {
+  id: string;
+  storeCode: string;
+  businessName: string;
+  deletedAt: string;
+  deletedBy: string | null;
+  source: string;
 }
 
 interface VersionHistoryDialogProps {
@@ -89,9 +99,11 @@ export const VersionHistoryDialog = ({ open, onOpenChange, clientId, onImport }:
   const [selectedBusinessId, setSelectedBusinessId] = useState<string | null>(null);
   const [selectedBusinessName, setSelectedBusinessName] = useState<string>('');
   
-  // New locations tracking
+  // New and deleted locations tracking
   const [newLocations, setNewLocations] = useState<NewLocationRecord[]>([]);
+  const [deletedLocations, setDeletedLocations] = useState<DeletedLocationRecord[]>([]);
   const [showNewLocationsDialog, setShowNewLocationsDialog] = useState(false);
+  const [showDeletedLocationsDialog, setShowDeletedLocationsDialog] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -182,7 +194,7 @@ export const VersionHistoryDialog = ({ open, onOpenChange, clientId, onImport }:
         
         clientBusinessIds = (clientBusinesses || []).map((b: any) => b.id);
         
-        // Track new locations (created in last 30 days via field_name = 'business_created')
+        // Track new locations via field_name = 'business_created'
         const { data: newLocationHistory } = await supabase
           .from('business_field_history')
           .select('*')
@@ -193,17 +205,64 @@ export const VersionHistoryDialog = ({ open, onOpenChange, clientId, onImport }:
         if (newLocationHistory && newLocationHistory.length > 0) {
           const newLocs: NewLocationRecord[] = newLocationHistory.map((h: any) => {
             const biz = (clientBusinesses || []).find((b: any) => b.id === h.business_id);
+            // Parse new_value to get storeCode and businessName for created records
+            let storeCode = biz?.storeCode || '';
+            let businessName = biz?.businessName || 'Unnamed';
+            try {
+              const parsed = JSON.parse(h.new_value || '{}');
+              storeCode = parsed.storeCode || storeCode;
+              businessName = parsed.businessName || businessName;
+            } catch {}
             return {
               id: h.business_id,
-              storeCode: biz?.storeCode || '',
-              businessName: biz?.businessName || 'Unnamed',
+              storeCode,
+              businessName,
               addedAt: h.changed_at,
               addedBy: h.changed_by_email,
+              source: h.change_source || 'crud',
             };
           });
           setNewLocations(newLocs);
         } else {
           setNewLocations([]);
+        }
+
+        // Track deleted locations via field_name = 'business_deleted'
+        // These may reference business_ids that no longer exist
+        const { data: deletedLocationHistory } = await supabase
+          .from('business_field_history')
+          .select('*')
+          .eq('field_name', 'business_deleted')
+          .order('changed_at', { ascending: false });
+        
+        if (deletedLocationHistory && deletedLocationHistory.length > 0) {
+          // Filter to only show deletions for this client's businesses (using old_value which contains storeCode/businessName)
+          const deletedLocs: DeletedLocationRecord[] = deletedLocationHistory
+            .filter((h: any) => {
+              // Check if the business_id was one of this client's businesses
+              return clientBusinessIds.includes(h.business_id);
+            })
+            .map((h: any) => {
+              // Parse old_value to get storeCode and businessName
+              let storeCode = '';
+              let businessName = 'Deleted Location';
+              try {
+                const parsed = JSON.parse(h.old_value || '{}');
+                storeCode = parsed.storeCode || '';
+                businessName = parsed.businessName || 'Deleted Location';
+              } catch {}
+              return {
+                id: h.business_id,
+                storeCode,
+                businessName,
+                deletedAt: h.changed_at,
+                deletedBy: h.changed_by_email,
+                source: h.change_source || 'crud',
+              };
+            });
+          setDeletedLocations(deletedLocs);
+        } else {
+          setDeletedLocations([]);
         }
       }
 
@@ -212,6 +271,7 @@ export const VersionHistoryDialog = ({ open, onOpenChange, clientId, onImport }:
         .from('business_field_history')
         .select('*')
         .neq('field_name', 'business_created') // Exclude new location markers from changes list
+        .neq('field_name', 'business_deleted') // Exclude deleted location markers from changes list
         .order('changed_at', { ascending: false })
         .limit(500);
 
@@ -659,13 +719,45 @@ export const VersionHistoryDialog = ({ open, onOpenChange, clientId, onImport }:
                   </Button>
                 </div>
               )}
+
+              {/* Deleted Locations Banner */}
+              {deletedLocations.length > 0 && (
+                <div className="mb-4 p-3 bg-destructive/10 border border-destructive/20 rounded-lg flex items-center justify-between">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="flex items-center gap-2 cursor-help">
+                          <MinusCircle className="h-5 w-5 text-destructive" />
+                          <span className="font-medium">{deletedLocations.length} locations removed</span>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom" className="max-w-xs">
+                        <div className="space-y-1 text-xs max-h-[200px] overflow-y-auto">
+                          {deletedLocations.slice(0, 10).map((loc, idx) => (
+                            <div key={`${loc.id}-${idx}`} className="flex gap-2">
+                              <span className="font-mono">{loc.storeCode}</span>
+                              <span className="truncate">{loc.businessName}</span>
+                            </div>
+                          ))}
+                          {deletedLocations.length > 10 && (
+                            <div className="text-muted-foreground">+{deletedLocations.length - 10} more...</div>
+                          )}
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  <Button variant="outline" size="sm" onClick={() => setShowDeletedLocationsDialog(true)}>
+                    View All
+                  </Button>
+                </div>
+              )}
               
               <ScrollArea className="max-h-[50vh]">
                 {historyLoading ? (
                   <div className="flex items-center justify-center py-8">
                     <p className="text-muted-foreground">Loading location updates...</p>
                   </div>
-                ) : filteredBusinessesWithChanges.length === 0 && newLocations.length === 0 ? (
+                ) : filteredBusinessesWithChanges.length === 0 && newLocations.length === 0 && deletedLocations.length === 0 ? (
                   <div className="flex items-center justify-center py-8">
                     <p className="text-muted-foreground">No location updates found</p>
                   </div>
@@ -917,6 +1009,7 @@ export const VersionHistoryDialog = ({ open, onOpenChange, clientId, onImport }:
                   <TableHead>Store Code</TableHead>
                   <TableHead>Business Name</TableHead>
                   <TableHead>Added At</TableHead>
+                  <TableHead>Source</TableHead>
                   <TableHead>Added By</TableHead>
                 </TableRow>
               </TableHeader>
@@ -928,7 +1021,56 @@ export const VersionHistoryDialog = ({ open, onOpenChange, clientId, onImport }:
                     <TableCell>
                       {format(new Date(loc.addedAt), 'MMM d, yyyy h:mm a')}
                     </TableCell>
+                    <TableCell>
+                      <Badge variant={loc.source === 'import' ? 'default' : 'secondary'}>
+                        {loc.source === 'import' ? 'Import' : 'CRUD'}
+                      </Badge>
+                    </TableCell>
                     <TableCell>{loc.addedBy || '-'}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
+
+      {/* Deleted Locations Dialog */}
+      <Dialog open={showDeletedLocationsDialog} onOpenChange={setShowDeletedLocationsDialog}>
+        <DialogContent className="max-w-2xl max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle>
+              <div className="flex items-center gap-2">
+                <MinusCircle className="h-5 w-5 text-destructive" />
+                Locations Removed ({deletedLocations.length})
+              </div>
+            </DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="h-[60vh]">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Store Code</TableHead>
+                  <TableHead>Business Name</TableHead>
+                  <TableHead>Deleted At</TableHead>
+                  <TableHead>Source</TableHead>
+                  <TableHead>Deleted By</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {deletedLocations.map((loc, idx) => (
+                  <TableRow key={`${loc.id}-${idx}`}>
+                    <TableCell className="font-mono text-sm">{loc.storeCode}</TableCell>
+                    <TableCell className="font-medium">{loc.businessName}</TableCell>
+                    <TableCell>
+                      {format(new Date(loc.deletedAt), 'MMM d, yyyy h:mm a')}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={loc.source === 'import' ? 'default' : 'destructive'}>
+                        {loc.source === 'import' ? 'Import' : 'CRUD'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{loc.deletedBy || '-'}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

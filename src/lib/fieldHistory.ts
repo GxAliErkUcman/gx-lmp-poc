@@ -247,6 +247,83 @@ export function getChangeSourceDisplayName(source: string): string {
     multi_edit: 'Multi-Edit',
     bulk_update: 'Bulk Update',
     rollback: 'Rollback',
+    crud: 'CRUD',
   };
   return sourceNames[source] || source;
+}
+
+/**
+ * Tracks when a new business is created
+ */
+export async function trackBusinessCreated(
+  businessId: string,
+  storeCode: string,
+  businessName: string | null,
+  userId: string,
+  changeSource: 'crud' | 'import' = 'crud'
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    const email = user?.email;
+
+    const { error } = await supabase
+      .from('business_field_history')
+      .insert({
+        business_id: businessId,
+        field_name: 'business_created',
+        old_value: null,
+        new_value: JSON.stringify({ storeCode, businessName }),
+        changed_by: userId,
+        changed_by_email: email,
+        change_source: changeSource,
+      });
+
+    if (error) {
+      console.error('Error tracking business creation:', error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } catch (err) {
+    console.error('Error in trackBusinessCreated:', err);
+    return { success: false, error: String(err) };
+  }
+}
+
+/**
+ * Tracks when a business is deleted
+ */
+export async function trackBusinessDeleted(
+  businessId: string,
+  storeCode: string,
+  businessName: string | null,
+  userId: string,
+  changeSource: 'crud' | 'import' = 'crud'
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    const email = user?.email;
+
+    const { error } = await supabase
+      .from('business_field_history')
+      .insert({
+        business_id: businessId,
+        field_name: 'business_deleted',
+        old_value: JSON.stringify({ storeCode, businessName }),
+        new_value: null,
+        changed_by: userId,
+        changed_by_email: email,
+        change_source: changeSource,
+      });
+
+    if (error) {
+      console.error('Error tracking business deletion:', error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } catch (err) {
+    console.error('Error in trackBusinessDeleted:', err);
+    return { success: false, error: String(err) };
+  }
 }
