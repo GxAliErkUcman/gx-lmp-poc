@@ -14,6 +14,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import { validateBusiness, ValidationError } from '@/lib/validation';
+import { trackFieldChanges } from '@/lib/fieldHistory';
 
 interface ImportDialogProps {
   open: boolean;
@@ -620,9 +621,31 @@ const ImportDialog = ({ open, onOpenChange, onSuccess, clientId }: ImportDialogP
         return business;
       });
 
-      // Handle overrides if enabled
+      // Handle overrides if enabled - track field changes before deleting
       if (allowOverride && duplicateBusinesses.length > 0) {
-        // Delete existing duplicates first
+        // Track field changes for each duplicate being overridden
+        for (const dup of duplicateBusinesses) {
+          const oldBusiness = dup.existingBusiness;
+          const storeCodeMapping = columnMappings.find(m => m.mapped === 'storeCode');
+          const newBusinessData = businessesToInsert.find(b => 
+            storeCodeMapping && b.storeCode === dup.storeCode
+          );
+          
+          if (newBusinessData && oldBusiness) {
+            // Track the changes between old and new values
+            await trackFieldChanges(
+              oldBusiness.id,
+              oldBusiness,
+              newBusinessData,
+              user.id,
+              'import',
+              undefined,
+              user.email || undefined
+            );
+          }
+        }
+        
+        // Delete existing duplicates
         const duplicateIds = duplicateBusinesses.map(d => d.existingBusiness.id);
         const { error: deleteError } = await supabase
           .from('businesses')
@@ -634,11 +657,35 @@ const ImportDialog = ({ open, onOpenChange, onSuccess, clientId }: ImportDialogP
 
       // Insert new businesses (including overrides if applicable)
       if (businessesToInsert.length > 0) {
-        const { error } = await supabase
+        const { data: insertedData, error } = await supabase
           .from('businesses')
-          .insert(businessesToInsert);
+          .insert(businessesToInsert)
+          .select('id, storeCode, businessName');
 
         if (error) throw error;
+
+        // Track new locations by creating a special history record
+        if (insertedData && insertedData.length > 0) {
+          const newLocationRecords = insertedData.map((biz: any) => ({
+            business_id: biz.id,
+            field_name: 'business_created',
+            old_value: null,
+            new_value: 'New location added via import',
+            changed_by: user.id,
+            changed_by_email: user.email || null,
+            change_source: 'import',
+          }));
+
+          // Insert history records for new locations
+          const { error: historyError } = await supabase
+            .from('business_field_history')
+            .insert(newLocationRecords);
+
+          if (historyError) {
+            console.error('Error tracking new locations:', historyError);
+            // Don't fail the import if history tracking fails
+          }
+        }
       }
 
       const activeCount = businessesToInsert.filter(b => b.status === 'active').length;
