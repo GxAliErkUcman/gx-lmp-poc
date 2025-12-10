@@ -228,7 +228,7 @@ export const VersionHistoryDialog = ({ open, onOpenChange, clientId, onImport }:
         }
 
         // Track deleted locations via field_name = 'business_deleted'
-        // These may reference business_ids that no longer exist
+        // These reference business_ids that no longer exist, so filter by client_id in old_value
         const { data: deletedLocationHistory } = await supabase
           .from('business_field_history')
           .select('*')
@@ -236,14 +236,17 @@ export const VersionHistoryDialog = ({ open, onOpenChange, clientId, onImport }:
           .order('changed_at', { ascending: false });
         
         if (deletedLocationHistory && deletedLocationHistory.length > 0) {
-          // Filter to only show deletions for this client's businesses (using old_value which contains storeCode/businessName)
+          // Filter by client_id stored in old_value JSON
           const deletedLocs: DeletedLocationRecord[] = deletedLocationHistory
             .filter((h: any) => {
-              // Check if the business_id was one of this client's businesses
-              return clientBusinessIds.includes(h.business_id);
+              try {
+                const parsed = JSON.parse(h.old_value || '{}');
+                return parsed.client_id === clientId;
+              } catch {
+                return false;
+              }
             })
             .map((h: any) => {
-              // Parse old_value to get storeCode and businessName
               let storeCode = '';
               let businessName = 'Deleted Location';
               try {

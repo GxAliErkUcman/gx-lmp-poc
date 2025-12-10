@@ -297,6 +297,7 @@ export async function trackBusinessDeleted(
   businessId: string,
   storeCode: string,
   businessName: string | null,
+  clientId: string | null,
   userId: string,
   changeSource: 'crud' | 'import' = 'crud'
 ): Promise<{ success: boolean; error?: string }> {
@@ -309,7 +310,7 @@ export async function trackBusinessDeleted(
       .insert({
         business_id: businessId,
         field_name: 'business_deleted',
-        old_value: JSON.stringify({ storeCode, businessName }),
+        old_value: JSON.stringify({ storeCode, businessName, client_id: clientId }),
         new_value: null,
         changed_by: userId,
         changed_by_email: email,
