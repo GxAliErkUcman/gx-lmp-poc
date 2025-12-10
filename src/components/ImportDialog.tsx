@@ -560,11 +560,31 @@ const ImportDialog = ({ open, onOpenChange, onSuccess, clientId }: ImportDialogP
 
         // Collect social media URLs
         const socialMediaUrls: any[] = [];
+        
+        // Collect unmapped columns for goldmine field (column_name: value format)
+        const goldmineEntries: string[] = [];
+        // Track explicitly mapped goldmine value
+        let explicitGoldmine = '';
 
         columnMappings.forEach(mapping => {
-          if (mapping.mapped && row[mapping.original] !== undefined && row[mapping.original] !== null && String(row[mapping.original]).trim() !== '') {
-            const value = row[mapping.original];
-            
+          const value = row[mapping.original];
+          const hasValue = value !== undefined && value !== null && String(value).trim() !== '';
+          
+          // If column is not mapped but has a value, add to goldmine with column name
+          if (!mapping.mapped && hasValue) {
+            const columnName = mapping.original;
+            const cleanValue = String(value).trim();
+            goldmineEntries.push(`${columnName}: ${cleanValue}`);
+          }
+          // If column is mapped to goldmine, collect it separately (may have multiple)
+          else if (mapping.mapped === 'goldmine' && hasValue) {
+            const columnName = mapping.original;
+            const cleanValue = String(value).trim();
+            // Include the original column name in the goldmine entry
+            goldmineEntries.push(`${columnName}: ${cleanValue}`);
+          }
+          // Handle other mapped fields
+          else if (mapping.mapped && mapping.mapped !== 'goldmine' && hasValue) {
             // CRITICAL: Do NOT clone addressLine2 to addressLine1 or perform any fallback logic
             // If addressLine1 is missing, the business should be marked as incomplete (pending)
             
@@ -607,6 +627,11 @@ const ImportDialog = ({ open, onOpenChange, onSuccess, clientId }: ImportDialogP
             }
           }
         });
+
+        // Combine all goldmine entries with semicolon separator
+        if (goldmineEntries.length > 0) {
+          business.goldmine = goldmineEntries.join('; ');
+        }
 
         // Add social media URLs if any were collected
         if (socialMediaUrls.length > 0) {
