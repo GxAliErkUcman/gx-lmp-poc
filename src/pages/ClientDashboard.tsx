@@ -176,26 +176,7 @@ const ClientDashboard = () => {
     if (!confirm('Are you sure you want to delete this business?')) return;
 
     try {
-      // Get business details before deleting for tracking
-      const businessToDelete = businesses.find(b => b.id === id);
-      
-      // Track deletion before actually deleting
-      if (businessToDelete && user) {
-        const { trackBusinessDeleted } = await import('@/lib/fieldHistory');
-        const trackResult = await trackBusinessDeleted(
-          id,
-          businessToDelete.storeCode,
-          businessToDelete.businessName,
-          businessToDelete.client_id,
-          user.id,
-          'crud'
-        );
-        console.log('Track deletion result:', trackResult);
-        if (!trackResult.success) {
-          console.error('Failed to track deletion:', trackResult.error);
-        }
-      }
-
+      // Deletion tracking is now handled automatically by database trigger
       // CRITICAL: Only delete businesses from the current client
       const { error } = await supabase
         .from('businesses')
