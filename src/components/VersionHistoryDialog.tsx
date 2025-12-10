@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Download, Upload, Trash2, Eye, History, Search, PlusCircle } from 'lucide-react';
+import { Download, Upload, Trash2, Eye, History, Search, PlusCircle, CalendarIcon } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -11,10 +11,13 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { format } from 'date-fns';
+import { format, isAfter, isBefore, startOfDay, endOfDay } from 'date-fns';
 import { getFieldDisplayName, getChangeSourceDisplayName } from '@/lib/fieldHistory';
 import { BusinessHistoryView } from '@/components/BusinessHistoryView';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { cn } from '@/lib/utils';
 
 interface BackupFile {
   name: string;
@@ -79,6 +82,8 @@ export const VersionHistoryDialog = ({ open, onOpenChange, clientId, onImport }:
   // All Changes tab filters
   const [allChangesSearch, setAllChangesSearch] = useState('');
   const [allChangesBusinessFilter, setAllChangesBusinessFilter] = useState<string>('all');
+  const [dateFrom, setDateFrom] = useState<Date | undefined>(undefined);
+  const [dateTo, setDateTo] = useState<Date | undefined>(undefined);
   
   // Business history view state
   const [selectedBusinessId, setSelectedBusinessId] = useState<string | null>(null);
@@ -440,6 +445,15 @@ export const VersionHistoryDialog = ({ open, onOpenChange, clientId, onImport }:
         return false;
       }
       
+      // Date filter
+      const recordDate = new Date(record.changed_at);
+      if (dateFrom && isBefore(recordDate, startOfDay(dateFrom))) {
+        return false;
+      }
+      if (dateTo && isAfter(recordDate, endOfDay(dateTo))) {
+        return false;
+      }
+      
       // Search filter
       if (allChangesSearch) {
         const searchLower = allChangesSearch.toLowerCase();
@@ -463,7 +477,16 @@ export const VersionHistoryDialog = ({ open, onOpenChange, clientId, onImport }:
       
       return true;
     });
-  }, [fieldHistory, allChangesBusinessFilter, allChangesSearch, businessLookup]);
+  }, [fieldHistory, allChangesBusinessFilter, allChangesSearch, businessLookup, dateFrom, dateTo]);
+
+  // Filter businesses with changes based on date
+  const filteredBusinessesWithChanges = useMemo(() => {
+    if (!dateFrom && !dateTo) return businessesWithChanges;
+    
+    // Filter based on field history dates
+    const businessIdsInRange = new Set(filteredFieldHistory.map(r => r.business_id));
+    return businessesWithChanges.filter(b => businessIdsInRange.has(b.id));
+  }, [businessesWithChanges, filteredFieldHistory, dateFrom, dateTo]);
 
   return (
     <>
@@ -550,6 +573,61 @@ export const VersionHistoryDialog = ({ open, onOpenChange, clientId, onImport }:
 
             {/* Location Updates Tab */}
             <TabsContent value="locations">
+              {/* Date Filter */}
+              <div className="flex flex-wrap gap-3 mb-4">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-[160px] justify-start text-left font-normal",
+                        !dateFrom && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {dateFrom ? format(dateFrom, "MMM d, yyyy") : "From date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={dateFrom}
+                      onSelect={setDateFrom}
+                      initialFocus
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </PopoverContent>
+                </Popover>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-[160px] justify-start text-left font-normal",
+                        !dateTo && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {dateTo ? format(dateTo, "MMM d, yyyy") : "To date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={dateTo}
+                      onSelect={setDateTo}
+                      initialFocus
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </PopoverContent>
+                </Popover>
+                {(dateFrom || dateTo) && (
+                  <Button variant="ghost" size="sm" onClick={() => { setDateFrom(undefined); setDateTo(undefined); }}>
+                    Clear
+                  </Button>
+                )}
+              </div>
+
               {/* New Locations Banner */}
               {newLocations.length > 0 && (
                 <div className="mb-4 p-3 bg-primary/10 border border-primary/20 rounded-lg flex items-center justify-between">
@@ -582,12 +660,12 @@ export const VersionHistoryDialog = ({ open, onOpenChange, clientId, onImport }:
                 </div>
               )}
               
-              <ScrollArea className="max-h-[55vh]">
+              <ScrollArea className="max-h-[50vh]">
                 {historyLoading ? (
                   <div className="flex items-center justify-center py-8">
                     <p className="text-muted-foreground">Loading location updates...</p>
                   </div>
-                ) : businessesWithChanges.length === 0 && newLocations.length === 0 ? (
+                ) : filteredBusinessesWithChanges.length === 0 && newLocations.length === 0 ? (
                   <div className="flex items-center justify-center py-8">
                     <p className="text-muted-foreground">No location updates found</p>
                   </div>
@@ -603,7 +681,7 @@ export const VersionHistoryDialog = ({ open, onOpenChange, clientId, onImport }:
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {businessesWithChanges.map((business) => (
+                      {filteredBusinessesWithChanges.map((business) => (
                         <TableRow key={business.id}>
                           <TableCell className="font-mono text-sm">{business.storeCode}</TableCell>
                           <TableCell className="font-medium">{business.businessName}</TableCell>
@@ -667,17 +745,17 @@ export const VersionHistoryDialog = ({ open, onOpenChange, clientId, onImport }:
               
               {/* Filters */}
               <div className="flex flex-wrap gap-3 mb-4">
-                <div className="relative flex-1 min-w-[200px]">
+                <div className="relative flex-1 min-w-[180px]">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="Search by store code, name, field, value..."
+                    placeholder="Search by store code, name, field..."
                     value={allChangesSearch}
                     onChange={(e) => setAllChangesSearch(e.target.value)}
                     className="pl-9"
                   />
                 </div>
                 <Select value={allChangesBusinessFilter} onValueChange={setAllChangesBusinessFilter}>
-                  <SelectTrigger className="w-[250px]">
+                  <SelectTrigger className="w-[200px]">
                     <SelectValue placeholder="Filter by business" />
                   </SelectTrigger>
                   <SelectContent>
@@ -689,6 +767,57 @@ export const VersionHistoryDialog = ({ open, onOpenChange, clientId, onImport }:
                     ))}
                   </SelectContent>
                 </Select>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-[140px] justify-start text-left font-normal",
+                        !dateFrom && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {dateFrom ? format(dateFrom, "MMM d") : "From"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={dateFrom}
+                      onSelect={setDateFrom}
+                      initialFocus
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </PopoverContent>
+                </Popover>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-[140px] justify-start text-left font-normal",
+                        !dateTo && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {dateTo ? format(dateTo, "MMM d") : "To"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={dateTo}
+                      onSelect={setDateTo}
+                      initialFocus
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </PopoverContent>
+                </Popover>
+                {(dateFrom || dateTo) && (
+                  <Button variant="ghost" size="sm" onClick={() => { setDateFrom(undefined); setDateTo(undefined); }}>
+                    Clear
+                  </Button>
+                )}
               </div>
 
               <ScrollArea className="h-[45vh]">
