@@ -16,6 +16,7 @@ import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
 import GcpSyncButton from '@/components/GcpSyncButton';
 import { ClientCategoriesDialog } from '@/components/ClientCategoriesDialog';
+import { ApiImportDialog } from '@/components/ApiImportDialog';
 import ClientCustomServicesDialog from '@/components/ClientCustomServicesDialog';
 import ClientFieldPermissionsDialog from '@/components/ClientFieldPermissionsDialog';
 import { RoleChangeDialog } from '@/components/RoleChangeDialog';
@@ -1204,6 +1205,11 @@ const AdminPanel = () => {
                             <Settings className="w-3.5 h-3.5" />
                             <span className="text-[10px] leading-none">Users</span>
                           </Button>
+                          <ApiImportDialog 
+                            clientId={client.id} 
+                            clientName={client.name}
+                            onSyncComplete={fetchData}
+                          />
                           <Button
                             size="sm"
                             variant="destructive"
