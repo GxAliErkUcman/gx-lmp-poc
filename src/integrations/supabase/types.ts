@@ -14,6 +14,50 @@ export type Database = {
   }
   public: {
     Tables: {
+      api_import_logs: {
+        Row: {
+          client_id: string
+          error_message: string | null
+          id: string
+          locations_created: number | null
+          locations_fetched: number | null
+          locations_updated: number | null
+          run_at: string | null
+          source: string
+          status: string
+        }
+        Insert: {
+          client_id: string
+          error_message?: string | null
+          id?: string
+          locations_created?: number | null
+          locations_fetched?: number | null
+          locations_updated?: number | null
+          run_at?: string | null
+          source?: string
+          status?: string
+        }
+        Update: {
+          client_id?: string
+          error_message?: string | null
+          id?: string
+          locations_created?: number | null
+          locations_fetched?: number | null
+          locations_updated?: number | null
+          run_at?: string | null
+          source?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_import_logs_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       business_field_history: {
         Row: {
           business_id: string
