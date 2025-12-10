@@ -655,6 +655,11 @@ const ImportDialog = ({ open, onOpenChange, onSuccess, clientId }: ImportDialogP
         if (deleteError) throw deleteError;
       }
 
+      // Get the store codes of overridden businesses to exclude from "new location" tracking
+      const overriddenStoreCodes = allowOverride 
+        ? duplicateBusinesses.map(d => d.storeCode) 
+        : [];
+
       // Insert new businesses (including overrides if applicable)
       if (businessesToInsert.length > 0) {
         const { data: insertedData, error } = await supabase
@@ -664,26 +669,33 @@ const ImportDialog = ({ open, onOpenChange, onSuccess, clientId }: ImportDialogP
 
         if (error) throw error;
 
-        // Track new locations by creating a special history record
+        // Track ONLY truly new locations (not overrides) by creating a special history record
         if (insertedData && insertedData.length > 0) {
-          const newLocationRecords = insertedData.map((biz: any) => ({
-            business_id: biz.id,
-            field_name: 'business_created',
-            old_value: null,
-            new_value: 'New location added via import',
-            changed_by: user.id,
-            changed_by_email: user.email || null,
-            change_source: 'import',
-          }));
+          // Filter out overridden locations - they are updates, not new
+          const trulyNewLocations = insertedData.filter(
+            (biz: any) => !overriddenStoreCodes.includes(biz.storeCode)
+          );
 
-          // Insert history records for new locations
-          const { error: historyError } = await supabase
-            .from('business_field_history')
-            .insert(newLocationRecords);
+          if (trulyNewLocations.length > 0) {
+            const newLocationRecords = trulyNewLocations.map((biz: any) => ({
+              business_id: biz.id,
+              field_name: 'business_created',
+              old_value: null,
+              new_value: 'New location added via import',
+              changed_by: user.id,
+              changed_by_email: user.email || null,
+              change_source: 'import',
+            }));
 
-          if (historyError) {
-            console.error('Error tracking new locations:', historyError);
-            // Don't fail the import if history tracking fails
+            // Insert history records for new locations only
+            const { error: historyError } = await supabase
+              .from('business_field_history')
+              .insert(newLocationRecords);
+
+            if (historyError) {
+              console.error('Error tracking new locations:', historyError);
+              // Don't fail the import if history tracking fails
+            }
           }
         }
       }
