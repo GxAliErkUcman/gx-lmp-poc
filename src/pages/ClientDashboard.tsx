@@ -24,6 +24,7 @@ import ServiceUserCreateDialog from '@/components/ServiceUserCreateDialog';
 import { UserPlus, History as HistoryIcon, Wrench } from 'lucide-react';
 import { VersionHistoryDialog } from '@/components/VersionHistoryDialog';
 import ClientCustomServicesDialog from '@/components/ClientCustomServicesDialog';
+import { ApiSyncButton } from '@/components/ApiSyncButton';
 
 const ClientDashboard = () => {
   const { user, signOut } = useAuth();
@@ -322,6 +323,10 @@ const ClientDashboard = () => {
                 </div>
               </div>
               <div className="flex items-center gap-2">
+                <ApiSyncButton 
+                  clientId={selectedClientId} 
+                  onSyncComplete={fetchBusinesses}
+                />
                 <JsonExport 
                   businesses={businesses} 
                   clientName={accessibleClients.find(c => c.id === selectedClientId)?.name} 
