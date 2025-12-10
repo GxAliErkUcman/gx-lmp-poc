@@ -273,7 +273,7 @@ serve(async (req) => {
     const apiResponse = await fetch('https://api.eco-movement.com/api/ocpi/cpo/2.2/locations', {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${ecoMovementToken}`,
+        'Authorization': `Token ${ecoMovementToken}`,
         'Content-Type': 'application/json',
       },
     });
