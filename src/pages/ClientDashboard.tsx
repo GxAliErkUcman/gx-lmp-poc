@@ -182,7 +182,7 @@ const ClientDashboard = () => {
       // Track deletion before actually deleting
       if (businessToDelete && user) {
         const { trackBusinessDeleted } = await import('@/lib/fieldHistory');
-        await trackBusinessDeleted(
+        const trackResult = await trackBusinessDeleted(
           id,
           businessToDelete.storeCode,
           businessToDelete.businessName,
@@ -190,6 +190,10 @@ const ClientDashboard = () => {
           user.id,
           'crud'
         );
+        console.log('Track deletion result:', trackResult);
+        if (!trackResult.success) {
+          console.error('Failed to track deletion:', trackResult.error);
+        }
       }
 
       // CRITICAL: Only delete businesses from the current client
