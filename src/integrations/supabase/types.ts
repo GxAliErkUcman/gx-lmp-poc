@@ -48,15 +48,7 @@ export type Database = {
           new_value?: string | null
           old_value?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "business_field_history_business_id_fkey"
-            columns: ["business_id"]
-            isOneToOne: false
-            referencedRelation: "businesses"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       businesses: {
         Row: {
