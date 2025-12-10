@@ -621,18 +621,19 @@ const ImportDialog = ({ open, onOpenChange, onSuccess, clientId }: ImportDialogP
         return business;
       });
 
-      // Handle overrides if enabled - track field changes before deleting
+      // Separate overrides from truly new businesses
+      const overriddenStoreCodes = allowOverride 
+        ? duplicateBusinesses.map(d => d.storeCode) 
+        : [];
+
+      // Handle overrides via UPDATE (not delete+insert) to preserve history
       if (allowOverride && duplicateBusinesses.length > 0) {
-        // Track field changes for each duplicate being overridden
         for (const dup of duplicateBusinesses) {
           const oldBusiness = dup.existingBusiness;
-          const storeCodeMapping = columnMappings.find(m => m.mapped === 'storeCode');
-          const newBusinessData = businessesToInsert.find(b => 
-            storeCodeMapping && b.storeCode === dup.storeCode
-          );
+          const newBusinessData = businessesToInsert.find(b => b.storeCode === dup.storeCode);
           
           if (newBusinessData && oldBusiness) {
-            // Track the changes between old and new values
+            // Track the changes between old and new values BEFORE updating
             await trackFieldChanges(
               oldBusiness.id,
               oldBusiness,
@@ -642,66 +643,64 @@ const ImportDialog = ({ open, onOpenChange, onSuccess, clientId }: ImportDialogP
               undefined,
               user.email || undefined
             );
-          }
-        }
-        
-        // Delete existing duplicates
-        const duplicateIds = duplicateBusinesses.map(d => d.existingBusiness.id);
-        const { error: deleteError } = await supabase
-          .from('businesses')
-          .delete()
-          .in('id', duplicateIds);
 
-        if (deleteError) throw deleteError;
-      }
+            // Prepare update payload (exclude storeCode and user_id to preserve them)
+            const updatePayload = { ...newBusinessData };
+            delete updatePayload.storeCode; // Keep original store code
+            delete updatePayload.user_id; // Keep original user_id
 
-      // Get the store codes of overridden businesses to exclude from "new location" tracking
-      const overriddenStoreCodes = allowOverride 
-        ? duplicateBusinesses.map(d => d.storeCode) 
-        : [];
+            // UPDATE the existing business instead of delete+insert
+            const { error: updateError } = await supabase
+              .from('businesses')
+              .update(updatePayload)
+              .eq('id', oldBusiness.id);
 
-      // Insert new businesses (including overrides if applicable)
-      if (businessesToInsert.length > 0) {
-        const { data: insertedData, error } = await supabase
-          .from('businesses')
-          .insert(businessesToInsert)
-          .select('id, storeCode, businessName');
-
-        if (error) throw error;
-
-        // Track ONLY truly new locations (not overrides) by creating a special history record
-        if (insertedData && insertedData.length > 0) {
-          // Filter out overridden locations - they are updates, not new
-          const trulyNewLocations = insertedData.filter(
-            (biz: any) => !overriddenStoreCodes.includes(biz.storeCode)
-          );
-
-          if (trulyNewLocations.length > 0) {
-            const newLocationRecords = trulyNewLocations.map((biz: any) => ({
-              business_id: biz.id,
-              field_name: 'business_created',
-              old_value: null,
-              new_value: 'New location added via import',
-              changed_by: user.id,
-              changed_by_email: user.email || null,
-              change_source: 'import',
-            }));
-
-            // Insert history records for new locations only
-            const { error: historyError } = await supabase
-              .from('business_field_history')
-              .insert(newLocationRecords);
-
-            if (historyError) {
-              console.error('Error tracking new locations:', historyError);
-              // Don't fail the import if history tracking fails
+            if (updateError) {
+              console.error('Error updating business:', oldBusiness.id, updateError);
+              throw updateError;
             }
           }
         }
       }
 
-      const activeCount = businessesToInsert.filter(b => b.status === 'active').length;
-      const pendingCount = businessesToInsert.filter(b => b.status === 'pending').length;
+      // Filter out overridden businesses from insert list - they were already updated
+      const trulyNewBusinesses = businessesToInsert.filter(
+        b => !overriddenStoreCodes.includes(b.storeCode)
+      );
+
+      // Insert only truly new businesses
+      if (trulyNewBusinesses.length > 0) {
+        const { data: insertedData, error } = await supabase
+          .from('businesses')
+          .insert(trulyNewBusinesses)
+          .select('id, storeCode, businessName');
+
+        if (error) throw error;
+
+        // Track new locations by creating a special history record
+        if (insertedData && insertedData.length > 0) {
+          const newLocationRecords = insertedData.map((biz: any) => ({
+            business_id: biz.id,
+            field_name: 'business_created',
+            old_value: null,
+            new_value: 'New location added via import',
+            changed_by: user.id,
+            changed_by_email: user.email || null,
+            change_source: 'import',
+          }));
+
+          const { error: historyError } = await supabase
+            .from('business_field_history')
+            .insert(newLocationRecords);
+
+          if (historyError) {
+            console.error('Error tracking new locations:', historyError);
+          }
+        }
+      }
+
+      const activeCount = trulyNewBusinesses.filter(b => b.status === 'active').length;
+      const pendingCount = trulyNewBusinesses.filter(b => b.status === 'pending').length;
       const overrideCount = allowOverride ? duplicateBusinesses.length : 0;
       const skippedCount = duplicateBusinesses.length > 0 && !allowOverride ? duplicateBusinesses.length : 0;
 
