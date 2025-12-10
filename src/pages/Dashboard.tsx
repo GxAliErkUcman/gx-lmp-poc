@@ -142,6 +142,7 @@ useEffect(() => {
           id,
           businessToDelete.storeCode,
           businessToDelete.businessName,
+          businessToDelete.client_id,
           user.id,
           'crud'
         );
