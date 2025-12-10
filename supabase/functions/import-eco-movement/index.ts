@@ -346,7 +346,7 @@ serve(async (req) => {
             old_value: change.oldValue,
             new_value: change.newValue,
             changed_by: userId,
-            change_source: 'api_import',
+            change_source: 'eco_movement',
           }));
 
           const { error: historyError } = await supabase
@@ -383,10 +383,10 @@ serve(async (req) => {
             new_value: JSON.stringify({
               storeCode: businessData.storeCode,
               businessName: businessData.businessName,
-              source: 'api_import',
+              source: 'eco_movement',
             }),
             changed_by: userId,
-            change_source: 'api_import',
+            change_source: 'eco_movement',
           });
 
         if (historyError) {
