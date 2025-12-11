@@ -205,9 +205,9 @@ const AdminPanel = () => {
     }
   };
 
-  const fetchAllUsers = async () => {
+  const fetchAllUsers = async (silent = false) => {
     try {
-      setUsersLoading(true);
+      if (!silent) setUsersLoading(true);
       
       const { data: users, error } = await supabase
         .from('profiles')
@@ -268,7 +268,7 @@ const AdminPanel = () => {
         variant: "destructive"
       });
     } finally {
-      setUsersLoading(false);
+      if (!silent) setUsersLoading(false);
     }
   };
 
@@ -298,7 +298,7 @@ const AdminPanel = () => {
         description: `${userName} has been deleted successfully.`,
       });
 
-      fetchAllUsers();
+      fetchAllUsers(true);
       fetchData(true);
     } catch (error: any) {
       console.error('Error deleting user:', error);
@@ -637,9 +637,9 @@ const AdminPanel = () => {
     await fetchUsersForClient(client.id);
   };
 
-  const fetchUsersForClient = async (clientId: string) => {
+  const fetchUsersForClient = async (clientId: string, silent = false) => {
     try {
-      setUserManagementLoading(true);
+      if (!silent) setUserManagementLoading(true);
 
       // 1) Fetch all profiles (admins can view all)
       const { data: profilesData, error: usersError } = await supabase
@@ -709,7 +709,7 @@ const AdminPanel = () => {
         variant: "destructive"
       });
     } finally {
-      setUserManagementLoading(false);
+      if (!silent) setUserManagementLoading(false);
     }
   };
 
@@ -759,10 +759,7 @@ const AdminPanel = () => {
         });
       }
 
-      // Small delay to ensure database consistency
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      await fetchUsersForClient(selectedClient.id);
+      await fetchUsersForClient(selectedClient.id, true);
       fetchData(true); // Refresh client stats silently
     } catch (error: any) {
       console.error('Error assigning user:', error);
@@ -832,11 +829,8 @@ const AdminPanel = () => {
         if (error) throw error;
       }
 
-      // Small delay to ensure database consistency
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
       // Refresh the user lists
-      await fetchUsersForClient(selectedClient.id);
+      await fetchUsersForClient(selectedClient.id, true);
       
       toast({
         title: "User Removed",
@@ -1472,7 +1466,7 @@ const AdminPanel = () => {
           userId={selectedUserForRole.user_id}
           userName={`${selectedUserForRole.first_name} ${selectedUserForRole.last_name}`}
           onRolesUpdated={() => {
-            fetchAllUsers();
+            fetchAllUsers(true);
             fetchData(true);
           }}
         />
@@ -1487,7 +1481,7 @@ const AdminPanel = () => {
           userName={`${selectedUserForReassign.first_name} ${selectedUserForReassign.last_name}`}
           userRoles={selectedUserForReassign.roles || []}
           onReassigned={() => {
-            fetchAllUsers();
+            fetchAllUsers(true);
             fetchData(true);
           }}
         />
