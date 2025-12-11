@@ -641,31 +641,7 @@ const AdminPanel = () => {
     try {
       if (!silent) setUserManagementLoading(true);
 
-      // 1) Fetch all profiles (admins can view all)
-      const { data: profilesData, error: usersError } = await supabase
-        .from('profiles')
-        .select('user_id, first_name, last_name, email, client_id');
-
-      if (usersError) throw usersError;
-
-      const userIds = (profilesData || []).map(u => u.user_id);
-
-      // 2) Fetch roles for these users
-      const { data: rolesData, error: rolesError } = await supabase
-        .from('user_roles')
-        .select('user_id, role')
-        .in('user_id', userIds);
-
-      if (rolesError) throw rolesError;
-
-      const rolesMap = new Map<string, string[]>();
-      (rolesData || []).forEach(r => {
-        const arr = rolesMap.get(r.user_id) || [];
-        arr.push(r.role);
-        rolesMap.set(r.user_id, arr);
-      });
-
-      // 3) Fetch service-user access for this client
+      // Only fetch the client-specific access data - we already have profiles and roles from allUsers
       const { data: accessData, error: accessError } = await supabase
         .from('user_client_access')
         .select('user_id')
@@ -674,30 +650,52 @@ const AdminPanel = () => {
       if (accessError) throw accessError;
 
       const serviceUserIds = new Set((accessData || []).map(a => a.user_id));
-      const profileAssignedIds = new Set((profilesData || []).filter(u => u.client_id === clientId).map(u => u.user_id));
+
+      // Use cached allUsers data if available, otherwise fetch fresh
+      let usersToProcess = allUsers;
+      if (usersToProcess.length === 0) {
+        // Fallback: fetch all data in parallel if allUsers not loaded yet
+        const [profilesResult, rolesResult] = await Promise.all([
+          supabase.from('profiles').select('user_id, first_name, last_name, email, client_id'),
+          supabase.from('user_roles').select('user_id, role')
+        ]);
+
+        if (profilesResult.error) throw profilesResult.error;
+        if (rolesResult.error) throw rolesResult.error;
+
+        const rolesMap = new Map<string, string[]>();
+        (rolesResult.data || []).forEach(r => {
+          const arr = rolesMap.get(r.user_id) || [];
+          arr.push(r.role);
+          rolesMap.set(r.user_id, arr);
+        });
+
+        usersToProcess = (profilesResult.data || []).map(u => ({
+          ...u,
+          roles: rolesMap.get(u.user_id) || []
+        }));
+      }
 
       // Determine assignment per role:
       // - service_user: assigned only if present in user_client_access for this client
       // - everyone else: assigned if profile.client_id matches this client
-      const assigned = (profilesData || [])
-        .map((u) => {
-          const r = rolesMap.get(u.user_id) || [];
-          const isService = r.includes('service_user');
+      const assigned = usersToProcess
+        .map((u: any) => {
+          const isService = (u.roles || []).includes('service_user');
           const isAssigned = isService ? serviceUserIds.has(u.user_id) : u.client_id === clientId;
-          return { ...u, roles: r, __assigned: isAssigned } as any;
+          return { ...u, __assigned: isAssigned };
         })
         .filter((u: any) => u.__assigned)
-        .map(({ __assigned, ...rest }: any) => rest);
+        .map(({ __assigned, client_name, client_access_count, ...rest }: any) => rest);
 
-      const available = (profilesData || [])
-        .map((u) => {
-          const r = rolesMap.get(u.user_id) || [];
-          const isService = r.includes('service_user');
+      const available = usersToProcess
+        .map((u: any) => {
+          const isService = (u.roles || []).includes('service_user');
           const isAssigned = isService ? serviceUserIds.has(u.user_id) : u.client_id === clientId;
-          return { ...u, roles: r, __assigned: isAssigned } as any;
+          return { ...u, __assigned: isAssigned };
         })
         .filter((u: any) => !u.__assigned)
-        .map(({ __assigned, ...rest }: any) => rest);
+        .map(({ __assigned, client_name, client_access_count, ...rest }: any) => rest);
 
       setClientUsers(assigned);
       setAvailableUsers(available);
