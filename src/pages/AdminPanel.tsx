@@ -143,9 +143,9 @@ const AdminPanel = () => {
     }
   };
 
-  const fetchData = async () => {
+  const fetchData = async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       
       // Fetch client statistics using the database function
       const { data: clientStats, error: statsError } = await supabase
@@ -201,7 +201,7 @@ const AdminPanel = () => {
         variant: "destructive"
       });
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
@@ -299,7 +299,7 @@ const AdminPanel = () => {
       });
 
       fetchAllUsers();
-      fetchData();
+      fetchData(true);
     } catch (error: any) {
       console.error('Error deleting user:', error);
       toast({
@@ -382,7 +382,7 @@ const AdminPanel = () => {
       setEditingClientId(null);
       setEditClientName('');
       setEditLscId('');
-      fetchData();
+      fetchData(true);
     } catch (error: any) {
       console.error('Error updating client:', error);
       toast({
@@ -425,7 +425,7 @@ const AdminPanel = () => {
 
       setNewUser({ firstName: '', lastName: '', email: '', clientId: '', role: 'user' });
       setIsCreateUserDialogOpen(false);
-      fetchData(); // Refresh the data
+      fetchData(true); // Refresh the data silently
     } catch (error: any) {
       console.error('Error creating user:', error);
       toast({
@@ -564,7 +564,7 @@ const AdminPanel = () => {
 
       setNewClientName('');
       setIsCreateClientDialogOpen(false);
-      fetchData();
+      fetchData(true);
     } catch (error: any) {
       console.error('Error creating client:', error);
       toast({
@@ -610,7 +610,7 @@ const AdminPanel = () => {
       setClientToDelete(null);
       setDeleteConfirmation('');
       setDeleteUsersChecked(false);
-      fetchData();
+      fetchData(true);
     } catch (error: any) {
       console.error('Error deleting client:', error);
       toast({
@@ -763,7 +763,7 @@ const AdminPanel = () => {
       await new Promise(resolve => setTimeout(resolve, 100));
       
       await fetchUsersForClient(selectedClient.id);
-      fetchData(); // Refresh client stats
+      fetchData(true); // Refresh client stats silently
     } catch (error: any) {
       console.error('Error assigning user:', error);
       toast({
@@ -843,7 +843,7 @@ const AdminPanel = () => {
         description: "User removed from client.",
       });
 
-      fetchData(); // Refresh client stats
+      fetchData(true); // Refresh client stats silently
     } catch (error: any) {
       console.error('Error removing user:', error);
       toast({
@@ -1208,7 +1208,7 @@ const AdminPanel = () => {
                           <ApiImportDialog 
                             clientId={client.id} 
                             clientName={client.name}
-                            onSyncComplete={fetchData}
+                            onSyncComplete={() => fetchData(true)}
                           />
                           <Button
                             size="sm"
@@ -1473,7 +1473,7 @@ const AdminPanel = () => {
           userName={`${selectedUserForRole.first_name} ${selectedUserForRole.last_name}`}
           onRolesUpdated={() => {
             fetchAllUsers();
-            fetchData();
+            fetchData(true);
           }}
         />
       )}
@@ -1488,7 +1488,7 @@ const AdminPanel = () => {
           userRoles={selectedUserForReassign.roles || []}
           onReassigned={() => {
             fetchAllUsers();
-            fetchData();
+            fetchData(true);
           }}
         />
       )}
@@ -1730,7 +1730,7 @@ const AdminPanel = () => {
           open={fieldPermissionsDialogOpen}
           onOpenChange={setFieldPermissionsDialogOpen}
           clientId={categoryManagementClient.id}
-          onSuccess={fetchData}
+          onSuccess={() => fetchData(true)}
         />
       )}
     </div>
