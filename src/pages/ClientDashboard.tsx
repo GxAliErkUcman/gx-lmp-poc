@@ -21,10 +21,11 @@ import jasonerLogo from '@/assets/jasoner-horizontal-logo.png';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { JsonExport } from '@/components/JsonExport';
 import ServiceUserCreateDialog from '@/components/ServiceUserCreateDialog';
-import { UserPlus, History as HistoryIcon, Wrench } from 'lucide-react';
+import { UserPlus, History as HistoryIcon, Wrench, MoreVertical } from 'lucide-react';
 import { VersionHistoryDialog } from '@/components/VersionHistoryDialog';
 import ClientCustomServicesDialog from '@/components/ClientCustomServicesDialog';
 import { ApiImportDialog } from '@/components/ApiImportDialog';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
 const ClientDashboard = () => {
   const { user, signOut } = useAuth();
@@ -271,21 +272,22 @@ const ClientDashboard = () => {
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
       {/* Header */}
       <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+        <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => navigate(isAdmin ? '/admin' : '/service-user-home')}
+                className="px-2 sm:px-3"
               >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Overview
+                <ArrowLeft className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">Back to Overview</span>
               </Button>
-              <img src={jasonerLogo} alt="Logo" className="h-8" />
+              <img src={jasonerLogo} alt="Logo" className="h-6 sm:h-8" />
               {/* Client Selector */}
               <Select value={selectedClientId} onValueChange={handleClientChange}>
-                <SelectTrigger className="w-[280px]">
+                <SelectTrigger className="w-full sm:w-[280px]">
                   <SelectValue placeholder="Select a client" />
                 </SelectTrigger>
                 <SelectContent>
@@ -297,11 +299,11 @@ const ClientDashboard = () => {
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-muted-foreground">{user.email}</span>
-              <Button variant="ghost" size="sm" onClick={() => signOut()}>
-                <LogOut className="w-4 h-4 mr-2" />
-                Sign Out
+            <div className="flex items-center gap-2 sm:gap-4 justify-between sm:justify-end">
+              <span className="text-xs sm:text-sm text-muted-foreground truncate max-w-[150px] sm:max-w-none">{user.email}</span>
+              <Button variant="ghost" size="sm" onClick={() => signOut()} className="px-2 sm:px-3">
+                <LogOut className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">Sign Out</span>
               </Button>
             </div>
           </div>
@@ -309,25 +311,27 @@ const ClientDashboard = () => {
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-8">
         {loading ? (
           <div className="flex items-center justify-center h-64">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
         ) : (
           <>
-            <div className="flex items-center justify-between mb-8">
+            <div className="flex flex-col gap-4 mb-6 sm:mb-8">
               <div>
-                <h1 className="text-4xl font-bold mb-2">
+                <h1 className="text-2xl sm:text-4xl font-bold mb-2">
                   {accessibleClients.find(c => c.id === selectedClientId)?.name || 'Client Dashboard'}
                 </h1>
-                <div className="flex gap-4 text-sm text-muted-foreground">
+                <div className="flex flex-wrap gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
                   <span>Total: {businesses.length}</span>
                   <span>Active: {activeBusinesses.length}</span>
                   <span>Pending: {pendingBusinesses.length}</span>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              
+              {/* Desktop Actions */}
+              <div className="hidden md:flex items-center gap-2 flex-wrap">
                 <ApiImportDialog 
                   clientId={selectedClientId} 
                   clientName={accessibleClients.find(c => c.id === selectedClientId)?.name || ''}
@@ -366,10 +370,73 @@ const ClientDashboard = () => {
                   Add Business
                 </Button>
               </div>
+
+              {/* Mobile Actions */}
+              <div className="flex md:hidden items-center gap-2">
+                <Button 
+                  onClick={() => {
+                    setEditingBusiness(null);
+                    setBusinessDialogOpen(true);
+                  }}
+                  className="flex-1"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Business
+                </Button>
+                <Sheet>
+                  <SheetTrigger asChild>
+                    <Button variant="outline" size="icon">
+                      <MoreVertical className="w-4 h-4" />
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent side="bottom" className="h-auto max-h-[80vh]">
+                    <div className="flex flex-col gap-2 mt-4">
+                      <ApiImportDialog 
+                        clientId={selectedClientId} 
+                        clientName={accessibleClients.find(c => c.id === selectedClientId)?.name || ''}
+                        onSyncComplete={fetchBusinesses}
+                      />
+                      <JsonExport 
+                        businesses={businesses} 
+                        clientName={accessibleClients.find(c => c.id === selectedClientId)?.name} 
+                      />
+                      <Button 
+                        variant="outline" 
+                        onClick={() => setVersionHistoryOpen(true)}
+                        className="w-full justify-start"
+                      >
+                        <HistoryIcon className="w-4 h-4 mr-2" />
+                        Version History
+                      </Button>
+                      <Button variant="outline" onClick={() => setSettingsDialogOpen(true)} className="w-full justify-start">
+                        <Settings className="w-4 h-4 mr-2" />
+                        Settings
+                      </Button>
+                      <Button variant="outline" onClick={() => setCustomServicesDialogOpen(true)} className="w-full justify-start">
+                        <Wrench className="w-4 h-4 mr-2" />
+                        Custom Services
+                      </Button>
+                      {!isImportDisabled() && (
+                        <Button variant="outline" onClick={() => setImportDialogOpen(true)} className="w-full justify-start">
+                          <Upload className="w-4 h-4 mr-2" />
+                          Import
+                        </Button>
+                      )}
+                      <Button 
+                        onClick={() => setCreateUserDialogOpen(true)}
+                        className="w-full justify-start"
+                      >
+                        <UserPlus className="w-4 h-4 mr-2" />
+                        Create User
+                      </Button>
+                    </div>
+                  </SheetContent>
+                </Sheet>
+              </div>
             </div>
 
-            {/* Create User Button - Prominent placement */}
-            <div className="mb-6">
+            {/* Create User Button - Desktop only (mobile is in sheet) */}
+            <div className="mb-6 hidden md:block">
               <Button 
                 onClick={() => setCreateUserDialogOpen(true)}
                 size="lg"
@@ -404,7 +471,7 @@ const ClientDashboard = () => {
 
             {businesses.length === 0 ? (
               <Card>
-                <CardContent className="py-12 text-center">
+                <CardContent className="py-8 sm:py-12 text-center">
                   <p className="text-muted-foreground mb-4">No businesses found for this client</p>
                   <Button onClick={() => setBusinessDialogOpen(true)}>
                     <Plus className="w-4 h-4 mr-2" />
@@ -414,15 +481,15 @@ const ClientDashboard = () => {
               </Card>
             ) : (
               <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'active' | 'pending' | 'new')}>
-                <TabsList className="mb-4">
-                  <TabsTrigger value="active">
-                    Active Locations ({activeBusinesses.length})
+                <TabsList className="mb-4 w-full flex flex-wrap h-auto gap-1 p-1">
+                  <TabsTrigger value="active" className="flex-1 min-w-[100px] text-xs sm:text-sm">
+                    Active ({activeBusinesses.length})
                   </TabsTrigger>
-                  <TabsTrigger value="pending">
-                    Need Attention ({pendingBusinesses.length})
+                  <TabsTrigger value="pending" className="flex-1 min-w-[100px] text-xs sm:text-sm">
+                    Attention ({pendingBusinesses.length})
                   </TabsTrigger>
-                  <TabsTrigger value="new">
-                    New Locations ({newBusinesses.length})
+                  <TabsTrigger value="new" className="flex-1 min-w-[100px] text-xs sm:text-sm">
+                    New ({newBusinesses.length})
                   </TabsTrigger>
                 </TabsList>
 

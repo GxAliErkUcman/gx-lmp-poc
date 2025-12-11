@@ -555,9 +555,9 @@ export const VersionHistoryDialog = ({ open, onOpenChange, clientId, onImport, o
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-5xl max-h-[85vh]">
+        <DialogContent className="w-[95vw] max-w-5xl max-h-[85vh] p-3 sm:p-6">
           <DialogHeader>
-            <DialogTitle>Version History</DialogTitle>
+            <DialogTitle className="text-lg sm:text-xl">Version History</DialogTitle>
           </DialogHeader>
 
           <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>

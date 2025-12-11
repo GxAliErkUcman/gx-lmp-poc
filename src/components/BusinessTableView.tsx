@@ -243,62 +243,66 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
   return (
     <div className="space-y-4">
       {/* Search and controls */}
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-3 flex-1">
-          <div className="relative">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3 flex-1">
+          <div className="relative w-full sm:w-80">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
             <Input
               placeholder="Search businesses..."
               value={searchTerm}
               onChange={(e) => handleSearch(e.target.value)}
-              className="pl-10 w-80"
+              className="pl-10 w-full"
             />
           </div>
           
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center gap-2"
-          >
-            <Filter className="w-4 h-4" />
-            Filters
-            {(categoryFilter || cityFilter || countryFilter) && (
-              <Badge variant="secondary" className="ml-1">
-                {[categoryFilter, cityFilter, countryFilter].filter(Boolean).length}
-              </Badge>
-            )}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowFilters(!showFilters)}
+              className="flex items-center gap-2 flex-1 sm:flex-none"
+            >
+              <Filter className="w-4 h-4" />
+              <span className="sm:inline">Filters</span>
+              {(categoryFilter || cityFilter || countryFilter) && (
+                <Badge variant="secondary" className="ml-1">
+                  {[categoryFilter, cityFilter, countryFilter].filter(Boolean).length}
+                </Badge>
+              )}
+            </Button>
 
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setManageColumnsOpen(true)}
-            className="flex items-center gap-2"
-          >
-            <Settings className="w-4 h-4" />
-            Manage View
-          </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setManageColumnsOpen(true)}
+              className="flex items-center gap-2 flex-1 sm:flex-none"
+            >
+              <Settings className="w-4 h-4" />
+              <span className="hidden sm:inline">Manage View</span>
+            </Button>
+          </div>
         </div>
         
         {selectedIds.length > 0 && (
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs sm:text-sm text-muted-foreground">
               {selectedIds.length} selected
             </span>
             <Button 
               variant="outline" 
               size="sm"
               onClick={() => onMultiEdit(selectedIds)}
+              className="text-xs sm:text-sm"
             >
-              Edit Selected
+              Edit
             </Button>
             <Button 
               variant="destructive" 
               size="sm"
               onClick={() => onMultiDelete(selectedIds)}
+              className="text-xs sm:text-sm"
             >
-              Delete Selected
+              Delete
             </Button>
           </div>
         )}
@@ -306,11 +310,11 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
 
       {/* Filters */}
       {showFilters && (
-        <div className="flex items-center gap-3 p-4 bg-muted/30 rounded-lg">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium">Category:</span>
+        <div className="flex flex-col gap-3 p-3 sm:p-4 bg-muted/30 rounded-lg sm:flex-row sm:flex-wrap sm:items-center">
+          <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2">
+            <span className="text-xs sm:text-sm font-medium">Category:</span>
             <Select value={categoryFilter} onValueChange={handleCategoryFilter}>
-              <SelectTrigger className="w-48">
+              <SelectTrigger className="w-full sm:w-48">
                 <SelectValue placeholder="All categories" />
               </SelectTrigger>
               <SelectContent>
@@ -324,10 +328,10 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
             </Select>
           </div>
           
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium">City:</span>
+          <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2">
+            <span className="text-xs sm:text-sm font-medium">City:</span>
             <Select value={cityFilter} onValueChange={handleCityFilter}>
-              <SelectTrigger className="w-48">
+              <SelectTrigger className="w-full sm:w-48">
                 <SelectValue placeholder="All cities" />
               </SelectTrigger>
               <SelectContent>
@@ -341,10 +345,10 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
             </Select>
           </div>
 
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium">Country:</span>
+          <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2">
+            <span className="text-xs sm:text-sm font-medium">Country:</span>
             <Select value={countryFilter} onValueChange={handleCountryFilter}>
-              <SelectTrigger className="w-48">
+              <SelectTrigger className="w-full sm:w-48">
                 <SelectValue placeholder="All countries" />
               </SelectTrigger>
               <SelectContent>
@@ -363,17 +367,17 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
               variant="ghost"
               size="sm"
               onClick={clearFilters}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 self-start sm:self-auto"
             >
               <X className="w-4 h-4" />
-              Clear Filters
+              Clear
             </Button>
           )}
         </div>
       )}
 
       {/* Table */}
-      <div className="border rounded-lg">
+      <div className="border rounded-lg overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
