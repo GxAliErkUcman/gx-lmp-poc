@@ -39,7 +39,7 @@ const ClientDashboard = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('table');
   const [multiEditDialogOpen, setMultiEditDialogOpen] = useState(false);
   const [selectedBusinessIds, setSelectedBusinessIds] = useState<string[]>([]);
-  const [activeTab, setActiveTab] = useState<'active' | 'pending'>('active');
+  const [activeTab, setActiveTab] = useState<'active' | 'pending' | 'new'>('active');
   const [userLogo, setUserLogo] = useState<string | null>(null);
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
   const [deleteConfirmDialogOpen, setDeleteConfirmDialogOpen] = useState(false);
@@ -259,6 +259,11 @@ const ClientDashboard = () => {
 
   const activeBusinesses = businesses.filter(b => b.status === 'active');
   const pendingBusinesses = businesses.filter(b => b.status === 'pending');
+  
+  // Filter businesses created within the last 3 days
+  const threeDaysAgo = new Date();
+  threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+  const newBusinesses = businesses.filter(b => new Date(b.created_at) >= threeDaysAgo);
 
   const selectedClient = accessibleClients.find(c => c.id === selectedClientId);
 
@@ -408,13 +413,16 @@ const ClientDashboard = () => {
                 </CardContent>
               </Card>
             ) : (
-              <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'active' | 'pending')}>
+              <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'active' | 'pending' | 'new')}>
                 <TabsList className="mb-4">
                   <TabsTrigger value="active">
                     Active Locations ({activeBusinesses.length})
                   </TabsTrigger>
                   <TabsTrigger value="pending">
                     Need Attention ({pendingBusinesses.length})
+                  </TabsTrigger>
+                  <TabsTrigger value="new">
+                    New Locations ({newBusinesses.length})
                   </TabsTrigger>
                 </TabsList>
 
@@ -468,6 +476,44 @@ const ClientDashboard = () => {
                   ) : (
                     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                       {pendingBusinesses.map((business) => (
+                        <Card key={business.id}>
+                          <CardHeader>
+                            <CardTitle>{business.businessName}</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="space-y-2 text-sm">
+                              <p className="text-muted-foreground">{business.addressLine1}</p>
+                              <p className="text-muted-foreground">{business.city}, {business.state}</p>
+                              <div className="flex gap-2 mt-4">
+                                <Button size="sm" variant="outline" onClick={() => handleEditBusiness(business)}>
+                                  <Edit className="w-4 h-4 mr-2" />
+                                  Edit
+                                </Button>
+                                <Button size="sm" variant="destructive" onClick={() => handleDeleteBusiness(business.id)}>
+                                  <Trash2 className="w-4 h-4 mr-2" />
+                                  Delete
+                                </Button>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="new">
+                  {viewMode === 'table' ? (
+                    <BusinessTableView
+                      businesses={newBusinesses}
+                      onEdit={handleEditBusiness}
+                      onDelete={handleDeleteBusiness}
+                      onMultiEdit={handleMultiEdit}
+                      onMultiDelete={handleMultiDelete}
+                    />
+                  ) : (
+                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                      {newBusinesses.map((business) => (
                         <Card key={business.id}>
                           <CardHeader>
                             <CardTitle>{business.businessName}</CardTitle>
@@ -547,6 +593,12 @@ const ClientDashboard = () => {
         onOpenChange={setVersionHistoryOpen}
         clientId={selectedClientId}
         onImport={fetchBusinesses}
+        onEditBusiness={(businessId) => {
+          const business = businesses.find(b => b.id === businessId);
+          if (business) {
+            handleEditBusiness(business);
+          }
+        }}
       />
 
       <ClientCustomServicesDialog
