@@ -27,6 +27,9 @@ import ClientCustomServicesDialog from '@/components/ClientCustomServicesDialog'
 import { ApiImportDialog } from '@/components/ApiImportDialog';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
+// Energie 360° client ID for data source filter
+const ENERGIE_360_CLIENT_ID = 'e77c44c5-0585-4225-a5ea-59a38edb85fb';
+
 const ClientDashboard = () => {
   const { user, signOut } = useAuth();
   const { hasRole } = useAdmin();
@@ -52,8 +55,11 @@ const ClientDashboard = () => {
   const [createUserDialogOpen, setCreateUserDialogOpen] = useState(false);
   const [versionHistoryOpen, setVersionHistoryOpen] = useState(false);
   const [customServicesDialogOpen, setCustomServicesDialogOpen] = useState(false);
+  const [dataSourceFilter, setDataSourceFilter] = useState<'all' | 'api' | 'crud'>('all');
+  const [apiSourcedBusinessIds, setApiSourcedBusinessIds] = useState<Set<string>>(new Set());
   
   const { isImportDisabled } = useFieldPermissions(selectedClientId);
+  const isEnergie360 = selectedClientId === ENERGIE_360_CLIENT_ID;
 
   useEffect(() => {
     const checkRoleAndFetch = async () => {
@@ -89,8 +95,32 @@ const ClientDashboard = () => {
   useEffect(() => {
     if (selectedClientId) {
       fetchBusinesses();
+      // Fetch API-sourced business IDs for Energie 360°
+      if (selectedClientId === ENERGIE_360_CLIENT_ID) {
+        fetchApiSourcedBusinessIds();
+      } else {
+        setApiSourcedBusinessIds(new Set());
+        setDataSourceFilter('all');
+      }
     }
   }, [selectedClientId]);
+
+  const fetchApiSourcedBusinessIds = async () => {
+    try {
+      // Get all business IDs that have at least one eco_movement history record
+      const { data, error } = await supabase
+        .from('business_field_history')
+        .select('business_id')
+        .eq('change_source', 'eco_movement');
+      
+      if (error) throw error;
+      
+      const uniqueIds = new Set((data || []).map(d => d.business_id));
+      setApiSourcedBusinessIds(uniqueIds);
+    } catch (error) {
+      console.error('Error fetching API-sourced business IDs:', error);
+    }
+  };
 
   const fetchAccessibleClients = async (isAdminUser: boolean) => {
     try {
@@ -258,13 +288,23 @@ const ClientDashboard = () => {
     });
   };
 
-  const activeBusinesses = businesses.filter(b => b.status === 'active');
-  const pendingBusinesses = businesses.filter(b => b.status === 'pending');
+  // Apply data source filter for Energie 360°
+  const dataSourceFilteredBusinesses = isEnergie360 && dataSourceFilter !== 'all'
+    ? businesses.filter(b => {
+        const isApiSourced = apiSourcedBusinessIds.has(b.id);
+        if (dataSourceFilter === 'api') return isApiSourced;
+        if (dataSourceFilter === 'crud') return !isApiSourced;
+        return true;
+      })
+    : businesses;
+
+  const activeBusinesses = dataSourceFilteredBusinesses.filter(b => b.status === 'active');
+  const pendingBusinesses = dataSourceFilteredBusinesses.filter(b => b.status === 'pending');
   
   // Filter businesses created within the last 3 days
   const threeDaysAgo = new Date();
   threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
-  const newBusinesses = businesses.filter(b => new Date(b.created_at) >= threeDaysAgo);
+  const newBusinesses = dataSourceFilteredBusinesses.filter(b => new Date(b.created_at) >= threeDaysAgo);
 
   const selectedClient = accessibleClients.find(c => c.id === selectedClientId);
 
@@ -324,7 +364,7 @@ const ClientDashboard = () => {
                   {accessibleClients.find(c => c.id === selectedClientId)?.name || 'Client Dashboard'}
                 </h1>
                 <div className="flex flex-wrap gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
-                  <span>Total: {businesses.length}</span>
+                  <span>Total: {dataSourceFilteredBusinesses.length}{dataSourceFilter !== 'all' ? ` (of ${businesses.length})` : ''}</span>
                   <span>Active: {activeBusinesses.length}</span>
                   <span>Pending: {pendingBusinesses.length}</span>
                 </div>
@@ -466,6 +506,20 @@ const ClientDashboard = () => {
                 >
                   <Grid className="w-4 h-4" />
                 </Button>
+                
+                {/* Data Source filter - Only for Energie 360° */}
+                {isEnergie360 && (
+                  <Select value={dataSourceFilter} onValueChange={(v) => setDataSourceFilter(v as 'all' | 'api' | 'crud')}>
+                    <SelectTrigger className="w-[140px]">
+                      <SelectValue placeholder="Data Source" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Sources</SelectItem>
+                      <SelectItem value="api">API Only</SelectItem>
+                      <SelectItem value="crud">CRUD Only</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
             </div>
 
