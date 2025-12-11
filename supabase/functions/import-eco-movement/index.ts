@@ -398,6 +398,32 @@ serve(async (req) => {
       }
     }
 
+    // Track which store codes are in the API feed
+    const apiStoreCodes = locations.map(loc => loc.id);
+    console.log(`Updating api_feed_locations with ${apiStoreCodes.length} store codes...`);
+
+    // Upsert all API store codes to api_feed_locations
+    const feedLocationRecords = apiStoreCodes.map(storeCode => ({
+      client_id: ENERGIE_360_CLIENT_ID,
+      store_code: storeCode,
+      last_seen_at: new Date().toISOString(),
+    }));
+
+    // Insert in batches to avoid query limits
+    const batchSize = 100;
+    for (let i = 0; i < feedLocationRecords.length; i += batchSize) {
+      const batch = feedLocationRecords.slice(i, i + batchSize);
+      const { error: feedError } = await supabase
+        .from('api_feed_locations')
+        .upsert(batch, { onConflict: 'client_id,store_code' });
+
+      if (feedError) {
+        console.error(`Failed to upsert api_feed_locations batch:`, feedError);
+      }
+    }
+
+    console.log(`Updated api_feed_locations with ${apiStoreCodes.length} store codes`);
+
     // Update import log with success
     if (logId) {
       await supabase

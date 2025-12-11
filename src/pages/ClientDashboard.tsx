@@ -95,30 +95,41 @@ const ClientDashboard = () => {
   useEffect(() => {
     if (selectedClientId) {
       fetchBusinesses();
-      // Fetch API-sourced business IDs for Energie 360°
-      if (selectedClientId === ENERGIE_360_CLIENT_ID) {
-        fetchApiSourcedBusinessIds();
-      } else {
-        setApiSourcedBusinessIds(new Set());
-        setDataSourceFilter('all');
-      }
     }
   }, [selectedClientId]);
 
+  // Fetch API feed locations after businesses are loaded (for Energie 360° only)
+  useEffect(() => {
+    if (selectedClientId === ENERGIE_360_CLIENT_ID && businesses.length > 0) {
+      fetchApiSourcedBusinessIds();
+    } else if (selectedClientId !== ENERGIE_360_CLIENT_ID) {
+      setApiSourcedBusinessIds(new Set());
+      setDataSourceFilter('all');
+    }
+  }, [selectedClientId, businesses]);
+
   const fetchApiSourcedBusinessIds = async () => {
     try {
-      // Get all business IDs that have at least one eco_movement history record
+      // Get all store codes that exist in the API feed
       const { data, error } = await supabase
-        .from('business_field_history')
-        .select('business_id')
-        .eq('change_source', 'eco_movement');
+        .from('api_feed_locations')
+        .select('store_code')
+        .eq('client_id', ENERGIE_360_CLIENT_ID);
       
       if (error) throw error;
       
-      const uniqueIds = new Set((data || []).map(d => d.business_id));
-      setApiSourcedBusinessIds(uniqueIds);
+      const apiStoreCodes = new Set((data || []).map(d => d.store_code));
+      
+      // Now map these store codes to business IDs
+      const apiBusinessIds = new Set(
+        businesses
+          .filter(b => apiStoreCodes.has(b.storeCode))
+          .map(b => b.id)
+      );
+      
+      setApiSourcedBusinessIds(apiBusinessIds);
     } catch (error) {
-      console.error('Error fetching API-sourced business IDs:', error);
+      console.error('Error fetching API feed locations:', error);
     }
   };
 
