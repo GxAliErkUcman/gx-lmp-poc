@@ -170,9 +170,9 @@ const StoreOwnerDashboard = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/30 font-montserrat">
       <header className="border-b bg-card/50 backdrop-blur-sm">
-        <div className="container mx-auto px-4 py-6 flex items-center justify-between">
+        <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4">
-            <div className="h-40 flex items-center justify-center">
+            <div className="h-20 sm:h-40 flex items-center justify-center">
               <img 
                 src={jasonerLogo} 
                 alt="Jasoner Logo" 
@@ -180,10 +180,10 @@ const StoreOwnerDashboard = () => {
               />
             </div>
           </div>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-muted-foreground">{user.email}</span>
+          <div className="flex items-center gap-2 sm:gap-4 justify-between sm:justify-end">
+            <span className="text-xs sm:text-sm text-muted-foreground truncate max-w-[150px] sm:max-w-none">{user.email}</span>
             {userLogo && (
-              <div className="h-20 flex items-center justify-center">
+              <div className="h-10 sm:h-20 flex items-center justify-center">
                 <img 
                   src={userLogo} 
                   alt="User Logo" 
@@ -191,18 +191,19 @@ const StoreOwnerDashboard = () => {
                 />
               </div>
             )}
-            <Button onClick={signOut} variant="outline" className="shadow-modern">
-              Sign Out
+            <Button onClick={signOut} variant="outline" className="shadow-modern text-xs sm:text-sm">
+              <span className="hidden sm:inline">Sign Out</span>
+              <span className="sm:hidden">Exit</span>
             </Button>
           </div>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
-        <div className="mb-8 flex flex-wrap items-center justify-between gap-6">
+      <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-8">
+        <div className="mb-6 sm:mb-8 flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-3xl font-bold mb-2">Your Locations</h2>
-            <p className="text-muted-foreground">
+            <h2 className="text-2xl sm:text-3xl font-bold mb-2">Your Locations</h2>
+            <p className="text-sm text-muted-foreground">
               {activeBusinesses.length} active, {pendingBusinesses.length} need attention
             </p>
           </div>
@@ -237,35 +238,37 @@ const StoreOwnerDashboard = () => {
           </Card>
         ) : (
           <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'active' | 'pending')}>
-            <TabsList className="grid w-full grid-cols-2 mb-6">
+            <TabsList className="grid w-full grid-cols-2 mb-4 sm:mb-6 h-auto gap-1 p-1">
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <TabsTrigger value="active" className="flex items-center gap-2">
-                      Active Locations
-                      {activeBusinesses.length > 0 && (
-                        <Badge variant="secondary" className="ml-1">
-                          {activeBusinesses.length}
-                        </Badge>
-                      )}
-                    </TabsTrigger>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>These locations are validated and sent to g-Xperts for publishing.</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-              
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <TabsTrigger value="pending" className="flex items-center gap-2">
-                      Need Attention
-                      {pendingBusinesses.length > 0 && (
-                        <Badge variant="destructive" className="ml-1">
-                          {pendingBusinesses.length}
-                        </Badge>
-                      )}
+              <TabsTrigger value="active" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm py-2">
+                <span className="hidden sm:inline">Active Locations</span>
+                <span className="sm:hidden">Active</span>
+                {activeBusinesses.length > 0 && (
+                  <Badge variant="secondary" className="ml-1 text-xs">
+                    {activeBusinesses.length}
+                  </Badge>
+                )}
+              </TabsTrigger>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>These locations are validated and sent to g-Xperts for publishing.</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+        
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <TabsTrigger value="pending" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm py-2">
+                <span className="hidden sm:inline">Need Attention</span>
+                <span className="sm:hidden">Attention</span>
+                {pendingBusinesses.length > 0 && (
+                  <Badge variant="destructive" className="ml-1 text-xs">
+                    {pendingBusinesses.length}
+                  </Badge>
+                )}
                     </TabsTrigger>
                   </TooltipTrigger>
                   <TooltipContent>

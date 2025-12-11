@@ -103,3 +103,38 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+
+/* Mobile utility classes */
+@layer utilities {
+  .mobile-container {
+    @apply px-3 sm:px-4 md:px-6;
+  }
+  
+  .mobile-header {
+    @apply flex-col gap-3 sm:flex-row sm:gap-4;
+  }
+  
+  .mobile-stack {
+    @apply flex flex-col gap-2 sm:flex-row sm:gap-3;
+  }
+  
+  .mobile-full {
+    @apply w-full sm:w-auto;
+  }
+  
+  .mobile-hide {
+    @apply hidden md:flex;
+  }
+  
+  .mobile-show {
+    @apply flex md:hidden;
+  }
+  
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px];
+  }
+  
+  .table-scroll {
+    @apply overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0;
+  }
+}

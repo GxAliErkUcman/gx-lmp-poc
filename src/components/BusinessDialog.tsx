@@ -593,56 +593,58 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[95vw] max-w-[900px] max-h-[90vh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
-          <DialogTitle>{business ? 'Edit Business' : 'Add New Business'}</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="text-lg sm:text-xl">{business ? 'Edit Business' : 'Add New Business'}</DialogTitle>
+          <DialogDescription className="text-sm">
             {business ? 'Update business information' : 'Enter the details for your new business location'}
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6">
           {validationErrors.length > 0 && (
             <ValidationErrors errors={validationErrors} />
           )}
 
           {/* Basic Information */}
           <Card>
-            <CardHeader>
-              <CardTitle>Basic Information</CardTitle>
+            <CardHeader className="pb-2 sm:pb-4">
+              <CardTitle className="text-base sm:text-lg">Basic Information</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+            <CardContent className="space-y-3 sm:space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <Label htmlFor="storeCode">Store Code *</Label>
+                  <Label htmlFor="storeCode" className="text-sm">Store Code *</Label>
                   <LockedFieldWrapper isLocked={isFieldLocked('storeCode')}>
                     <Input 
                       {...register('storeCode')} 
                       id="storeCode" 
                       disabled={isFieldLocked('storeCode')}
+                      className="mt-1"
                     />
                   </LockedFieldWrapper>
                   {errors.storeCode && (
-                    <p className="text-sm text-destructive mt-1">{errors.storeCode.message}</p>
+                    <p className="text-xs sm:text-sm text-destructive mt-1">{errors.storeCode.message}</p>
                   )}
                 </div>
                 <div>
-                  <Label htmlFor="businessName">Business Name *</Label>
+                  <Label htmlFor="businessName" className="text-sm">Business Name *</Label>
                   <LockedFieldWrapper isLocked={isFieldLocked('businessName')}>
                     <Input 
                       {...register('businessName')} 
                       id="businessName"
                       disabled={isFieldLocked('businessName')}
+                      className="mt-1"
                     />
                   </LockedFieldWrapper>
                   {errors.businessName && (
-                    <p className="text-sm text-destructive mt-1">{errors.businessName.message}</p>
+                    <p className="text-xs sm:text-sm text-destructive mt-1">{errors.businessName.message}</p>
                   )}
                 </div>
               </div>
 
               <div>
-                <Label htmlFor="fromTheBusiness">From the Business</Label>
+                <Label htmlFor="fromTheBusiness" className="text-sm">From the Business</Label>
                 <LockedFieldWrapper isLocked={isFieldLocked('fromTheBusiness')}>
                   <Textarea 
                     {...register('fromTheBusiness')} 
@@ -718,10 +720,10 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
 
           {/* Address Information */}
           <Card>
-            <CardHeader>
-              <CardTitle>Address Information</CardTitle>
+            <CardHeader className="pb-2 sm:pb-4">
+              <CardTitle className="text-base sm:text-lg">Address Information</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-3 sm:space-y-4">
               <LockedFieldWrapper isLocked={isFieldLocked('country')}>
                 <CountrySelect
                   key={business?.id || 'new'}
@@ -731,53 +733,54 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
                 />
               </LockedFieldWrapper>
               {errors.country && (
-                <p className="text-sm text-destructive mt-1">{errors.country.message}</p>
+                <p className="text-xs sm:text-sm text-destructive mt-1">{errors.country.message}</p>
               )}
 
               <div>
-                <Label htmlFor="addressLine1">Street Address *</Label>
+                <Label htmlFor="addressLine1" className="text-sm">Street Address *</Label>
                 <LockedFieldWrapper isLocked={isFieldLocked('addressLine1')}>
                   <Input 
                     {...register('addressLine1')} 
                     id="addressLine1"
                     disabled={isFieldLocked('addressLine1')}
+                    className="mt-1"
                   />
                 </LockedFieldWrapper>
                 {errors.addressLine1 && (
-                  <p className="text-sm text-destructive mt-1">{errors.addressLine1.message}</p>
+                  <p className="text-xs sm:text-sm text-destructive mt-1">{errors.addressLine1.message}</p>
                 )}
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <Label htmlFor="addressLine2">Address Line 2</Label>
-                  <Input {...register('addressLine2')} id="addressLine2" />
+                  <Label htmlFor="addressLine2" className="text-sm">Address Line 2</Label>
+                  <Input {...register('addressLine2')} id="addressLine2" className="mt-1" />
                 </div>
                 <div>
-                  <Label htmlFor="addressLine3">Address Line 3</Label>
-                  <Input {...register('addressLine3')} id="addressLine3" />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="addressLine4">Address Line 4</Label>
-                  <Input {...register('addressLine4')} id="addressLine4" />
-                </div>
-                <div>
-                  <Label htmlFor="addressLine5">Address Line 5</Label>
-                  <Input {...register('addressLine5')} id="addressLine5" />
+                  <Label htmlFor="addressLine3" className="text-sm">Address Line 3</Label>
+                  <Input {...register('addressLine3')} id="addressLine3" className="mt-1" />
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <Label htmlFor="postalCode">Postal Code</Label>
-                  <Input {...register('postalCode')} id="postalCode" />
+                  <Label htmlFor="addressLine4" className="text-sm">Address Line 4</Label>
+                  <Input {...register('addressLine4')} id="addressLine4" className="mt-1" />
                 </div>
                 <div>
-                  <Label htmlFor="district">District</Label>
-                  <Input {...register('district')} id="district" />
+                  <Label htmlFor="addressLine5" className="text-sm">Address Line 5</Label>
+                  <Input {...register('addressLine5')} id="addressLine5" className="mt-1" />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                <div>
+                  <Label htmlFor="postalCode" className="text-sm">Postal Code</Label>
+                  <Input {...register('postalCode')} id="postalCode" className="mt-1" />
+                </div>
+                <div>
+                  <Label htmlFor="district" className="text-sm">District</Label>
+                  <Input {...register('district')} id="district" className="mt-1" />
                 </div>
                 <CitySelect
                   value={watch('city') || ''}
@@ -787,15 +790,15 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
               </div>
 
               <div>
-                <Label htmlFor="state">State/Province</Label>
-                <Input {...register('state')} id="state" />
+                <Label htmlFor="state" className="text-sm">State/Province</Label>
+                <Input {...register('state')} id="state" className="mt-1" />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <Label htmlFor="latitude">Latitude</Label>
+                  <Label htmlFor="latitude" className="text-sm">Latitude</Label>
                   <Input 
-                    {...register('latitude', { valueAsNumber: true })} 
+                    {...register('latitude', { valueAsNumber: true })}
                     id="latitude" 
                     type="number" 
                     step="any"

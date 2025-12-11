@@ -210,9 +210,9 @@ useEffect(() => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/30 font-montserrat">
       <header className="border-b bg-card/50 backdrop-blur-sm">
-        <div className="container mx-auto px-4 py-6 flex items-center justify-between">
+        <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4">
-            <div className="h-40 flex items-center justify-center">
+            <div className="h-20 sm:h-40 flex items-center justify-center">
               <img 
                 src={jasonerLogo} 
                 alt="Jasoner Logo" 
@@ -220,10 +220,10 @@ useEffect(() => {
               />
             </div>
           </div>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-muted-foreground">{user.email}</span>
+          <div className="flex items-center gap-2 sm:gap-4 justify-between sm:justify-end">
+            <span className="text-xs sm:text-sm text-muted-foreground truncate max-w-[150px] sm:max-w-none">{user.email}</span>
             {userLogo && (
-              <div className="h-20 flex items-center justify-center">
+              <div className="h-10 sm:h-20 flex items-center justify-center">
                 <img 
                   src={userLogo} 
                   alt="User Logo" 
@@ -231,24 +231,25 @@ useEffect(() => {
                 />
               </div>
             )}
-            <Button onClick={signOut} variant="outline" className="shadow-modern">
-              Sign Out
+            <Button onClick={signOut} variant="outline" className="shadow-modern text-xs sm:text-sm">
+              <span className="hidden sm:inline">Sign Out</span>
+              <span className="sm:hidden">Exit</span>
             </Button>
           </div>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
-        <div className="mb-8 flex flex-wrap items-center justify-between gap-6">
+      <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-8">
+        <div className="mb-6 sm:mb-8 flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-3xl font-bold mb-2">Your Locations</h2>
-            <p className="text-muted-foreground">
+            <h2 className="text-2xl sm:text-3xl font-bold mb-2">Your Locations</h2>
+            <p className="text-sm text-muted-foreground">
               {activeBusinesses.length} active, {pendingBusinesses.length} need attention
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             {/* View Mode Toggle */}
-            <div className="flex border rounded-xl p-1 bg-card shadow-card">
+            <div className="flex border rounded-xl p-1 bg-card shadow-card self-start">
               <Button
                 variant={viewMode === 'grid' ? 'default' : 'ghost'}
                 size="sm"
@@ -267,32 +268,33 @@ useEffect(() => {
               </Button>
             </div>
             
-            {/* Action Buttons - Symmetric Layout */}
-            <div className="flex items-center gap-2">
+            {/* Action Buttons */}
+            <div className="flex items-center gap-2 flex-wrap">
               <Button 
                 onClick={() => setSettingsDialogOpen(true)}
                 variant="outline"
-                size="default"
-                className="shadow-modern"
+                size="sm"
+                className="shadow-modern flex-1 sm:flex-none"
               >
-                <Settings className="w-4 h-4 mr-2" />
-                Account Wide Settings
+                <Settings className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">Account Settings</span>
               </Button>
               <Button 
                 onClick={() => setImportDialogOpen(true)}
                 variant="outline"
-                size="default"
-                className="shadow-modern"
+                size="sm"
+                className="shadow-modern flex-1 sm:flex-none"
               >
-                <Upload className="w-4 h-4 mr-2" />
-                Import
+                <Upload className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">Import</span>
               </Button>
               <Button 
                 onClick={() => setBusinessDialogOpen(true)}
-                className="shadow-modern bg-gradient-primary hover:opacity-90"
+                size="sm"
+                className="shadow-modern bg-gradient-primary hover:opacity-90 flex-1 sm:flex-none"
               >
-                <Plus className="w-4 h-4 mr-2" />
-                Add Business
+                <Plus className="w-4 h-4 mr-1 sm:mr-2" />
+                Add
               </Button>
             </div>
           </div>
@@ -319,14 +321,15 @@ useEffect(() => {
           </Card>
         ) : (
           <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'active' | 'pending')}>
-            <TabsList className="grid w-full grid-cols-2 mb-6">
+            <TabsList className="grid w-full grid-cols-2 mb-4 sm:mb-6 h-auto gap-1 p-1">
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <TabsTrigger value="active" className="flex items-center gap-2">
-                      Active Locations
+                    <TabsTrigger value="active" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm py-2">
+                      <span className="hidden sm:inline">Active Locations</span>
+                      <span className="sm:hidden">Active</span>
                       {activeBusinesses.length > 0 && (
-                        <Badge variant="secondary" className="ml-1">
+                        <Badge variant="secondary" className="ml-1 text-xs">
                           {activeBusinesses.length}
                         </Badge>
                       )}
@@ -341,10 +344,11 @@ useEffect(() => {
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <TabsTrigger value="pending" className="flex items-center gap-2">
-                      Need Attention
+                    <TabsTrigger value="pending" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm py-2">
+                      <span className="hidden sm:inline">Need Attention</span>
+                      <span className="sm:hidden">Attention</span>
                       {pendingBusinesses.length > 0 && (
-                        <Badge variant="destructive" className="ml-1">
+                        <Badge variant="destructive" className="ml-1 text-xs">
                           {pendingBusinesses.length}
                         </Badge>
                       )}
