@@ -139,9 +139,9 @@ const ClientDashboard = () => {
     }
   };
 
-  const fetchBusinesses = async () => {
+  const fetchBusinesses = async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       const { data, error } = await supabase
         .from('businesses')
         .select('*')
@@ -162,7 +162,7 @@ const ClientDashboard = () => {
         variant: "destructive",
       });
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
@@ -335,7 +335,7 @@ const ClientDashboard = () => {
                 <ApiImportDialog 
                   clientId={selectedClientId} 
                   clientName={accessibleClients.find(c => c.id === selectedClientId)?.name || ''}
-                  onSyncComplete={fetchBusinesses}
+                  onSyncComplete={() => fetchBusinesses(true)}
                 />
                 <JsonExport 
                   businesses={businesses} 
@@ -394,7 +394,7 @@ const ClientDashboard = () => {
                       <ApiImportDialog 
                         clientId={selectedClientId} 
                         clientName={accessibleClients.find(c => c.id === selectedClientId)?.name || ''}
-                        onSyncComplete={fetchBusinesses}
+                        onSyncComplete={() => fetchBusinesses(true)}
                       />
                       <JsonExport 
                         businesses={businesses} 
@@ -617,26 +617,26 @@ const ClientDashboard = () => {
         open={businessDialogOpen}
         onOpenChange={setBusinessDialogOpen}
         business={editingBusiness}
-        onSuccess={fetchBusinesses}
+        onSuccess={() => fetchBusinesses(true)}
         clientId={selectedClientId}
       />
       <ImportDialog
         open={importDialogOpen}
         onOpenChange={setImportDialogOpen}
-        onSuccess={fetchBusinesses}
+        onSuccess={() => fetchBusinesses(true)}
         clientId={selectedClientId}
       />
       <MultiEditDialog
         open={multiEditDialogOpen}
         onOpenChange={setMultiEditDialogOpen}
         selectedIds={selectedBusinessIds}
-        onSuccess={fetchBusinesses}
+        onSuccess={() => fetchBusinesses(true)}
         clientId={selectedClientId}
       />
       <SettingsDialog
         open={settingsDialogOpen}
         onOpenChange={setSettingsDialogOpen}
-        onLogoUploaded={fetchBusinesses}
+        onLogoUploaded={() => fetchBusinesses(true)}
         clientId={selectedClientId}
       />
       <DeleteConfirmationDialog
@@ -659,7 +659,7 @@ const ClientDashboard = () => {
         open={versionHistoryOpen}
         onOpenChange={setVersionHistoryOpen}
         clientId={selectedClientId}
-        onImport={fetchBusinesses}
+        onImport={() => fetchBusinesses(true)}
         onEditBusiness={(businessId) => {
           const business = businesses.find(b => b.id === businessId);
           if (business) {

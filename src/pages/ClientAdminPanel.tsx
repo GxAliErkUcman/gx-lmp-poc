@@ -75,8 +75,8 @@ const ClientAdminPanel = () => {
     checkRoleAndFetch();
   }, [user]);
 
-  const fetchData = async () => {
-    setLoading(true);
+  const fetchData = async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
       // Get current user's profile to find their client_id
       const { data: profileData, error: profileError } = await supabase
@@ -181,7 +181,7 @@ const ClientAdminPanel = () => {
         variant: 'destructive',
       });
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
@@ -471,7 +471,7 @@ const ClientAdminPanel = () => {
         open={createUserDialogOpen}
         onOpenChange={setCreateUserDialogOpen}
         clientId={clientId || ''}
-        onUserCreated={fetchData}
+        onUserCreated={() => fetchData(true)}
       />
 
       {selectedUserId && clientId && (
@@ -480,7 +480,7 @@ const ClientAdminPanel = () => {
           onOpenChange={setStoreAssignmentDialogOpen}
           userId={selectedUserId}
           clientId={clientId}
-          onAssigned={fetchData}
+          onAssigned={() => fetchData(true)}
         />
       )}
 
@@ -493,21 +493,21 @@ const ClientAdminPanel = () => {
           }
         }}
         business={editingBusiness}
-        onSuccess={fetchData}
+        onSuccess={() => fetchData(true)}
         clientId={clientId || undefined}
       />
 
       <ImportDialog
         open={importDialogOpen}
         onOpenChange={setImportDialogOpen}
-        onSuccess={fetchData}
+        onSuccess={() => fetchData(true)}
         clientId={clientId || undefined}
       />
 
       <SettingsDialog
         open={settingsDialogOpen}
         onOpenChange={setSettingsDialogOpen}
-        onLogoUploaded={fetchData}
+        onLogoUploaded={() => fetchData(true)}
         clientId={clientId || undefined}
       />
 
