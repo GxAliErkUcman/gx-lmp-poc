@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Download, Upload, Trash2, Eye, History, Search, PlusCircle, MinusCircle, CalendarIcon } from 'lucide-react';
+import { Download, Upload, Trash2, Eye, History, Search, PlusCircle, MinusCircle, CalendarIcon, Edit } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -74,9 +74,10 @@ interface VersionHistoryDialogProps {
   onOpenChange: (open: boolean) => void;
   clientId?: string;
   onImport?: () => void;
+  onEditBusiness?: (businessId: string) => void;
 }
 
-export const VersionHistoryDialog = ({ open, onOpenChange, clientId, onImport }: VersionHistoryDialogProps) => {
+export const VersionHistoryDialog = ({ open, onOpenChange, clientId, onImport, onEditBusiness }: VersionHistoryDialogProps) => {
   const { user } = useAuth();
   const [backups, setBackups] = useState<BackupFile[]>([]);
   const [loading, setLoading] = useState(false);
@@ -996,7 +997,7 @@ export const VersionHistoryDialog = ({ open, onOpenChange, clientId, onImport }:
 
       {/* New Locations Dialog */}
       <Dialog open={showNewLocationsDialog} onOpenChange={setShowNewLocationsDialog}>
-        <DialogContent className="max-w-2xl max-h-[80vh]">
+        <DialogContent className="max-w-4xl max-h-[80vh]">
           <DialogHeader>
             <DialogTitle>
               <div className="flex items-center gap-2">
@@ -1014,6 +1015,7 @@ export const VersionHistoryDialog = ({ open, onOpenChange, clientId, onImport }:
                   <TableHead>Added At</TableHead>
                   <TableHead>Source</TableHead>
                   <TableHead>Added By</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -1025,11 +1027,24 @@ export const VersionHistoryDialog = ({ open, onOpenChange, clientId, onImport }:
                       {format(new Date(loc.addedAt), 'MMM d, yyyy h:mm a')}
                     </TableCell>
                     <TableCell>
-                      <Badge variant={loc.source === 'import' ? 'default' : 'secondary'}>
-                        {loc.source === 'import' ? 'Import' : 'CRUD'}
+                      <Badge variant={getSourceBadgeVariant(loc.source)}>
+                        {getChangeSourceDisplayName(loc.source)}
                       </Badge>
                     </TableCell>
                     <TableCell>{loc.addedBy || '-'}</TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setShowNewLocationsDialog(false);
+                          onOpenChange(false);
+                          onEditBusiness?.(loc.id);
+                        }}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
