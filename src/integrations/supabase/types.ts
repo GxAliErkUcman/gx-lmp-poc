@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      api_feed_locations: {
+        Row: {
+          client_id: string
+          id: string
+          last_seen_at: string
+          store_code: string
+        }
+        Insert: {
+          client_id: string
+          id?: string
+          last_seen_at?: string
+          store_code: string
+        }
+        Update: {
+          client_id?: string
+          id?: string
+          last_seen_at?: string
+          store_code?: string
+        }
+        Relationships: []
+      }
       api_import_logs: {
         Row: {
           client_id: string
