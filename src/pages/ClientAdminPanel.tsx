@@ -17,6 +17,7 @@ import ClientFieldPermissionsDialog from '@/components/ClientFieldPermissionsDia
 import BusinessTableView from '@/components/BusinessTableView';
 import BusinessDialog from '@/components/BusinessDialog';
 import ImportDialog from '@/components/ImportDialog';
+import { JsonExport } from '@/components/JsonExport';
 import { useFieldPermissions } from '@/hooks/use-field-permissions';
 import type { Business } from '@/types/business';
 import jasonerLogo from '@/assets/jasoner-horizontal-logo.png';
@@ -440,6 +441,7 @@ const ClientAdminPanel = () => {
                     Import
                   </Button>
                 )}
+                <JsonExport businesses={businesses} clientName={clientName || 'Export'} />
                 <Button onClick={() => setBusinessDialogOpen(true)}>
                   <Plus className="w-4 h-4 mr-2" />
                   Add Store

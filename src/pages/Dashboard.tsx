@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 import { toast } from '@/hooks/use-toast';
 import BusinessDialog from '@/components/BusinessDialog';
+import { JsonExport } from '@/components/JsonExport';
 import ImportDialog from '@/components/ImportDialog';
 import BusinessTableView from '@/components/BusinessTableView';
 import MultiEditDialog from '@/components/MultiEditDialog';
@@ -38,6 +39,7 @@ const Dashboard = () => {
   const [deleteConfirmDialogOpen, setDeleteConfirmDialogOpen] = useState(false);
   const [businessesToDelete, setBusinessesToDelete] = useState<string[]>([]);
   const [clientId, setClientId] = useState<string | null>(null);
+  const [clientName, setClientName] = useState<string>('');
 
   const handleLogoUploaded = () => {
     // Refresh businesses to get updated logo
@@ -68,16 +70,17 @@ useEffect(() => {
       const businessList = (data || []) as Business[];
       setBusinesses(businessList);
       
-      // Get user's client_id from their profile
+      // Get user's client_id and client name from their profile
       if (user) {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('client_id')
+          .select('client_id, clients(name)')
           .eq('user_id', user.id)
           .maybeSingle();
         
         if (profile?.client_id) {
           setClientId(profile.client_id);
+          setClientName((profile as any).clients?.name || '');
         }
       }
       
@@ -288,6 +291,7 @@ useEffect(() => {
                 <Upload className="w-4 h-4 sm:mr-2" />
                 <span className="hidden sm:inline">Import</span>
               </Button>
+              <JsonExport businesses={businesses} clientName={clientName || 'Export'} />
               <Button 
                 onClick={() => setBusinessDialogOpen(true)}
                 size="sm"
