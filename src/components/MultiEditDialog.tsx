@@ -27,6 +27,7 @@ import { CategorySelect } from '@/components/CategorySelect';
 import { CountrySelect } from '@/components/CountrySelect';
 import CategoryNameChangeDialog from '@/components/CategoryNameChangeDialog';
 import BusinessCustomServicesDialog from '@/components/BusinessCustomServicesDialog';
+import SpecialHours, { SpecialHourEntry, parseSpecialHoursFromSchema, formatSpecialHoursToSchema } from '@/components/SpecialHours';
 
 const multiEditFormSchema = z.object({
   businessName: z.string().optional(),
@@ -42,6 +43,7 @@ const multiEditFormSchema = z.object({
   fridayHours: z.string().optional(),
   saturdayHours: z.string().optional(),
   sundayHours: z.string().optional(),
+  specialHours: z.string().optional(),
   facebookUrl: z.string().optional(),
   instagramUrl: z.string().optional(),
   linkedinUrl: z.string().optional(),
@@ -68,6 +70,7 @@ const MultiEditDialog = ({ open, onOpenChange, selectedIds, onSuccess, clientId 
   const [pendingFormData, setPendingFormData] = useState<MultiEditFormValues | null>(null);
   const [customServicesDialogOpen, setCustomServicesDialogOpen] = useState(false);
   const [customServices, setCustomServices] = useState<any[]>([]);
+  const [specialHoursEntries, setSpecialHoursEntries] = useState<SpecialHourEntry[]>([]);
 
   const form = useForm<MultiEditFormValues>({
     resolver: zodResolver(multiEditFormSchema),
@@ -85,6 +88,7 @@ const MultiEditDialog = ({ open, onOpenChange, selectedIds, onSuccess, clientId 
       fridayHours: '',
       saturdayHours: '',
       sundayHours: '',
+      specialHours: '',
       facebookUrl: '',
       instagramUrl: '',
       linkedinUrl: '',
@@ -121,7 +125,7 @@ const MultiEditDialog = ({ open, onOpenChange, selectedIds, onSuccess, clientId 
     try {
       // Filter out empty values for regular fields
       const regularFields = ['businessName', 'primaryPhone', 'website', 'fromTheBusiness', 'primaryCategory', 'country'];
-      const hoursFields = ['mondayHours', 'tuesdayHours', 'wednesdayHours', 'thursdayHours', 'fridayHours', 'saturdayHours', 'sundayHours'];
+      const hoursFields = ['mondayHours', 'tuesdayHours', 'wednesdayHours', 'thursdayHours', 'fridayHours', 'saturdayHours', 'sundayHours', 'specialHours'];
       const socialMediaFields = ['facebookUrl', 'instagramUrl', 'linkedinUrl', 'pinterestUrl', 'tiktokUrl', 'twitterUrl', 'youtubeUrl'];
       
       const allUpdateFields = [...regularFields, ...hoursFields];
@@ -130,6 +134,11 @@ const MultiEditDialog = ({ open, onOpenChange, selectedIds, onSuccess, clientId 
         Object.entries(values)
           .filter(([key, value]) => allUpdateFields.includes(key) && value !== '' && value !== undefined)
       );
+      
+      // Add special hours from component if any entries exist
+      if (specialHoursEntries.length > 0) {
+        (updateData as any).specialHours = formatSpecialHoursToSchema(specialHoursEntries);
+      }
 
       // Handle social media URLs separately
       const socialMediaUrls = [
@@ -575,6 +584,14 @@ const MultiEditDialog = ({ open, onOpenChange, selectedIds, onSuccess, clientId 
                       <FormMessage />
                     </FormItem>
                   )}
+                />
+              </div>
+
+              {/* Special Hours */}
+              <div className="col-span-2 mt-4">
+                <SpecialHours
+                  specialHours={specialHoursEntries}
+                  onSpecialHoursChange={setSpecialHoursEntries}
                 />
               </div>
             </div>
