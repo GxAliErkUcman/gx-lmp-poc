@@ -42,3 +42,6 @@ verify_jwt = false
 
 [functions.import-eco-movement]
 verify_jwt = false
+
+[functions.generate-lsc-magic-link]
+verify_jwt = false
