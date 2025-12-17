@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Download, Upload, Trash2, Eye, History, Search, PlusCircle, MinusCircle, CalendarIcon, Edit } from 'lucide-react';
+import { Download, Upload, Trash2, Eye, History, Search, PlusCircle, MinusCircle, CalendarIcon, Edit, Undo2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -12,7 +12,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { format, isAfter, isBefore, startOfDay, endOfDay } from 'date-fns';
-import { getFieldDisplayName, getChangeSourceDisplayName } from '@/lib/fieldHistory';
+import { getFieldDisplayName, getChangeSourceDisplayName, rollbackField } from '@/lib/fieldHistory';
 import { BusinessHistoryView } from '@/components/BusinessHistoryView';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -104,6 +104,7 @@ export const VersionHistoryDialog = ({ open, onOpenChange, clientId, onImport, o
   const [newLocations, setNewLocations] = useState<NewLocationRecord[]>([]);
   const [deletedLocations, setDeletedLocations] = useState<DeletedLocationRecord[]>([]);
   const [showNewLocationsDialog, setShowNewLocationsDialog] = useState(false);
+  const [rollingBackId, setRollingBackId] = useState<string | null>(null);
   const [showDeletedLocationsDialog, setShowDeletedLocationsDialog] = useState(false);
 
   useEffect(() => {
@@ -499,6 +500,45 @@ export const VersionHistoryDialog = ({ open, onOpenChange, clientId, onImport, o
   const handleViewBusinessHistory = (businessId: string, businessName: string) => {
     setSelectedBusinessId(businessId);
     setSelectedBusinessName(businessName);
+  };
+
+  // Handle rollback from All Changes tab
+  const handleRollbackFromAllChanges = async (record: FieldHistoryRecord) => {
+    if (!user) return;
+    
+    // Find current value (most recent for this field in this business)
+    const currentRecord = fieldHistory.find(
+      h => h.business_id === record.business_id && h.field_name === record.field_name
+    );
+    const currentValue = currentRecord?.new_value || null;
+
+    setRollingBackId(record.id);
+    try {
+      const result = await rollbackField(
+        record.business_id,
+        record.field_name,
+        record.old_value,
+        currentValue,
+        user.id
+      );
+
+      if (result.success) {
+        toast({
+          title: 'Rollback successful',
+          description: `${getFieldDisplayName(record.field_name)} has been restored`,
+        });
+        await fetchFieldHistory();
+        onImport?.();
+      } else {
+        toast({
+          title: 'Rollback failed',
+          description: result.error || 'An error occurred',
+          variant: 'destructive',
+        });
+      }
+    } finally {
+      setRollingBackId(null);
+    }
   };
 
   // Filtered field history for All Changes tab
@@ -934,20 +974,33 @@ export const VersionHistoryDialog = ({ open, onOpenChange, clientId, onImport, o
                         key={record.id}
                         className="border rounded-lg p-3 space-y-2"
                       >
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="font-mono text-xs bg-muted px-2 py-0.5 rounded">
-                            {businessLookup.get(record.business_id)?.storeCode || 'Unknown'}
-                          </span>
-                          <span className="font-medium text-sm">
-                            {businessLookup.get(record.business_id)?.businessName || 'Unknown Business'}
-                          </span>
-                          <span className="text-muted-foreground">•</span>
-                          <span className="font-medium">
-                            {getFieldDisplayName(record.field_name)}
-                          </span>
-                          <Badge variant={getSourceBadgeVariant(record.change_source)}>
-                            {getChangeSourceDisplayName(record.change_source)}
-                          </Badge>
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="font-mono text-xs bg-muted px-2 py-0.5 rounded">
+                              {businessLookup.get(record.business_id)?.storeCode || 'Unknown'}
+                            </span>
+                            <span className="font-medium text-sm">
+                              {businessLookup.get(record.business_id)?.businessName || 'Unknown Business'}
+                            </span>
+                            <span className="text-muted-foreground">•</span>
+                            <span className="font-medium">
+                              {getFieldDisplayName(record.field_name)}
+                            </span>
+                            <Badge variant={getSourceBadgeVariant(record.change_source)}>
+                              {getChangeSourceDisplayName(record.change_source)}
+                            </Badge>
+                          </div>
+                          {record.field_name !== 'business_created' && record.field_name !== 'business_deleted' && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleRollbackFromAllChanges(record)}
+                              disabled={rollingBackId === record.id}
+                            >
+                              <Undo2 className="h-4 w-4 mr-1" />
+                              {rollingBackId === record.id ? 'Restoring...' : 'Restore'}
+                            </Button>
+                          )}
                         </div>
 
                         <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">

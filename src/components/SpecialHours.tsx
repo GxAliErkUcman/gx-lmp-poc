@@ -5,11 +5,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { CalendarIcon, Plus, Trash2, Clock, CalendarRange } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { CalendarIcon, Plus, Trash2, Clock, CalendarRange, AlertCircle } from 'lucide-react';
 import { format, eachDayOfInterval } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { DateRange } from 'react-day-picker';
+import { validateSpecialHours } from '@/lib/validation';
 
 export interface SpecialHourEntry {
   date: Date;
@@ -69,6 +70,8 @@ const SpecialHours = ({ specialHours, onSpecialHoursChange, disabled = false }: 
   const [dateRangeDialogOpen, setDateRangeDialogOpen] = useState(false);
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [rangeHours, setRangeHours] = useState({ open: '09:00', close: '17:00', isClosed: true });
+  const [validationErrorDialogOpen, setValidationErrorDialogOpen] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
 
   const addSpecialHour = () => {
     const newEntry: SpecialHourEntry = {
@@ -278,13 +281,35 @@ const SpecialHours = ({ specialHours, onSpecialHoursChange, disabled = false }: 
           </Button>
         </div>
 
-        {/* Preview of generated format */}
+        {/* Preview of generated format with validation */}
         {specialHours.length > 0 && (
           <div className="mt-4 p-3 bg-muted rounded-lg">
             <Label className="text-xs font-medium mb-1 block">Generated Format:</Label>
             <code className="text-xs text-muted-foreground break-all">
               {formatSpecialHoursToSchema(specialHours)}
             </code>
+            {(() => {
+              const schemaValue = formatSpecialHoursToSchema(specialHours);
+              const validation = validateSpecialHours(schemaValue);
+              if (!validation.isValid) {
+                return (
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    className="mt-2 w-full"
+                    onClick={() => {
+                      setValidationErrors(validation.errors);
+                      setValidationErrorDialogOpen(true);
+                    }}
+                  >
+                    <AlertCircle className="w-4 h-4 mr-2" />
+                    Format Issues Detected - Click to View
+                  </Button>
+                );
+              }
+              return null;
+            })()}
           </div>
         )}
 
@@ -360,6 +385,69 @@ const SpecialHours = ({ specialHours, onSpecialHoursChange, disabled = false }: 
                 disabled={!dateRange?.from || !dateRange?.to}
               >
                 Apply to All Dates
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Validation Error Dialog */}
+        <Dialog open={validationErrorDialogOpen} onOpenChange={setValidationErrorDialogOpen}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-destructive">
+                <AlertCircle className="w-5 h-5" />
+                Special Hours Format Error
+              </DialogTitle>
+              <DialogDescription>
+                The special hours format is invalid. Please review the issues below.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4">
+              {/* Error list */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Issues Found:</Label>
+                <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3 space-y-1">
+                  {validationErrors.map((error, idx) => (
+                    <p key={idx} className="text-sm text-destructive">• {error}</p>
+                  ))}
+                </div>
+              </div>
+
+              {/* Correct format guide */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Correct Format:</Label>
+                <div className="bg-muted rounded-lg p-3 space-y-2 text-sm">
+                  <p><strong>Pattern:</strong> <code className="bg-background px-1 rounded">YYYY-MM-DD: HH:MM-HH:MM</code></p>
+                  <p><strong>For closed days:</strong> <code className="bg-background px-1 rounded">YYYY-MM-DD: x</code></p>
+                  <p><strong>Multiple entries:</strong> Separate with commas</p>
+                </div>
+              </div>
+
+              {/* Examples */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Examples:</Label>
+                <div className="bg-primary/10 border border-primary/20 rounded-lg p-3 space-y-1 text-sm font-mono">
+                  <p>2025-12-25: x</p>
+                  <p>2025-01-01: 10:00-15:00</p>
+                  <p>2025-12-31: 09:00-13:00, 2026-01-01: x</p>
+                </div>
+              </div>
+
+              {/* Important notes */}
+              <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 text-sm">
+                <p className="font-medium text-amber-700 dark:text-amber-400">Important Notes:</p>
+                <ul className="list-disc list-inside mt-1 text-muted-foreground space-y-1">
+                  <li>Use lowercase <code className="bg-background px-1 rounded">x</code> for closed (not "y" or uppercase)</li>
+                  <li>Date must be in YYYY-MM-DD format (e.g., 2025-12-25)</li>
+                  <li>Time must be in 24-hour format (e.g., 09:00-17:00)</li>
+                </ul>
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button onClick={() => setValidationErrorDialogOpen(false)}>
+                Got it
               </Button>
             </DialogFooter>
           </DialogContent>
