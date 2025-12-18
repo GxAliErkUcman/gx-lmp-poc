@@ -94,8 +94,7 @@ serve(async (req) => {
     // Return the magic link
     return new Response(
       JSON.stringify({ 
-        magic_link: linkData.properties.action_link,
-        user_id: existingUser.id
+        magic_link: linkData.properties.action_link
       }),
       { 
         status: 200, 
