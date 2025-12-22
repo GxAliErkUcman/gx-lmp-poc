@@ -6,10 +6,13 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
-import { Edit, Trash2, Search, ArrowUp, ArrowDown, Settings, Filter, X, AlertCircle } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { Edit, Trash2, Search, ArrowUp, ArrowDown, Settings, Filter, X, AlertCircle, Check, ChevronsUpDown } from 'lucide-react';
 import { Business } from '@/types/business';
 import ManageColumnsDialog, { type ColumnConfig } from './ManageColumnsDialog';
 import { validateBusiness, ValidationError } from '@/lib/validation';
+import { cn } from '@/lib/utils';
 
 
 interface BusinessTableViewProps {
@@ -376,19 +379,55 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
 
           <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2">
             <span className="text-xs sm:text-sm font-medium">Postal Code:</span>
-            <Select value={postalCodeFilter} onValueChange={handlePostalCodeFilter}>
-              <SelectTrigger className="w-full sm:w-48">
-                <SelectValue placeholder="All postal codes" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All postal codes</SelectItem>
-                {uniquePostalCodes.map(postalCode => (
-                  <SelectItem key={postalCode} value={postalCode}>
-                    {postalCode}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  className="w-full sm:w-48 justify-between font-normal"
+                >
+                  {postalCodeFilter || "All postal codes"}
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-48 p-0">
+                <Command>
+                  <CommandInput placeholder="Search postal code..." />
+                  <CommandList>
+                    <CommandEmpty>No postal code found.</CommandEmpty>
+                    <CommandGroup>
+                      <CommandItem
+                        value="all"
+                        onSelect={() => handlePostalCodeFilter("all")}
+                      >
+                        <Check
+                          className={cn(
+                            "mr-2 h-4 w-4",
+                            !postalCodeFilter ? "opacity-100" : "opacity-0"
+                          )}
+                        />
+                        All postal codes
+                      </CommandItem>
+                      {uniquePostalCodes.map(postalCode => (
+                        <CommandItem
+                          key={postalCode}
+                          value={postalCode}
+                          onSelect={() => handlePostalCodeFilter(postalCode)}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              postalCodeFilter === postalCode ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          {postalCode}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </div>
           
           {(categoryFilter || cityFilter || countryFilter || postalCodeFilter) && (
