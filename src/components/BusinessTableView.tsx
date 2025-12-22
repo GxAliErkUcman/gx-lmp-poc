@@ -40,7 +40,7 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
     { key: 'storeCode', label: 'Store Code', visible: true, required: true },
     { key: 'businessName', label: 'Business Name', visible: true, required: true },
     { key: 'primaryCategory', label: 'Category', visible: true },
-    { key: 'address', label: 'Address', visible: false },
+    { key: 'address', label: 'Address', visible: true },
     { key: 'city', label: 'City', visible: true },
     { key: 'country', label: 'Country', visible: true },
     { key: 'postalCode', label: 'Postal Code', visible: true },
