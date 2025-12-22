@@ -40,6 +40,7 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
     { key: 'storeCode', label: 'Store Code', visible: true, required: true },
     { key: 'businessName', label: 'Business Name', visible: true, required: true },
     { key: 'primaryCategory', label: 'Category', visible: true },
+    { key: 'address', label: 'Address', visible: false },
     { key: 'city', label: 'City', visible: true },
     { key: 'country', label: 'Country', visible: true },
     { key: 'postalCode', label: 'Postal Code', visible: true },
@@ -508,6 +509,11 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
                     )}
                     {column.key === 'city' && (
                       <span className="text-sm">{business.city || '-'}</span>
+                    )}
+                    {column.key === 'address' && (
+                      <div className="text-sm max-w-[300px] whitespace-normal">
+                        {[business.addressLine1, business.addressLine2].filter(Boolean).join(', ') || '-'}
+                      </div>
                     )}
                     {column.key === 'country' && (
                       <span className="text-sm">{business.country || '-'}</span>
