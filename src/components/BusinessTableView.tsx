@@ -29,6 +29,7 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
   const [categoryFilter, setCategoryFilter] = useState<string>('');
   const [cityFilter, setCityFilter] = useState<string>('');
   const [countryFilter, setCountryFilter] = useState<string>('');
+  const [postalCodeFilter, setPostalCodeFilter] = useState<string>('');
   const [showFilters, setShowFilters] = useState(false);
   const [manageColumnsOpen, setManageColumnsOpen] = useState(false);
   
@@ -50,44 +51,54 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
   const uniqueCategories = [...new Set(businesses.map(b => b.primaryCategory).filter(Boolean))];
   const uniqueCities = [...new Set(businesses.map(b => b.city).filter(Boolean))];
   const uniqueCountries = [...new Set(businesses.map(b => b.country).filter(Boolean))];
+  const uniquePostalCodes = [...new Set(businesses.map(b => b.postalCode).filter(Boolean))];
 
   // Filter businesses based on search term and filters
   const handleSearch = (term: string) => {
     setSearchTerm(term);
-    applyFilters(term, categoryFilter, cityFilter, countryFilter);
+    applyFilters(term, categoryFilter, cityFilter, countryFilter, postalCodeFilter);
   };
 
   const handleCategoryFilter = (category: string) => {
     const filterValue = category === "all" ? "" : category;
     setCategoryFilter(filterValue);
-    applyFilters(searchTerm, filterValue, cityFilter, countryFilter);
+    applyFilters(searchTerm, filterValue, cityFilter, countryFilter, postalCodeFilter);
   };
 
   const handleCityFilter = (city: string) => {
     const filterValue = city === "all" ? "" : city;
     setCityFilter(filterValue);
-    applyFilters(searchTerm, categoryFilter, filterValue, countryFilter);
+    applyFilters(searchTerm, categoryFilter, filterValue, countryFilter, postalCodeFilter);
   };
 
   const handleCountryFilter = (country: string) => {
     const filterValue = country === "all" ? "" : country;
     setCountryFilter(filterValue);
-    applyFilters(searchTerm, categoryFilter, cityFilter, filterValue);
+    applyFilters(searchTerm, categoryFilter, cityFilter, filterValue, postalCodeFilter);
   };
 
-  const applyFilters = (search: string, category: string, city: string, country: string) => {
+  const handlePostalCodeFilter = (postalCode: string) => {
+    const filterValue = postalCode === "all" ? "" : postalCode;
+    setPostalCodeFilter(filterValue);
+    applyFilters(searchTerm, categoryFilter, cityFilter, countryFilter, filterValue);
+  };
+
+  const applyFilters = (search: string, category: string, city: string, country: string, postalCode: string) => {
     let filtered = businesses.filter(business => {
       const matchesSearch = !search || 
         business.businessName?.toLowerCase().includes(search.toLowerCase()) ||
         business.city?.toLowerCase().includes(search.toLowerCase()) ||
         business.primaryCategory?.toLowerCase().includes(search.toLowerCase()) || 
-        business.storeCode?.toLowerCase().includes(search.toLowerCase());
+        business.storeCode?.toLowerCase().includes(search.toLowerCase()) ||
+        business.addressLine1?.toLowerCase().includes(search.toLowerCase()) ||
+        business.postalCode?.toLowerCase().includes(search.toLowerCase());
       
       const matchesCategory = !category || business.primaryCategory === category;
       const matchesCity = !city || business.city === city;
       const matchesCountry = !country || business.country === country;
+      const matchesPostalCode = !postalCode || business.postalCode === postalCode;
       
-      return matchesSearch && matchesCategory && matchesCity && matchesCountry;
+      return matchesSearch && matchesCategory && matchesCity && matchesCountry && matchesPostalCode;
     });
     
     setFilteredBusinesses(filtered);
@@ -98,6 +109,7 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
     setCategoryFilter('');
     setCityFilter('');
     setCountryFilter('');
+    setPostalCodeFilter('');
     setFilteredBusinesses(businesses);
   };
 
@@ -149,8 +161,8 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
 
   // Update filtered businesses when businesses prop changes
   React.useEffect(() => {
-    applyFilters(searchTerm, categoryFilter, cityFilter, countryFilter);
-  }, [businesses, searchTerm, categoryFilter, cityFilter, countryFilter]);
+    applyFilters(searchTerm, categoryFilter, cityFilter, countryFilter, postalCodeFilter);
+  }, [businesses, searchTerm, categoryFilter, cityFilter, countryFilter, postalCodeFilter]);
 
   const visibleColumns = columns.filter(col => col.visible);
 
@@ -264,9 +276,9 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
             >
               <Filter className="w-4 h-4" />
               <span className="sm:inline">Filters</span>
-              {(categoryFilter || cityFilter || countryFilter) && (
+              {(categoryFilter || cityFilter || countryFilter || postalCodeFilter) && (
                 <Badge variant="secondary" className="ml-1">
-                  {[categoryFilter, cityFilter, countryFilter].filter(Boolean).length}
+                  {[categoryFilter, cityFilter, countryFilter, postalCodeFilter].filter(Boolean).length}
                 </Badge>
               )}
             </Button>
@@ -361,8 +373,25 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
               </SelectContent>
             </Select>
           </div>
+
+          <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2">
+            <span className="text-xs sm:text-sm font-medium">Postal Code:</span>
+            <Select value={postalCodeFilter} onValueChange={handlePostalCodeFilter}>
+              <SelectTrigger className="w-full sm:w-48">
+                <SelectValue placeholder="All postal codes" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All postal codes</SelectItem>
+                {uniquePostalCodes.map(postalCode => (
+                  <SelectItem key={postalCode} value={postalCode}>
+                    {postalCode}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           
-          {(categoryFilter || cityFilter || countryFilter) && (
+          {(categoryFilter || cityFilter || countryFilter || postalCodeFilter) && (
             <Button
               variant="ghost"
               size="sm"
