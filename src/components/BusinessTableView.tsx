@@ -139,7 +139,7 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
   const isAllSelected = filteredBusinesses.length > 0 && 
     filteredBusinesses.every(business => selectedIds.includes(business.id));
 
-  const handleSort = (key: keyof Business) => {
+  const handleSort = (key: string) => {
     let direction: 'asc' | 'desc' = 'asc';
     
     // Check if the same column is clicked to toggle the direction
@@ -149,8 +149,10 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
 
     // Sort a copy of the array and update the state
     const sortedArray = [...filteredBusinesses].sort((a, b) => {
-      const aValue = a[key] || '';
-      const bValue = b[key] || '';
+      // Handle address column specially - sort by addressLine1
+      const sortKey = key === 'address' ? 'addressLine1' : key;
+      const aValue = a[sortKey as keyof Business] || '';
+      const bValue = b[sortKey as keyof Business] || '';
       if (aValue < bValue) {
         return direction === 'asc' ? -1 : 1;
       }
@@ -159,7 +161,7 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
       }
       return 0;
     });
-    setCurrentSort({ key, direction }); 
+    setCurrentSort({ key: key as keyof Business, direction }); 
     setFilteredBusinesses(sortedArray);
   };
 
@@ -459,10 +461,10 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
               </TableHead>
               {visibleColumns.map((column) => (
                 <TableHead key={column.key}>
-                  {['storeCode', 'businessName', 'primaryCategory', 'city'].includes(column.key) ? (
+                  {['storeCode', 'businessName', 'primaryCategory', 'city', 'address'].includes(column.key) ? (
                     <div
                       className="flex items-center gap-1 cursor-pointer text-gray-700 dark:text-gray-300"
-                      onClick={() => handleSort(column.key as keyof Business)}
+                      onClick={() => handleSort(column.key)}
                     >
                       <span>{column.label}</span>
                       {currentSort?.key === column.key && (
