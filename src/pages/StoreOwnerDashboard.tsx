@@ -17,7 +17,7 @@ import DeleteConfirmationDialog from '@/components/DeleteConfirmationDialog';
 import jasonerLogo from '@/assets/jasoner-horizontal-logo.png';
 
 const StoreOwnerDashboard = () => {
-  const { user, signOut } = useAuth();
+  const { user, signOut, loading: authLoading } = useAuth();
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [loading, setLoading] = useState(true);
   const [businessDialogOpen, setBusinessDialogOpen] = useState(false);
@@ -83,6 +83,15 @@ const StoreOwnerDashboard = () => {
     if (!user) return;
     fetchBusinesses();
   }, [user]);
+
+  // Wait for auth to initialize before checking user/redirecting
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   if (!user) {
     return <Navigate to="/auth" replace />;

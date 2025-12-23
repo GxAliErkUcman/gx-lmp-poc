@@ -91,10 +91,13 @@ serve(async (req) => {
 
     console.log('Magic link generated successfully for user:', existingUser.id);
 
-    // Return the magic link
+    // Return the magic link with debugging metadata
     return new Response(
       JSON.stringify({ 
-        magic_link: linkData.properties.action_link
+        magic_link: linkData.properties.action_link,
+        requested_email: email,
+        resolved_user_id: existingUser.id,
+        resolved_email: existingUser.email
       }),
       { 
         status: 200, 

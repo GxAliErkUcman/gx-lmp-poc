@@ -39,7 +39,7 @@ interface ServiceUser {
 }
 
 const ClientAdminPanel = () => {
-  const { user, signOut } = useAuth();
+  const { user, signOut, loading: authLoading } = useAuth();
   const { hasRole } = useAdmin();
   const userId = user?.id;
   const navigate = useNavigate();
@@ -243,6 +243,15 @@ const ClientAdminPanel = () => {
       });
     }
   };
+
+  // Wait for auth to initialize before checking user/redirecting
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   if (!user) {
     return <Navigate to="/auth" replace />;

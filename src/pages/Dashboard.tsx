@@ -22,7 +22,7 @@ import DeleteConfirmationDialog from '@/components/DeleteConfirmationDialog';
 import jasonerLogo from '@/assets/jasoner-horizontal-logo.png';
 
 const Dashboard = () => {
-  const { user, signOut } = useAuth();
+  const { user, signOut, loading: authLoading } = useAuth();
   const { hasRole } = useAdmin();
   const navigate = useNavigate();
   const [businesses, setBusinesses] = useState<Business[]>([]);
@@ -126,6 +126,15 @@ useEffect(() => {
     
     checkRoleAndRedirect();
   }, [user]);
+
+  // Wait for auth to initialize before checking user/redirecting
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   if (!user) {
     return <Navigate to="/auth" replace />;
