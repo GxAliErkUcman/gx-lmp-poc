@@ -22,6 +22,14 @@ export function AuthCodeExchange() {
       const refresh_token = hashParams.get("refresh_token");
       const error_description = hashParams.get("error_description") || hashParams.get("error");
 
+      // Non-sensitive debug breadcrumbs (no tokens)
+      console.log("[AuthCodeExchange] url", {
+        pathname: url.pathname,
+        hasCode: Boolean(code),
+        hasHashTokens: Boolean(access_token && refresh_token),
+        hasError: Boolean(error_description),
+      });
+
       const shouldHandle = Boolean(code || (access_token && refresh_token) || error_description);
       if (!shouldHandle) return;
       if (exchanging) return;
@@ -39,8 +47,10 @@ export function AuthCodeExchange() {
         }
 
         if (code) {
+          console.log("[AuthCodeExchange] exchanging code for session");
           const { error } = await supabase.auth.exchangeCodeForSession(code);
           if (error) {
+            console.error("[AuthCodeExchange] exchangeCodeForSession error", error.message);
             toast({
               title: "Login failed",
               description: error.message,
@@ -50,8 +60,10 @@ export function AuthCodeExchange() {
             return;
           }
         } else if (access_token && refresh_token) {
+          console.log("[AuthCodeExchange] setting session from hash tokens");
           const { error } = await supabase.auth.setSession({ access_token, refresh_token });
           if (error) {
+            console.error("[AuthCodeExchange] setSession error", error.message);
             toast({
               title: "Login failed",
               description: error.message,
