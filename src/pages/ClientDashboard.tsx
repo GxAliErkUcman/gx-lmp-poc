@@ -31,7 +31,7 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 const ENERGIE_360_CLIENT_ID = 'e77c44c5-0585-4225-a5ea-59a38edb85fb';
 
 const ClientDashboard = () => {
-  const { user, signOut } = useAuth();
+  const { user, signOut, loading: authLoading } = useAuth();
   const { hasRole } = useAdmin();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -206,6 +206,15 @@ const ClientDashboard = () => {
       if (!silent) setLoading(false);
     }
   };
+
+  // Wait for auth to initialize before checking user/redirecting
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   if (!user) {
     return <Navigate to="/auth" replace />;
