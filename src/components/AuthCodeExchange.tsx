@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
@@ -8,6 +9,7 @@ import { toast } from "@/hooks/use-toast";
  * Without this, users can be redirected to /auth and appear to "need a password".
  */
 export function AuthCodeExchange() {
+  const { setUrlAuthProcessing } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [exchanging, setExchanging] = useState(false);
@@ -34,6 +36,7 @@ export function AuthCodeExchange() {
       if (!shouldHandle) return;
       if (exchanging) return;
 
+      setUrlAuthProcessing(true);
       setExchanging(true);
       try {
         if (error_description) {
@@ -90,6 +93,7 @@ export function AuthCodeExchange() {
         navigate("/auth", { replace: true });
       } finally {
         setExchanging(false);
+        setUrlAuthProcessing(false);
       }
     };
 

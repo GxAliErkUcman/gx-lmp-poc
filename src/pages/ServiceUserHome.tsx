@@ -26,7 +26,7 @@ interface ClientInfo {
 }
 
 const ServiceUserHome = () => {
-  const { user, signOut, loading: authLoading } = useAuth();
+  const { user, signOut, loading: authLoading, urlAuthProcessing } = useAuth();
   const { hasRole } = useAdmin();
   const navigate = useNavigate();
   const [clients, setClients] = useState<ClientInfo[]>([]);
@@ -177,8 +177,8 @@ const ServiceUserHome = () => {
     }
   };
 
-  // Wait for auth to initialize before checking user/redirecting
-  if (authLoading) {
+  // Wait for auth (and URL-based login) to initialize before checking user/redirecting
+  if (authLoading || urlAuthProcessing) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin" />

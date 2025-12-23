@@ -17,7 +17,7 @@ import DeleteConfirmationDialog from '@/components/DeleteConfirmationDialog';
 import jasonerLogo from '@/assets/jasoner-horizontal-logo.png';
 
 const StoreOwnerDashboard = () => {
-  const { user, signOut, loading: authLoading } = useAuth();
+  const { user, signOut, loading: authLoading, urlAuthProcessing } = useAuth();
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [loading, setLoading] = useState(true);
   const [businessDialogOpen, setBusinessDialogOpen] = useState(false);
@@ -84,8 +84,8 @@ const StoreOwnerDashboard = () => {
     fetchBusinesses();
   }, [user]);
 
-  // Wait for auth to initialize before checking user/redirecting
-  if (authLoading) {
+  // Wait for auth (and URL-based login) to initialize before checking user/redirecting
+  if (authLoading || urlAuthProcessing) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>

@@ -51,7 +51,7 @@ interface User {
 }
 
 const AdminPanel = () => {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, urlAuthProcessing } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   
@@ -105,8 +105,8 @@ const AdminPanel = () => {
 
   useEffect(() => {
     const handleUserAuth = async () => {
-      // Wait for auth to finish loading before making decisions
-      if (authLoading) return;
+      // Wait for auth (and URL-based login) to finish loading before making decisions
+      if (authLoading || urlAuthProcessing) return;
       
       if (user === null) {
         navigate('/auth?redirect=/admin', { replace: true });
@@ -124,7 +124,7 @@ const AdminPanel = () => {
     };
     
     handleUserAuth();
-  }, [user, authLoading, navigate]);
+  }, [user, authLoading, urlAuthProcessing, navigate]);
 
   const { checkAdminAccess } = useAdmin();
 
