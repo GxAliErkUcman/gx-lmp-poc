@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -17,6 +17,7 @@ import ServiceUserHome from "./pages/ServiceUserHome";
 import ClientDashboard from "./pages/ClientDashboard";
 import ClientAdminPanel from "./pages/ClientAdminPanel";
 import StoreOwnerDashboard from "./pages/StoreOwnerDashboard";
+import AuthCallback from "./pages/AuthCallback";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +32,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<AuthPage />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/admin" element={<AdminPanel />} />
             <Route path="/service-user-home" element={<ServiceUserHome />} />
@@ -49,3 +51,4 @@ const App = () => (
 );
 
 export default App;
+

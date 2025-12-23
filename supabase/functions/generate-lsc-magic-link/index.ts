@@ -71,8 +71,11 @@ serve(async (req) => {
     console.log('Existing user found:', existingUser.id);
 
     // Step 4: Generate magic link
-    const redirectUrl = `${req.headers.get('origin') || 'https://gx-lmp.lovable.app'}/client-dashboard`;
-    
+    // Important: Supabase email-link auth MUST redirect back to the app so the client can exchange the code for a session.
+    // We send users to a dedicated callback route that completes the exchange and then forwards them.
+    const baseOrigin = req.headers.get('origin') || 'https://gx-lmp.lovable.app';
+    const redirectUrl = `${baseOrigin}/auth/callback?redirect=/client-dashboard`;
+
     const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
       type: 'magiclink',
       email: email,
