@@ -14,7 +14,8 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "next-themes";
-import { Settings, Sun, Moon, Monitor, Key, Mail, Shield } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { Settings, Sun, Moon, Monitor, Key, Mail, Shield, Languages } from "lucide-react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Separator } from "@/components/ui/separator";
 
@@ -40,6 +41,9 @@ export const UserSettingsDialog = ({
   const { toast } = useToast();
   const { user } = useAuth();
   const { theme, setTheme } = useTheme();
+  const { t, i18n } = useTranslation();
+
+  const currentLanguage = i18n.language?.startsWith('de') ? 'de' : 'en';
 
   useEffect(() => {
     const fetchUserRole = async () => {
@@ -66,8 +70,8 @@ export const UserSettingsDialog = ({
 
     if (newPassword.length < 8) {
       toast({
-        title: "Password too short",
-        description: "Use at least 8 characters.",
+        title: t('validation.passwordTooShort'),
+        description: t('validation.passwordTooShort'),
         variant: "destructive",
       });
       return;
@@ -75,8 +79,8 @@ export const UserSettingsDialog = ({
 
     if (newPassword !== confirmPassword) {
       toast({
-        title: "Passwords do not match",
-        description: "Please re-enter matching passwords.",
+        title: t('validation.passwordsMustMatch'),
+        description: t('validation.passwordsMustMatch'),
         variant: "destructive",
       });
       return;
@@ -107,7 +111,7 @@ export const UserSettingsDialog = ({
       }
 
       toast({
-        title: "Password updated",
+        title: t('messages.success'),
         description: "Your password has been changed successfully.",
       });
       setPasswordDialogOpen(false);
@@ -115,7 +119,7 @@ export const UserSettingsDialog = ({
       setConfirmPassword("");
     } catch (err: any) {
       toast({
-        title: "Update failed",
+        title: t('messages.error'),
         description: err.message || "Could not update password.",
         variant: "destructive",
       });
@@ -133,8 +137,14 @@ export const UserSettingsDialog = ({
     }
   };
 
+  const handleLanguageChange = (value: string) => {
+    if (value) {
+      i18n.changeLanguage(value);
+    }
+  };
+
   const formatRole = (role: string | null) => {
-    if (!role) return "Loading...";
+    if (!role) return t('status.loading');
     return role
       .split("_")
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
@@ -146,12 +156,12 @@ export const UserSettingsDialog = ({
       <DialogTrigger asChild>
         <Button variant={variant} size={size} className={triggerClassName}>
           <Settings className="w-4 h-4" />
-          {showLabel && <span className="hidden sm:inline ml-2">Settings</span>}
+          {showLabel && <span className="hidden sm:inline ml-2">{t('settings.title')}</span>}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Account Settings</DialogTitle>
+          <DialogTitle>{t('settings.title')}</DialogTitle>
           <DialogDescription>
             Manage your account preferences and security settings.
           </DialogDescription>
@@ -161,13 +171,13 @@ export const UserSettingsDialog = ({
           {/* Account Information Section */}
           <div className="space-y-3">
             <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-              Account
+              {t('settings.account')}
             </h4>
             <div className="space-y-3 rounded-lg border p-4">
               <div className="flex items-center gap-3">
                 <Mail className="h-4 w-4 text-muted-foreground" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs text-muted-foreground">Email</p>
+                  <p className="text-xs text-muted-foreground">{t('settings.email')}</p>
                   <p className="text-sm font-medium truncate">{user?.email}</p>
                 </div>
               </div>
@@ -175,7 +185,7 @@ export const UserSettingsDialog = ({
               <div className="flex items-center gap-3">
                 <Shield className="h-4 w-4 text-muted-foreground" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs text-muted-foreground">Role</p>
+                  <p className="text-xs text-muted-foreground">{t('settings.role')}</p>
                   <p className="text-sm font-medium">{formatRole(userRole)}</p>
                 </div>
               </div>
@@ -185,7 +195,7 @@ export const UserSettingsDialog = ({
           {/* Appearance Section */}
           <div className="space-y-3">
             <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-              Appearance
+              {t('settings.appearance')}
             </h4>
             <div className="rounded-lg border p-4">
               <ToggleGroup
@@ -200,7 +210,7 @@ export const UserSettingsDialog = ({
                   className="gap-2"
                 >
                   <Sun className="h-4 w-4" />
-                  Light
+                  {t('theme.light')}
                 </ToggleGroupItem>
                 <ToggleGroupItem
                   value="dark"
@@ -208,7 +218,7 @@ export const UserSettingsDialog = ({
                   className="gap-2"
                 >
                   <Moon className="h-4 w-4" />
-                  Dark
+                  {t('theme.dark')}
                 </ToggleGroupItem>
                 <ToggleGroupItem
                   value="system"
@@ -216,7 +226,39 @@ export const UserSettingsDialog = ({
                   className="gap-2"
                 >
                   <Monitor className="h-4 w-4" />
-                  System
+                  {t('theme.system')}
+                </ToggleGroupItem>
+              </ToggleGroup>
+            </div>
+          </div>
+
+          {/* Language Section */}
+          <div className="space-y-3">
+            <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+              {t('settings.language')}
+            </h4>
+            <div className="rounded-lg border p-4">
+              <ToggleGroup
+                type="single"
+                value={currentLanguage}
+                onValueChange={handleLanguageChange}
+                className="justify-start"
+              >
+                <ToggleGroupItem
+                  value="en"
+                  aria-label="English"
+                  className="gap-2"
+                >
+                  <span className="text-base">🇬🇧</span>
+                  English
+                </ToggleGroupItem>
+                <ToggleGroupItem
+                  value="de"
+                  aria-label="Deutsch"
+                  className="gap-2"
+                >
+                  <span className="text-base">🇩🇪</span>
+                  Deutsch
                 </ToggleGroupItem>
               </ToggleGroup>
             </div>
@@ -225,7 +267,7 @@ export const UserSettingsDialog = ({
           {/* Security Section */}
           <div className="space-y-3">
             <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-              Security
+              {t('settings.security')}
             </h4>
             <div className="rounded-lg border p-4">
               <Dialog
@@ -235,12 +277,12 @@ export const UserSettingsDialog = ({
                 <DialogTrigger asChild>
                   <Button variant="outline" className="w-full gap-2">
                     <Key className="h-4 w-4" />
-                    Change Password
+                    {t('settings.changePassword')}
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-[400px]">
                   <DialogHeader>
-                    <DialogTitle>Change Password</DialogTitle>
+                    <DialogTitle>{t('settings.changePassword')}</DialogTitle>
                     <DialogDescription>
                       Enter your new password below.
                     </DialogDescription>
@@ -269,7 +311,7 @@ export const UserSettingsDialog = ({
                       />
                     </div>
                     <Button type="submit" className="w-full" disabled={loading}>
-                      {loading ? "Updating..." : "Update Password"}
+                      {loading ? t('status.loading') : t('actions.update')}
                     </Button>
                   </form>
                 </DialogContent>
