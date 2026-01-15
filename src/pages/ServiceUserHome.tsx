@@ -10,6 +10,7 @@ import { Eye, MapPin, Users, Loader2, LogOut, UserPlus } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import jasonerLogo from '@/assets/jasoner-horizontal-logo.png';
 import ServiceUserCreateDialog from '@/components/ServiceUserCreateDialog';
+import { UserSettingsDialog } from '@/components/UserSettingsDialog';
 
 interface ClientInfo {
   id: string;
@@ -235,6 +236,7 @@ const ServiceUserHome = () => {
             </div>
             <div className="flex items-center gap-4">
               <span className="text-sm text-muted-foreground">{user.email}</span>
+              <UserSettingsDialog variant="ghost" />
               <Button variant="ghost" size="sm" onClick={handleSignOut}>
                 <LogOut className="w-4 h-4 mr-2" />
                 Sign Out

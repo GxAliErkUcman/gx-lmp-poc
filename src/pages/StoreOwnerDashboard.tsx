@@ -14,6 +14,7 @@ import BusinessTableView from '@/components/BusinessTableView';
 import MultiEditDialog from '@/components/MultiEditDialog';
 import type { Business } from '@/types/business';
 import DeleteConfirmationDialog from '@/components/DeleteConfirmationDialog';
+import { UserSettingsDialog } from '@/components/UserSettingsDialog';
 import jasonerLogo from '@/assets/jasoner-horizontal-logo.png';
 
 const StoreOwnerDashboard = () => {
@@ -200,6 +201,7 @@ const StoreOwnerDashboard = () => {
                 />
               </div>
             )}
+            <UserSettingsDialog variant="outline" />
             <Button onClick={signOut} variant="outline" className="shadow-modern text-xs sm:text-sm">
               <span className="hidden sm:inline">Sign Out</span>
               <span className="sm:hidden">Exit</span>
