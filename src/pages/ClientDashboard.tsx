@@ -345,7 +345,7 @@ const ClientDashboard = () => {
                 className="px-2 sm:px-3"
               >
                 <ArrowLeft className="w-4 h-4 sm:mr-2" />
-                <span className="hidden sm:inline">Back to Overview</span>
+                <span className="hidden sm:inline">{t('nav.backToOverview')}</span>
               </Button>
               <img src={jasonerLogo} alt="Logo" className="h-6 sm:h-8" />
               {/* Client Selector */}
@@ -367,7 +367,7 @@ const ClientDashboard = () => {
               <UserSettingsDialog variant="ghost" />
               <Button variant="ghost" size="sm" onClick={() => signOut()} className="px-2 sm:px-3">
                 <LogOut className="w-4 h-4 sm:mr-2" />
-                <span className="hidden sm:inline">Sign Out</span>
+                <span className="hidden sm:inline">{t('nav.signOut')}</span>
               </Button>
             </div>
           </div>
@@ -388,9 +388,9 @@ const ClientDashboard = () => {
                   {accessibleClients.find(c => c.id === selectedClientId)?.name || 'Client Dashboard'}
                 </h1>
                 <div className="flex flex-wrap gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
-                  <span>Total: {dataSourceFilteredBusinesses.length}{dataSourceFilter !== 'all' ? ` (of ${businesses.length})` : ''}</span>
-                  <span>Active: {activeBusinesses.length}</span>
-                  <span>Pending: {pendingBusinesses.length}</span>
+                  <span>{t('status.total')}: {dataSourceFilteredBusinesses.length}{dataSourceFilter !== 'all' ? ` (of ${businesses.length})` : ''}</span>
+                  <span>{t('status.active')}: {activeBusinesses.length}</span>
+                  <span>{t('status.pending')}: {pendingBusinesses.length}</span>
                 </div>
               </div>
               
@@ -410,20 +410,20 @@ const ClientDashboard = () => {
                   onClick={() => setVersionHistoryOpen(true)}
                 >
                   <HistoryIcon className="w-4 h-4 mr-2" />
-                  Version History
+                  {t('actions.versionHistory')}
                 </Button>
                 <Button variant="outline" onClick={() => setSettingsDialogOpen(true)}>
                   <Settings className="w-4 h-4 mr-2" />
-                  Settings
+                  {t('actions.settings')}
                 </Button>
                 <Button variant="outline" onClick={() => setCustomServicesDialogOpen(true)}>
                   <Wrench className="w-4 h-4 mr-2" />
-                  Custom Services
+                  {t('actions.customServices')}
                 </Button>
                 {!isImportDisabled() && (
                   <Button variant="outline" onClick={() => setImportDialogOpen(true)}>
                     <Upload className="w-4 h-4 mr-2" />
-                    Import
+                    {t('actions.import')}
                   </Button>
                 )}
                 <Button onClick={() => {
@@ -431,7 +431,7 @@ const ClientDashboard = () => {
                   setBusinessDialogOpen(true);
                 }}>
                   <Plus className="w-4 h-4 mr-2" />
-                  Add Business
+                  {t('actions.addBusiness')}
                 </Button>
               </div>
 
@@ -445,7 +445,7 @@ const ClientDashboard = () => {
                   className="flex-1"
                 >
                   <Plus className="w-4 h-4 mr-2" />
-                  Add Business
+                  {t('actions.addBusiness')}
                 </Button>
                 <Sheet>
                   <SheetTrigger asChild>
@@ -470,20 +470,20 @@ const ClientDashboard = () => {
                         className="w-full justify-start"
                       >
                         <HistoryIcon className="w-4 h-4 mr-2" />
-                        Version History
+                        {t('actions.versionHistory')}
                       </Button>
                       <Button variant="outline" onClick={() => setSettingsDialogOpen(true)} className="w-full justify-start">
                         <Settings className="w-4 h-4 mr-2" />
-                        Settings
+                        {t('actions.settings')}
                       </Button>
                       <Button variant="outline" onClick={() => setCustomServicesDialogOpen(true)} className="w-full justify-start">
                         <Wrench className="w-4 h-4 mr-2" />
-                        Custom Services
+                        {t('actions.customServices')}
                       </Button>
                       {!isImportDisabled() && (
                         <Button variant="outline" onClick={() => setImportDialogOpen(true)} className="w-full justify-start">
                           <Upload className="w-4 h-4 mr-2" />
-                          Import
+                          {t('actions.import')}
                         </Button>
                       )}
                       <Button 
@@ -491,7 +491,7 @@ const ClientDashboard = () => {
                         className="w-full justify-start"
                       >
                         <UserPlus className="w-4 h-4 mr-2" />
-                        Create User
+                        {t('actions.createUser')}
                       </Button>
                     </div>
                   </SheetContent>
@@ -499,7 +499,6 @@ const ClientDashboard = () => {
               </div>
             </div>
 
-            {/* Create User Button - Desktop only (mobile is in sheet) */}
             <div className="mb-6 hidden md:block">
               <Button 
                 onClick={() => setCreateUserDialogOpen(true)}
@@ -507,10 +506,10 @@ const ClientDashboard = () => {
                 className="w-full sm:w-auto"
               >
                 <UserPlus className="w-5 h-5 mr-2" />
-                Create User for {selectedClient?.name}
+                {t('actions.createUser')} {selectedClient?.name}
               </Button>
               <p className="text-xs text-muted-foreground mt-2">
-                Create Client Admins, Users, or Store Owners for this client
+                {t('messages.createUserDescription')}
               </p>
             </div>
 
@@ -550,10 +549,10 @@ const ClientDashboard = () => {
             {businesses.length === 0 ? (
               <Card>
                 <CardContent className="py-8 sm:py-12 text-center">
-                  <p className="text-muted-foreground mb-4">No businesses found for this client</p>
+                  <p className="text-muted-foreground mb-4">{t('messages.noBusinessesFound')}</p>
                   <Button onClick={() => setBusinessDialogOpen(true)}>
                     <Plus className="w-4 h-4 mr-2" />
-                    Add Your First Business
+                    {t('actions.addFirstBusiness')}
                   </Button>
                 </CardContent>
               </Card>
@@ -567,7 +566,7 @@ const ClientDashboard = () => {
                     {t('tabs.needAttention')} ({pendingBusinesses.length})
                   </TabsTrigger>
                   <TabsTrigger value="new" className="flex-1 min-w-[100px] text-xs sm:text-sm">
-                    New ({newBusinesses.length})
+                    {t('tabs.new')} ({newBusinesses.length})
                   </TabsTrigger>
                 </TabsList>
 

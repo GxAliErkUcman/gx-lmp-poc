@@ -149,11 +149,10 @@ const OpeningHours = ({ hours, onHoursChange, disabled = false }: OpeningHoursPr
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Clock className="w-5 h-5" />
-          Opening Hours
+          {t('sections.openingHours')}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Quick actions */}
         <div className="flex flex-wrap gap-2">
           <Button
             type="button"
@@ -162,7 +161,7 @@ const OpeningHours = ({ hours, onHoursChange, disabled = false }: OpeningHoursPr
             onClick={() => setAllWeekdays('09:00-18:00')}
             disabled={disabled}
           >
-            Weekdays 9-6
+            {t('openingHours.weekdays9to6')}
           </Button>
           <Button
             type="button"
@@ -171,7 +170,7 @@ const OpeningHours = ({ hours, onHoursChange, disabled = false }: OpeningHoursPr
             onClick={() => setAllWeekdays('08:00-17:00')}
             disabled={disabled}
           >
-            Weekdays 8-5
+            {t('openingHours.weekdays8to5')}
           </Button>
           <Button
             type="button"
@@ -180,7 +179,7 @@ const OpeningHours = ({ hours, onHoursChange, disabled = false }: OpeningHoursPr
             onClick={() => setAllWeekend('10:00-14:00')}
             disabled={disabled}
           >
-            Weekend 10-2
+            {t('openingHours.weekend10to2')}
           </Button>
           <Button
             type="button"
@@ -189,7 +188,7 @@ const OpeningHours = ({ hours, onHoursChange, disabled = false }: OpeningHoursPr
             onClick={() => setAllWeekend('Closed')}
             disabled={disabled}
           >
-            Close Weekends
+            {t('openingHours.closeWeekends')}
           </Button>
         </div>
 
@@ -239,7 +238,7 @@ const OpeningHours = ({ hours, onHoursChange, disabled = false }: OpeningHoursPr
                     }}
                     disabled={disabled}
                   >
-                    {isClosed ? 'Closed' : 'Close'}
+                    {isClosed ? t('actions.closed') : t('actions.close')}
                   </Button>
                 </div>
               </div>

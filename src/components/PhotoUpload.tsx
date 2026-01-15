@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { validateCoverPhoto, validateOtherPhoto, validateLogoImage } from '@/lib/imageValidation';
+import { useTranslation } from 'react-i18next';
 
 interface PhotoUploadProps {
   photos: string[];
@@ -17,6 +18,7 @@ interface PhotoUploadProps {
 }
 
 const PhotoUpload = ({ photos, onPhotosChange, maxPhotos = 10, disabled = false, photoType = 'other' }: PhotoUploadProps) => {
+  const { t } = useTranslation();
   const [uploading, setUploading] = useState(false);
   const { user } = useAuth();
 
@@ -133,12 +135,12 @@ const PhotoUpload = ({ photos, onPhotosChange, maxPhotos = 10, disabled = false,
           <input {...getInputProps()} disabled={disabled} />
           <Upload className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
           <p className="text-sm font-medium">
-            {isDragActive ? 'Drop photos here' : 'Drag & drop photos here, or click to select'}
+            {isDragActive ? t('photos.dropHere') : t('photos.dragAndDrop')}
           </p>
           <p className="text-xs text-muted-foreground mt-1">
-            {photos.length}/{maxPhotos} photos uploaded
+            {photos.length}/{maxPhotos} {t('photos.photosUploaded')}
           </p>
-          {uploading && <p className="text-xs text-muted-foreground mt-2">Uploading...</p>}
+          {uploading && <p className="text-xs text-muted-foreground mt-2">{t('status.loading')}</p>}
         </div>
       )}
 

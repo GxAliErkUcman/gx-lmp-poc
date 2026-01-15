@@ -11,6 +11,7 @@ import { format, eachDayOfInterval } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { DateRange } from 'react-day-picker';
 import { validateSpecialHours } from '@/lib/validation';
+import { useTranslation } from 'react-i18next';
 
 export interface SpecialHourEntry {
   date: Date;
@@ -67,6 +68,7 @@ export function formatSpecialHoursToSchema(specialHours: SpecialHourEntry[]): st
 }
 
 const SpecialHours = ({ specialHours, onSpecialHoursChange, disabled = false }: SpecialHoursProps) => {
+  const { t } = useTranslation();
   const [dateRangeDialogOpen, setDateRangeDialogOpen] = useState(false);
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [rangeHours, setRangeHours] = useState({ open: '09:00', close: '17:00', isClosed: true });
@@ -144,19 +146,19 @@ const SpecialHours = ({ specialHours, onSpecialHoursChange, disabled = false }: 
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Clock className="w-5 h-5" />
-          Special Hours
+          {t('sections.specialHours')}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <p className="text-sm text-muted-foreground">
-          Set special hours for holidays and other exceptions. These override regular opening hours.
+          {t('specialHours.description')}
         </p>
 
         {specialHours.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             <Clock className="w-12 h-12 mx-auto mb-4 opacity-50" />
-            <p>No special hours added yet</p>
-            <p className="text-xs">Click "Add Special Hours" to get started</p>
+            <p>{t('specialHours.noHoursAdded')}</p>
+            <p className="text-xs">{t('specialHours.clickToStart')}</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -165,9 +167,8 @@ const SpecialHours = ({ specialHours, onSpecialHoursChange, disabled = false }: 
               
               return (
                 <div key={index} className="flex items-center gap-3 p-4 border rounded-lg">
-                  {/* Date Picker */}
                   <div className="flex-1">
-                    <Label className="text-xs text-muted-foreground mb-1 block">Date</Label>
+                    <Label className="text-xs text-muted-foreground mb-1 block">{t('specialHours.date')}</Label>
                     <Popover>
                       <PopoverTrigger asChild>
                         <Button
@@ -179,7 +180,7 @@ const SpecialHours = ({ specialHours, onSpecialHoursChange, disabled = false }: 
                           disabled={disabled}
                         >
                           <CalendarIcon className="mr-2 h-4 w-4" />
-                          {entry.date ? format(entry.date, "PPP") : <span>Pick a date</span>}
+                          {entry.date ? format(entry.date, "PPP") : <span>{t('specialHours.pickDate')}</span>}
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0" align="start">
@@ -194,9 +195,8 @@ const SpecialHours = ({ specialHours, onSpecialHoursChange, disabled = false }: 
                     </Popover>
                   </div>
 
-                  {/* Hours Input */}
                   <div className="flex-1">
-                    <Label className="text-xs text-muted-foreground mb-1 block">Hours</Label>
+                    <Label className="text-xs text-muted-foreground mb-1 block">{t('specialHours.hours')}</Label>
                     <div className="flex items-center gap-2">
                       <Input
                         type="time"
@@ -224,9 +224,8 @@ const SpecialHours = ({ specialHours, onSpecialHoursChange, disabled = false }: 
                     </div>
                   </div>
 
-                  {/* Closed Toggle */}
                   <div className="flex flex-col items-center gap-2">
-                    <Label className="text-xs text-muted-foreground">Status</Label>
+                    <Label className="text-xs text-muted-foreground">{t('status.active')}</Label>
                     <Button
                       type="button"
                       variant={isClosed ? "default" : "outline"}
@@ -237,11 +236,10 @@ const SpecialHours = ({ specialHours, onSpecialHoursChange, disabled = false }: 
                       }}
                       disabled={disabled}
                     >
-                      {isClosed ? 'Closed' : 'Open'}
+                      {isClosed ? t('actions.closed') : t('status.open')}
                     </Button>
                   </div>
 
-                  {/* Remove Button */}
                   <Button
                     type="button"
                     variant="ghost"
@@ -267,7 +265,7 @@ const SpecialHours = ({ specialHours, onSpecialHoursChange, disabled = false }: 
             disabled={disabled}
           >
             <Plus className="w-4 h-4 mr-2" />
-            Add Single Date
+            {t('actions.addSingleDate')}
           </Button>
           <Button
             type="button"
@@ -277,14 +275,13 @@ const SpecialHours = ({ specialHours, onSpecialHoursChange, disabled = false }: 
             disabled={disabled}
           >
             <CalendarRange className="w-4 h-4 mr-2" />
-            Add Date Range
+            {t('actions.addDateRange')}
           </Button>
         </div>
 
-        {/* Preview of generated format with validation */}
         {specialHours.length > 0 && (
           <div className="mt-4 p-3 bg-muted rounded-lg">
-            <Label className="text-xs font-medium mb-1 block">Generated Format:</Label>
+            <Label className="text-xs font-medium mb-1 block">{t('specialHours.generatedFormat')}:</Label>
             <code className="text-xs text-muted-foreground break-all">
               {formatSpecialHoursToSchema(specialHours)}
             </code>
@@ -313,19 +310,18 @@ const SpecialHours = ({ specialHours, onSpecialHoursChange, disabled = false }: 
           </div>
         )}
 
-        {/* Date Range Dialog */}
         <Dialog open={dateRangeDialogOpen} onOpenChange={setDateRangeDialogOpen}>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <CalendarRange className="w-5 h-5" />
-                Add Special Hours for Date Range
+                {t('actions.addDateRange')}
               </DialogTitle>
             </DialogHeader>
 
             <div className="space-y-4">
               <div>
-                <Label className="mb-2 block">Select Date Range</Label>
+                <Label className="mb-2 block">{t('specialHours.selectDateRange')}</Label>
                 <Calendar
                   mode="range"
                   selected={dateRange}
@@ -335,14 +331,14 @@ const SpecialHours = ({ specialHours, onSpecialHoursChange, disabled = false }: 
                 />
                 {dateRange?.from && dateRange?.to && (
                   <p className="text-sm text-muted-foreground mt-2">
-                    Selected: {format(dateRange.from, "PPP")} - {format(dateRange.to, "PPP")} 
-                    ({eachDayOfInterval({ start: dateRange.from, end: dateRange.to }).length} days)
+                    {t('specialHours.selected')}: {format(dateRange.from, "PPP")} - {format(dateRange.to, "PPP")} 
+                    ({eachDayOfInterval({ start: dateRange.from, end: dateRange.to }).length} {t('specialHours.daysSelected')})
                   </p>
                 )}
               </div>
 
               <div className="space-y-3">
-                <Label>Hours for All Selected Days</Label>
+                <Label>{t('specialHours.hoursForAllDays')}</Label>
                 <div className="flex items-center gap-3">
                   <div className="flex-1 flex items-center gap-2">
                     <Input
@@ -369,7 +365,7 @@ const SpecialHours = ({ specialHours, onSpecialHoursChange, disabled = false }: 
                     size="sm"
                     onClick={() => setRangeHours({ ...rangeHours, isClosed: !rangeHours.isClosed })}
                   >
-                    {rangeHours.isClosed ? 'Closed' : 'Open'}
+                    {rangeHours.isClosed ? t('actions.closed') : t('status.open')}
                   </Button>
                 </div>
               </div>
@@ -377,14 +373,14 @@ const SpecialHours = ({ specialHours, onSpecialHoursChange, disabled = false }: 
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setDateRangeDialogOpen(false)}>
-                Cancel
+                {t('actions.cancel')}
               </Button>
               <Button 
                 type="button" 
                 onClick={applyDateRange}
                 disabled={!dateRange?.from || !dateRange?.to}
               >
-                Apply to All Dates
+                {t('specialHours.applyToAllDates')}
               </Button>
             </DialogFooter>
           </DialogContent>

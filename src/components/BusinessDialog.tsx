@@ -92,7 +92,8 @@ interface BusinessDialogProps {
 }
 
 const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: BusinessDialogProps) => {
-  const { t } = useTranslation('fields');
+  const { t } = useTranslation();
+  const { t: tFields } = useTranslation('fields');
   const { user } = useAuth();
   const { isFieldLocked, isGroupLocked, loading: permissionsLoading } = useFieldPermissions(clientId || business?.client_id);
   const [loading, setLoading] = useState(false);
@@ -597,9 +598,9 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[95vw] max-w-[900px] max-h-[90vh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
-          <DialogTitle className="text-lg sm:text-xl">{business ? 'Edit Business' : 'Add New Business'}</DialogTitle>
+          <DialogTitle className="text-lg sm:text-xl">{business ? t('dialog.editBusiness') : t('dialog.addNewBusiness')}</DialogTitle>
           <DialogDescription className="text-sm">
-            {business ? 'Update business information' : 'Enter the details for your new business location'}
+            {business ? t('dialog.updateBusinessInfo') : t('dialog.enterBusinessDetails')}
           </DialogDescription>
         </DialogHeader>
 
@@ -611,12 +612,12 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
           {/* Basic Information */}
           <Card>
             <CardHeader className="pb-2 sm:pb-4">
-              <CardTitle className="text-base sm:text-lg">Basic Information</CardTitle>
+              <CardTitle className="text-base sm:text-lg">{t('sections.basicInformation')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 sm:space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <Label htmlFor="storeCode" className="text-sm">{t('storeCode')} *</Label>
+                  <Label htmlFor="storeCode" className="text-sm">{tFields('storeCode')} *</Label>
                   <LockedFieldWrapper isLocked={isFieldLocked('storeCode')}>
                     <Input 
                       {...register('storeCode')} 
@@ -630,7 +631,7 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
                   )}
                 </div>
                 <div>
-                  <Label htmlFor="businessName" className="text-sm">{t('businessName')} *</Label>
+                  <Label htmlFor="businessName" className="text-sm">{tFields('businessName')} *</Label>
                   <LockedFieldWrapper isLocked={isFieldLocked('businessName')}>
                     <Input 
                       {...register('businessName')} 
@@ -646,12 +647,12 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
               </div>
 
               <div>
-                <Label htmlFor="fromTheBusiness" className="text-sm">{t('fromTheBusiness')}</Label>
+                <Label htmlFor="fromTheBusiness" className="text-sm">{tFields('fromTheBusiness')}</Label>
                 <LockedFieldWrapper isLocked={isFieldLocked('fromTheBusiness')}>
                   <Textarea 
                     {...register('fromTheBusiness')} 
                     id="fromTheBusiness"
-                    placeholder="Brief description of your business (max 750 characters)"
+                    placeholder={t('placeholders.briefDescription')}
                     className="min-h-[100px]"
                     disabled={isFieldLocked('fromTheBusiness')}
                   />
@@ -662,12 +663,12 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
               </div>
 
               <div>
-                <Label htmlFor="labels">{t('labels')}</Label>
+                <Label htmlFor="labels">{tFields('labels')}</Label>
                 <LockedFieldWrapper isLocked={isFieldLocked('labels')}>
                   <Input 
                     {...register('labels')} 
                     id="labels" 
-                    placeholder="e.g., Family-friendly, Organic, Free Wi-Fi (comma-separated)"
+                    placeholder={t('placeholders.labelsExample')}
                     disabled={isFieldLocked('labels')}
                   />
                 </LockedFieldWrapper>
@@ -681,7 +682,7 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
                   <CategorySelect
                     value={watch('primaryCategory') || ''}
                     onValueChange={(value) => !isFieldLocked('primaryCategory') && setValue('primaryCategory', value)}
-                    placeholder={`${t('primaryCategory')} *`}
+                    placeholder={`${tFields('primaryCategory')} *`}
                     required
                     clientId={clientId || business?.client_id}
                   />
@@ -692,12 +693,12 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
               </div>
 
               <div>
-                <Label htmlFor="additionalCategories">{t('additionalCategories')}</Label>
+                <Label htmlFor="additionalCategories">{tFields('additionalCategories')}</Label>
                 <LockedFieldWrapper isLocked={isFieldLocked('additionalCategories')}>
                   <Input 
                     {...register('additionalCategories')} 
                     id="additionalCategories" 
-                    placeholder="Comma-separated additional categories (max 10)"
+                    placeholder={t('placeholders.additionalCategoriesMax')}
                     disabled={isFieldLocked('additionalCategories')}
                   />
                 </LockedFieldWrapper>
@@ -715,7 +716,7 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
                     disabled={isFieldLocked('temporarilyClosed')}
                   />
                 </LockedFieldWrapper>
-                <Label htmlFor="temporarilyClosed">{t('temporarilyClosed')}</Label>
+                <Label htmlFor="temporarilyClosed">{tFields('temporarilyClosed')}</Label>
               </div>
             </CardContent>
           </Card>
@@ -723,7 +724,7 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
           {/* Address Information */}
           <Card>
             <CardHeader className="pb-2 sm:pb-4">
-              <CardTitle className="text-base sm:text-lg">Address Information</CardTitle>
+              <CardTitle className="text-base sm:text-lg">{t('sections.addressInformation')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 sm:space-y-4">
               <LockedFieldWrapper isLocked={isFieldLocked('country')}>
@@ -731,7 +732,7 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
                   key={business?.id || 'new'}
                   value={watch('country') || ''}
                   onValueChange={(value) => !isFieldLocked('country') && setValue('country', value)}
-                  placeholder="Select country *"
+                  placeholder={`${t('placeholders.selectCountry')} *`}
                 />
               </LockedFieldWrapper>
               {errors.country && (
@@ -739,7 +740,7 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
               )}
 
               <div>
-                <Label htmlFor="addressLine1" className="text-sm">{t('addressLine1')} *</Label>
+                <Label htmlFor="addressLine1" className="text-sm">{tFields('addressLine1')} *</Label>
                 <LockedFieldWrapper isLocked={isFieldLocked('addressLine1')}>
                   <Input 
                     {...register('addressLine1')} 
@@ -755,33 +756,33 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <Label htmlFor="addressLine2" className="text-sm">Address Line 2</Label>
+                  <Label htmlFor="addressLine2" className="text-sm">{tFields('addressLine2')}</Label>
                   <Input {...register('addressLine2')} id="addressLine2" className="mt-1" />
                 </div>
                 <div>
-                  <Label htmlFor="addressLine3" className="text-sm">Address Line 3</Label>
+                  <Label htmlFor="addressLine3" className="text-sm">{tFields('addressLine3')}</Label>
                   <Input {...register('addressLine3')} id="addressLine3" className="mt-1" />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <Label htmlFor="addressLine4" className="text-sm">Address Line 4</Label>
+                  <Label htmlFor="addressLine4" className="text-sm">{tFields('addressLine4')}</Label>
                   <Input {...register('addressLine4')} id="addressLine4" className="mt-1" />
                 </div>
                 <div>
-                  <Label htmlFor="addressLine5" className="text-sm">Address Line 5</Label>
+                  <Label htmlFor="addressLine5" className="text-sm">{tFields('addressLine5')}</Label>
                   <Input {...register('addressLine5')} id="addressLine5" className="mt-1" />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                 <div>
-                  <Label htmlFor="postalCode" className="text-sm">Postal Code</Label>
+                  <Label htmlFor="postalCode" className="text-sm">{tFields('postalCode')}</Label>
                   <Input {...register('postalCode')} id="postalCode" className="mt-1" />
                 </div>
                 <div>
-                  <Label htmlFor="district" className="text-sm">District</Label>
+                  <Label htmlFor="district" className="text-sm">{tFields('district')}</Label>
                   <Input {...register('district')} id="district" className="mt-1" />
                 </div>
                 <CitySelect
@@ -792,13 +793,13 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
               </div>
 
               <div>
-                <Label htmlFor="state" className="text-sm">State/Province</Label>
+                <Label htmlFor="state" className="text-sm">{tFields('state')}</Label>
                 <Input {...register('state')} id="state" className="mt-1" />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <Label htmlFor="latitude" className="text-sm">Latitude</Label>
+                  <Label htmlFor="latitude" className="text-sm">{tFields('latitude')}</Label>
                   <Input 
                     {...register('latitude', { valueAsNumber: true })}
                     id="latitude" 
@@ -811,7 +812,7 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
                   )}
                 </div>
                 <div>
-                  <Label htmlFor="longitude">Longitude</Label>
+                  <Label htmlFor="longitude">{tFields('longitude')}</Label>
                   <Input 
                     {...register('longitude', { valueAsNumber: true })} 
                     id="longitude" 
@@ -840,15 +841,15 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
           {/* Contact Information */}
           <LockedFieldWrapper 
             isLocked={isGroupLocked('contact_information')}
-            fieldName="Contact Information"
+            fieldName={t('sections.contactInformation')}
           >
             <Card>
               <CardHeader>
-                <CardTitle>Contact Information</CardTitle>
+                <CardTitle>{t('sections.contactInformation')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <Label htmlFor="website">Website</Label>
+                  <Label htmlFor="website">{tFields('website')}</Label>
                   <Input 
                     {...register('website')} 
                     id="website" 
@@ -863,11 +864,11 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="primaryPhone">Primary Phone</Label>
+                    <Label htmlFor="primaryPhone">{tFields('primaryPhone')}</Label>
                     <Input 
                       {...register('primaryPhone')} 
                       id="primaryPhone" 
-                      placeholder="+1-555-123-4567"
+                      placeholder={t('placeholders.phonePlaceholder')}
                       disabled={isGroupLocked('contact_information')}
                     />
                     {errors.primaryPhone && (
@@ -875,11 +876,11 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
                     )}
                   </div>
                   <div>
-                    <Label htmlFor="additionalPhones">Additional Phones</Label>
+                    <Label htmlFor="additionalPhones">{tFields('additionalPhones')}</Label>
                     <Input 
                       {...register('additionalPhones')} 
                       id="additionalPhones" 
-                      placeholder="Comma-separated phone numbers"
+                      placeholder={t('placeholders.additionalPhonesPlaceholder')}
                       disabled={isGroupLocked('contact_information')}
                     />
                     {errors.additionalPhones && (
@@ -889,11 +890,11 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
                 </div>
 
                 <div>
-                  <Label htmlFor="adwords">AdWords Phone</Label>
+                  <Label htmlFor="adwords">{tFields('adwords')}</Label>
                   <Input 
                     {...register('adwords')} 
                     id="adwords" 
-                    placeholder="+1-555-123-4567"
+                    placeholder={t('placeholders.phonePlaceholder')}
                     disabled={isGroupLocked('contact_information')}
                   />
                   {errors.adwords && (
@@ -907,16 +908,16 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
           {/* Social Media URLs */}
           <LockedFieldWrapper 
             isLocked={isGroupLocked('social_media')}
-            fieldName="Social Media"
+            fieldName={t('sections.socialMedia')}
           >
             <Card>
               <CardHeader>
-                <CardTitle>Social Media</CardTitle>
+                <CardTitle>{t('sections.socialMedia')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="facebookUrl">Facebook URL</Label>
+                    <Label htmlFor="facebookUrl">{tFields('facebookUrl')}</Label>
                     <Input 
                       {...register('facebookUrl')} 
                       id="facebookUrl" 
@@ -925,7 +926,7 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
                     />
                   </div>
                   <div>
-                    <Label htmlFor="instagramUrl">Instagram URL</Label>
+                    <Label htmlFor="instagramUrl">{tFields('instagramUrl')}</Label>
                     <Input 
                       {...register('instagramUrl')} 
                       id="instagramUrl" 
@@ -937,7 +938,7 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="linkedinUrl">LinkedIn URL</Label>
+                    <Label htmlFor="linkedinUrl">{tFields('linkedinUrl')}</Label>
                     <Input 
                       {...register('linkedinUrl')} 
                       id="linkedinUrl" 
@@ -946,7 +947,7 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
                     />
                   </div>
                   <div>
-                    <Label htmlFor="pinterestUrl">Pinterest URL</Label>
+                    <Label htmlFor="pinterestUrl">{tFields('pinterestUrl')}</Label>
                     <Input 
                       {...register('pinterestUrl')} 
                       id="pinterestUrl" 
@@ -958,7 +959,7 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="tiktokUrl">TikTok URL</Label>
+                    <Label htmlFor="tiktokUrl">{tFields('tiktokUrl')}</Label>
                     <Input 
                       {...register('tiktokUrl')} 
                       id="tiktokUrl" 
@@ -967,7 +968,7 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
                     />
                   </div>
                   <div>
-                    <Label htmlFor="twitterUrl">Twitter/X URL</Label>
+                    <Label htmlFor="twitterUrl">{tFields('twitterUrl')}</Label>
                     <Input 
                       {...register('twitterUrl')} 
                       id="twitterUrl" 
@@ -978,7 +979,7 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
                 </div>
 
                 <div>
-                  <Label htmlFor="youtubeUrl">YouTube URL</Label>
+                  <Label htmlFor="youtubeUrl">{tFields('youtubeUrl')}</Label>
                   <Input 
                     {...register('youtubeUrl')} 
                     id="youtubeUrl" 
@@ -993,15 +994,15 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
           {/* Business Dates */}
           <LockedFieldWrapper 
             isLocked={isFieldLocked('opening_date')}
-            fieldName="Business Dates"
+            fieldName={t('sections.businessDates')}
           >
             <Card>
               <CardHeader>
-                <CardTitle>Business Dates</CardTitle>
+                <CardTitle>{t('sections.businessDates')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div>
-                  <Label htmlFor="openingDate">Opening Date</Label>
+                  <Label htmlFor="openingDate">{tFields('openingDate')}</Label>
                   <Input 
                     {...register('openingDate')} 
                     id="openingDate" 
@@ -1019,7 +1020,7 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
           {/* Opening Hours */}
           <LockedFieldWrapper 
             isLocked={isGroupLocked('opening_hours')}
-            fieldName="Opening Hours"
+            fieldName={t('sections.openingHours')}
           >
             <OpeningHours 
               hours={hours} 
@@ -1031,7 +1032,7 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
           {/* Special Hours */}
           <LockedFieldWrapper 
             isLocked={isGroupLocked('special_hours')}
-            fieldName="Special Hours"
+            fieldName={t('sections.specialHours')}
           >
             <SpecialHours 
               specialHours={specialHours} 
@@ -1043,11 +1044,11 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
           {/* Cover Photo Upload */}
           <LockedFieldWrapper 
             isLocked={isFieldLocked('cover_photo')}
-            fieldName="Cover Photo"
+            fieldName={t('sections.coverPhoto')}
           >
             <Card>
               <CardHeader>
-                <CardTitle>Cover Photo</CardTitle>
+                <CardTitle>{t('sections.coverPhoto')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <PhotoUpload
@@ -1064,11 +1065,11 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
           {/* Logo Photo Upload */}
           <LockedFieldWrapper 
             isLocked={isFieldLocked('logo_photo')}
-            fieldName="Logo Photo"
+            fieldName={t('sections.logoPhoto')}
           >
             <Card>
               <CardHeader>
-                <CardTitle>Logo Photo</CardTitle>
+                <CardTitle>{t('sections.logoPhoto')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <PhotoUpload
@@ -1085,15 +1086,15 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
           {/* Service URLs */}
           <LockedFieldWrapper 
             isLocked={isGroupLocked('service_urls')}
-            fieldName="Service URLs"
+            fieldName={t('sections.serviceUrls')}
           >
             <Card>
               <CardHeader>
-                <CardTitle>Service URLs</CardTitle>
+                <CardTitle>{t('sections.serviceUrls')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <Label htmlFor="appointmentURL">Appointment URL</Label>
+                  <Label htmlFor="appointmentURL">{tFields('appointmentURL')}</Label>
                   <Input 
                     {...register('appointmentURL')} 
                     id="appointmentURL" 
@@ -1103,7 +1104,7 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
                 </div>
 
                 <div>
-                  <Label htmlFor="menuURL">Menu URL</Label>
+                  <Label htmlFor="menuURL">{tFields('menuURL')}</Label>
                   <Input 
                     {...register('menuURL')} 
                     id="menuURL" 
@@ -1113,7 +1114,7 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
                 </div>
 
                 <div>
-                  <Label htmlFor="reservationsURL">Reservations URL</Label>
+                  <Label htmlFor="reservationsURL">{tFields('reservationsURL')}</Label>
                   <Input 
                     {...register('reservationsURL')} 
                     id="reservationsURL" 
@@ -1123,7 +1124,7 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
                 </div>
 
                 <div>
-                  <Label htmlFor="orderAheadURL">Order Ahead URL</Label>
+                  <Label htmlFor="orderAheadURL">{tFields('orderAheadURL')}</Label>
                   <Input 
                     {...register('orderAheadURL')} 
                     id="orderAheadURL" 
@@ -1138,11 +1139,11 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
           {/* Custom Services */}
           <LockedFieldWrapper 
             isLocked={isGroupLocked('custom_services')}
-            fieldName="Custom Services"
+            fieldName={t('sections.customServices')}
           >
             <Card>
               <CardHeader>
-                <CardTitle>Custom Services</CardTitle>
+                <CardTitle>{t('sections.customServices')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
@@ -1166,7 +1167,7 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
                     </div>
                   ) : (
                     <p className="text-sm text-muted-foreground mb-3">
-                      No custom services assigned yet.
+                      {t('placeholders.noCustomServices')}
                     </p>
                   )}
                   <Button
@@ -1176,7 +1177,7 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
                     className="w-full"
                     disabled={isGroupLocked('custom_services')}
                   >
-                    Manage Custom Services
+                    {t('actions.manageCustomServices')}
                   </Button>
                 </div>
               </CardContent>
@@ -1186,19 +1187,19 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
           {/* Data Goldmine */}
           <Card>
             <CardHeader>
-              <CardTitle>Data Goldmine</CardTitle>
+              <CardTitle>{t('sections.dataGoldmine')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div>
-                <Label htmlFor="goldmine">Unstructured Data</Label>
+                <Label htmlFor="goldmine">{tFields('unstructuredData')}</Label>
                 <Textarea 
                   {...register('goldmine')} 
                   id="goldmine" 
-                  placeholder="Store unstructured data here (not included in JSON exports)"
+                  placeholder={t('placeholders.goldminePlaceholder')}
                   className="h-32 font-mono text-sm"
                 />
                 <p className="text-xs text-muted-foreground mt-1">
-                  This field is for storing raw/unstructured data and is excluded from all JSON exports.
+                  {t('placeholders.goldmineDescription')}
                 </p>
               </div>
             </CardContent>
@@ -1208,10 +1209,10 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
 
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t('actions.cancel')}
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? 'Saving...' : (business ? 'Update Business' : 'Create Business')}
+              {loading ? t('dialog.saving') : (business ? t('dialog.updateBusiness') : t('dialog.createBusiness'))}
             </Button>
           </div>
         </form>

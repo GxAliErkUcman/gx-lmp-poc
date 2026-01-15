@@ -10,12 +10,14 @@ const resources = {
         yourLocations: "Your Locations",
         accountSettings: "Account Settings",
         signOut: "Sign Out",
-        adminPanel: "Admin Panel"
+        adminPanel: "Admin Panel",
+        backToOverview: "Back to Overview"
       },
       actions: {
         add: "Add",
         import: "Import",
         export: "Export",
+        exportJson: "Export JSON",
         save: "Save",
         cancel: "Cancel",
         delete: "Delete",
@@ -24,13 +26,31 @@ const resources = {
         filter: "Filter",
         refresh: "Refresh",
         close: "Close",
+        closed: "Closed",
         confirm: "Confirm",
         submit: "Submit",
-        update: "Update"
+        update: "Update",
+        updateCoordinates: "Update Coordinates",
+        copyCoordinates: "Copy Coordinates",
+        openInBingMaps: "Open in Bing Maps",
+        useCurrentLocation: "Use Current Location",
+        findFromAddress: "Find from Address",
+        gettingLocation: "Getting Location...",
+        geocoding: "Geocoding...",
+        addSingleDate: "Add Single Date",
+        addDateRange: "Add Date Range",
+        manageCustomServices: "Manage Custom Services",
+        addBusiness: "Add Business",
+        addFirstBusiness: "Add Your First Business",
+        createUser: "Create User",
+        versionHistory: "Version History",
+        settings: "Settings",
+        customServices: "Custom Services"
       },
       tabs: {
         activeLocations: "Active Locations",
         needAttention: "Need Attention",
+        new: "New",
         clientOverview: "Client Overview",
         allClients: "All Clients",
         users: "Users",
@@ -55,14 +75,74 @@ const resources = {
         active: "Active",
         pending: "Pending",
         loading: "Loading...",
-        noResults: "No results found"
+        noResults: "No results found",
+        open: "Open",
+        total: "Total"
       },
       messages: {
         success: "Success",
         error: "Error",
         saved: "Changes saved successfully",
         deleted: "Deleted successfully",
-        confirmDelete: "Are you sure you want to delete this?"
+        confirmDelete: "Are you sure you want to delete this?",
+        noBusinessesFound: "No businesses found for this client",
+        createUserDescription: "Create Client Admins, Users, or Store Owners for this client"
+      },
+      sections: {
+        basicInformation: "Basic Information",
+        addressInformation: "Address Information",
+        locationCoordinates: "Location Coordinates",
+        contactInformation: "Contact Information",
+        socialMedia: "Social Media",
+        businessDates: "Business Dates",
+        openingHours: "Opening Hours",
+        specialHours: "Special Hours",
+        coverPhoto: "Cover Photo",
+        logoPhoto: "Logo Photo",
+        serviceUrls: "Service URLs",
+        customServices: "Custom Services",
+        dataGoldmine: "Data Goldmine"
+      },
+      location: {
+        currentCoordinates: "Current Coordinates",
+        useCurrentLocationHint: "Use \"Current Location\" to auto-detect your position",
+        findFromAddressHint: "Use \"Find from Address\" to geocode the address you entered",
+        manualEntryHint: "You can also manually enter precise coordinates"
+      },
+      specialHours: {
+        description: "Set special hours for holidays and other exceptions. These override regular opening hours.",
+        noHoursAdded: "No special hours added yet",
+        clickToStart: "Click \"Add Special Hours\" to get started",
+        date: "Date",
+        hours: "Hours",
+        pickDate: "Pick a date",
+        selectDateRange: "Select Date Range",
+        hoursForAllDays: "Hours for All Selected Days",
+        applyToAllDates: "Apply to All Dates",
+        daysSelected: "days",
+        selected: "Selected",
+        generatedFormat: "Generated Format"
+      },
+      openingHours: {
+        weekdays9to6: "Weekdays 9-6",
+        weekdays8to5: "Weekdays 8-5",
+        weekend10to2: "Weekend 10-2",
+        closeWeekends: "Close Weekends",
+        customFormat: "Custom Format (Advanced)"
+      },
+      photos: {
+        dragAndDrop: "Drag & drop photos here, or click to select",
+        dropHere: "Drop photos here",
+        photosUploaded: "photos uploaded"
+      },
+      dialog: {
+        editBusiness: "Edit Business",
+        addNewBusiness: "Add New Business",
+        updateBusinessInfo: "Update business information",
+        enterBusinessDetails: "Enter the details for your new business location",
+        saving: "Saving...",
+        updateBusiness: "Update Business",
+        createBusiness: "Create Business"
       }
     },
     fields: {
@@ -98,10 +178,18 @@ const resources = {
       orderAheadURL: "Order Ahead URL",
       adwords: "AdWords Phone",
       goldmine: "Notes (Internal)",
+      unstructuredData: "Unstructured Data",
       socialMedia: "Social Media",
       openingHours: "Opening Hours",
       specialHours: "Special Hours",
-      moreHours: "More Hours"
+      moreHours: "More Hours",
+      facebookUrl: "Facebook URL",
+      instagramUrl: "Instagram URL",
+      linkedinUrl: "LinkedIn URL",
+      pinterestUrl: "Pinterest URL",
+      tiktokUrl: "TikTok URL",
+      twitterUrl: "Twitter/X URL",
+      youtubeUrl: "YouTube URL"
     },
     days: {
       monday: "Monday",
@@ -128,6 +216,17 @@ const resources = {
       futureDate: "Date cannot be in the future",
       maxLength: "Maximum {{max}} characters allowed",
       invalidFormat: "Invalid format"
+    },
+    placeholders: {
+      briefDescription: "Brief description of your business (max 750 characters)",
+      labelsExample: "e.g., Family-friendly, Organic, Free Wi-Fi (comma-separated)",
+      additionalCategoriesMax: "Comma-separated additional categories (max 10)",
+      selectCountry: "Select country",
+      phonePlaceholder: "+1-555-123-4567",
+      additionalPhonesPlaceholder: "Comma-separated phone numbers",
+      goldminePlaceholder: "Store unstructured data here (not included in JSON exports)",
+      goldmineDescription: "This field is for storing raw/unstructured data and is excluded from all JSON exports.",
+      noCustomServices: "No custom services assigned yet."
     }
   },
   de: {
@@ -136,12 +235,14 @@ const resources = {
         yourLocations: "Ihre Standorte",
         accountSettings: "Kontoeinstellungen",
         signOut: "Abmelden",
-        adminPanel: "Admin-Bereich"
+        adminPanel: "Admin-Bereich",
+        backToOverview: "Zurück zur Übersicht"
       },
       actions: {
         add: "Hinzufügen",
         import: "Importieren",
         export: "Exportieren",
+        exportJson: "JSON exportieren",
         save: "Speichern",
         cancel: "Abbrechen",
         delete: "Löschen",
@@ -150,13 +251,31 @@ const resources = {
         filter: "Filtern",
         refresh: "Aktualisieren",
         close: "Schließen",
+        closed: "Geschlossen",
         confirm: "Bestätigen",
         submit: "Absenden",
-        update: "Aktualisieren"
+        update: "Aktualisieren",
+        updateCoordinates: "Koordinaten aktualisieren",
+        copyCoordinates: "Koordinaten kopieren",
+        openInBingMaps: "In Bing Maps öffnen",
+        useCurrentLocation: "Aktuellen Standort verwenden",
+        findFromAddress: "Von Adresse suchen",
+        gettingLocation: "Standort wird ermittelt...",
+        geocoding: "Geocodierung...",
+        addSingleDate: "Einzeldatum hinzufügen",
+        addDateRange: "Datumsbereich hinzufügen",
+        manageCustomServices: "Individuelle Dienste verwalten",
+        addBusiness: "Unternehmen hinzufügen",
+        addFirstBusiness: "Erstes Unternehmen hinzufügen",
+        createUser: "Benutzer erstellen",
+        versionHistory: "Versionshistorie",
+        settings: "Einstellungen",
+        customServices: "Individuelle Dienste"
       },
       tabs: {
         activeLocations: "Aktive Standorte",
         needAttention: "Handlungsbedarf",
+        new: "Neu",
         clientOverview: "Kundenübersicht",
         allClients: "Alle Kunden",
         users: "Benutzer",
@@ -181,14 +300,74 @@ const resources = {
         active: "Aktiv",
         pending: "Ausstehend",
         loading: "Laden...",
-        noResults: "Keine Ergebnisse gefunden"
+        noResults: "Keine Ergebnisse gefunden",
+        open: "Geöffnet",
+        total: "Gesamt"
       },
       messages: {
         success: "Erfolg",
         error: "Fehler",
         saved: "Änderungen erfolgreich gespeichert",
         deleted: "Erfolgreich gelöscht",
-        confirmDelete: "Sind Sie sicher, dass Sie dies löschen möchten?"
+        confirmDelete: "Sind Sie sicher, dass Sie dies löschen möchten?",
+        noBusinessesFound: "Keine Unternehmen für diesen Kunden gefunden",
+        createUserDescription: "Erstellen Sie Client-Admins, Benutzer oder Store-Besitzer für diesen Kunden"
+      },
+      sections: {
+        basicInformation: "Grundlegende Informationen",
+        addressInformation: "Adressinformationen",
+        locationCoordinates: "Standortkoordinaten",
+        contactInformation: "Kontaktinformationen",
+        socialMedia: "Soziale Medien",
+        businessDates: "Geschäftsdaten",
+        openingHours: "Öffnungszeiten",
+        specialHours: "Sonderöffnungszeiten",
+        coverPhoto: "Titelbild",
+        logoPhoto: "Logo-Foto",
+        serviceUrls: "Service-URLs",
+        customServices: "Individuelle Dienste",
+        dataGoldmine: "Daten-Goldmine"
+      },
+      location: {
+        currentCoordinates: "Aktuelle Koordinaten",
+        useCurrentLocationHint: "Verwenden Sie \"Aktuellen Standort\", um Ihre Position automatisch zu erkennen",
+        findFromAddressHint: "Verwenden Sie \"Von Adresse suchen\", um die eingegebene Adresse zu geocodieren",
+        manualEntryHint: "Sie können auch präzise Koordinaten manuell eingeben"
+      },
+      specialHours: {
+        description: "Legen Sie Sonderöffnungszeiten für Feiertage und andere Ausnahmen fest. Diese überschreiben die regulären Öffnungszeiten.",
+        noHoursAdded: "Noch keine Sonderöffnungszeiten hinzugefügt",
+        clickToStart: "Klicken Sie auf \"Sonderöffnungszeiten hinzufügen\", um zu beginnen",
+        date: "Datum",
+        hours: "Stunden",
+        pickDate: "Datum auswählen",
+        selectDateRange: "Datumsbereich auswählen",
+        hoursForAllDays: "Öffnungszeiten für alle ausgewählten Tage",
+        applyToAllDates: "Auf alle Tage anwenden",
+        daysSelected: "Tage",
+        selected: "Ausgewählt",
+        generatedFormat: "Generiertes Format"
+      },
+      openingHours: {
+        weekdays9to6: "Wochentage 9-18",
+        weekdays8to5: "Wochentage 8-17",
+        weekend10to2: "Wochenende 10-14",
+        closeWeekends: "Wochenenden schließen",
+        customFormat: "Benutzerdefiniertes Format (Erweitert)"
+      },
+      photos: {
+        dragAndDrop: "Fotos hierher ziehen oder klicken zum Auswählen",
+        dropHere: "Fotos hier ablegen",
+        photosUploaded: "Fotos hochgeladen"
+      },
+      dialog: {
+        editBusiness: "Unternehmen bearbeiten",
+        addNewBusiness: "Neues Unternehmen hinzufügen",
+        updateBusinessInfo: "Unternehmensinformationen aktualisieren",
+        enterBusinessDetails: "Geben Sie die Details für Ihren neuen Unternehmensstandort ein",
+        saving: "Speichern...",
+        updateBusiness: "Unternehmen aktualisieren",
+        createBusiness: "Unternehmen erstellen"
       }
     },
     fields: {
@@ -224,10 +403,18 @@ const resources = {
       orderAheadURL: "Vorbestellungs-URL",
       adwords: "AdWords-Telefon",
       goldmine: "Notizen (Intern)",
+      unstructuredData: "Unstrukturierte Daten",
       socialMedia: "Soziale Medien",
       openingHours: "Öffnungszeiten",
       specialHours: "Sonderöffnungszeiten",
-      moreHours: "Weitere Öffnungszeiten"
+      moreHours: "Weitere Öffnungszeiten",
+      facebookUrl: "Facebook URL",
+      instagramUrl: "Instagram URL",
+      linkedinUrl: "LinkedIn URL",
+      pinterestUrl: "Pinterest URL",
+      tiktokUrl: "TikTok URL",
+      twitterUrl: "Twitter/X URL",
+      youtubeUrl: "YouTube URL"
     },
     days: {
       monday: "Montag",
@@ -254,6 +441,17 @@ const resources = {
       futureDate: "Datum darf nicht in der Zukunft liegen",
       maxLength: "Maximal {{max}} Zeichen erlaubt",
       invalidFormat: "Ungültiges Format"
+    },
+    placeholders: {
+      briefDescription: "Kurze Beschreibung Ihres Unternehmens (max. 750 Zeichen)",
+      labelsExample: "z.B. Familienfreundlich, Bio, Kostenloses WLAN (kommagetrennt)",
+      additionalCategoriesMax: "Kommagetrennte zusätzliche Kategorien (max. 10)",
+      selectCountry: "Land auswählen",
+      phonePlaceholder: "+49-123-456789",
+      additionalPhonesPlaceholder: "Kommagetrennte Telefonnummern",
+      goldminePlaceholder: "Unstrukturierte Daten hier speichern (nicht in JSON-Exporten enthalten)",
+      goldmineDescription: "Dieses Feld dient zum Speichern von Rohdaten/unstrukturierten Daten und ist von allen JSON-Exporten ausgeschlossen.",
+      noCustomServices: "Noch keine individuellen Dienste zugewiesen."
     }
   }
 };
