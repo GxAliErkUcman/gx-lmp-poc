@@ -21,8 +21,10 @@ import SettingsDialog from '@/components/SettingsDialog';
 import DeleteConfirmationDialog from '@/components/DeleteConfirmationDialog';
 import { UserSettingsDialog } from '@/components/UserSettingsDialog';
 import jasonerLogo from '@/assets/jasoner-horizontal-logo.png';
+import { useTranslation } from 'react-i18next';
 
 const Dashboard = () => {
+  const { t } = useTranslation();
   const { user, signOut, loading: authLoading, urlAuthProcessing } = useAuth();
   const { hasRole } = useAdmin();
   const navigate = useNavigate();
@@ -256,9 +258,9 @@ useEffect(() => {
       <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-8">
         <div className="mb-6 sm:mb-8 flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-2xl sm:text-3xl font-bold mb-2">Your Locations</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold mb-2">{t('nav.yourLocations')}</h2>
             <p className="text-sm text-muted-foreground">
-              {activeBusinesses.length} active, {pendingBusinesses.length} need attention
+              {activeBusinesses.length} {t('status.active').toLowerCase()}, {pendingBusinesses.length} {t('tabs.needAttention').toLowerCase()}
             </p>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -291,7 +293,7 @@ useEffect(() => {
                 className="shadow-modern flex-1 sm:flex-none"
               >
                 <Settings className="w-4 h-4 sm:mr-2" />
-                <span className="hidden sm:inline">Account Settings</span>
+                <span className="hidden sm:inline">{t('nav.accountSettings')}</span>
               </Button>
               <Button 
                 onClick={() => setImportDialogOpen(true)}
@@ -300,7 +302,7 @@ useEffect(() => {
                 className="shadow-modern flex-1 sm:flex-none"
               >
                 <Upload className="w-4 h-4 sm:mr-2" />
-                <span className="hidden sm:inline">Import</span>
+                <span className="hidden sm:inline">{t('actions.import')}</span>
               </Button>
               <JsonExport businesses={businesses} clientName={clientName || 'Export'} />
               <Button 
@@ -309,7 +311,7 @@ useEffect(() => {
                 className="shadow-modern bg-gradient-primary hover:opacity-90 flex-1 sm:flex-none"
               >
                 <Plus className="w-4 h-4 mr-1 sm:mr-2" />
-                Add
+                {t('actions.add')}
               </Button>
             </div>
           </div>
@@ -341,8 +343,8 @@ useEffect(() => {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <TabsTrigger value="active" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm py-2">
-                      <span className="hidden sm:inline">Active Locations</span>
-                      <span className="sm:hidden">Active</span>
+                      <span className="hidden sm:inline">{t('tabs.activeLocations')}</span>
+                      <span className="sm:hidden">{t('status.active')}</span>
                       {activeBusinesses.length > 0 && (
                         <Badge variant="secondary" className="ml-1 text-xs">
                           {activeBusinesses.length}
@@ -360,8 +362,8 @@ useEffect(() => {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <TabsTrigger value="pending" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm py-2">
-                      <span className="hidden sm:inline">Need Attention</span>
-                      <span className="sm:hidden">Attention</span>
+                      <span className="hidden sm:inline">{t('tabs.needAttention')}</span>
+                      <span className="sm:hidden">{t('status.pending')}</span>
                       {pendingBusinesses.length > 0 && (
                         <Badge variant="destructive" className="ml-1 text-xs">
                           {pendingBusinesses.length}

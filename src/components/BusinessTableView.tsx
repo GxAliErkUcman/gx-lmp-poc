@@ -13,6 +13,7 @@ import { Business } from '@/types/business';
 import ManageColumnsDialog, { type ColumnConfig } from './ManageColumnsDialog';
 import { validateBusiness, ValidationError } from '@/lib/validation';
 import { cn } from '@/lib/utils';
+import { useTranslation } from 'react-i18next';
 
 
 interface BusinessTableViewProps {
@@ -25,6 +26,7 @@ interface BusinessTableViewProps {
 }
 
 const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiDelete, showValidationErrors = true }: BusinessTableViewProps) => {
+  const { t } = useTranslation('fields');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredBusinesses, setFilteredBusinesses] = useState(businesses);
@@ -37,17 +39,17 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
   const [manageColumnsOpen, setManageColumnsOpen] = useState(false);
   
   const [columns, setColumns] = useState<ColumnConfig[]>([
-    { key: 'storeCode', label: 'Store Code', visible: true, required: true },
-    { key: 'businessName', label: 'Business Name', visible: true, required: true },
-    { key: 'primaryCategory', label: 'Category', visible: true },
-    { key: 'address', label: 'Address', visible: true },
-    { key: 'city', label: 'City', visible: true },
-    { key: 'country', label: 'Country', visible: true },
-    { key: 'postalCode', label: 'Postal Code', visible: true },
-    { key: 'primaryPhone', label: 'Phone', visible: false },
-    { key: 'website', label: 'Website', visible: false },
-    { key: 'labels', label: 'Labels', visible: false },
-    { key: 'goldmine', label: 'Data Goldmine', visible: false },
+    { key: 'storeCode', label: t('storeCode'), visible: true, required: true },
+    { key: 'businessName', label: t('businessName'), visible: true, required: true },
+    { key: 'primaryCategory', label: t('primaryCategory'), visible: true },
+    { key: 'address', label: t('addressLine1'), visible: true },
+    { key: 'city', label: t('city'), visible: true },
+    { key: 'country', label: t('country'), visible: true },
+    { key: 'postalCode', label: t('postalCode'), visible: true },
+    { key: 'primaryPhone', label: t('primaryPhone'), visible: false },
+    { key: 'website', label: t('website'), visible: false },
+    { key: 'labels', label: t('labels'), visible: false },
+    { key: 'goldmine', label: t('goldmine'), visible: false },
   ]);
 
 

@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Clock, AlertCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface Hours {
   monday: string | null;
@@ -22,14 +23,14 @@ interface OpeningHoursProps {
   disabled?: boolean;
 }
 
-const daysOfWeek = [
-  { key: 'monday', label: 'Monday' },
-  { key: 'tuesday', label: 'Tuesday' },
-  { key: 'wednesday', label: 'Wednesday' },
-  { key: 'thursday', label: 'Thursday' },
-  { key: 'friday', label: 'Friday' },
-  { key: 'saturday', label: 'Saturday' },
-  { key: 'sunday', label: 'Sunday' },
+const getDaysOfWeek = (t: (key: string) => string) => [
+  { key: 'monday', label: t('days:monday') },
+  { key: 'tuesday', label: t('days:tuesday') },
+  { key: 'wednesday', label: t('days:wednesday') },
+  { key: 'thursday', label: t('days:thursday') },
+  { key: 'friday', label: t('days:friday') },
+  { key: 'saturday', label: t('days:saturday') },
+  { key: 'sunday', label: t('days:sunday') },
 ] as const;
 
 // Validation pattern for opening hours
@@ -76,6 +77,8 @@ function validateOpeningHours(value: string | null, dayLabel: string): Validatio
 }
 
 const OpeningHours = ({ hours, onHoursChange, disabled = false }: OpeningHoursProps) => {
+  const { t } = useTranslation();
+  const daysOfWeek = getDaysOfWeek(t);
   const [validationDialogOpen, setValidationDialogOpen] = useState(false);
 
   const updateHour = (day: keyof Hours, value: string) => {

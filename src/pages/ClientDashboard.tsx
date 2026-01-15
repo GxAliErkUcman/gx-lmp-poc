@@ -27,11 +27,13 @@ import { VersionHistoryDialog } from '@/components/VersionHistoryDialog';
 import ClientCustomServicesDialog from '@/components/ClientCustomServicesDialog';
 import { ApiImportDialog } from '@/components/ApiImportDialog';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { useTranslation } from 'react-i18next';
 
 // Energie 360° client ID for data source filter
 const ENERGIE_360_CLIENT_ID = 'e77c44c5-0585-4225-a5ea-59a38edb85fb';
 
 const ClientDashboard = () => {
+  const { t } = useTranslation();
   const { user, signOut, loading: authLoading, urlAuthProcessing } = useAuth();
   const { hasRole } = useAdmin();
   const navigate = useNavigate();
@@ -559,10 +561,10 @@ const ClientDashboard = () => {
               <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'active' | 'pending' | 'new')}>
                 <TabsList className="mb-4 w-full flex flex-wrap h-auto gap-1 p-1">
                   <TabsTrigger value="active" className="flex-1 min-w-[100px] text-xs sm:text-sm">
-                    Active ({activeBusinesses.length})
+                    {t('status.active')} ({activeBusinesses.length})
                   </TabsTrigger>
                   <TabsTrigger value="pending" className="flex-1 min-w-[100px] text-xs sm:text-sm">
-                    Attention ({pendingBusinesses.length})
+                    {t('tabs.needAttention')} ({pendingBusinesses.length})
                   </TabsTrigger>
                   <TabsTrigger value="new" className="flex-1 min-w-[100px] text-xs sm:text-sm">
                     New ({newBusinesses.length})

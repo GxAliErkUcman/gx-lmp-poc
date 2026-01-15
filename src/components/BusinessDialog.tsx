@@ -28,6 +28,7 @@ import BusinessCustomServicesDialog from '@/components/BusinessCustomServicesDia
 import { useFieldPermissions } from '@/hooks/use-field-permissions';
 import { LockedFieldWrapper } from '@/components/LockedFieldWrapper';
 import { trackFieldChanges, trackBusinessCreated } from '@/lib/fieldHistory';
+import { useTranslation } from 'react-i18next';
 
 const businessSchema = z.object({
   storeCode: z.string().min(1, 'Store code is required'),
@@ -91,6 +92,7 @@ interface BusinessDialogProps {
 }
 
 const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: BusinessDialogProps) => {
+  const { t } = useTranslation('fields');
   const { user } = useAuth();
   const { isFieldLocked, isGroupLocked, loading: permissionsLoading } = useFieldPermissions(clientId || business?.client_id);
   const [loading, setLoading] = useState(false);
@@ -614,7 +616,7 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
             <CardContent className="space-y-3 sm:space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <Label htmlFor="storeCode" className="text-sm">Store Code *</Label>
+                  <Label htmlFor="storeCode" className="text-sm">{t('storeCode')} *</Label>
                   <LockedFieldWrapper isLocked={isFieldLocked('storeCode')}>
                     <Input 
                       {...register('storeCode')} 
@@ -628,7 +630,7 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
                   )}
                 </div>
                 <div>
-                  <Label htmlFor="businessName" className="text-sm">Business Name *</Label>
+                  <Label htmlFor="businessName" className="text-sm">{t('businessName')} *</Label>
                   <LockedFieldWrapper isLocked={isFieldLocked('businessName')}>
                     <Input 
                       {...register('businessName')} 
@@ -644,7 +646,7 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
               </div>
 
               <div>
-                <Label htmlFor="fromTheBusiness" className="text-sm">From the Business</Label>
+                <Label htmlFor="fromTheBusiness" className="text-sm">{t('fromTheBusiness')}</Label>
                 <LockedFieldWrapper isLocked={isFieldLocked('fromTheBusiness')}>
                   <Textarea 
                     {...register('fromTheBusiness')} 
@@ -660,7 +662,7 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
               </div>
 
               <div>
-                <Label htmlFor="labels">Labels</Label>
+                <Label htmlFor="labels">{t('labels')}</Label>
                 <LockedFieldWrapper isLocked={isFieldLocked('labels')}>
                   <Input 
                     {...register('labels')} 
@@ -679,7 +681,7 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
                   <CategorySelect
                     value={watch('primaryCategory') || ''}
                     onValueChange={(value) => !isFieldLocked('primaryCategory') && setValue('primaryCategory', value)}
-                    placeholder="Select primary category *"
+                    placeholder={`${t('primaryCategory')} *`}
                     required
                     clientId={clientId || business?.client_id}
                   />
@@ -690,7 +692,7 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
               </div>
 
               <div>
-                <Label htmlFor="additionalCategories">Additional Categories</Label>
+                <Label htmlFor="additionalCategories">{t('additionalCategories')}</Label>
                 <LockedFieldWrapper isLocked={isFieldLocked('additionalCategories')}>
                   <Input 
                     {...register('additionalCategories')} 
@@ -713,7 +715,7 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
                     disabled={isFieldLocked('temporarilyClosed')}
                   />
                 </LockedFieldWrapper>
-                <Label htmlFor="temporarilyClosed">Temporarily Closed</Label>
+                <Label htmlFor="temporarilyClosed">{t('temporarilyClosed')}</Label>
               </div>
             </CardContent>
           </Card>
@@ -737,7 +739,7 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
               )}
 
               <div>
-                <Label htmlFor="addressLine1" className="text-sm">Street Address *</Label>
+                <Label htmlFor="addressLine1" className="text-sm">{t('addressLine1')} *</Label>
                 <LockedFieldWrapper isLocked={isFieldLocked('addressLine1')}>
                   <Input 
                     {...register('addressLine1')} 
