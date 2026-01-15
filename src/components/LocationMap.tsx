@@ -5,13 +5,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { MapPin, Navigation } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { useTranslation } from 'react-i18next';
 
 interface LocationMapProps {
   latitude?: number | null;
   longitude?: number | null;
   onLocationChange: (lat: number | null, lng: number | null) => void;
   address?: string;
-  // Structured address components for better geocoding
   addressLine1?: string;
   city?: string;
   state?: string;
@@ -20,6 +20,8 @@ interface LocationMapProps {
 }
 
 const LocationMap = ({ latitude, longitude, onLocationChange, address, addressLine1, city, state, country, postalCode }: LocationMapProps) => {
+  const { t } = useTranslation();
+  const { t: tFields } = useTranslation('fields');
   const [mapLatitude, setMapLatitude] = useState<string>(latitude?.toString() || '');
   const [mapLongitude, setMapLongitude] = useState<string>(longitude?.toString() || '');
   const [loading, setLoading] = useState(false);
@@ -297,14 +299,13 @@ const LocationMap = ({ latitude, longitude, onLocationChange, address, addressLi
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <MapPin className="w-5 h-5" />
-          Location Coordinates
+          {t('sections.locationCoordinates')}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Coordinate inputs */}
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <Label htmlFor="latitude">Latitude</Label>
+            <Label htmlFor="latitude">{tFields('latitude')}</Label>
             <Input
               id="latitude"
               type="number"
@@ -315,7 +316,7 @@ const LocationMap = ({ latitude, longitude, onLocationChange, address, addressLi
             />
           </div>
           <div>
-            <Label htmlFor="longitude">Longitude</Label>
+            <Label htmlFor="longitude">{tFields('longitude')}</Label>
             <Input
               id="longitude"
               type="number"
@@ -327,7 +328,6 @@ const LocationMap = ({ latitude, longitude, onLocationChange, address, addressLi
           </div>
         </div>
 
-        {/* Action buttons */}
         <div className="flex flex-wrap gap-2">
           <Button
             type="button"
@@ -337,7 +337,7 @@ const LocationMap = ({ latitude, longitude, onLocationChange, address, addressLi
             disabled={loading}
           >
             <Navigation className="w-4 h-4 mr-2" />
-            {loading ? 'Getting Location...' : 'Use Current Location'}
+            {loading ? t('actions.gettingLocation') : t('actions.useCurrentLocation')}
           </Button>
           
           <Button
@@ -348,7 +348,7 @@ const LocationMap = ({ latitude, longitude, onLocationChange, address, addressLi
             disabled={loading || (!address && !addressLine1)}
           >
             <MapPin className="w-4 h-4 mr-2" />
-            {loading ? 'Geocoding...' : 'Find from Address'}
+            {loading ? t('actions.geocoding') : t('actions.findFromAddress')}
           </Button>
           
           <Button
@@ -357,7 +357,7 @@ const LocationMap = ({ latitude, longitude, onLocationChange, address, addressLi
             size="sm"
             onClick={updateCoordinates}
           >
-            Update Coordinates
+            {t('actions.updateCoordinates')}
           </Button>
           
           {mapLatitude && mapLongitude && (
@@ -368,7 +368,7 @@ const LocationMap = ({ latitude, longitude, onLocationChange, address, addressLi
                 size="sm"
                 onClick={openInMaps}
               >
-                Copy Coordinates
+                {t('actions.copyCoordinates')}
               </Button>
 
               <Button asChild variant="outline" size="sm">
@@ -378,28 +378,26 @@ const LocationMap = ({ latitude, longitude, onLocationChange, address, addressLi
                   rel="noopener noreferrer"
                 >
                   <MapPin className="w-4 h-4 mr-2" />
-                  Open in Bing Maps
+                  {t('actions.openInBingMaps')}
                 </a>
               </Button>
             </>
           )}
         </div>
 
-        {/* Current coordinates display */}
         {latitude && longitude && (
           <div className="p-3 bg-muted rounded-lg">
-            <p className="text-sm font-medium">Current Coordinates:</p>
+            <p className="text-sm font-medium">{t('location.currentCoordinates')}:</p>
             <p className="text-sm text-muted-foreground">
               {latitude.toFixed(6)}, {longitude.toFixed(6)}
             </p>
           </div>
         )}
 
-        {/* Helpful notes */}
         <div className="text-xs text-muted-foreground space-y-1">
-          <p>• Use "Current Location" to auto-detect your position</p>
-          <p>• Use "Find from Address" to geocode the address you entered</p>
-          <p>• You can also manually enter precise coordinates</p>
+          <p>• {t('location.useCurrentLocationHint')}</p>
+          <p>• {t('location.findFromAddressHint')}</p>
+          <p>• {t('location.manualEntryHint')}</p>
         </div>
       </CardContent>
     </Card>
