@@ -893,6 +893,13 @@ const AdminPanel = () => {
           </Button>
           <Button
             variant="outline"
+            onClick={() => navigate('/dashboard?openSettings=true')}
+          >
+            <Settings className="w-4 h-4 mr-2" />
+            Account Settings
+          </Button>
+          <Button
+            variant="outline"
             onClick={handleSyncAllToGcp}
             disabled={syncAllLoading}
           >
