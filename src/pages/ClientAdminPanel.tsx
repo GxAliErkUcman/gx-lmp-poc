@@ -20,6 +20,7 @@ import ImportDialog from '@/components/ImportDialog';
 import { JsonExport } from '@/components/JsonExport';
 import { useFieldPermissions } from '@/hooks/use-field-permissions';
 import type { Business } from '@/types/business';
+import { UserSettingsDialog } from '@/components/UserSettingsDialog';
 import jasonerLogo from '@/assets/jasoner-horizontal-logo.png';
 
 interface UserProfile {
@@ -311,6 +312,7 @@ const ClientAdminPanel = () => {
               Field Permissions
             </Button>
             <span className="text-sm text-muted-foreground">{user.email}</span>
+            <UserSettingsDialog variant="outline" />
             <Button onClick={signOut} variant="outline" className="shadow-modern">
               Sign Out
             </Button>

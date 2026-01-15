@@ -17,6 +17,7 @@ import MultiEditDialog from '@/components/MultiEditDialog';
 import type { Business } from '@/types/business';
 import SettingsDialog from '@/components/SettingsDialog';
 import DeleteConfirmationDialog from '@/components/DeleteConfirmationDialog';
+import { UserSettingsDialog } from '@/components/UserSettingsDialog';
 import jasonerLogo from '@/assets/jasoner-horizontal-logo.png';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { JsonExport } from '@/components/JsonExport';
@@ -361,6 +362,7 @@ const ClientDashboard = () => {
             </div>
             <div className="flex items-center gap-2 sm:gap-4 justify-between sm:justify-end">
               <span className="text-xs sm:text-sm text-muted-foreground truncate max-w-[150px] sm:max-w-none">{user.email}</span>
+              <UserSettingsDialog variant="ghost" />
               <Button variant="ghost" size="sm" onClick={() => signOut()} className="px-2 sm:px-3">
                 <LogOut className="w-4 h-4 sm:mr-2" />
                 <span className="hidden sm:inline">Sign Out</span>
