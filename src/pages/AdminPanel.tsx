@@ -22,6 +22,8 @@ import ClientFieldPermissionsDialog from '@/components/ClientFieldPermissionsDia
 import { RoleChangeDialog } from '@/components/RoleChangeDialog';
 import { UserReassignDialog } from '@/components/UserReassignDialog';
 import { AllClientsView } from '@/components/AllClientsView';
+import TranslationEditor from '@/components/TranslationEditor';
+import { useTranslation } from 'react-i18next';
 
 
 interface Client {
@@ -1035,6 +1037,7 @@ const AdminPanel = () => {
           <TabsTrigger value="clients">Client Overview</TabsTrigger>
           <TabsTrigger value="all-clients">All Clients</TabsTrigger>
           <TabsTrigger value="users">Users</TabsTrigger>
+          <TabsTrigger value="translations">Translations</TabsTrigger>
         </TabsList>
 
         <TabsContent value="clients">
@@ -1456,6 +1459,10 @@ const AdminPanel = () => {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+        
+        <TabsContent value="translations">
+          <TranslationEditor />
         </TabsContent>
       </Tabs>
 
