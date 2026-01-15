@@ -147,7 +147,7 @@ const resources = {
     },
     fields: {
       storeCode: "Store Code",
-      businessName: "Name des Unternehmens",
+      businessName: "Business Name",
       addressLine1: "Street Address",
       addressLine2: "Address Line 2",
       addressLine3: "Address Line 3",
@@ -163,7 +163,7 @@ const resources = {
       website: "Website",
       primaryPhone: "Primary Phone",
       additionalPhones: "Additional Phones",
-      fromTheBusiness: "Beschreibung des Unternehmens",
+      fromTheBusiness: "From the Business",
       openingDate: "Opening Date",
       labels: "Labels",
       temporarilyClosed: "Temporarily Closed",

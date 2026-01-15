@@ -26,7 +26,7 @@ interface BusinessTableViewProps {
 }
 
 const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiDelete, showValidationErrors = true }: BusinessTableViewProps) => {
-  const { t } = useTranslation('fields');
+  const { t, i18n } = useTranslation('fields');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredBusinesses, setFilteredBusinesses] = useState(businesses);
@@ -38,19 +38,36 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
   const [showFilters, setShowFilters] = useState(false);
   const [manageColumnsOpen, setManageColumnsOpen] = useState(false);
   
-  const [columns, setColumns] = useState<ColumnConfig[]>([
-    { key: 'storeCode', label: t('storeCode'), visible: true, required: true },
-    { key: 'businessName', label: t('businessName'), visible: true, required: true },
-    { key: 'primaryCategory', label: t('primaryCategory'), visible: true },
-    { key: 'address', label: t('addressLine1'), visible: true },
-    { key: 'city', label: t('city'), visible: true },
-    { key: 'country', label: t('country'), visible: true },
-    { key: 'postalCode', label: t('postalCode'), visible: true },
-    { key: 'primaryPhone', label: t('primaryPhone'), visible: false },
-    { key: 'website', label: t('website'), visible: false },
-    { key: 'labels', label: t('labels'), visible: false },
-    { key: 'goldmine', label: t('goldmine'), visible: false },
-  ]);
+  // Column definitions with keys only - labels are computed dynamically
+  const columnDefs = [
+    { key: 'storeCode', visible: true, required: true },
+    { key: 'businessName', visible: true, required: true },
+    { key: 'primaryCategory', visible: true },
+    { key: 'address', visible: true },
+    { key: 'city', visible: true },
+    { key: 'country', visible: true },
+    { key: 'postalCode', visible: true },
+    { key: 'primaryPhone', visible: false },
+    { key: 'website', visible: false },
+    { key: 'labels', visible: false },
+    { key: 'goldmine', visible: false },
+  ];
+  
+  // Compute columns with translated labels - updates when language changes
+  const getTranslatedColumns = (): ColumnConfig[] => columnDefs.map(col => ({
+    ...col,
+    label: t(col.key === 'address' ? 'addressLine1' : col.key)
+  }));
+  
+  const [columns, setColumns] = useState<ColumnConfig[]>(getTranslatedColumns());
+  
+  // Update column labels when language changes
+  React.useEffect(() => {
+    setColumns(prev => prev.map(col => ({
+      ...col,
+      label: t(col.key === 'address' ? 'addressLine1' : col.key)
+    })));
+  }, [i18n.language, t]);
 
 
   // Get unique values for filter dropdowns
