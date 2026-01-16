@@ -687,7 +687,6 @@ const turkishTranslations = {
 export const DEFAULT_LANGUAGES = [
   { code: 'en', name: 'English', flag: '🇬🇧', isDefault: true },
   { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
-  { code: 'tr', name: 'Türkçe', flag: '🇹🇷' },
 ];
 
 export interface Language {
