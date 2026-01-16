@@ -1,13 +1,24 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Save, RotateCcw, Search, Languages, Check } from 'lucide-react';
-import { getDefaultTranslations, getAllTranslations, saveTranslations } from '@/lib/i18n';
+import { Save, RotateCcw, Search, Languages, Check, Plus, Trash2 } from 'lucide-react';
+import { 
+  getDefaultTranslations, 
+  getAllTranslations, 
+  saveTranslations, 
+  getAllLanguages, 
+  addCustomLanguage, 
+  removeCustomLanguage,
+  type Language 
+} from '@/lib/i18n';
 import { useTranslation } from 'react-i18next';
 
 interface FlatTranslation {
@@ -21,12 +32,42 @@ interface FlatTranslation {
 const TranslationEditor = () => {
   const { toast } = useToast();
   const { i18n } = useTranslation();
-  const [targetLang] = useState('de'); // Currently only editing German
+  
+  const [languages, setLanguages] = useState<Language[]>([]);
+  const [targetLang, setTargetLang] = useState('de');
   const [translations, setTranslations] = useState<FlatTranslation[]>([]);
   const [editedTranslations, setEditedTranslations] = useState<Record<string, string>>({});
   const [searchQuery, setSearchQuery] = useState('');
   const [hasChanges, setHasChanges] = useState(false);
   const [saving, setSaving] = useState(false);
+  
+  // Add language dialog state
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [newLangCode, setNewLangCode] = useState('');
+  const [newLangName, setNewLangName] = useState('');
+  const [newLangFlag, setNewLangFlag] = useState('');
+  
+  // Delete language dialog state
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [langToDelete, setLangToDelete] = useState<Language | null>(null);
+
+  // Load available languages
+  useEffect(() => {
+    const loadLanguages = () => {
+      const allLangs = getAllLanguages();
+      setLanguages(allLangs);
+      
+      // If current target doesn't exist, default to first non-English language
+      if (!allLangs.some(l => l.code === targetLang)) {
+        const nonEnglish = allLangs.find(l => l.code !== 'en');
+        if (nonEnglish) {
+          setTargetLang(nonEnglish.code);
+        }
+      }
+    };
+    
+    loadLanguages();
+  }, []);
 
   // Flatten nested object to array of translations
   const flattenTranslations = (
@@ -56,7 +97,7 @@ const TranslationEditor = () => {
     return result;
   };
 
-  // Load translations
+  // Load translations when target language changes
   useEffect(() => {
     const defaults = getDefaultTranslations();
     const targetTranslations = getAllTranslations(targetLang);
@@ -81,6 +122,8 @@ const TranslationEditor = () => {
     }
     
     setTranslations(flattened);
+    setEditedTranslations({});
+    setHasChanges(false);
   }, [targetLang]);
 
   // Get nested value from object by dot-path
@@ -107,6 +150,21 @@ const TranslationEditor = () => {
       (editedTranslations[item.key] || item.translatedValue).toLowerCase().includes(query)
     );
   };
+
+  // Calculate translation progress
+  const translationProgress = useMemo(() => {
+    let translated = 0;
+    let total = translations.length;
+    
+    translations.forEach(item => {
+      const currentValue = editedTranslations[item.key] ?? item.translatedValue;
+      if (currentValue !== item.originalValue) {
+        translated++;
+      }
+    });
+    
+    return { translated, total };
+  }, [translations, editedTranslations]);
 
   // Handle translation change
   const handleTranslationChange = (key: string, value: string) => {
@@ -151,7 +209,7 @@ const TranslationEditor = () => {
       
       toast({
         title: "Translations Saved",
-        description: "Your translation changes have been saved successfully.",
+        description: `Your ${getCurrentLanguage()?.name || targetLang} translations have been saved.`,
       });
     } catch (error) {
       console.error('Error saving translations:', error);
@@ -190,41 +248,257 @@ const TranslationEditor = () => {
     });
   };
 
+  // Get current language object
+  const getCurrentLanguage = () => languages.find(l => l.code === targetLang);
+
+  // Handle adding a new language
+  const handleAddLanguage = () => {
+    if (!newLangCode || !newLangName) {
+      toast({
+        title: "Missing Fields",
+        description: "Please enter both language code and name.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Validate code format (2-3 lowercase letters)
+    if (!/^[a-z]{2,3}$/.test(newLangCode)) {
+      toast({
+        title: "Invalid Code",
+        description: "Language code must be 2-3 lowercase letters (e.g., 'tr', 'es', 'fra').",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    try {
+      addCustomLanguage(newLangCode, newLangName, newLangFlag || '🌐');
+      
+      // Refresh languages list
+      setLanguages(getAllLanguages());
+      
+      // Switch to the new language
+      setTargetLang(newLangCode);
+      
+      // Reset form
+      setNewLangCode('');
+      setNewLangName('');
+      setNewLangFlag('');
+      setAddDialogOpen(false);
+      
+      toast({
+        title: "Language Added",
+        description: `${newLangName} has been added. You can now start translating.`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to add language.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Handle deleting a language
+  const handleDeleteLanguage = () => {
+    if (!langToDelete) return;
+    
+    try {
+      removeCustomLanguage(langToDelete.code);
+      
+      // Refresh languages list
+      const updatedLangs = getAllLanguages();
+      setLanguages(updatedLangs);
+      
+      // Switch to German or first available non-English
+      const newTarget = updatedLangs.find(l => l.code === 'de') || updatedLangs.find(l => l.code !== 'en');
+      if (newTarget) {
+        setTargetLang(newTarget.code);
+      }
+      
+      setDeleteDialogOpen(false);
+      setLangToDelete(null);
+      
+      toast({
+        title: "Language Deleted",
+        description: `${langToDelete.name} has been removed.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete language.",
+        variant: "destructive",
+      });
+    }
+  };
+
   // Format namespace for display
   const formatNamespace = (ns: string): string => {
     return ns.charAt(0).toUpperCase() + ns.slice(1);
   };
 
-  // Format path for display
-  const formatPath = (path: string): string => {
-    return path.split('.').map(p => 
-      p.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())
-    ).join(' → ');
-  };
+  // Non-English languages for the selector
+  const editableLanguages = languages.filter(l => l.code !== 'en');
+  const currentLang = getCurrentLanguage();
 
   return (
     <Card className="h-full">
       <CardHeader className="pb-4">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <div>
             <CardTitle className="flex items-center gap-2">
               <Languages className="w-5 h-5" />
               Translation Editor
             </CardTitle>
             <CardDescription className="mt-1">
-              Edit German translations. Original English values are shown on the left.
+              Edit translations. English shown as source language on the left.
             </CardDescription>
           </div>
-          <div className="flex items-center gap-2">
-            <Badge variant="outline" className="gap-1">
-              🇬🇧 EN → 🇩🇪 DE
-            </Badge>
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Language selector */}
+            <Select value={targetLang} onValueChange={setTargetLang}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue>
+                  {currentLang && (
+                    <span className="flex items-center gap-2">
+                      <span>{currentLang.flag}</span>
+                      <span>{currentLang.name}</span>
+                    </span>
+                  )}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {editableLanguages.map(lang => (
+                  <SelectItem key={lang.code} value={lang.code}>
+                    <span className="flex items-center gap-2">
+                      <span>{lang.flag}</span>
+                      <span>{lang.name}</span>
+                      {lang.isCustom && (
+                        <Badge variant="secondary" className="text-[10px] ml-1">Custom</Badge>
+                      )}
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            
+            {/* Add Language button */}
+            <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="icon" title="Add Language">
+                  <Plus className="w-4 h-4" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[400px]">
+                <DialogHeader>
+                  <DialogTitle>Add New Language</DialogTitle>
+                  <DialogDescription>
+                    Add a new language for translation. Untranslated strings will fall back to English.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="lang-code">Language Code *</Label>
+                    <Input
+                      id="lang-code"
+                      value={newLangCode}
+                      onChange={(e) => setNewLangCode(e.target.value.toLowerCase())}
+                      placeholder="e.g., tr, es, fr, it"
+                      maxLength={3}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      2-3 letter code (ISO 639-1)
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="lang-name">Language Name *</Label>
+                    <Input
+                      id="lang-name"
+                      value={newLangName}
+                      onChange={(e) => setNewLangName(e.target.value)}
+                      placeholder="e.g., Türkçe, Español, Français"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="lang-flag">Flag Emoji</Label>
+                    <Input
+                      id="lang-flag"
+                      value={newLangFlag}
+                      onChange={(e) => setNewLangFlag(e.target.value)}
+                      placeholder="e.g., 🇹🇷, 🇪🇸, 🇫🇷"
+                      maxLength={4}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Optional. Defaults to 🌐 if not provided.
+                    </p>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setAddDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button onClick={handleAddLanguage}>
+                    Add Language
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+            
+            {/* Delete Language button (only for custom languages) */}
+            {currentLang?.isCustom && (
+              <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    size="icon" 
+                    className="text-destructive hover:text-destructive"
+                    title="Delete Language"
+                    onClick={() => setLangToDelete(currentLang)}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Delete Language</DialogTitle>
+                    <DialogDescription>
+                      Are you sure you want to delete {langToDelete?.flag} {langToDelete?.name}? 
+                      All translations for this language will be permanently removed.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button variant="destructive" onClick={handleDeleteLanguage}>
+                      Delete Language
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            )}
+            
             {hasChanges && (
               <Badge variant="secondary" className="bg-yellow-500/10 text-yellow-600">
                 Unsaved Changes
               </Badge>
             )}
           </div>
+        </div>
+        
+        {/* Progress indicator */}
+        <div className="flex items-center gap-2 mt-3">
+          <Badge variant="outline" className="gap-1">
+            🇬🇧 EN → {currentLang?.flag || '🌐'} {targetLang.toUpperCase()}
+          </Badge>
+          <Badge 
+            variant={translationProgress.translated === translationProgress.total ? "default" : "secondary"}
+            className={translationProgress.translated === translationProgress.total ? "bg-green-500/10 text-green-600 border-green-500/20" : ""}
+          >
+            {translationProgress.translated}/{translationProgress.total} translated
+            {translationProgress.translated === translationProgress.total && " ✓"}
+          </Badge>
         </div>
         
         <div className="flex items-center gap-2 mt-4">
@@ -260,11 +534,17 @@ const TranslationEditor = () => {
       </CardHeader>
       
       <CardContent>
-        <ScrollArea className="h-[calc(100vh-350px)]">
+        <ScrollArea className="h-[calc(100vh-420px)]">
           <Accordion type="multiple" defaultValue={Object.keys(groupedTranslations)} className="space-y-2">
             {Object.entries(groupedTranslations).map(([namespace, items]) => {
               const filteredItems = filterTranslations(items);
               if (filteredItems.length === 0) return null;
+              
+              // Calculate namespace progress
+              const nsTranslated = filteredItems.filter(item => {
+                const currentValue = editedTranslations[item.key] ?? item.translatedValue;
+                return currentValue !== item.originalValue;
+              }).length;
               
               return (
                 <AccordionItem key={namespace} value={namespace} className="border rounded-lg px-4">
@@ -272,7 +552,7 @@ const TranslationEditor = () => {
                     <div className="flex items-center gap-2">
                       <span className="font-medium">{formatNamespace(namespace)}</span>
                       <Badge variant="secondary" className="text-xs">
-                        {filteredItems.length} items
+                        {nsTranslated}/{filteredItems.length}
                       </Badge>
                     </div>
                   </AccordionTrigger>
@@ -297,7 +577,9 @@ const TranslationEditor = () => {
                             <div className="space-y-1">
                               <div className="flex items-center gap-2">
                                 <span className="text-xs font-mono text-muted-foreground">Translation</span>
-                                <Badge variant="outline" className="text-[10px] px-1.5 py-0">🇩🇪 DE</Badge>
+                                <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                                  {currentLang?.flag || '🌐'} {targetLang.toUpperCase()}
+                                </Badge>
                                 {isDifferentFromOriginal && (
                                   <Check className="w-3 h-3 text-green-500" />
                                 )}
