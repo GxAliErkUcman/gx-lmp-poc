@@ -15,9 +15,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "next-themes";
 import { useTranslation } from "react-i18next";
-import { Settings, Sun, Moon, Monitor, Key, Mail, Shield, Languages } from "lucide-react";
+import { Settings, Sun, Moon, Monitor, Key, Mail, Shield } from "lucide-react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Separator } from "@/components/ui/separator";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { getAllLanguages } from "@/lib/i18n";
 
 interface UserSettingsDialogProps {
   triggerClassName?: string;
@@ -42,8 +44,9 @@ export const UserSettingsDialog = ({
   const { user } = useAuth();
   const { theme, setTheme } = useTheme();
   const { t, i18n } = useTranslation();
+  const [availableLanguages, setAvailableLanguages] = useState(getAllLanguages());
 
-  const currentLanguage = i18n.language?.startsWith('de') ? 'de' : 'en';
+  const currentLanguage = i18n.language?.split('-')[0] || 'en';
 
   useEffect(() => {
     const fetchUserRole = async () => {
@@ -62,6 +65,8 @@ export const UserSettingsDialog = ({
 
     if (open) {
       fetchUserRole();
+      // Refresh available languages when dialog opens
+      setAvailableLanguages(getAllLanguages());
     }
   }, [user, open]);
 
@@ -238,29 +243,31 @@ export const UserSettingsDialog = ({
               {t('settings.language')}
             </h4>
             <div className="rounded-lg border p-4">
-              <ToggleGroup
-                type="single"
-                value={currentLanguage}
-                onValueChange={handleLanguageChange}
-                className="justify-start"
-              >
-                <ToggleGroupItem
-                  value="en"
-                  aria-label="English"
-                  className="gap-2"
-                >
-                  <span className="text-base">🇬🇧</span>
-                  English
-                </ToggleGroupItem>
-                <ToggleGroupItem
-                  value="de"
-                  aria-label="Deutsch"
-                  className="gap-2"
-                >
-                  <span className="text-base">🇩🇪</span>
-                  Deutsch
-                </ToggleGroupItem>
-              </ToggleGroup>
+              <Select value={currentLanguage} onValueChange={handleLanguageChange}>
+                <SelectTrigger className="w-full">
+                  <SelectValue>
+                    {(() => {
+                      const lang = availableLanguages.find(l => l.code === currentLanguage);
+                      return lang ? (
+                        <span className="flex items-center gap-2">
+                          <span>{lang.flag}</span>
+                          <span>{lang.name}</span>
+                        </span>
+                      ) : 'Select language';
+                    })()}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {availableLanguages.map(lang => (
+                    <SelectItem key={lang.code} value={lang.code}>
+                      <span className="flex items-center gap-2">
+                        <span>{lang.flag}</span>
+                        <span>{lang.name}</span>
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 

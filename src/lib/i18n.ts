@@ -456,6 +456,69 @@ const resources = {
   }
 };
 
+// Default languages that are always available
+export const DEFAULT_LANGUAGES = [
+  { code: 'en', name: 'English', flag: '🇬🇧', isDefault: true },
+  { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
+];
+
+export interface Language {
+  code: string;
+  name: string;
+  flag: string;
+  isDefault?: boolean;
+  isCustom?: boolean;
+}
+
+// Get custom languages from localStorage
+export const getCustomLanguages = (): Language[] => {
+  try {
+    const stored = localStorage.getItem('custom_languages');
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+};
+
+// Add a new custom language
+export const addCustomLanguage = (code: string, name: string, flag: string) => {
+  const custom = getCustomLanguages();
+  
+  // Check if language already exists
+  const allLangs = getAllLanguages();
+  if (allLangs.some(l => l.code === code)) {
+    throw new Error(`Language with code "${code}" already exists`);
+  }
+  
+  const newLang: Language = { code, name, flag, isCustom: true };
+  custom.push(newLang);
+  localStorage.setItem('custom_languages', JSON.stringify(custom));
+  
+  // Initialize empty resources for this language (will fallback to English)
+  i18n.addResourceBundle(code, 'common', {}, true, true);
+  i18n.addResourceBundle(code, 'fields', {}, true, true);
+  i18n.addResourceBundle(code, 'days', {}, true, true);
+  i18n.addResourceBundle(code, 'validation', {}, true, true);
+  i18n.addResourceBundle(code, 'placeholders', {}, true, true);
+  
+  return newLang;
+};
+
+// Remove a custom language
+export const removeCustomLanguage = (code: string) => {
+  const custom = getCustomLanguages();
+  const filtered = custom.filter(l => l.code !== code);
+  localStorage.setItem('custom_languages', JSON.stringify(filtered));
+  
+  // Also remove stored translations for this language
+  localStorage.removeItem(`translations_${code}`);
+};
+
+// Get all languages (default + custom)
+export const getAllLanguages = (): Language[] => {
+  return [...DEFAULT_LANGUAGES, ...getCustomLanguages()];
+};
+
 // Get custom translations from localStorage (these override defaults)
 export const getStoredTranslations = (lang: string) => {
   try {
@@ -510,7 +573,7 @@ i18n
     resources,
     fallbackLng: 'en',
     defaultNS: 'common',
-    ns: ['common', 'fields', 'days', 'validation'],
+    ns: ['common', 'fields', 'days', 'validation', 'placeholders'],
     interpolation: {
       escapeValue: false, // React already escapes
     },
@@ -521,8 +584,23 @@ i18n
     },
   });
 
+// Load custom languages and their translations
+const loadCustomLanguages = () => {
+  const customLanguages = getCustomLanguages();
+  customLanguages.forEach(lang => {
+    // Initialize empty resources for custom languages
+    i18n.addResourceBundle(lang.code, 'common', {}, true, true);
+    i18n.addResourceBundle(lang.code, 'fields', {}, true, true);
+    i18n.addResourceBundle(lang.code, 'days', {}, true, true);
+    i18n.addResourceBundle(lang.code, 'validation', {}, true, true);
+    i18n.addResourceBundle(lang.code, 'placeholders', {}, true, true);
+  });
+};
+
 // Load any custom translations from localStorage
-const languages = ['en', 'de'];
+const languages = getAllLanguages().map(l => l.code);
+loadCustomLanguages();
+
 languages.forEach(lang => {
   const custom = getStoredTranslations(lang);
   if (custom) {
