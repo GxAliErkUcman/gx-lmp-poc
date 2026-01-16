@@ -456,6 +456,233 @@ const resources = {
   }
 };
 
+// Spanish translations (bundled)
+const spanishTranslations = {
+  common: {
+    nav: {
+      yourLocations: "Tus Ubicaciones",
+      accountSettings: "Configuración de Cuenta",
+      signOut: "Cerrar Sesión",
+      adminPanel: "Panel de Administración",
+      backToOverview: "Volver al Resumen"
+    },
+    actions: {
+      add: "Añadir",
+      import: "Importar",
+      export: "Exportar",
+      exportJson: "Exportar JSON",
+      save: "Guardar",
+      cancel: "Cancelar",
+      delete: "Eliminar",
+      edit: "Editar",
+      search: "Buscar",
+      filter: "Filtrar",
+      refresh: "Actualizar",
+      close: "Cerrar",
+      closed: "Cerrado",
+      confirm: "Confirmar",
+      submit: "Enviar",
+      update: "Actualizar",
+      updateCoordinates: "Actualizar Coordenadas",
+      copyCoordinates: "Copiar Coordenadas",
+      openInBingMaps: "Abrir en Bing Maps",
+      useCurrentLocation: "Usar Ubicación Actual",
+      findFromAddress: "Buscar desde Dirección",
+      gettingLocation: "Obteniendo Ubicación...",
+      geocoding: "Geocodificando...",
+      addSingleDate: "Añadir Fecha Individual",
+      addDateRange: "Añadir Rango de Fechas",
+      manageCustomServices: "Gestionar Servicios Personalizados",
+      addBusiness: "Añadir Negocio",
+      addFirstBusiness: "Añade Tu Primer Negocio",
+      createUser: "Crear Usuario",
+      versionHistory: "Historial de Versiones",
+      settings: "Configuración",
+      customServices: "Servicios Personalizados"
+    },
+    tabs: {
+      activeLocations: "Ubicaciones Activas",
+      needAttention: "Requieren Atención",
+      new: "Nuevo",
+      clientOverview: "Resumen de Clientes",
+      allClients: "Todos los Clientes",
+      users: "Usuarios",
+      translations: "Traducciones"
+    },
+    settings: {
+      title: "Configuración de Cuenta",
+      appearance: "Apariencia",
+      security: "Seguridad",
+      language: "Idioma",
+      changePassword: "Cambiar Contraseña",
+      account: "Cuenta",
+      email: "Correo Electrónico",
+      role: "Rol"
+    },
+    theme: {
+      light: "Claro",
+      dark: "Oscuro",
+      system: "Sistema"
+    },
+    status: {
+      active: "Activo",
+      pending: "Pendiente",
+      loading: "Cargando...",
+      noResults: "No se encontraron resultados",
+      open: "Abierto",
+      total: "Total"
+    },
+    messages: {
+      success: "Éxito",
+      error: "Error",
+      saved: "Cambios guardados correctamente",
+      deleted: "Eliminado correctamente",
+      confirmDelete: "¿Estás seguro de que quieres eliminar esto?",
+      noBusinessesFound: "No se encontraron negocios para este cliente",
+      createUserDescription: "Crear Administradores de Cliente, Usuarios o Propietarios de Tienda para este cliente"
+    },
+    sections: {
+      basicInformation: "Información Básica",
+      addressInformation: "Información de Dirección",
+      locationCoordinates: "Coordenadas de Ubicación",
+      contactInformation: "Información de Contacto",
+      socialMedia: "Redes Sociales",
+      businessDates: "Fechas del Negocio",
+      openingHours: "Horario de Apertura",
+      specialHours: "Horarios Especiales",
+      coverPhoto: "Foto de Portada",
+      logoPhoto: "Foto del Logo",
+      serviceUrls: "URLs de Servicios",
+      customServices: "Servicios Personalizados",
+      dataGoldmine: "Depósito de Datos"
+    },
+    location: {
+      currentCoordinates: "Coordenadas Actuales",
+      useCurrentLocationHint: "Usa \"Ubicación Actual\" para detectar tu posición automáticamente",
+      findFromAddressHint: "Usa \"Buscar desde Dirección\" para geocodificar la dirección ingresada",
+      manualEntryHint: "También puedes ingresar coordenadas precisas manualmente"
+    },
+    specialHours: {
+      description: "Establece horarios especiales para festivos y otras excepciones. Estos anulan los horarios regulares.",
+      noHoursAdded: "Aún no se han añadido horarios especiales",
+      clickToStart: "Haz clic en \"Añadir Horarios Especiales\" para comenzar",
+      date: "Fecha",
+      hours: "Horas",
+      pickDate: "Seleccionar fecha",
+      selectDateRange: "Seleccionar Rango de Fechas",
+      hoursForAllDays: "Horario para Todos los Días Seleccionados",
+      applyToAllDates: "Aplicar a Todas las Fechas",
+      daysSelected: "días",
+      selected: "Seleccionado",
+      generatedFormat: "Formato Generado"
+    },
+    openingHours: {
+      weekdays9to6: "Días laborables 9-18",
+      weekdays8to5: "Días laborables 8-17",
+      weekend10to2: "Fin de semana 10-14",
+      closeWeekends: "Cerrar fines de semana",
+      customFormat: "Formato Personalizado (Avanzado)"
+    },
+    photos: {
+      dragAndDrop: "Arrastra y suelta fotos aquí, o haz clic para seleccionar",
+      dropHere: "Suelta las fotos aquí",
+      photosUploaded: "fotos subidas"
+    },
+    dialog: {
+      editBusiness: "Editar Negocio",
+      addNewBusiness: "Añadir Nuevo Negocio",
+      updateBusinessInfo: "Actualizar información del negocio",
+      enterBusinessDetails: "Ingresa los detalles de tu nueva ubicación de negocio",
+      saving: "Guardando...",
+      updateBusiness: "Actualizar Negocio",
+      createBusiness: "Crear Negocio"
+    }
+  },
+  fields: {
+    storeCode: "Código de Tienda",
+    businessName: "Nombre del Negocio",
+    addressLine1: "Dirección",
+    addressLine2: "Línea de Dirección 2",
+    addressLine3: "Línea de Dirección 3",
+    addressLine4: "Línea de Dirección 4",
+    addressLine5: "Línea de Dirección 5",
+    country: "País",
+    city: "Ciudad",
+    state: "Estado/Provincia",
+    postalCode: "Código Postal",
+    district: "Distrito",
+    primaryCategory: "Categoría Principal",
+    additionalCategories: "Categorías Adicionales",
+    website: "Sitio Web",
+    primaryPhone: "Teléfono Principal",
+    additionalPhones: "Teléfonos Adicionales",
+    fromTheBusiness: "Sobre el Negocio",
+    openingDate: "Fecha de Apertura",
+    labels: "Etiquetas",
+    temporarilyClosed: "Cerrado Temporalmente",
+    latitude: "Latitud",
+    longitude: "Longitud",
+    logoPhoto: "Foto del Logo",
+    coverPhoto: "Foto de Portada",
+    otherPhotos: "Otras Fotos",
+    appointmentURL: "URL de Citas",
+    menuURL: "URL del Menú",
+    reservationsURL: "URL de Reservaciones",
+    orderAheadURL: "URL de Pedidos Anticipados",
+    adwords: "Teléfono AdWords",
+    goldmine: "Notas (Interno)",
+    unstructuredData: "Datos No Estructurados",
+    socialMedia: "Redes Sociales",
+    openingHours: "Horario de Apertura",
+    specialHours: "Horarios Especiales",
+    moreHours: "Más Horarios",
+    facebookUrl: "URL de Facebook",
+    instagramUrl: "URL de Instagram",
+    linkedinUrl: "URL de LinkedIn",
+    pinterestUrl: "URL de Pinterest",
+    tiktokUrl: "URL de TikTok",
+    twitterUrl: "URL de Twitter/X",
+    youtubeUrl: "URL de YouTube"
+  },
+  days: {
+    monday: "Lunes",
+    tuesday: "Martes",
+    wednesday: "Miércoles",
+    thursday: "Jueves",
+    friday: "Viernes",
+    saturday: "Sábado",
+    sunday: "Domingo"
+  },
+  validation: {
+    required: "Este campo es obligatorio",
+    storeCodeRequired: "El código de tienda es obligatorio",
+    businessNameRequired: "El nombre del negocio es obligatorio",
+    addressRequired: "La dirección es obligatoria",
+    countryRequired: "El país es obligatorio",
+    categoryRequired: "La categoría principal es obligatoria",
+    invalidUrl: "Formato de URL inválido",
+    invalidPhone: "Formato de número de teléfono inválido",
+    invalidEmail: "Formato de correo electrónico inválido",
+    passwordTooShort: "La contraseña debe tener al menos 8 caracteres",
+    passwordsMustMatch: "Las contraseñas no coinciden",
+    invalidDate: "Formato de fecha inválido",
+    futureDate: "La fecha no puede ser en el futuro",
+    maxLength: "Máximo {{max}} caracteres permitidos",
+    invalidFormat: "Formato inválido"
+  },
+  placeholders: {
+    briefDescription: "Breve descripción de tu negocio (máx. 750 caracteres)",
+    labelsExample: "ej., Familiar, Orgánico, Wi-Fi Gratis (separados por coma)",
+    additionalCategoriesMax: "Categorías adicionales separadas por coma (máx. 10)",
+    selectCountry: "Seleccionar país",
+    phonePlaceholder: "+34-555-123-4567",
+    additionalPhonesPlaceholder: "Números de teléfono separados por coma",
+    goldminePlaceholder: "Almacena datos no estructurados aquí (no incluido en exportaciones JSON)",
+    goldmineDescription: "Este campo es para almacenar datos crudos/no estructurados y está excluido de todas las exportaciones JSON.",
+    noCustomServices: "Aún no hay servicios personalizados asignados."
+  }
+};
+
 // Turkish translations (bundled)
 const turkishTranslations = {
   common: {
@@ -768,6 +995,7 @@ export const saveTranslations = (lang: string, translations: Record<string, any>
 // Get bundled translations for a language
 const getBundledTranslations = (lang: string) => {
   if (lang === 'tr') return turkishTranslations;
+  if (lang === 'es') return spanishTranslations;
   return resources[lang as keyof typeof resources] || resources.en;
 };
 
@@ -801,7 +1029,8 @@ export const getDefaultTranslations = () => resources.en;
 // Initialize i18n with all bundled languages
 const allResources = {
   ...resources,
-  tr: turkishTranslations
+  tr: turkishTranslations,
+  es: spanishTranslations
 };
 
 i18n
