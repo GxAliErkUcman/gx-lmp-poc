@@ -456,10 +456,238 @@ const resources = {
   }
 };
 
+// Turkish translations (bundled)
+const turkishTranslations = {
+  common: {
+    nav: {
+      yourLocations: "Lokasyonlarınız",
+      accountSettings: "Hesap Ayarları",
+      signOut: "Çıkış Yap",
+      adminPanel: "Yönetim Paneli",
+      backToOverview: "Genel Bakışa Dön"
+    },
+    actions: {
+      add: "Ekle",
+      import: "İçe Aktar",
+      export: "Dışa Aktar",
+      exportJson: "JSON Dışa Aktar",
+      save: "Kaydet",
+      cancel: "İptal",
+      delete: "Sil",
+      edit: "Düzenle",
+      search: "Ara",
+      filter: "Filtrele",
+      refresh: "Yenile",
+      close: "Kapat",
+      closed: "Kapalı",
+      confirm: "Onayla",
+      submit: "Gönder",
+      update: "Güncelle",
+      updateCoordinates: "Koordinatları Güncelle",
+      copyCoordinates: "Koordinatları Kopyala",
+      openInBingMaps: "Bing Maps'te Aç",
+      useCurrentLocation: "Mevcut Konumu Kullan",
+      findFromAddress: "Adresten Bul",
+      gettingLocation: "Konum Alınıyor...",
+      geocoding: "Geocoding...",
+      addSingleDate: "Tek Tarih Ekle",
+      addDateRange: "Tarih Aralığı Ekle",
+      manageCustomServices: "Özel Hizmetleri Yönet",
+      addBusiness: "İşletme Ekle",
+      addFirstBusiness: "İlk İşletmenizi Ekleyin",
+      createUser: "Kullanıcı Oluştur",
+      versionHistory: "Sürüm Geçmişi",
+      settings: "Ayarlar",
+      customServices: "Özel Hizmetler"
+    },
+    tabs: {
+      activeLocations: "Aktif Lokasyonlar",
+      needAttention: "İlgi Bekleyenler",
+      new: "Yeni",
+      clientOverview: "Müşteri Genel Bakış",
+      allClients: "Tüm Müşteriler",
+      users: "Kullanıcılar",
+      translations: "Çeviriler"
+    },
+    settings: {
+      title: "Hesap Ayarları",
+      appearance: "Görünüm",
+      security: "Güvenlik",
+      language: "Dil",
+      changePassword: "Şifre Değiştir",
+      account: "Hesap",
+      email: "E-posta",
+      role: "Rol"
+    },
+    theme: {
+      light: "Açık",
+      dark: "Koyu",
+      system: "Sistem"
+    },
+    status: {
+      active: "Aktif",
+      pending: "Beklemede",
+      loading: "Yükleniyor...",
+      noResults: "Sonuç bulunamadı",
+      open: "Açık",
+      total: "Toplam"
+    },
+    messages: {
+      success: "Başarılı",
+      error: "Hata",
+      saved: "Değişiklikler başarıyla kaydedildi",
+      deleted: "Başarıyla silindi",
+      confirmDelete: "Bunu silmek istediğinizden emin misiniz?",
+      noBusinessesFound: "Bu müşteri için işletme bulunamadı",
+      createUserDescription: "Bu müşteri için Müşteri Yöneticisi, Kullanıcı veya Mağaza Sahibi oluşturun"
+    },
+    sections: {
+      basicInformation: "Temel Bilgiler",
+      addressInformation: "Adres Bilgileri",
+      locationCoordinates: "Konum Koordinatları",
+      contactInformation: "İletişim Bilgileri",
+      socialMedia: "Sosyal Medya",
+      businessDates: "İşletme Tarihleri",
+      openingHours: "Çalışma Saatleri",
+      specialHours: "Özel Saatler",
+      coverPhoto: "Kapak Fotoğrafı",
+      logoPhoto: "Logo Fotoğrafı",
+      serviceUrls: "Hizmet URL'leri",
+      customServices: "Özel Hizmetler",
+      dataGoldmine: "Veri Deposu"
+    },
+    location: {
+      currentCoordinates: "Mevcut Koordinatlar",
+      useCurrentLocationHint: "Konumunuzu otomatik algılamak için \"Mevcut Konumu Kullan\" seçeneğini kullanın",
+      findFromAddressHint: "Girdiğiniz adresi geocode etmek için \"Adresten Bul\" seçeneğini kullanın",
+      manualEntryHint: "Kesin koordinatları manuel olarak da girebilirsiniz"
+    },
+    specialHours: {
+      description: "Tatiller ve diğer istisnalar için özel saatler belirleyin. Bunlar normal çalışma saatlerini geçersiz kılar.",
+      noHoursAdded: "Henüz özel saat eklenmedi",
+      clickToStart: "Başlamak için \"Özel Saat Ekle\"ye tıklayın",
+      date: "Tarih",
+      hours: "Saat",
+      pickDate: "Tarih seçin",
+      selectDateRange: "Tarih Aralığı Seçin",
+      hoursForAllDays: "Seçilen Tüm Günler İçin Saatler",
+      applyToAllDates: "Tüm Tarihlere Uygula",
+      daysSelected: "gün",
+      selected: "Seçildi",
+      generatedFormat: "Oluşturulan Format"
+    },
+    openingHours: {
+      weekdays9to6: "Hafta içi 9-18",
+      weekdays8to5: "Hafta içi 8-17",
+      weekend10to2: "Hafta sonu 10-14",
+      closeWeekends: "Hafta sonları kapalı",
+      customFormat: "Özel Format (Gelişmiş)"
+    },
+    photos: {
+      dragAndDrop: "Fotoğrafları buraya sürükleyip bırakın veya seçmek için tıklayın",
+      dropHere: "Fotoğrafları buraya bırakın",
+      photosUploaded: "fotoğraf yüklendi"
+    },
+    dialog: {
+      editBusiness: "İşletmeyi Düzenle",
+      addNewBusiness: "Yeni İşletme Ekle",
+      updateBusinessInfo: "İşletme bilgilerini güncelle",
+      enterBusinessDetails: "Yeni işletme lokasyonunuz için detayları girin",
+      saving: "Kaydediliyor...",
+      updateBusiness: "İşletmeyi Güncelle",
+      createBusiness: "İşletme Oluştur"
+    }
+  },
+  fields: {
+    storeCode: "Mağaza Kodu",
+    businessName: "İşletme Adı",
+    addressLine1: "Sokak Adresi",
+    addressLine2: "Adres Satırı 2",
+    addressLine3: "Adres Satırı 3",
+    addressLine4: "Adres Satırı 4",
+    addressLine5: "Adres Satırı 5",
+    country: "Ülke",
+    city: "Şehir",
+    state: "İl/Eyalet",
+    postalCode: "Posta Kodu",
+    district: "İlçe",
+    primaryCategory: "Ana Kategori",
+    additionalCategories: "Ek Kategoriler",
+    website: "Web Sitesi",
+    primaryPhone: "Ana Telefon",
+    additionalPhones: "Ek Telefonlar",
+    fromTheBusiness: "İşletme Hakkında",
+    openingDate: "Açılış Tarihi",
+    labels: "Etiketler",
+    temporarilyClosed: "Geçici Olarak Kapalı",
+    latitude: "Enlem",
+    longitude: "Boylam",
+    logoPhoto: "Logo Fotoğrafı",
+    coverPhoto: "Kapak Fotoğrafı",
+    otherPhotos: "Diğer Fotoğraflar",
+    appointmentURL: "Randevu URL'si",
+    menuURL: "Menü URL'si",
+    reservationsURL: "Rezervasyon URL'si",
+    orderAheadURL: "Ön Sipariş URL'si",
+    adwords: "AdWords Telefon",
+    goldmine: "Notlar (Dahili)",
+    unstructuredData: "Yapılandırılmamış Veri",
+    socialMedia: "Sosyal Medya",
+    openingHours: "Çalışma Saatleri",
+    specialHours: "Özel Saatler",
+    moreHours: "Diğer Saatler",
+    facebookUrl: "Facebook URL",
+    instagramUrl: "Instagram URL",
+    linkedinUrl: "LinkedIn URL",
+    pinterestUrl: "Pinterest URL",
+    tiktokUrl: "TikTok URL",
+    twitterUrl: "Twitter/X URL",
+    youtubeUrl: "YouTube URL"
+  },
+  days: {
+    monday: "Pazartesi",
+    tuesday: "Salı",
+    wednesday: "Çarşamba",
+    thursday: "Perşembe",
+    friday: "Cuma",
+    saturday: "Cumartesi",
+    sunday: "Pazar"
+  },
+  validation: {
+    required: "Bu alan zorunludur",
+    storeCodeRequired: "Mağaza kodu gereklidir",
+    businessNameRequired: "İşletme adı gereklidir",
+    addressRequired: "Sokak adresi gereklidir",
+    countryRequired: "Ülke gereklidir",
+    categoryRequired: "Ana kategori gereklidir",
+    invalidUrl: "Geçersiz URL formatı",
+    invalidPhone: "Geçersiz telefon numarası formatı",
+    invalidEmail: "Geçersiz e-posta formatı",
+    passwordTooShort: "Şifre en az 8 karakter olmalıdır",
+    passwordsMustMatch: "Şifreler eşleşmiyor",
+    invalidDate: "Geçersiz tarih formatı",
+    futureDate: "Tarih gelecekte olamaz",
+    maxLength: "En fazla {{max}} karakter izin verilir",
+    invalidFormat: "Geçersiz format"
+  },
+  placeholders: {
+    briefDescription: "İşletmenizin kısa açıklaması (maks. 750 karakter)",
+    labelsExample: "örn., Aile dostu, Organik, Ücretsiz Wi-Fi (virgülle ayrılmış)",
+    additionalCategoriesMax: "Virgülle ayrılmış ek kategoriler (maks. 10)",
+    selectCountry: "Ülke seçin",
+    phonePlaceholder: "+90-555-123-4567",
+    additionalPhonesPlaceholder: "Virgülle ayrılmış telefon numaraları",
+    goldminePlaceholder: "Yapılandırılmamış verileri buraya kaydedin (JSON dışa aktarımlarına dahil değil)",
+    goldmineDescription: "Bu alan ham/yapılandırılmamış verileri depolamak içindir ve tüm JSON dışa aktarımlarından hariç tutulur.",
+    noCustomServices: "Henüz özel hizmet atanmadı."
+  }
+};
+
 // Default languages that are always available
 export const DEFAULT_LANGUAGES = [
   { code: 'en', name: 'English', flag: '🇬🇧', isDefault: true },
   { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
+  { code: 'tr', name: 'Türkçe', flag: '🇹🇷' },
 ];
 
 export interface Language {
@@ -538,9 +766,15 @@ export const saveTranslations = (lang: string, translations: Record<string, any>
   });
 };
 
+// Get bundled translations for a language
+const getBundledTranslations = (lang: string) => {
+  if (lang === 'tr') return turkishTranslations;
+  return resources[lang as keyof typeof resources] || resources.en;
+};
+
 // Get all translations for a language (merged default + custom)
 export const getAllTranslations = (lang: string) => {
-  const defaults = resources[lang as keyof typeof resources] || resources.en;
+  const defaults = getBundledTranslations(lang);
   const custom = getStoredTranslations(lang);
   
   if (!custom) return defaults;
@@ -565,12 +799,17 @@ function deepMerge(target: any, source: any): any {
 // Get the default (original English) translations
 export const getDefaultTranslations = () => resources.en;
 
-// Initialize i18n
+// Initialize i18n with all bundled languages
+const allResources = {
+  ...resources,
+  tr: turkishTranslations
+};
+
 i18n
   .use(LanguageDetector)
   .use(initReactI18next)
   .init({
-    resources,
+    resources: allResources,
     fallbackLng: 'en',
     defaultNS: 'common',
     ns: ['common', 'fields', 'days', 'validation', 'placeholders'],
