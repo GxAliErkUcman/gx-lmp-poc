@@ -1137,6 +1137,687 @@ const turkishTranslations = {
   }
 };
 
+// Italian translations (bundled)
+const italianTranslations = {
+  common: {
+    nav: {
+      yourLocations: "Le Tue Sedi",
+      accountSettings: "Impostazioni Account",
+      signOut: "Esci",
+      adminPanel: "Pannello di Amministrazione",
+      backToOverview: "Torna alla Panoramica"
+    },
+    actions: {
+      add: "Aggiungi",
+      import: "Importa",
+      export: "Esporta",
+      exportJson: "Esporta JSON",
+      save: "Salva",
+      cancel: "Annulla",
+      delete: "Elimina",
+      edit: "Modifica",
+      search: "Cerca",
+      filter: "Filtra",
+      refresh: "Aggiorna",
+      close: "Chiudi",
+      closed: "Chiuso",
+      confirm: "Conferma",
+      submit: "Invia",
+      update: "Aggiorna",
+      updateCoordinates: "Aggiorna Coordinate",
+      copyCoordinates: "Copia Coordinate",
+      openInBingMaps: "Apri in Bing Maps",
+      useCurrentLocation: "Usa Posizione Attuale",
+      findFromAddress: "Trova da Indirizzo",
+      gettingLocation: "Rilevamento Posizione...",
+      geocoding: "Geocodifica...",
+      addSingleDate: "Aggiungi Data Singola",
+      addDateRange: "Aggiungi Intervallo Date",
+      manageCustomServices: "Gestisci Servizi Personalizzati",
+      addBusiness: "Aggiungi Attività",
+      addFirstBusiness: "Aggiungi la Tua Prima Attività",
+      createUser: "Crea Utente",
+      versionHistory: "Cronologia Versioni",
+      settings: "Impostazioni",
+      customServices: "Servizi Personalizzati"
+    },
+    tabs: {
+      activeLocations: "Sedi Attive",
+      needAttention: "Richiedono Attenzione",
+      new: "Nuovo",
+      clientOverview: "Panoramica Clienti",
+      allClients: "Tutti i Clienti",
+      users: "Utenti",
+      translations: "Traduzioni"
+    },
+    settings: {
+      title: "Impostazioni Account",
+      appearance: "Aspetto",
+      security: "Sicurezza",
+      language: "Lingua",
+      changePassword: "Cambia Password",
+      account: "Account",
+      email: "Email",
+      role: "Ruolo"
+    },
+    theme: {
+      light: "Chiaro",
+      dark: "Scuro",
+      system: "Sistema"
+    },
+    status: {
+      active: "Attivo",
+      pending: "In Attesa",
+      loading: "Caricamento...",
+      noResults: "Nessun risultato trovato",
+      open: "Aperto",
+      total: "Totale"
+    },
+    messages: {
+      success: "Successo",
+      error: "Errore",
+      saved: "Modifiche salvate con successo",
+      deleted: "Eliminato con successo",
+      confirmDelete: "Sei sicuro di voler eliminare questo elemento?",
+      noBusinessesFound: "Nessuna attività trovata per questo cliente",
+      createUserDescription: "Crea Amministratori Cliente, Utenti o Proprietari di Negozio per questo cliente"
+    },
+    sections: {
+      basicInformation: "Informazioni di Base",
+      addressInformation: "Informazioni Indirizzo",
+      locationCoordinates: "Coordinate della Posizione",
+      contactInformation: "Informazioni di Contatto",
+      socialMedia: "Social Media",
+      businessDates: "Date dell'Attività",
+      openingHours: "Orari di Apertura",
+      specialHours: "Orari Speciali",
+      coverPhoto: "Foto di Copertina",
+      logoPhoto: "Foto del Logo",
+      serviceUrls: "URL dei Servizi",
+      customServices: "Servizi Personalizzati",
+      dataGoldmine: "Deposito Dati"
+    },
+    location: {
+      currentCoordinates: "Coordinate Attuali",
+      useCurrentLocationHint: "Usa \"Posizione Attuale\" per rilevare automaticamente la tua posizione",
+      findFromAddressHint: "Usa \"Trova da Indirizzo\" per geocodificare l'indirizzo inserito",
+      manualEntryHint: "Puoi anche inserire manualmente le coordinate precise"
+    },
+    specialHours: {
+      description: "Imposta orari speciali per festività e altre eccezioni. Questi sostituiscono gli orari di apertura regolari.",
+      noHoursAdded: "Nessun orario speciale ancora aggiunto",
+      clickToStart: "Clicca su \"Aggiungi Orari Speciali\" per iniziare",
+      date: "Data",
+      hours: "Ore",
+      pickDate: "Seleziona una data",
+      selectDateRange: "Seleziona Intervallo Date",
+      hoursForAllDays: "Orari per Tutti i Giorni Selezionati",
+      applyToAllDates: "Applica a Tutte le Date",
+      daysSelected: "giorni",
+      selected: "Selezionato",
+      generatedFormat: "Formato Generato"
+    },
+    openingHours: {
+      weekdays9to6: "Giorni feriali 9-18",
+      weekdays8to5: "Giorni feriali 8-17",
+      weekend10to2: "Fine settimana 10-14",
+      closeWeekends: "Chiuso nei fine settimana",
+      customFormat: "Formato Personalizzato (Avanzato)"
+    },
+    photos: {
+      dragAndDrop: "Trascina e rilascia le foto qui, o clicca per selezionare",
+      dropHere: "Rilascia le foto qui",
+      photosUploaded: "foto caricate"
+    },
+    dialog: {
+      editBusiness: "Modifica Attività",
+      addNewBusiness: "Aggiungi Nuova Attività",
+      updateBusinessInfo: "Aggiorna le informazioni dell'attività",
+      enterBusinessDetails: "Inserisci i dettagli per la tua nuova sede",
+      saving: "Salvataggio...",
+      updateBusiness: "Aggiorna Attività",
+      createBusiness: "Crea Attività"
+    }
+  },
+  fields: {
+    storeCode: "Codice Negozio",
+    businessName: "Nome Attività",
+    addressLine1: "Indirizzo",
+    addressLine2: "Riga Indirizzo 2",
+    addressLine3: "Riga Indirizzo 3",
+    addressLine4: "Riga Indirizzo 4",
+    addressLine5: "Riga Indirizzo 5",
+    country: "Paese",
+    city: "Città",
+    state: "Stato/Provincia",
+    postalCode: "Codice Postale",
+    district: "Distretto",
+    primaryCategory: "Categoria Principale",
+    additionalCategories: "Categorie Aggiuntive",
+    website: "Sito Web",
+    primaryPhone: "Telefono Principale",
+    additionalPhones: "Telefoni Aggiuntivi",
+    fromTheBusiness: "Dall'Attività",
+    openingDate: "Data di Apertura",
+    labels: "Etichette",
+    temporarilyClosed: "Temporaneamente Chiuso",
+    latitude: "Latitudine",
+    longitude: "Longitudine",
+    logoPhoto: "Foto del Logo",
+    coverPhoto: "Foto di Copertina",
+    otherPhotos: "Altre Foto",
+    appointmentURL: "URL Appuntamenti",
+    menuURL: "URL Menu",
+    reservationsURL: "URL Prenotazioni",
+    orderAheadURL: "URL Ordini Anticipati",
+    adwords: "Telefono AdWords",
+    goldmine: "Note (Interno)",
+    unstructuredData: "Dati Non Strutturati",
+    socialMedia: "Social Media",
+    openingHours: "Orari di Apertura",
+    specialHours: "Orari Speciali",
+    moreHours: "Altri Orari",
+    facebookUrl: "URL Facebook",
+    instagramUrl: "URL Instagram",
+    linkedinUrl: "URL LinkedIn",
+    pinterestUrl: "URL Pinterest",
+    tiktokUrl: "URL TikTok",
+    twitterUrl: "URL Twitter/X",
+    youtubeUrl: "URL YouTube"
+  },
+  days: {
+    monday: "Lunedì",
+    tuesday: "Martedì",
+    wednesday: "Mercoledì",
+    thursday: "Giovedì",
+    friday: "Venerdì",
+    saturday: "Sabato",
+    sunday: "Domenica"
+  },
+  validation: {
+    required: "Questo campo è obbligatorio",
+    storeCodeRequired: "Il codice negozio è obbligatorio",
+    businessNameRequired: "Il nome dell'attività è obbligatorio",
+    addressRequired: "L'indirizzo è obbligatorio",
+    countryRequired: "Il paese è obbligatorio",
+    categoryRequired: "La categoria principale è obbligatoria",
+    invalidUrl: "Formato URL non valido",
+    invalidPhone: "Formato numero di telefono non valido",
+    invalidEmail: "Formato email non valido",
+    passwordTooShort: "La password deve contenere almeno 8 caratteri",
+    passwordsMustMatch: "Le password non corrispondono",
+    invalidDate: "Formato data non valido",
+    futureDate: "La data non può essere nel futuro",
+    maxLength: "Massimo {{max}} caratteri consentiti",
+    invalidFormat: "Formato non valido"
+  },
+  placeholders: {
+    briefDescription: "Breve descrizione della tua attività (max. 750 caratteri)",
+    labelsExample: "es., Adatto alle famiglie, Biologico, Wi-Fi Gratuito (separati da virgola)",
+    additionalCategoriesMax: "Categorie aggiuntive separate da virgola (max. 10)",
+    selectCountry: "Seleziona paese",
+    phonePlaceholder: "+39-02-1234567",
+    additionalPhonesPlaceholder: "Numeri di telefono separati da virgola",
+    goldminePlaceholder: "Archivia dati non strutturati qui (non inclusi nelle esportazioni JSON)",
+    goldmineDescription: "Questo campo serve per archiviare dati grezzi/non strutturati ed è escluso da tutte le esportazioni JSON.",
+    noCustomServices: "Nessun servizio personalizzato ancora assegnato."
+  }
+};
+
+// Serbian translations (bundled)
+const serbianTranslations = {
+  common: {
+    nav: {
+      yourLocations: "Ваше Локације",
+      accountSettings: "Подешавања Налога",
+      signOut: "Одјави се",
+      adminPanel: "Администраторски Панел",
+      backToOverview: "Назад на Преглед"
+    },
+    actions: {
+      add: "Додај",
+      import: "Увези",
+      export: "Извези",
+      exportJson: "Извези JSON",
+      save: "Сачувај",
+      cancel: "Откажи",
+      delete: "Обриши",
+      edit: "Измени",
+      search: "Претражи",
+      filter: "Филтрирај",
+      refresh: "Освежи",
+      close: "Затвори",
+      closed: "Затворено",
+      confirm: "Потврди",
+      submit: "Пошаљи",
+      update: "Ажурирај",
+      updateCoordinates: "Ажурирај Координате",
+      copyCoordinates: "Копирај Координате",
+      openInBingMaps: "Отвори у Bing Maps",
+      useCurrentLocation: "Користи Тренутну Локацију",
+      findFromAddress: "Пронађи од Адресе",
+      gettingLocation: "Добијање Локације...",
+      geocoding: "Геокодирање...",
+      addSingleDate: "Додај Појединачни Датум",
+      addDateRange: "Додај Опсег Датума",
+      manageCustomServices: "Управљај Прилагођеним Услугама",
+      addBusiness: "Додај Пословање",
+      addFirstBusiness: "Додај Своје Прво Пословање",
+      createUser: "Креирај Корисника",
+      versionHistory: "Историја Верзија",
+      settings: "Подешавања",
+      customServices: "Прилагођене Услуге"
+    },
+    tabs: {
+      activeLocations: "Активне Локације",
+      needAttention: "Захтевају Пажњу",
+      new: "Ново",
+      clientOverview: "Преглед Клијената",
+      allClients: "Сви Клијенти",
+      users: "Корисници",
+      translations: "Преводи"
+    },
+    settings: {
+      title: "Подешавања Налога",
+      appearance: "Изглед",
+      security: "Безбедност",
+      language: "Језик",
+      changePassword: "Промени Лозинку",
+      account: "Налог",
+      email: "Е-пошта",
+      role: "Улога"
+    },
+    theme: {
+      light: "Светла",
+      dark: "Тамна",
+      system: "Систем"
+    },
+    status: {
+      active: "Активно",
+      pending: "На Чекању",
+      loading: "Учитавање...",
+      noResults: "Нема пронађених резултата",
+      open: "Отворено",
+      total: "Укупно"
+    },
+    messages: {
+      success: "Успех",
+      error: "Грешка",
+      saved: "Измене су успешно сачуване",
+      deleted: "Успешно обрисано",
+      confirmDelete: "Да ли сте сигурни да желите да обришете ово?",
+      noBusinessesFound: "Није пронађено пословање за овог клијента",
+      createUserDescription: "Креирајте Администраторе Клијената, Кориснике или Власнике Продавница за овог клијента"
+    },
+    sections: {
+      basicInformation: "Основне Информације",
+      addressInformation: "Информације о Адреси",
+      locationCoordinates: "Координате Локације",
+      contactInformation: "Контакт Информације",
+      socialMedia: "Друштвене Мреже",
+      businessDates: "Датуми Пословања",
+      openingHours: "Радно Време",
+      specialHours: "Посебно Радно Време",
+      coverPhoto: "Насловна Фотографија",
+      logoPhoto: "Фотографија Логоа",
+      serviceUrls: "URL Адресе Услуга",
+      customServices: "Прилагођене Услуге",
+      dataGoldmine: "Складиште Података"
+    },
+    location: {
+      currentCoordinates: "Тренутне Координате",
+      useCurrentLocationHint: "Користите \"Тренутну Локацију\" за аутоматско откривање ваше позиције",
+      findFromAddressHint: "Користите \"Пронађи од Адресе\" за геокодирање унете адресе",
+      manualEntryHint: "Такође можете ручно унети прецизне координате"
+    },
+    specialHours: {
+      description: "Поставите посебно радно време за празнике и друге изузетке. Ово замењује редовно радно време.",
+      noHoursAdded: "Још није додато посебно радно време",
+      clickToStart: "Кликните на \"Додај Посебно Радно Време\" за почетак",
+      date: "Датум",
+      hours: "Сати",
+      pickDate: "Изаберите датум",
+      selectDateRange: "Изаберите Опсег Датума",
+      hoursForAllDays: "Радно Време за Све Изабране Дане",
+      applyToAllDates: "Примени на Све Датуме",
+      daysSelected: "дана",
+      selected: "Изабрано",
+      generatedFormat: "Генерисани Формат"
+    },
+    openingHours: {
+      weekdays9to6: "Радни дани 9-18",
+      weekdays8to5: "Радни дани 8-17",
+      weekend10to2: "Викенд 10-14",
+      closeWeekends: "Затворено викендом",
+      customFormat: "Прилагођени Формат (Напредно)"
+    },
+    photos: {
+      dragAndDrop: "Превуците и отпустите фотографије овде, или кликните за одабир",
+      dropHere: "Отпустите фотографије овде",
+      photosUploaded: "фотографија отпремљено"
+    },
+    dialog: {
+      editBusiness: "Измени Пословање",
+      addNewBusiness: "Додај Ново Пословање",
+      updateBusinessInfo: "Ажурирај информације о пословању",
+      enterBusinessDetails: "Унесите детаље за вашу нову локацију пословања",
+      saving: "Чување...",
+      updateBusiness: "Ажурирај Пословање",
+      createBusiness: "Креирај Пословање"
+    }
+  },
+  fields: {
+    storeCode: "Код Продавнице",
+    businessName: "Назив Пословања",
+    addressLine1: "Адреса",
+    addressLine2: "Ред Адресе 2",
+    addressLine3: "Ред Адресе 3",
+    addressLine4: "Ред Адресе 4",
+    addressLine5: "Ред Адресе 5",
+    country: "Земља",
+    city: "Град",
+    state: "Држава/Покрајина",
+    postalCode: "Поштански Број",
+    district: "Округ",
+    primaryCategory: "Примарна Категорија",
+    additionalCategories: "Додатне Категорије",
+    website: "Веб Сајт",
+    primaryPhone: "Примарни Телефон",
+    additionalPhones: "Додатни Телефони",
+    fromTheBusiness: "О Пословању",
+    openingDate: "Датум Отварања",
+    labels: "Ознаке",
+    temporarilyClosed: "Привремено Затворено",
+    latitude: "Географска Ширина",
+    longitude: "Географска Дужина",
+    logoPhoto: "Фотографија Логоа",
+    coverPhoto: "Насловна Фотографија",
+    otherPhotos: "Остале Фотографије",
+    appointmentURL: "URL за Заказивање",
+    menuURL: "URL Менија",
+    reservationsURL: "URL Резервација",
+    orderAheadURL: "URL за Претходну Наруџбу",
+    adwords: "AdWords Телефон",
+    goldmine: "Белешке (Интерно)",
+    unstructuredData: "Неструктурирани Подаци",
+    socialMedia: "Друштвене Мреже",
+    openingHours: "Радно Време",
+    specialHours: "Посебно Радно Време",
+    moreHours: "Више Радног Времена",
+    facebookUrl: "Facebook URL",
+    instagramUrl: "Instagram URL",
+    linkedinUrl: "LinkedIn URL",
+    pinterestUrl: "Pinterest URL",
+    tiktokUrl: "TikTok URL",
+    twitterUrl: "Twitter/X URL",
+    youtubeUrl: "YouTube URL"
+  },
+  days: {
+    monday: "Понедељак",
+    tuesday: "Уторак",
+    wednesday: "Среда",
+    thursday: "Четвртак",
+    friday: "Петак",
+    saturday: "Субота",
+    sunday: "Недеља"
+  },
+  validation: {
+    required: "Ово поље је обавезно",
+    storeCodeRequired: "Код продавнице је обавезан",
+    businessNameRequired: "Назив пословања је обавезан",
+    addressRequired: "Адреса је обавезна",
+    countryRequired: "Земља је обавезна",
+    categoryRequired: "Примарна категорија је обавезна",
+    invalidUrl: "Неважећи формат URL-а",
+    invalidPhone: "Неважећи формат телефонског броја",
+    invalidEmail: "Неважећи формат е-поште",
+    passwordTooShort: "Лозинка мора имати најмање 8 карактера",
+    passwordsMustMatch: "Лозинке се не подударају",
+    invalidDate: "Неважећи формат датума",
+    futureDate: "Датум не може бити у будућности",
+    maxLength: "Максимално {{max}} карактера дозвољено",
+    invalidFormat: "Неважећи формат"
+  },
+  placeholders: {
+    briefDescription: "Кратак опис вашег пословања (макс. 750 карактера)",
+    labelsExample: "нпр., Породично пријатељски, Органски, Бесплатан Wi-Fi (одвојено зарезом)",
+    additionalCategoriesMax: "Додатне категорије одвојене зарезом (макс. 10)",
+    selectCountry: "Изаберите земљу",
+    phonePlaceholder: "+381-11-123-4567",
+    additionalPhonesPlaceholder: "Телефонски бројеви одвојени зарезом",
+    goldminePlaceholder: "Сачувајте неструктуриране податке овде (није укључено у JSON извоз)",
+    goldmineDescription: "Ово поље служи за складиштење сирових/неструктурираних података и искључено је из свих JSON извоза.",
+    noCustomServices: "Још нема додељених прилагођених услуга."
+  }
+};
+
+// Romanian translations (bundled)
+const romanianTranslations = {
+  common: {
+    nav: {
+      yourLocations: "Locațiile Tale",
+      accountSettings: "Setări Cont",
+      signOut: "Deconectare",
+      adminPanel: "Panou de Administrare",
+      backToOverview: "Înapoi la Prezentare"
+    },
+    actions: {
+      add: "Adaugă",
+      import: "Importă",
+      export: "Exportă",
+      exportJson: "Exportă JSON",
+      save: "Salvează",
+      cancel: "Anulează",
+      delete: "Șterge",
+      edit: "Editează",
+      search: "Caută",
+      filter: "Filtrează",
+      refresh: "Reîmprospătează",
+      close: "Închide",
+      closed: "Închis",
+      confirm: "Confirmă",
+      submit: "Trimite",
+      update: "Actualizează",
+      updateCoordinates: "Actualizează Coordonatele",
+      copyCoordinates: "Copiază Coordonatele",
+      openInBingMaps: "Deschide în Bing Maps",
+      useCurrentLocation: "Folosește Locația Curentă",
+      findFromAddress: "Găsește din Adresă",
+      gettingLocation: "Se obține Locația...",
+      geocoding: "Geocodificare...",
+      addSingleDate: "Adaugă Dată Unică",
+      addDateRange: "Adaugă Interval de Date",
+      manageCustomServices: "Gestionează Servicii Personalizate",
+      addBusiness: "Adaugă Afacere",
+      addFirstBusiness: "Adaugă Prima Ta Afacere",
+      createUser: "Creează Utilizator",
+      versionHistory: "Istoric Versiuni",
+      settings: "Setări",
+      customServices: "Servicii Personalizate"
+    },
+    tabs: {
+      activeLocations: "Locații Active",
+      needAttention: "Necesită Atenție",
+      new: "Nou",
+      clientOverview: "Prezentare Clienți",
+      allClients: "Toți Clienții",
+      users: "Utilizatori",
+      translations: "Traduceri"
+    },
+    settings: {
+      title: "Setări Cont",
+      appearance: "Aspect",
+      security: "Securitate",
+      language: "Limbă",
+      changePassword: "Schimbă Parola",
+      account: "Cont",
+      email: "Email",
+      role: "Rol"
+    },
+    theme: {
+      light: "Luminos",
+      dark: "Întunecat",
+      system: "Sistem"
+    },
+    status: {
+      active: "Activ",
+      pending: "În Așteptare",
+      loading: "Se încarcă...",
+      noResults: "Nu s-au găsit rezultate",
+      open: "Deschis",
+      total: "Total"
+    },
+    messages: {
+      success: "Succes",
+      error: "Eroare",
+      saved: "Modificările au fost salvate cu succes",
+      deleted: "Șters cu succes",
+      confirmDelete: "Ești sigur că vrei să ștergi acest element?",
+      noBusinessesFound: "Nu s-au găsit afaceri pentru acest client",
+      createUserDescription: "Creează Administratori de Client, Utilizatori sau Proprietari de Magazine pentru acest client"
+    },
+    sections: {
+      basicInformation: "Informații de Bază",
+      addressInformation: "Informații despre Adresă",
+      locationCoordinates: "Coordonatele Locației",
+      contactInformation: "Informații de Contact",
+      socialMedia: "Rețele Sociale",
+      businessDates: "Datele Afacerii",
+      openingHours: "Program de Funcționare",
+      specialHours: "Program Special",
+      coverPhoto: "Fotografie de Copertă",
+      logoPhoto: "Fotografie Logo",
+      serviceUrls: "URL-uri Servicii",
+      customServices: "Servicii Personalizate",
+      dataGoldmine: "Depozit de Date"
+    },
+    location: {
+      currentCoordinates: "Coordonate Curente",
+      useCurrentLocationHint: "Folosește \"Locația Curentă\" pentru a detecta automat poziția ta",
+      findFromAddressHint: "Folosește \"Găsește din Adresă\" pentru a geocodifica adresa introdusă",
+      manualEntryHint: "Poți introduce manual și coordonate precise"
+    },
+    specialHours: {
+      description: "Setează program special pentru sărbători și alte excepții. Acestea înlocuiesc programul obișnuit.",
+      noHoursAdded: "Nu s-a adăugat încă program special",
+      clickToStart: "Apasă pe \"Adaugă Program Special\" pentru a începe",
+      date: "Dată",
+      hours: "Ore",
+      pickDate: "Alege o dată",
+      selectDateRange: "Selectează Interval de Date",
+      hoursForAllDays: "Program pentru Toate Zilele Selectate",
+      applyToAllDates: "Aplică la Toate Datele",
+      daysSelected: "zile",
+      selected: "Selectat",
+      generatedFormat: "Format Generat"
+    },
+    openingHours: {
+      weekdays9to6: "Zile lucrătoare 9-18",
+      weekdays8to5: "Zile lucrătoare 8-17",
+      weekend10to2: "Weekend 10-14",
+      closeWeekends: "Închis în weekend",
+      customFormat: "Format Personalizat (Avansat)"
+    },
+    photos: {
+      dragAndDrop: "Trage și plasează fotografii aici, sau apasă pentru a selecta",
+      dropHere: "Plasează fotografiile aici",
+      photosUploaded: "fotografii încărcate"
+    },
+    dialog: {
+      editBusiness: "Editează Afacerea",
+      addNewBusiness: "Adaugă Afacere Nouă",
+      updateBusinessInfo: "Actualizează informațiile afacerii",
+      enterBusinessDetails: "Introdu detaliile pentru noua ta locație",
+      saving: "Se salvează...",
+      updateBusiness: "Actualizează Afacerea",
+      createBusiness: "Creează Afacerea"
+    }
+  },
+  fields: {
+    storeCode: "Cod Magazin",
+    businessName: "Numele Afacerii",
+    addressLine1: "Adresă",
+    addressLine2: "Linie Adresă 2",
+    addressLine3: "Linie Adresă 3",
+    addressLine4: "Linie Adresă 4",
+    addressLine5: "Linie Adresă 5",
+    country: "Țară",
+    city: "Oraș",
+    state: "Stat/Provincie",
+    postalCode: "Cod Poștal",
+    district: "District",
+    primaryCategory: "Categorie Principală",
+    additionalCategories: "Categorii Suplimentare",
+    website: "Site Web",
+    primaryPhone: "Telefon Principal",
+    additionalPhones: "Telefoane Suplimentare",
+    fromTheBusiness: "Despre Afacere",
+    openingDate: "Data Deschiderii",
+    labels: "Etichete",
+    temporarilyClosed: "Închis Temporar",
+    latitude: "Latitudine",
+    longitude: "Longitudine",
+    logoPhoto: "Fotografie Logo",
+    coverPhoto: "Fotografie de Copertă",
+    otherPhotos: "Alte Fotografii",
+    appointmentURL: "URL Programări",
+    menuURL: "URL Meniu",
+    reservationsURL: "URL Rezervări",
+    orderAheadURL: "URL Comenzi Anticipate",
+    adwords: "Telefon AdWords",
+    goldmine: "Note (Intern)",
+    unstructuredData: "Date Nestructurate",
+    socialMedia: "Rețele Sociale",
+    openingHours: "Program de Funcționare",
+    specialHours: "Program Special",
+    moreHours: "Mai Multe Ore",
+    facebookUrl: "URL Facebook",
+    instagramUrl: "URL Instagram",
+    linkedinUrl: "URL LinkedIn",
+    pinterestUrl: "URL Pinterest",
+    tiktokUrl: "URL TikTok",
+    twitterUrl: "URL Twitter/X",
+    youtubeUrl: "URL YouTube"
+  },
+  days: {
+    monday: "Luni",
+    tuesday: "Marți",
+    wednesday: "Miercuri",
+    thursday: "Joi",
+    friday: "Vineri",
+    saturday: "Sâmbătă",
+    sunday: "Duminică"
+  },
+  validation: {
+    required: "Acest câmp este obligatoriu",
+    storeCodeRequired: "Codul magazinului este obligatoriu",
+    businessNameRequired: "Numele afacerii este obligatoriu",
+    addressRequired: "Adresa este obligatorie",
+    countryRequired: "Țara este obligatorie",
+    categoryRequired: "Categoria principală este obligatorie",
+    invalidUrl: "Format URL invalid",
+    invalidPhone: "Format număr de telefon invalid",
+    invalidEmail: "Format email invalid",
+    passwordTooShort: "Parola trebuie să aibă cel puțin 8 caractere",
+    passwordsMustMatch: "Parolele nu se potrivesc",
+    invalidDate: "Format dată invalid",
+    futureDate: "Data nu poate fi în viitor",
+    maxLength: "Maximum {{max}} caractere permise",
+    invalidFormat: "Format invalid"
+  },
+  placeholders: {
+    briefDescription: "Descriere scurtă a afacerii tale (max. 750 caractere)",
+    labelsExample: "ex., Familie, Organic, Wi-Fi Gratuit (separate prin virgulă)",
+    additionalCategoriesMax: "Categorii suplimentare separate prin virgulă (max. 10)",
+    selectCountry: "Selectează țara",
+    phonePlaceholder: "+40-21-123-4567",
+    additionalPhonesPlaceholder: "Numere de telefon separate prin virgulă",
+    goldminePlaceholder: "Stochează date nestructurate aici (nu sunt incluse în exporturile JSON)",
+    goldmineDescription: "Acest câmp este pentru stocarea datelor brute/nestructurate și este exclus din toate exporturile JSON.",
+    noCustomServices: "Nu sunt încă servicii personalizate atribuite."
+  }
+};
+
 // Default languages that are always available
 export const DEFAULT_LANGUAGES = [
   { code: 'en', name: 'English', flag: '🇬🇧', isDefault: true },
@@ -1224,6 +1905,9 @@ const getBundledTranslations = (lang: string) => {
   if (lang === 'tr') return turkishTranslations;
   if (lang === 'es') return spanishTranslations;
   if (lang === 'fr') return frenchTranslations;
+  if (lang === 'it') return italianTranslations;
+  if (lang === 'sr') return serbianTranslations;
+  if (lang === 'ro') return romanianTranslations;
   return resources[lang as keyof typeof resources] || resources.en;
 };
 
@@ -1259,7 +1943,10 @@ const allResources = {
   ...resources,
   tr: turkishTranslations,
   es: spanishTranslations,
-  fr: frenchTranslations
+  fr: frenchTranslations,
+  it: italianTranslations,
+  sr: serbianTranslations,
+  ro: romanianTranslations
 };
 
 i18n
