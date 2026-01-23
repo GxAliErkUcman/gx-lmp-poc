@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useDropzone } from 'react-dropzone';
 import * as XLSX from 'xlsx';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -9,12 +9,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
-import { Upload, FileText, CheckCircle, AlertCircle, AlertTriangle, X } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Upload, FileText, CheckCircle, AlertCircle, AlertTriangle, X, Info } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import { validateBusiness, ValidationError } from '@/lib/validation';
 import { trackFieldChanges } from '@/lib/fieldHistory';
+import { validateColumnForField, detectCombinedOpeningHoursColumn, ColumnValidationResult } from '@/lib/importValidation';
 
 interface ImportDialogProps {
   open: boolean;
@@ -31,6 +33,8 @@ interface ColumnMapping {
   original: string;
   mapped: string;
   required: boolean;
+  validation?: ColumnValidationResult | null;
+  isCombinedHours?: boolean;
 }
 
 interface DuplicateBusiness {
@@ -372,19 +376,51 @@ const ImportDialog = ({ open, onOpenChange, onSuccess, clientId }: ImportDialogP
         }
       }
 
+      const isCombinedHours = detectCombinedOpeningHoursColumn(header);
+      
       return {
         original: header,
         mapped: mappedField,
         required: requiredFields.includes(mappedField),
+        isCombinedHours,
       };
     });
   };
 
+  // Compute column validations for all mappings
+  const columnValidations = useMemo(() => {
+    const validations = new Map<number, ColumnValidationResult | null>();
+    
+    columnMappings.forEach((mapping, index) => {
+      if (mapping.mapped && parsedData.length > 0) {
+        // Extract column data
+        const columnData = parsedData.map(row => String(row[mapping.original] || ''));
+        const validation = validateColumnForField(mapping.mapped, columnData, mapping.original);
+        if (validation) {
+          validations.set(index, validation);
+        }
+      }
+    });
+    
+    return validations;
+  }, [columnMappings, parsedData]);
+
 
   const updateMapping = (index: number, newMapping: string) => {
     const newMappings = [...columnMappings];
-    newMappings[index].mapped = newMapping;
-    newMappings[index].required = requiredFields.includes(newMapping);
+    const mapping = newMappings[index];
+    
+    // Check if this is a combined hours column being mapped to a day field
+    if (mapping.isCombinedHours && newMapping.endsWith('Hours') && newMapping !== 'specialHours' && newMapping !== 'moreHours') {
+      toast({
+        title: "Warning: Combined Hours Column",
+        description: "This column appears to contain combined opening hours with day names. Each day should have its own column (Monday Hours, Tuesday Hours, etc.) for proper import.",
+        variant: "destructive",
+      });
+    }
+    
+    mapping.mapped = newMapping;
+    mapping.required = requiredFields.includes(newMapping);
     setColumnMappings(newMappings);
   };
 
@@ -821,61 +857,158 @@ const ImportDialog = ({ open, onOpenChange, onSuccess, clientId }: ImportDialogP
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-medium">Map Columns</h3>
-              <Badge variant="outline">
-                {parsedData.length} rows detected
-              </Badge>
+              <div className="flex items-center gap-2">
+                {Array.from(columnValidations.values()).filter(v => v?.severity === 'error').length > 0 && (
+                  <Badge variant="destructive" className="flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
+                    {Array.from(columnValidations.values()).filter(v => v?.severity === 'error').length} issues
+                  </Badge>
+                )}
+                <Badge variant="outline">
+                  {parsedData.length} rows detected
+                </Badge>
+              </div>
             </div>
 
             <div className="space-y-3 max-h-96 overflow-y-auto">
-              {columnMappings.map((mapping, index) => (
-                <Card key={index}>
-                  <CardContent className="pt-4">
-                    <div className="flex items-center gap-4">
-                      <div className="flex-1">
-                        <label className="text-sm font-medium">
-                          {mapping.original}
-                          {mapping.required && <span className="text-red-500 ml-1">*</span>}
-                        </label>
-                        <p className="text-xs text-muted-foreground">
-                          Sample: {parsedData[0]?.[mapping.original] || 'N/A'}
-                        </p>
-                      </div>
-                      <div className="flex-1">
-                        <select
-                          className="w-full p-2 border rounded-md"
-                          value={mapping.mapped}
-                          onChange={(e) => updateMapping(index, e.target.value)}
+              {columnMappings.map((mapping, index) => {
+                const validation = columnValidations.get(index);
+                const hasError = validation?.severity === 'error';
+                const hasWarning = validation?.severity === 'warning';
+                const showCombinedHoursWarning = mapping.isCombinedHours && mapping.mapped?.endsWith('Hours') && mapping.mapped !== 'specialHours' && mapping.mapped !== 'moreHours';
+                
+                return (
+                  <Card key={index} className={hasError ? 'border-destructive' : hasWarning || showCombinedHoursWarning ? 'border-yellow-500' : ''}>
+                    <CardContent className="pt-4">
+                      <div className="flex items-center gap-4">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <label className="text-sm font-medium truncate">
+                              {mapping.original}
+                              {mapping.required && <span className="text-red-500 ml-1">*</span>}
+                            </label>
+                            {mapping.isCombinedHours && (
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger>
+                                    <Info className="h-4 w-4 text-yellow-600" />
+                                  </TooltipTrigger>
+                                  <TooltipContent className="max-w-xs">
+                                    <p>This column appears to contain combined opening hours with day names. Consider splitting into separate day columns.</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            )}
+                          </div>
+                          <p className="text-xs text-muted-foreground truncate max-w-[200px]">
+                            Sample: {String(parsedData[0]?.[mapping.original] || 'N/A').substring(0, 50)}{String(parsedData[0]?.[mapping.original] || '').length > 50 ? '...' : ''}
+                          </p>
+                        </div>
+                        <div className="flex-1">
+                          <select
+                            className={`w-full p-2 border rounded-md ${hasError ? 'border-destructive bg-destructive/5' : hasWarning ? 'border-yellow-500 bg-yellow-50' : ''}`}
+                            value={mapping.mapped}
+                            onChange={(e) => updateMapping(index, e.target.value)}
+                          >
+                            <option value="">-- Skip this column --</option>
+                            {availableFields.map(field => (
+                              <option key={field} value={field}>
+                                {field.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => updateMapping(index, '')}
+                          className="h-8 w-8 p-0"
+                          title="Skip this column"
                         >
-                          <option value="">-- Skip this column --</option>
-                          {availableFields.map(field => (
-                            <option key={field} value={field}>
-                              {field.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                            </option>
-                          ))}
-                        </select>
+                          <X className="h-4 w-4" />
+                        </Button>
+                        <div className="w-8 flex-shrink-0">
+                          {validation ? (
+                            <HoverCard>
+                              <HoverCardTrigger asChild>
+                                <button type="button" className="cursor-help">
+                                  {hasError ? (
+                                    <AlertCircle className="h-5 w-5 text-destructive" />
+                                  ) : (
+                                    <AlertTriangle className="h-5 w-5 text-yellow-600" />
+                                  )}
+                                </button>
+                              </HoverCardTrigger>
+                              <HoverCardContent className="w-96" side="left">
+                                <div className="space-y-2">
+                                  <div className="flex items-center gap-2">
+                                    {hasError ? (
+                                      <AlertCircle className="h-4 w-4 text-destructive" />
+                                    ) : (
+                                      <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                                    )}
+                                    <h4 className={`text-sm font-semibold ${hasError ? 'text-destructive' : 'text-yellow-700'}`}>
+                                      {validation.message}
+                                    </h4>
+                                  </div>
+                                  {validation.details && (
+                                    <p className="text-xs text-muted-foreground">
+                                      {validation.details}
+                                    </p>
+                                  )}
+                                  {validation.invalidSamples && validation.invalidSamples.length > 0 && (
+                                    <div className="mt-2">
+                                      <p className="text-xs font-medium mb-1">Example problematic values:</p>
+                                      <ul className="text-xs text-muted-foreground space-y-1">
+                                        {validation.invalidSamples.map((sample, i) => (
+                                          <li key={i} className="bg-muted p-1 rounded font-mono text-[10px] break-all">
+                                            "{sample}"
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  )}
+                                  {validation.invalidCount && (
+                                    <p className="text-xs text-muted-foreground mt-2">
+                                      Affects {validation.invalidCount} of {parsedData.length} rows
+                                    </p>
+                                  )}
+                                  {hasError && (
+                                    <div className="mt-2 pt-2 border-t">
+                                      <p className="text-xs text-destructive font-medium">
+                                        ⚠️ These values will fail validation. Consider skipping this column or fixing the data in your source file.
+                                      </p>
+                                    </div>
+                                  )}
+                                </div>
+                              </HoverCardContent>
+                            </HoverCard>
+                          ) : (
+                            <>
+                              {mapping.mapped && mapping.required && (
+                                <CheckCircle className="h-5 w-5 text-green-600" />
+                              )}
+                              {mapping.mapped && !mapping.required && (
+                                <CheckCircle className="h-5 w-5 text-blue-600" />
+                              )}
+                            </>
+                          )}
+                        </div>
                       </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => updateMapping(index, '')}
-                        className="h-8 w-8 p-0"
-                        title="Skip this column"
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                      <div className="w-8">
-                        {mapping.mapped && mapping.required && (
-                          <CheckCircle className="h-5 w-5 text-green-600" />
-                        )}
-                        {mapping.mapped && !mapping.required && (
-                          <CheckCircle className="h-5 w-5 text-blue-600" />
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                      {/* Show validation error inline for visibility */}
+                      {(validation || showCombinedHoursWarning) && (
+                        <div className={`mt-2 p-2 rounded text-xs ${hasError ? 'bg-destructive/10 text-destructive' : 'bg-yellow-50 text-yellow-800'}`}>
+                          <strong>{hasError ? 'Error: ' : 'Warning: '}</strong>
+                          {showCombinedHoursWarning && !validation 
+                            ? 'This column contains day names (e.g., "Monday - Friday"). Each day should have its own column for proper import.'
+                            : validation?.message}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
 
             <div className="flex justify-between">
