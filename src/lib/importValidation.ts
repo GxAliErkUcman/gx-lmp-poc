@@ -144,9 +144,25 @@ function validateCoordinateColumn(data: string[], fieldName: string): ColumnVali
   const min = isLat ? -90 : -180;
   const max = isLat ? 90 : 180;
   
+  // DMS pattern: detects formats like 5°17'18.3"N, 12°21'47.1"N, 4°23'21.1"S
+  const dmsPattern = /[°'"′″]|[NSEW]$/i;
+  
   for (const value of data) {
     const trimmed = String(value).trim();
     if (!trimmed) continue;
+    
+    // Check for DMS (Degrees Minutes Seconds) format first - this is a common issue
+    if (dmsPattern.test(trimmed)) {
+      const dmsCount = data.filter(v => dmsPattern.test(String(v).trim())).length;
+      return {
+        isValid: false,
+        severity: 'error',
+        message: `Uses DMS format (degrees/minutes/seconds)`,
+        details: `Coordinates like "${trimmed}" are in DMS (Degrees Minutes Seconds) format. Required format is decimal degrees. Example: "5°17'18.3"N" should be "5.288417" and "3°58'56.6"W" should be "-3.982389". Please convert your coordinates to decimal format before importing.`,
+        invalidSamples: data.filter(v => dmsPattern.test(String(v).trim())).slice(0, 3),
+        invalidCount: dmsCount
+      };
+    }
     
     // Check for European number format with commas (e.g., "52,385983" or thousands separators)
     if (trimmed.includes(',')) {
@@ -174,9 +190,44 @@ function validateCoordinateColumn(data: string[], fieldName: string): ColumnVali
       };
     }
     
+    // Check for non-numeric characters (except minus and period)
+    const cleanedForCheck = trimmed.replace(/^-/, ''); // Remove leading minus
+    if (/[^0-9.]/.test(cleanedForCheck)) {
+      return {
+        isValid: false,
+        severity: 'error',
+        message: `Contains non-numeric characters`,
+        details: `Value "${trimmed}" contains invalid characters. Coordinates must be decimal numbers like "52.385983" or "-3.982389" (negative for South/West).`,
+        invalidSamples: [trimmed],
+        invalidCount: data.filter(v => {
+          const cleaned = String(v).trim().replace(/^-/, '');
+          return /[^0-9.]/.test(cleaned);
+        }).length
+      };
+    }
+    
     const num = parseFloat(trimmed);
-    if (isNaN(num) || num < min || num > max) {
+    if (isNaN(num)) {
       invalidEntries.push(trimmed);
+      continue;
+    }
+    
+    // Check range
+    if (num < min || num > max) {
+      return {
+        isValid: false,
+        severity: 'error',
+        message: `Values out of valid range`,
+        details: `${isLat ? 'Latitude must be between -90 and 90' : 'Longitude must be between -180 and 180'}. Found "${trimmed}" which is outside the valid range.`,
+        invalidSamples: data.filter(v => {
+          const n = parseFloat(String(v).trim());
+          return !isNaN(n) && (n < min || n > max);
+        }).slice(0, 3),
+        invalidCount: data.filter(v => {
+          const n = parseFloat(String(v).trim());
+          return !isNaN(n) && (n < min || n > max);
+        }).length
+      };
     }
   }
   
@@ -185,7 +236,7 @@ function validateCoordinateColumn(data: string[], fieldName: string): ColumnVali
       isValid: false,
       severity: 'error',
       message: `${invalidEntries.length} invalid ${fieldName} values`,
-      details: `${fieldName === 'latitude' ? 'Latitude must be between -90 and 90' : 'Longitude must be between -180 and 180'}. Found: "${invalidEntries[0]}"`,
+      details: `Coordinates must be decimal numbers like "52.385983" or "-3.982389". Found: "${invalidEntries[0]}"`,
       invalidSamples: invalidEntries.slice(0, 3),
       invalidCount: invalidEntries.length
     };
