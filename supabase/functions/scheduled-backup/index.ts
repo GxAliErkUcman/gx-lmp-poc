@@ -79,12 +79,13 @@ Deno.serve(async (req) => {
       try {
         console.log(`Processing backup for client: ${client.name} (${client.id})`);
 
-        // Fetch active businesses for this client
+        // Fetch active businesses for this client (excluding async locations)
         const { data: businesses, error: businessError } = await supabase
           .from('businesses')
           .select('*')
           .eq('client_id', client.id)
-          .eq('status', 'active');
+          .eq('status', 'active')
+          .eq('is_async', false);
 
         if (businessError) {
           console.error(`Error fetching businesses for ${client.name}:`, businessError);

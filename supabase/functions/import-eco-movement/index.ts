@@ -400,6 +400,7 @@ serve(async (req) => {
 
     // Track which store codes are in the API feed
     const apiStoreCodes = locations.map(loc => loc.id);
+    const apiStoreCodesSet = new Set(apiStoreCodes);
     console.log(`Updating api_feed_locations with ${apiStoreCodes.length} store codes...`);
 
     // Upsert all API store codes to api_feed_locations
@@ -423,6 +424,73 @@ serve(async (req) => {
     }
 
     console.log(`Updated api_feed_locations with ${apiStoreCodes.length} store codes`);
+
+    // === ASYNC DETECTION LOGIC ===
+    // Flag businesses that exist in Jasoner but are NOT in the API feed
+    console.log('Checking for async (out-of-sync) locations...');
+
+    // Get all Energie 360° businesses that are active and not already flagged
+    const { data: allClientBusinesses } = await supabase
+      .from('businesses')
+      .select('id, storeCode, is_async')
+      .eq('client_id', ENERGIE_360_CLIENT_ID)
+      .eq('status', 'active');
+
+    let asyncFlagged = 0;
+    let asyncUnflagged = 0;
+
+    for (const business of allClientBusinesses || []) {
+      const isInFeed = apiStoreCodesSet.has(business.storeCode);
+      const currentlyAsync = business.is_async === true;
+
+      if (!isInFeed && !currentlyAsync) {
+        // Business exists in Jasoner but NOT in feed - flag it as async
+        const { error: flagError } = await supabase
+          .from('businesses')
+          .update({ is_async: true, updated_at: new Date().toISOString() })
+          .eq('id', business.id);
+
+        if (!flagError) {
+          // Track this change in history
+          await supabase
+            .from('business_field_history')
+            .insert({
+              business_id: business.id,
+              field_name: 'is_async',
+              old_value: 'false',
+              new_value: 'true',
+              changed_by: userId,
+              change_source: 'eco_movement',
+            });
+          asyncFlagged++;
+          console.log(`Flagged as async: ${business.storeCode} (missing from API feed)`);
+        }
+      } else if (isInFeed && currentlyAsync) {
+        // Business is back in feed - unflag it
+        const { error: unflagError } = await supabase
+          .from('businesses')
+          .update({ is_async: false, updated_at: new Date().toISOString() })
+          .eq('id', business.id);
+
+        if (!unflagError) {
+          // Track this change in history
+          await supabase
+            .from('business_field_history')
+            .insert({
+              business_id: business.id,
+              field_name: 'is_async',
+              old_value: 'true',
+              new_value: 'false',
+              changed_by: userId,
+              change_source: 'eco_movement',
+            });
+          asyncUnflagged++;
+          console.log(`Unflagged async: ${business.storeCode} (back in API feed)`);
+        }
+      }
+    }
+
+    console.log(`Async detection complete: ${asyncFlagged} flagged, ${asyncUnflagged} unflagged`);
 
     // Update import log with success
     if (logId) {

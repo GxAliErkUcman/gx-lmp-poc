@@ -18,8 +18,10 @@ export const JsonExport = ({ businesses, clientName }: JsonExportProps) => {
   const [validationResults, setValidationResults] = useState<Array<{ business: Business; isValid: boolean; errors: any[] }>>([]);
 
   const validateAllBusinesses = () => {
-    // Only validate and export active businesses
-    const activeBusinesses = businesses.filter(b => (b as any).status === 'active');
+    // Only validate and export active businesses that are not async (out-of-sync)
+    const activeBusinesses = businesses.filter(b => 
+      (b as any).status === 'active' && (b as any).is_async !== true
+    );
     const results = activeBusinesses.map(business => {
       const jsonBusiness = convertToJsonSchema(business);
       const validation = validateBusiness(jsonBusiness);

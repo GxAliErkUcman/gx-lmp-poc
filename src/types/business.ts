@@ -71,6 +71,9 @@ export interface Business {
   // Goldmine - unstructured data storage (not included in JSON exports)
   goldmine?: string;
   
+  // Async flag - true when location exists in Jasoner but is missing from Eco-Movement API feed
+  is_async?: boolean;
+  
   // Metadata
   created_at: string;
   updated_at: string;
