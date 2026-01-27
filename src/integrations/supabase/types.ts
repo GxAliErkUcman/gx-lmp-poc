@@ -138,6 +138,7 @@ export type Database = {
           fromTheBusiness: string | null
           goldmine: string | null
           id: string
+          is_async: boolean
           labels: string | null
           latitude: number | null
           logoPhoto: string | null
@@ -190,6 +191,7 @@ export type Database = {
           fromTheBusiness?: string | null
           goldmine?: string | null
           id?: string
+          is_async?: boolean
           labels?: string | null
           latitude?: number | null
           logoPhoto?: string | null
@@ -242,6 +244,7 @@ export type Database = {
           fromTheBusiness?: string | null
           goldmine?: string | null
           id?: string
+          is_async?: boolean
           labels?: string | null
           latitude?: number | null
           logoPhoto?: string | null

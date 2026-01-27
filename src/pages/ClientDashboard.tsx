@@ -46,7 +46,7 @@ const ClientDashboard = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('table');
   const [multiEditDialogOpen, setMultiEditDialogOpen] = useState(false);
   const [selectedBusinessIds, setSelectedBusinessIds] = useState<string[]>([]);
-  const [activeTab, setActiveTab] = useState<'active' | 'pending' | 'new'>('active');
+  const [activeTab, setActiveTab] = useState<'active' | 'pending' | 'new' | 'async'>('active');
   const [userLogo, setUserLogo] = useState<string | null>(null);
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
   const [deleteConfirmDialogOpen, setDeleteConfirmDialogOpen] = useState(false);
@@ -321,8 +321,13 @@ const ClientDashboard = () => {
       })
     : businesses;
 
-  const activeBusinesses = dataSourceFilteredBusinesses.filter(b => b.status === 'active');
-  const pendingBusinesses = dataSourceFilteredBusinesses.filter(b => b.status === 'pending');
+  // Filter by status and async flag
+  // Active: status=active AND not async
+  const activeBusinesses = dataSourceFilteredBusinesses.filter(b => b.status === 'active' && (b as any).is_async !== true);
+  // Need Attention: status=pending OR async=true
+  const pendingBusinesses = dataSourceFilteredBusinesses.filter(b => b.status === 'pending' || (b as any).is_async === true);
+  // Async only (for Energie 360° tab)
+  const asyncBusinesses = dataSourceFilteredBusinesses.filter(b => (b as any).is_async === true);
   
   // Filter businesses created within the last 3 days
   const threeDaysAgo = new Date();
@@ -557,17 +562,22 @@ const ClientDashboard = () => {
                 </CardContent>
               </Card>
             ) : (
-              <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'active' | 'pending' | 'new')}>
+              <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'active' | 'pending' | 'new' | 'async')}>
                 <TabsList className="mb-4 w-full flex flex-wrap h-auto gap-1 p-1">
-                  <TabsTrigger value="active" className="flex-1 min-w-[100px] text-xs sm:text-sm">
+                  <TabsTrigger value="active" className="flex-1 min-w-[80px] text-xs sm:text-sm">
                     {t('status.active')} ({activeBusinesses.length})
                   </TabsTrigger>
-                  <TabsTrigger value="pending" className="flex-1 min-w-[100px] text-xs sm:text-sm">
+                  <TabsTrigger value="pending" className="flex-1 min-w-[80px] text-xs sm:text-sm">
                     {t('tabs.needAttention')} ({pendingBusinesses.length})
                   </TabsTrigger>
-                  <TabsTrigger value="new" className="flex-1 min-w-[100px] text-xs sm:text-sm">
+                  <TabsTrigger value="new" className="flex-1 min-w-[80px] text-xs sm:text-sm">
                     {t('tabs.new')} ({newBusinesses.length})
                   </TabsTrigger>
+                  {isEnergie360 && (
+                    <TabsTrigger value="async" className="flex-1 min-w-[80px] text-xs sm:text-sm">
+                      Async ({asyncBusinesses.length})
+                    </TabsTrigger>
+                  )}
                 </TabsList>
 
                 <TabsContent value="active">
@@ -683,6 +693,51 @@ const ClientDashboard = () => {
                     </div>
                   )}
                 </TabsContent>
+
+                {/* Async Locations Tab - Only for Energie 360° */}
+                {isEnergie360 && (
+                  <TabsContent value="async">
+                    {viewMode === 'table' ? (
+                      <BusinessTableView
+                        businesses={asyncBusinesses}
+                        onEdit={handleEditBusiness}
+                        onDelete={handleDeleteBusiness}
+                        onMultiEdit={handleMultiEdit}
+                        onMultiDelete={handleMultiDelete}
+                      />
+                    ) : (
+                      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                        {asyncBusinesses.map((business) => (
+                          <Card key={business.id}>
+                            <CardHeader>
+                              <CardTitle className="flex items-center gap-2">
+                                {business.businessName}
+                                <Badge variant="destructive" className="text-xs">Async</Badge>
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                              <div className="space-y-2 text-sm">
+                                <p className="text-muted-foreground">{business.addressLine1}</p>
+                                <p className="text-muted-foreground">{business.city}, {business.state}</p>
+                                <p className="text-xs text-destructive mt-2">Missing from Eco-Movement feed</p>
+                                <div className="flex gap-2 mt-4">
+                                  <Button size="sm" variant="outline" onClick={() => handleEditBusiness(business)}>
+                                    <Edit className="w-4 h-4 mr-2" />
+                                    Edit
+                                  </Button>
+                                  <Button size="sm" variant="destructive" onClick={() => handleDeleteBusiness(business.id)}>
+                                    <Trash2 className="w-4 h-4 mr-2" />
+                                    Delete
+                                  </Button>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    )}
+                  </TabsContent>
+                )}
               </Tabs>
             )}
           </>

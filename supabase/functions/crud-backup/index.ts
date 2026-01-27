@@ -81,12 +81,13 @@ Deno.serve(async (req) => {
       throw clientError;
     }
 
-    // Fetch active businesses for this client
+    // Fetch active businesses for this client (excluding async locations)
     const { data: businesses, error: businessError } = await supabase
       .from('businesses')
       .select('*')
       .eq('client_id', client_id)
-      .eq('status', 'active');
+      .eq('status', 'active')
+      .eq('is_async', false);
 
     if (businessError) {
       console.error('Error fetching businesses:', businessError);
