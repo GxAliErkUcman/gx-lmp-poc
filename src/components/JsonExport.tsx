@@ -1,12 +1,14 @@
 import { useState } from 'react';
-import { Download, FileText, AlertCircle } from 'lucide-react';
+import { Download, FileText, FileSpreadsheet, Table } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { ValidationErrors } from '@/components/ValidationErrors';
 import { validateBusiness } from '@/lib/validation';
 import { Business } from '@/types/business';
 import { toast } from '@/hooks/use-toast';
+import * as XLSX from 'xlsx';
 
 interface JsonExportProps {
   businesses: Business[];
@@ -81,6 +83,11 @@ export const JsonExport = ({ businesses, clientName }: JsonExportProps) => {
     };
   };
 
+  const getFilename = (extension: string) => {
+    const date = new Date().toISOString().split('T')[0];
+    return clientName ? `${clientName} - ${date}.${extension}` : `business-locations-${date}.${extension}`;
+  };
+
   const exportJson = () => {
     const validBusinesses = validationResults.filter(result => result.isValid);
     
@@ -99,9 +106,7 @@ export const JsonExport = ({ businesses, clientName }: JsonExportProps) => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    const date = new Date().toISOString().split('T')[0];
-    const filename = clientName ? `${clientName} - ${date}.json` : `business-locations-${date}.json`;
-    a.download = filename;
+    a.download = getFilename('json');
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -109,7 +114,67 @@ export const JsonExport = ({ businesses, clientName }: JsonExportProps) => {
 
     toast({
       title: "Export Successful",
-      description: `Exported ${validBusinesses.length} valid business locations`,
+      description: `Exported ${validBusinesses.length} valid business locations as JSON`,
+    });
+    
+    setOpen(false);
+  };
+
+  const exportCsv = () => {
+    const validBusinesses = validationResults.filter(result => result.isValid);
+    
+    if (validBusinesses.length === 0) {
+      toast({
+        title: "Export Failed",
+        description: "No valid businesses to export. Please fix validation errors first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const exportData = validBusinesses.map(result => convertToJsonSchema(result.business));
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const csvContent = XLSX.utils.sheet_to_csv(worksheet);
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = getFilename('csv');
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    toast({
+      title: "Export Successful",
+      description: `Exported ${validBusinesses.length} valid business locations as CSV`,
+    });
+    
+    setOpen(false);
+  };
+
+  const exportXls = () => {
+    const validBusinesses = validationResults.filter(result => result.isValid);
+    
+    if (validBusinesses.length === 0) {
+      toast({
+        title: "Export Failed",
+        description: "No valid businesses to export. Please fix validation errors first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const exportData = validBusinesses.map(result => convertToJsonSchema(result.business));
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Locations');
+    XLSX.writeFile(workbook, getFilename('xlsx'));
+
+    toast({
+      title: "Export Successful",
+      description: `Exported ${validBusinesses.length} valid business locations as Excel`,
     });
     
     setOpen(false);
@@ -184,14 +249,28 @@ export const JsonExport = ({ businesses, clientName }: JsonExportProps) => {
               <Button variant="outline" onClick={() => setOpen(false)}>
                 Cancel
               </Button>
-              <Button 
-                onClick={exportJson} 
-                disabled={validCount === 0}
-                className="gap-2"
-              >
-                <Download className="h-4 w-4" />
-                Export JSON ({validCount})
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button disabled={validCount === 0} className="gap-2">
+                    <Download className="h-4 w-4" />
+                    Export ({validCount})
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="bg-popover">
+                  <DropdownMenuItem onClick={exportJson} className="gap-2 cursor-pointer">
+                    <FileText className="h-4 w-4" />
+                    JSON (.json)
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={exportCsv} className="gap-2 cursor-pointer">
+                    <Table className="h-4 w-4" />
+                    CSV (.csv)
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={exportXls} className="gap-2 cursor-pointer">
+                    <FileSpreadsheet className="h-4 w-4" />
+                    Excel (.xlsx)
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </div>
