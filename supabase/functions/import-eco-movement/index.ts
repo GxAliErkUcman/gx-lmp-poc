@@ -269,24 +269,66 @@ serve(async (req) => {
   try {
     console.log('Fetching locations from Eco-Movement API...');
 
-    // Fetch from Eco-Movement API
-    const apiResponse = await fetch('https://api.eco-movement.com/api/ocpi/cpo/2.2/locations', {
-      method: 'GET',
-      headers: {
-        'Authorization': `Token ${ecoMovementToken}`,
-        'Content-Type': 'application/json',
-      },
-    });
+    // Helper function to parse Link header for pagination
+    const parseNextLink = (linkHeader: string | null): string | null => {
+      if (!linkHeader) return null;
+      
+      // Parse Link header format: <url>; rel="next", <url>; rel="last"
+      const links = linkHeader.split(',');
+      for (const link of links) {
+        const parts = link.trim().split(';');
+        if (parts.length < 2) continue;
+        
+        const url = parts[0].trim().replace(/^<|>$/g, '');
+        const rel = parts[1].trim();
+        
+        if (rel === 'rel="next"' || rel === "rel='next'") {
+          return url;
+        }
+      }
+      return null;
+    };
 
-    if (!apiResponse.ok) {
-      const errorText = await apiResponse.text();
-      throw new Error(`API request failed: ${apiResponse.status} - ${errorText}`);
+    // Fetch all pages from Eco-Movement API with pagination support
+    const allLocations: OCPILocation[] = [];
+    let nextUrl: string | null = 'https://api.eco-movement.com/api/ocpi/cpo/2.2/locations';
+    let pageCount = 0;
+    const maxPages = 50; // Safety limit to prevent infinite loops
+
+    while (nextUrl && pageCount < maxPages) {
+      pageCount++;
+      console.log(`Fetching page ${pageCount}: ${nextUrl}`);
+
+      const apiResponse = await fetch(nextUrl, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Token ${ecoMovementToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!apiResponse.ok) {
+        const errorText = await apiResponse.text();
+        throw new Error(`API request failed: ${apiResponse.status} - ${errorText}`);
+      }
+
+      const apiData = await apiResponse.json();
+      const pageLocations: OCPILocation[] = apiData.data || apiData;
+      
+      console.log(`Page ${pageCount}: fetched ${pageLocations.length} locations`);
+      allLocations.push(...pageLocations);
+
+      // Check for next page in Link header
+      const linkHeader = apiResponse.headers.get('Link');
+      nextUrl = parseNextLink(linkHeader);
+      
+      if (nextUrl) {
+        console.log(`Found next page link: ${nextUrl}`);
+      }
     }
 
-    const apiData = await apiResponse.json();
-    const locations: OCPILocation[] = apiData.data || apiData;
-
-    console.log(`Fetched ${locations.length} locations from API`);
+    const locations = allLocations;
+    console.log(`Fetched ${locations.length} total locations from API across ${pageCount} page(s)`);
 
     // Get a service user ID for user_id field (use first admin user)
     const { data: adminUser } = await supabase
