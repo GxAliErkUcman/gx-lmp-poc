@@ -182,13 +182,16 @@ const handler = async (req: Request): Promise<Response> => {
     
     // Handle specific auth errors with user-friendly messages
     if (error.code === 'email_exists' || error.message?.includes('already been registered')) {
+      // NOTE: We intentionally return 200 here to avoid client runtime “blank screen” handling
+      // that occurs on non-2xx responses in some environments.
       return new Response(
-        JSON.stringify({ 
+        JSON.stringify({
+          success: false,
           error: 'A user with this email address already exists',
-          code: 'email_exists'
+          code: 'email_exists',
         }),
         {
-          status: 409, // Conflict
+          status: 200,
           headers: { 'Content-Type': 'application/json', ...corsHeaders },
         }
       );
