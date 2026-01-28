@@ -95,10 +95,20 @@ export default function CreateUserDialog({
         },
       });
 
-      // Check for error in response body (edge function returns JSON with error field)
-      if (error || data?.error) {
-        const errorMessage = data?.error || error?.message || 'Failed to create user';
-        const isEmailExists = data?.code === 'email_exists' || errorMessage.includes('already exists');
+      // Handle edge function errors (non-2xx responses)
+      if (error) {
+        // Parse error response body from context if available
+        let errorData: { error?: string; code?: string } = {};
+        try {
+          if (error.context) {
+            errorData = await error.context.json();
+          }
+        } catch {
+          // Context might not be JSON parseable
+        }
+        
+        const errorMessage = errorData.error || error.message || 'Failed to create user';
+        const isEmailExists = errorData.code === 'email_exists' || errorMessage.includes('already exists');
         
         toast({
           title: isEmailExists ? 'User Already Exists' : 'Error',
