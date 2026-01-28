@@ -270,23 +270,32 @@ serve(async (req) => {
     console.log('Fetching locations from Eco-Movement API...');
 
     // Helper function to parse Link header for pagination
+    // OCPI uses RFC5988 Web Linking: Link: <url>; rel="next", <url>; rel="last"
     const parseNextLink = (linkHeader: string | null): string | null => {
       if (!linkHeader) return null;
-      
-      // Parse Link header format: <url>; rel="next", <url>; rel="last"
+
+      // Fast path regex (handles additional params like type, title, etc.)
+      const regexMatch = linkHeader.match(/<([^>]+)>\s*;\s*rel="next"/i);
+      if (regexMatch?.[1]) return regexMatch[1];
+
+      // Fallback parser
       const links = linkHeader.split(',');
       for (const link of links) {
-        const parts = link.trim().split(';');
-        if (parts.length < 2) continue;
-        
-        const url = parts[0].trim().replace(/^<|>$/g, '');
-        const rel = parts[1].trim();
-        
-        if (rel === 'rel="next"' || rel === "rel='next'") {
-          return url;
-        }
+        const trimmed = link.trim();
+        const urlMatch = trimmed.match(/<([^>]+)>/);
+        if (!urlMatch?.[1]) continue;
+
+        const relMatch = trimmed.match(/rel\s*=\s*"?next"?/i);
+        if (relMatch) return urlMatch[1];
       }
       return null;
+    };
+
+    const parseNextFromBody = (apiData: any): string | null => {
+      // Some OCPI implementations include pagination hints in-body
+      // e.g. { data: [...], links: { next: "..." } }
+      const next = apiData?.links?.next ?? apiData?.next;
+      return typeof next === 'string' && next.length > 0 ? next : null;
     };
 
     // Fetch all pages from Eco-Movement API with pagination support
@@ -316,11 +325,21 @@ serve(async (req) => {
       const pageLocations: OCPILocation[] = apiData.data || apiData;
       
       console.log(`Page ${pageCount}: fetched ${pageLocations.length} locations`);
+      if (pageCount === 1) {
+        const idsSample = pageLocations.slice(0, 10).map((l) => l?.id).filter(Boolean);
+        console.log(`Page 1 sample ids: ${idsSample.join(', ')}`);
+      }
       allLocations.push(...pageLocations);
 
       // Check for next page in Link header
       const linkHeader = apiResponse.headers.get('Link');
-      nextUrl = parseNextLink(linkHeader);
+      if (pageCount === 1) {
+        console.log(`Response Link header: ${linkHeader ?? '(none)'}`);
+        const keysSample = Array.from(apiResponse.headers.keys()).slice(0, 30);
+        console.log(`Response headers sample: ${keysSample.join(', ')}`);
+      }
+
+      nextUrl = parseNextLink(linkHeader) ?? parseNextFromBody(apiData);
       
       if (nextUrl) {
         console.log(`Found next page link: ${nextUrl}`);
