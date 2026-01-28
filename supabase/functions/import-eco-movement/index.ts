@@ -299,10 +299,17 @@ serve(async (req) => {
     };
 
     // Fetch all pages from Eco-Movement API with pagination support
+    // OCPI supports offset/limit pagination; some providers also expose it via headers (x-total-count/x-limit)
     const allLocations: OCPILocation[] = [];
-    let nextUrl: string | null = 'https://api.eco-movement.com/api/ocpi/cpo/2.2/locations';
+    const baseUrl = 'https://api.eco-movement.com/api/ocpi/cpo/2.2/locations';
+    let nextUrl: string | null = baseUrl;
     let pageCount = 0;
     const maxPages = 50; // Safety limit to prevent infinite loops
+
+    // Offset/limit fallback (used when Link header is missing but total/limit headers are present)
+    let offset = 0;
+    let requestedLimit = 100;
+    let usingOffsetPagination = false;
 
     while (nextUrl && pageCount < maxPages) {
       pageCount++;
@@ -333,17 +340,51 @@ serve(async (req) => {
 
       // Check for next page in Link header
       const linkHeader = apiResponse.headers.get('Link');
+      const totalCountHeader = apiResponse.headers.get('x-total-count');
+      const limitHeader = apiResponse.headers.get('x-limit');
+      const offsetHeader = apiResponse.headers.get('x-offset');
       if (pageCount === 1) {
         console.log(`Response Link header: ${linkHeader ?? '(none)'}`);
+        console.log(
+          `Pagination headers: x-total-count=${totalCountHeader ?? '(none)'} x-limit=${limitHeader ?? '(none)'} x-offset=${offsetHeader ?? '(none)'}`
+        );
         const keysSample = Array.from(apiResponse.headers.keys()).slice(0, 30);
         console.log(`Response headers sample: ${keysSample.join(', ')}`);
       }
 
+      // Primary: Link header / in-body next
       nextUrl = parseNextLink(linkHeader) ?? parseNextFromBody(apiData);
+
+      // Fallback: offset/limit pagination if provider exposes totals but does not provide Link/next
+      if (!nextUrl) {
+        const totalCount = totalCountHeader ? Number(totalCountHeader) : NaN;
+        const providerLimit = limitHeader ? Number(limitHeader) : NaN;
+
+        // If provider forces a tiny limit (like 4), we still paginate by offset.
+        if (!Number.isNaN(totalCount) && totalCount > allLocations.length) {
+          usingOffsetPagination = true;
+          // Prefer provider-reported limit if it looks sane, otherwise keep requestedLimit
+          const effectiveLimit = !Number.isNaN(providerLimit) && providerLimit > 0 ? providerLimit : requestedLimit;
+          offset = allLocations.length; // next offset is how many we've already collected
+
+          const url = new URL(baseUrl);
+          url.searchParams.set('offset', String(offset));
+          url.searchParams.set('limit', String(effectiveLimit));
+          nextUrl = url.toString();
+
+          console.log(
+            `No Link header; continuing with offset pagination: offset=${offset} limit=${effectiveLimit} total=${totalCount}`
+          );
+        }
+      }
       
       if (nextUrl) {
         console.log(`Found next page link: ${nextUrl}`);
       }
+    }
+
+    if (usingOffsetPagination) {
+      console.log(`Used offset/limit pagination across ${pageCount} page(s)`);
     }
 
     const locations = allLocations;
