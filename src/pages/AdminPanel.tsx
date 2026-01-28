@@ -417,15 +417,26 @@ const AdminPanel = () => {
           firstName: newUser.firstName,
           lastName: newUser.lastName,
           clientId: newUser.clientId,
-          role: newUser.role
-        }
+          role: newUser.role,
+        },
       });
 
-      if (error) throw error;
+      // Handle edge function errors - data contains the response body even on error
+      if (error || (data as any)?.error) {
+        const errorMessage = (data as any)?.error || (error as any)?.message || 'Failed to create user.';
+        const isEmailExists = (data as any)?.code === 'email_exists' || String(errorMessage).includes('already exists');
+
+        toast({
+          title: isEmailExists ? 'User Already Exists' : 'Error',
+          description: errorMessage,
+          variant: 'destructive',
+        });
+        return;
+      }
 
       toast({
-        title: "User Created",
-        description: "User invitation sent successfully. They will receive an email to set up their password.",
+        title: 'User Created',
+        description: 'User invitation sent successfully. They will receive an email to set up their password.',
       });
 
       setNewUser({ firstName: '', lastName: '', email: '', clientId: '', role: 'user' });
@@ -434,9 +445,9 @@ const AdminPanel = () => {
     } catch (error: any) {
       console.error('Error creating user:', error);
       toast({
-        title: "Error",
-        description: error.message || "Failed to create user.",
-        variant: "destructive"
+        title: 'Error',
+        description: error.message || 'Failed to create user.',
+        variant: 'destructive',
       });
     } finally {
       setCreateUserLoading(false);
