@@ -86,7 +86,7 @@ export default function ServiceUserCreateDialog({
 
     setLoading(true);
     try {
-      const { error } = await supabase.functions.invoke('create-user', {
+      const { data, error } = await supabase.functions.invoke('create-user', {
         body: {
           email,
           firstName,
@@ -97,7 +97,18 @@ export default function ServiceUserCreateDialog({
         },
       });
 
-      if (error) throw error;
+      // Check for error in response body (edge function returns JSON with error field)
+      if (error || data?.error) {
+        const errorMessage = data?.error || error?.message || 'Failed to create user';
+        const isEmailExists = data?.code === 'email_exists' || errorMessage.includes('already exists');
+        
+        toast({
+          title: isEmailExists ? 'User Already Exists' : 'Error',
+          description: errorMessage,
+          variant: 'destructive',
+        });
+        return;
+      }
 
       toast({
         title: 'Success',

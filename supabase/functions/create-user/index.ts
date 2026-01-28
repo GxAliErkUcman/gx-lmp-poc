@@ -179,6 +179,21 @@ const handler = async (req: Request): Promise<Response> => {
     );
   } catch (error: any) {
     console.error('Error in create-user function:', error);
+    
+    // Handle specific auth errors with user-friendly messages
+    if (error.code === 'email_exists' || error.message?.includes('already been registered')) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'A user with this email address already exists',
+          code: 'email_exists'
+        }),
+        {
+          status: 409, // Conflict
+          headers: { 'Content-Type': 'application/json', ...corsHeaders },
+        }
+      );
+    }
+    
     return new Response(
       JSON.stringify({ error: error.message }),
       {
