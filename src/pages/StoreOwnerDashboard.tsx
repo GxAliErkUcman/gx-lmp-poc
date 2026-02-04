@@ -16,6 +16,7 @@ import type { Business } from '@/types/business';
 import DeleteConfirmationDialog from '@/components/DeleteConfirmationDialog';
 import { UserSettingsDialog } from '@/components/UserSettingsDialog';
 import jasonerLogo from '@/assets/jasoner-horizontal-logo.png';
+import NeedAttentionBanner from '@/components/NeedAttentionBanner';
 
 const StoreOwnerDashboard = () => {
   const { user, signOut, loading: authLoading, urlAuthProcessing } = useAuth();
@@ -345,6 +346,7 @@ const StoreOwnerDashboard = () => {
             </TabsContent>
             
             <TabsContent value="pending">
+              <NeedAttentionBanner pendingBusinesses={pendingBusinesses} />
               {pendingBusinesses.length === 0 ? (
                 <Card className="shadow-card">
                   <CardContent className="py-16 text-center">

@@ -22,6 +22,7 @@ import DeleteConfirmationDialog from '@/components/DeleteConfirmationDialog';
 import { UserSettingsDialog } from '@/components/UserSettingsDialog';
 import jasonerLogo from '@/assets/jasoner-horizontal-logo.png';
 import { useTranslation } from 'react-i18next';
+import NeedAttentionBanner from '@/components/NeedAttentionBanner';
 
 const Dashboard = () => {
   const { t } = useTranslation();
@@ -455,6 +456,7 @@ useEffect(() => {
             </TabsContent>
             
             <TabsContent value="pending">
+              <NeedAttentionBanner pendingBusinesses={pendingBusinesses} />
               {pendingBusinesses.length === 0 ? (
                 <Card className="shadow-card">
                   <CardContent className="py-16 text-center">

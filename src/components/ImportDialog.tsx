@@ -114,9 +114,11 @@ const ImportDialog = ({ open, onOpenChange, onSuccess, clientId }: ImportDialogP
     'goldmine': ['goldmine', 'data goldmine', 'raw data', 'unstructured data', 'extra data']
   };
 
-  const requiredFields = ['businessName'];
+  // Required fields for import - these match the validation schema
+  // Lat/Long are NOT required (optional with range validation)
+  const requiredFields = ['storeCode', 'businessName', 'addressLine1', 'country', 'primaryCategory'];
   
-  // Essential fields for determining if a business is complete
+  // Essential fields for determining if a business is complete (used for status calculation)
   const essentialFields = ['businessName', 'addressLine1', 'country', 'primaryCategory'];
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -687,33 +689,81 @@ const ImportDialog = ({ open, onOpenChange, onSuccess, clientId }: ImportDialogP
         ? duplicateBusinesses.map(d => d.storeCode) 
         : [];
 
-      // Handle overrides via UPDATE (not delete+insert) to preserve history
+      // Handle overrides via MERGE UPDATE (only update fields present in import)
       if (allowOverride && duplicateBusinesses.length > 0) {
+        // Get the fields that are explicitly mapped in this import (excluding storeCode)
+        const mappedFields = columnMappings
+          .filter(m => m.mapped && m.mapped !== 'storeCode')
+          .map(m => m.mapped);
+
         for (const dup of duplicateBusinesses) {
           const oldBusiness = dup.existingBusiness;
-          const newBusinessData = businessesToInsert.find(b => b.storeCode === dup.storeCode);
+          const importedData = businessesToInsert.find(b => b.storeCode === dup.storeCode);
           
-          if (newBusinessData && oldBusiness) {
+          if (importedData && oldBusiness) {
+            // Build a merge payload with ONLY the fields present in the import
+            const mergePayload: any = {};
+            
+            mappedFields.forEach(field => {
+              // Only include the field if it was explicitly mapped and has a value in the import
+              if (importedData[field] !== undefined && importedData[field] !== null && importedData[field] !== '') {
+                mergePayload[field] = importedData[field];
+              }
+            });
+
+            // Handle socialMediaUrls specially - merge with existing
+            if (importedData.socialMediaUrls && importedData.socialMediaUrls.length > 0) {
+              const existingSocials = Array.isArray(oldBusiness.socialMediaUrls) ? oldBusiness.socialMediaUrls : [];
+              const newSocials = importedData.socialMediaUrls;
+              
+              // Merge: replace existing platform URLs with new ones, keep others
+              const mergedSocials = [...existingSocials];
+              newSocials.forEach((newSocial: any) => {
+                const existingIndex = mergedSocials.findIndex((s: any) => s.name === newSocial.name);
+                if (existingIndex >= 0) {
+                  mergedSocials[existingIndex] = newSocial;
+                } else {
+                  mergedSocials.push(newSocial);
+                }
+              });
+              mergePayload.socialMediaUrls = mergedSocials;
+            }
+
+            // IMPORTANT: Preserve status if existing location was 'active' 
+            // Only set to pending if there's a reason (missing essential fields)
+            const mergedBusiness = { ...oldBusiness, ...mergePayload };
+            const isStillComplete = checkBusinessCompleteness(mergedBusiness);
+            
+            // If existing was active and still complete after merge, keep it active
+            if (oldBusiness.status === 'active' && isStillComplete) {
+              // Don't change status - keep it active
+              delete mergePayload.status;
+            } else if (!isStillComplete) {
+              // Only set to pending if incomplete
+              mergePayload.status = 'pending';
+            }
+
+            // Skip update if no fields to merge
+            if (Object.keys(mergePayload).length === 0) {
+              console.log('No fields to update for:', dup.storeCode);
+              continue;
+            }
+
             // Track the changes between old and new values BEFORE updating
             await trackFieldChanges(
               oldBusiness.id,
               oldBusiness,
-              newBusinessData,
+              mergePayload,
               user.id,
               'import',
               undefined,
               user.email || undefined
             );
 
-            // Prepare update payload (exclude storeCode and user_id to preserve them)
-            const updatePayload = { ...newBusinessData };
-            delete updatePayload.storeCode; // Keep original store code
-            delete updatePayload.user_id; // Keep original user_id
-
-            // UPDATE the existing business instead of delete+insert
+            // UPDATE only the merged fields
             const { error: updateError } = await supabase
               .from('businesses')
-              .update(updatePayload)
+              .update(mergePayload)
               .eq('id', oldBusiness.id);
 
             if (updateError) {
@@ -870,6 +920,22 @@ const ImportDialog = ({ open, onOpenChange, onSuccess, clientId }: ImportDialogP
               </div>
             </div>
 
+            {/* Legend explaining checkmark colors */}
+            <div className="flex items-center gap-4 text-xs text-muted-foreground p-2 bg-muted/50 rounded-md">
+              <div className="flex items-center gap-1.5">
+                <CheckCircle className="h-4 w-4 text-green-600" />
+                <span>Required field (must be filled for active status)</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <CheckCircle className="h-4 w-4 text-blue-600" />
+                <span>Optional field</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-red-500 font-bold">*</span>
+                <span>= Required</span>
+              </div>
+            </div>
+
             <div className="space-y-3 max-h-96 overflow-y-auto">
               {columnMappings.map((mapping, index) => {
                 const validation = columnValidations.get(index);
@@ -986,10 +1052,12 @@ const ImportDialog = ({ open, onOpenChange, onSuccess, clientId }: ImportDialogP
                             </HoverCard>
                           ) : (
                             <>
-                              {mapping.mapped && mapping.required && (
+                              {/* Green checkmark for required fields (including essentialFields for completeness) */}
+                              {mapping.mapped && (requiredFields.includes(mapping.mapped) || essentialFields.includes(mapping.mapped)) && (
                                 <CheckCircle className="h-5 w-5 text-green-600" />
                               )}
-                              {mapping.mapped && !mapping.required && (
+                              {/* Blue checkmark for optional fields */}
+                              {mapping.mapped && !requiredFields.includes(mapping.mapped) && !essentialFields.includes(mapping.mapped) && (
                                 <CheckCircle className="h-5 w-5 text-blue-600" />
                               )}
                             </>
@@ -1048,16 +1116,34 @@ const ImportDialog = ({ open, onOpenChange, onSuccess, clientId }: ImportDialogP
               </TabsList>
 
               <TabsContent value="review" className="space-y-4">
+                {/* Validation summary at top of preview */}
+                {validationErrors.size > 0 && (
+                  <Card className="bg-destructive/10 border-destructive/20">
+                    <CardContent className="py-3">
+                      <div className="flex items-center gap-2">
+                        <AlertCircle className="h-4 w-4 text-destructive" />
+                        <span className="text-sm font-medium text-destructive">
+                          {validationErrors.size} row{validationErrors.size > 1 ? 's have' : ' has'} validation issues
+                        </span>
+                        <span className="text-xs text-muted-foreground ml-2">
+                          (hover over ⚠️ icons to see details)
+                        </span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+                
                 <div className="max-h-96 overflow-auto border rounded-md">
                   <table className="w-full text-sm">
-                    <thead className="bg-muted">
+                    <thead className="bg-muted sticky top-0">
                       <tr>
-                        <th className="p-2 text-left w-8"></th>
+                        <th className="py-1.5 px-2 text-left w-8"></th>
                         {columnMappings
                           .filter(m => m.mapped)
                           .map(mapping => (
-                            <th key={mapping.mapped} className="p-2 text-left">
+                            <th key={mapping.mapped} className="py-1.5 px-2 text-left text-xs">
                               {mapping.mapped.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                              {requiredFields.includes(mapping.mapped) && <span className="text-red-500 ml-0.5">*</span>}
                             </th>
                           ))}
                       </tr>
@@ -1070,19 +1156,19 @@ const ImportDialog = ({ open, onOpenChange, onSuccess, clientId }: ImportDialogP
                           const rowStoreCode = String(row[storeCodeMapping.original] || '').trim();
                           return !duplicateBusinesses.some(d => d.storeCode === rowStoreCode);
                         })
-                        .slice(0, 5)
+                        .slice(0, 10)
                         .map((row, index) => {
                           const originalIndex = parsedData.indexOf(row);
                           const rowErrors = validationErrors.get(originalIndex);
                           return (
-                            <tr key={index} className="border-t">
-                              <td className="p-2">
+                            <tr key={index} className="border-t hover:bg-muted/30">
+                              <td className="py-1 px-2">
                                 {rowErrors && rowErrors.length > 0 && (
                                   <HoverCard>
                                     <HoverCardTrigger>
                                       <AlertCircle className="h-4 w-4 text-destructive cursor-help" />
                                     </HoverCardTrigger>
-                                    <HoverCardContent className="w-80">
+                                    <HoverCardContent className="w-80 z-50" side="right" align="start">
                                       <div className="space-y-2">
                                         <h4 className="text-sm font-semibold text-destructive">
                                           Validation Issues ({rowErrors.length}):
@@ -1105,7 +1191,7 @@ const ImportDialog = ({ open, onOpenChange, onSuccess, clientId }: ImportDialogP
                               {columnMappings
                                 .filter(m => m.mapped)
                                 .map(mapping => (
-                                  <td key={mapping.mapped} className="p-2">
+                                  <td key={mapping.mapped} className="py-1 px-2 text-xs max-w-[150px] truncate" title={String(row[mapping.original] || '')}>
                                     {row[mapping.original] || '-'}
                                   </td>
                                 ))}
@@ -1114,9 +1200,9 @@ const ImportDialog = ({ open, onOpenChange, onSuccess, clientId }: ImportDialogP
                         })}
                     </tbody>
                   </table>
-                  {(parsedData.length - duplicateBusinesses.length) > 5 && (
-                    <div className="p-2 text-center text-muted-foreground border-t">
-                      ... and {(parsedData.length - duplicateBusinesses.length) - 5} more new businesses
+                  {(parsedData.length - duplicateBusinesses.length) > 10 && (
+                    <div className="py-1.5 px-2 text-center text-xs text-muted-foreground border-t bg-muted/30">
+                      ... and {(parsedData.length - duplicateBusinesses.length) - 10} more new businesses
                     </div>
                   )}
                 </div>
@@ -1171,28 +1257,33 @@ const ImportDialog = ({ open, onOpenChange, onSuccess, clientId }: ImportDialogP
                       </table>
                     </div>
 
-                    <Card className="bg-red-50 border-red-200">
+                    <Card className="bg-amber-50 border-amber-200">
                       <CardContent className="pt-4">
                         <div className="space-y-4">
                           <div className="flex items-start gap-3">
-                            <AlertCircle className="h-5 w-5 text-red-600 mt-0.5" />
+                            <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5" />
                             <div>
-                              <h4 className="font-medium text-red-800">Override Existing Locations</h4>
-                              <p className="text-sm text-red-700 mt-1">
-                                This will permanently delete the existing businesses and replace them with the imported data.
+                              <h4 className="font-medium text-amber-800">Merge/Update Existing Locations</h4>
+                              <p className="text-sm text-amber-700 mt-1">
+                                Only the fields present in your import file will be updated. Existing data for unmapped fields will be preserved.
+                                {columnMappings.filter(m => m.mapped && m.mapped !== 'storeCode').length > 0 && (
+                                  <span className="block mt-1 font-medium">
+                                    Fields to update: {columnMappings.filter(m => m.mapped && m.mapped !== 'storeCode').map(m => m.mapped).join(', ')}
+                                  </span>
+                                )}
                               </p>
                             </div>
                           </div>
 
                           <div className="space-y-3">
                             <div>
-                              <label className="text-sm font-medium text-red-800">
-                                Type "OVERRIDE" to confirm deletion of existing businesses:
+                              <label className="text-sm font-medium text-amber-800">
+                                Type "UPDATE" to confirm updating existing locations:
                               </label>
                               <Input
                                 value={overrideConfirmation}
                                 onChange={(e) => setOverrideConfirmation(e.target.value)}
-                                placeholder="Type OVERRIDE to confirm"
+                                placeholder="Type UPDATE to confirm"
                                 className="mt-1"
                               />
                             </div>
@@ -1202,13 +1293,13 @@ const ImportDialog = ({ open, onOpenChange, onSuccess, clientId }: ImportDialogP
                                 id="override-checkbox"
                                 checked={allowOverride}
                                 onCheckedChange={(checked) => setAllowOverride(checked as boolean)}
-                                disabled={overrideConfirmation !== 'OVERRIDE'}
+                                disabled={overrideConfirmation !== 'UPDATE'}
                               />
                               <label
                                 htmlFor="override-checkbox"
-                                className={`text-sm ${overrideConfirmation === 'OVERRIDE' ? 'text-red-800' : 'text-gray-400'}`}
+                                className={`text-sm ${overrideConfirmation === 'UPDATE' ? 'text-amber-800' : 'text-gray-400'}`}
                               >
-                                I understand this will permanently delete {duplicateBusinesses.length} existing business{duplicateBusinesses.length > 1 ? 'es' : ''} and replace them with imported data
+                                I understand {duplicateBusinesses.length} existing location{duplicateBusinesses.length > 1 ? 's' : ''} will be updated with the imported field values
                               </label>
                             </div>
                           </div>
