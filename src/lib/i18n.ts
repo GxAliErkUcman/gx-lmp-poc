@@ -45,7 +45,8 @@ const resources = {
         createUser: "Create User",
         versionHistory: "Version History",
         settings: "Settings",
-        customServices: "Custom Services"
+        customServices: "Custom Services",
+        mergeImport: "Merge Import"
       },
       tabs: {
         activeLocations: "Active Locations",
@@ -270,7 +271,8 @@ const resources = {
         createUser: "Benutzer erstellen",
         versionHistory: "Versionshistorie",
         settings: "Einstellungen",
-        customServices: "Individuelle Dienste"
+        customServices: "Individuelle Dienste",
+        mergeImport: "Merge-Import"
       },
       tabs: {
         activeLocations: "Aktive Standorte",
@@ -950,10 +952,11 @@ const turkishTranslations = {
       addBusiness: "İşletme Ekle",
       addFirstBusiness: "İlk İşletmenizi Ekleyin",
       createUser: "Kullanıcı Oluştur",
-      versionHistory: "Sürüm Geçmişi",
-      settings: "Ayarlar",
-      customServices: "Özel Hizmetler"
-    },
+        versionHistory: "Sürüm Geçmişi",
+        settings: "Ayarlar",
+        customServices: "Özel Hizmetler",
+        mergeImport: "Birleştirme İçe Aktarma"
+      },
     tabs: {
       activeLocations: "Aktif Lokasyonlar",
       needAttention: "İlgi Bekleyenler",

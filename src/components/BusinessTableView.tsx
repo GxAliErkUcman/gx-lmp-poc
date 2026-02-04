@@ -263,57 +263,28 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
     
     if (errors.length === 0) return null;
     
-    if (errors.length === 1) {
-      const friendlyMessage = getUserFriendlyErrorMessage(errors[0], business);
-      return (
-        <Dialog>
-          <DialogTrigger asChild>
-            <Badge variant="destructive" className="flex items-center gap-1 cursor-pointer hover:bg-destructive/80">
-              <AlertCircle className="w-3 h-3" />
-              {friendlyMessage}
-            </Badge>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2 text-destructive">
-                <AlertCircle className="w-5 h-5" />
-                Validation Issue
-              </DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="p-3 bg-destructive/10 rounded-md">
-                <p className="font-medium text-destructive">{friendlyMessage}</p>
-                <p className="text-sm text-muted-foreground mt-1">{errors[0].message}</p>
-              </div>
-              <div className="p-3 bg-muted rounded-md">
-                <p className="text-sm font-medium flex items-center gap-1.5">
-                  <Info className="w-4 h-4" />
-                  How to fix:
-                </p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {getActionItems(errors[0], business)}
-                </p>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
-      );
-    }
+    // Render exclamation button that opens dialog
+    const errorCount = errors.length;
+    const firstError = errors[0];
+    const friendlyMessage = getUserFriendlyErrorMessage(firstError, business);
     
-    // Multiple errors - show with dialog
     return (
       <Dialog>
         <DialogTrigger asChild>
-          <Badge variant="destructive" className="flex items-center gap-1 cursor-pointer hover:bg-destructive/80">
-            <AlertCircle className="w-3 h-3" />
-            {errors.length} Issues
-          </Badge>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-6 w-6 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+            title={friendlyMessage}
+          >
+            <AlertCircle className="w-4 h-4" />
+          </Button>
         </DialogTrigger>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-destructive">
               <AlertCircle className="w-5 h-5" />
-              Validation Issues ({errors.length})
+              {errorCount === 1 ? 'Validation Issue' : `Validation Issues (${errorCount})`}
             </DialogTitle>
           </DialogHeader>
           <ScrollArea className="max-h-[60vh]">
@@ -327,7 +298,10 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
                     <p className="text-sm text-muted-foreground">{error.message}</p>
                   </div>
                   <div className="p-2 bg-muted rounded text-sm">
-                    <span className="font-medium">Fix: </span>
+                    <span className="font-medium flex items-center gap-1.5 mb-1">
+                      <Info className="w-3.5 h-3.5" />
+                      How to fix:
+                    </span>
                     <span className="text-muted-foreground">{getActionItems(error, business)}</span>
                   </div>
                 </div>
@@ -575,15 +549,15 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
                 {visibleColumns.map((column) => (
                   <TableCell key={column.key}>
                     {column.key === 'storeCode' && (
-                      business.storeCode && (
-                        <Badge variant="secondary">{business.storeCode}</Badge>
-                      )
-                    )}
-                    {column.key === 'businessName' && (
                       <div className="flex items-center gap-2">
-                        <span className="font-medium">{business.businessName}</span>
+                        {business.storeCode && (
+                          <Badge variant="secondary">{business.storeCode}</Badge>
+                        )}
                         {renderValidationBadge(business)}
                       </div>
+                    )}
+                    {column.key === 'businessName' && (
+                      <span className="font-medium">{business.businessName}</span>
                     )}
                     {column.key === 'primaryCategory' && (
                       business.primaryCategory && (

@@ -57,6 +57,14 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        sage: {
+          100: "hsl(var(--sage-100))",
+          200: "hsl(var(--sage-200))",
+          300: "hsl(var(--sage-300))",
+          700: "hsl(var(--sage-700))",
+          800: "hsl(var(--sage-800))",
+          900: "hsl(var(--sage-900))",
+        },
       },
       fontFamily: {
         'montserrat': ['Montserrat', 'sans-serif'],

@@ -426,12 +426,6 @@ const ClientDashboard = () => {
                   <Wrench className="w-4 h-4 mr-2" />
                   {t('actions.customServices')}
                 </Button>
-                {!isImportDisabled() && (
-                  <Button variant="outline" onClick={() => setImportDialogOpen(true)}>
-                    <Upload className="w-4 h-4 mr-2" />
-                    {t('actions.import')}
-                  </Button>
-                )}
                 <Button onClick={() => {
                   setEditingBusiness(null);
                   setBusinessDialogOpen(true);
@@ -439,6 +433,26 @@ const ClientDashboard = () => {
                   <Plus className="w-4 h-4 mr-2" />
                   {t('actions.addBusiness')}
                 </Button>
+                {!isImportDisabled() && (
+                  <>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setImportDialogOpen(true)}
+                      className="bg-sage-100 hover:bg-sage-200 border-sage-300 text-sage-800 dark:bg-sage-900/30 dark:hover:bg-sage-900/50 dark:border-sage-700 dark:text-sage-300"
+                    >
+                      <Upload className="w-4 h-4 mr-2" />
+                      {t('actions.mergeImport')}
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setImportDialogOpen(true)}
+                      className="bg-sage-100 hover:bg-sage-200 border-sage-300 text-sage-800 dark:bg-sage-900/30 dark:hover:bg-sage-900/50 dark:border-sage-700 dark:text-sage-300"
+                    >
+                      <Upload className="w-4 h-4 mr-2" />
+                      {t('actions.import')}
+                    </Button>
+                  </>
+                )}
               </div>
 
               {/* Mobile Actions */}
@@ -487,10 +501,24 @@ const ClientDashboard = () => {
                         {t('actions.customServices')}
                       </Button>
                       {!isImportDisabled() && (
-                        <Button variant="outline" onClick={() => setImportDialogOpen(true)} className="w-full justify-start">
-                          <Upload className="w-4 h-4 mr-2" />
-                          {t('actions.import')}
-                        </Button>
+                        <>
+                          <Button 
+                            variant="outline" 
+                            onClick={() => setImportDialogOpen(true)} 
+                            className="w-full justify-start bg-sage-100 hover:bg-sage-200 border-sage-300 text-sage-800 dark:bg-sage-900/30 dark:hover:bg-sage-900/50 dark:border-sage-700 dark:text-sage-300"
+                          >
+                            <Upload className="w-4 h-4 mr-2" />
+                            {t('actions.mergeImport')}
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            onClick={() => setImportDialogOpen(true)} 
+                            className="w-full justify-start bg-sage-100 hover:bg-sage-200 border-sage-300 text-sage-800 dark:bg-sage-900/30 dark:hover:bg-sage-900/50 dark:border-sage-700 dark:text-sage-300"
+                          >
+                            <Upload className="w-4 h-4 mr-2" />
+                            {t('actions.import')}
+                          </Button>
+                        </>
                       )}
                       <Button 
                         onClick={() => setCreateUserDialogOpen(true)}
