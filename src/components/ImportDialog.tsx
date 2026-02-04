@@ -1068,15 +1068,12 @@ const ImportDialog = ({ open, onOpenChange, onSuccess, clientId, mergeMode = fal
                 <>
                   <div className="flex items-center gap-1.5">
                     <CheckCircle className="h-4 w-4 text-green-600" />
+                    <span className="text-red-500 font-bold">*</span>
                     <span>Required field (must be filled for active status)</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <CheckCircle className="h-4 w-4 text-blue-600" />
                     <span>Optional field</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-red-500 font-bold">*</span>
-                    <span>= Required</span>
                   </div>
                 </>
               )}
@@ -1429,29 +1426,20 @@ const ImportDialog = ({ open, onOpenChange, onSuccess, clientId, mergeMode = fal
                           <tr>
                             <th className="p-2 text-left">Store Code</th>
                             <th className="p-2 text-left">Business Name</th>
-                            <th className="p-2 text-left">Updated Fields</th>
+                            {/* Dynamic columns for each field being updated (excluding storeCode) */}
+                            {columnMappings
+                              .filter(m => m.mapped && m.mapped !== 'storeCode')
+                              .map(mapping => (
+                                <th key={mapping.mapped} className="p-2 text-left text-xs">
+                                  {mapping.mapped.replace(/([A-Z])/g, ' $1').trim().replace(/^./, str => str.toUpperCase())}
+                                </th>
+                              ))}
                           </tr>
                         </thead>
                         <tbody>
                           {duplicateBusinesses.map((duplicate, index) => {
                             // Get fields being updated (exclude storeCode)
                             const updatedFieldMappings = columnMappings.filter(m => m.mapped && m.mapped !== 'storeCode');
-                            
-                            // Calculate actual changes for this duplicate
-                            const changes: Array<{ field: string; oldValue: string; newValue: string }> = [];
-                            updatedFieldMappings.forEach(mapping => {
-                              const importValue = String(duplicate.importRow[mapping.original] || '').trim();
-                              const existingValue = String(duplicate.existingBusiness[mapping.mapped] || '').trim();
-                              
-                              // Only show if import has a value and it's different from existing
-                              if (importValue && importValue !== existingValue) {
-                                changes.push({
-                                  field: mapping.mapped,
-                                  oldValue: existingValue || '(empty)',
-                                  newValue: importValue,
-                                });
-                              }
-                            });
 
                             return (
                               <tr key={index} className="border-t align-top">
@@ -1459,30 +1447,32 @@ const ImportDialog = ({ open, onOpenChange, onSuccess, clientId, mergeMode = fal
                                 <td className="p-2 text-xs text-muted-foreground">
                                   {duplicate.existingBusiness.businessName || 'N/A'}
                                 </td>
-                                <td className="p-2 text-xs">
-                                  {changes.length === 0 ? (
-                                    <span className="text-muted-foreground italic">No changes detected</span>
-                                  ) : (
-                                    <div className="space-y-1.5">
-                                      {changes.map((change, changeIdx) => (
-                                        <div key={changeIdx} className="flex flex-col">
-                                          <span className="font-medium text-foreground">
-                                            {change.field.replace(/([A-Z])/g, ' $1').trim().replace(/^./, str => str.toUpperCase())}:
-                                          </span>
-                                          <div className="flex items-center gap-1.5 text-[11px]">
-                                            <span className="text-muted-foreground line-through max-w-[120px] truncate" title={change.oldValue}>
-                                              {change.oldValue}
+                                {/* Render each field column */}
+                                {updatedFieldMappings.map(mapping => {
+                                  const importValue = String(duplicate.importRow[mapping.original] || '').trim();
+                                  const existingValue = String(duplicate.existingBusiness[mapping.mapped] || '').trim();
+                                  const hasChange = importValue && importValue !== existingValue;
+
+                                  return (
+                                    <td key={mapping.mapped} className="p-2 text-xs">
+                                      {hasChange ? (
+                                        <div className="flex flex-col gap-0.5">
+                                          <div className="flex items-center gap-1 text-[11px]">
+                                            <span className="text-muted-foreground line-through max-w-[100px] truncate" title={existingValue || '(empty)'}>
+                                              {existingValue || '(empty)'}
                                             </span>
                                             <span className="text-muted-foreground">→</span>
-                                            <span className="text-green-700 font-medium max-w-[120px] truncate" title={change.newValue}>
-                                              {change.newValue}
+                                            <span className="text-green-700 font-medium max-w-[100px] truncate" title={importValue}>
+                                              {importValue}
                                             </span>
                                           </div>
                                         </div>
-                                      ))}
-                                    </div>
-                                  )}
-                                </td>
+                                      ) : (
+                                        <span className="text-muted-foreground italic">—</span>
+                                      )}
+                                    </td>
+                                  );
+                                })}
                               </tr>
                             );
                           })}
