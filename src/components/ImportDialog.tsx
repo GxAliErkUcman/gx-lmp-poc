@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import * as XLSX from 'xlsx';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -44,6 +44,8 @@ interface DuplicateBusiness {
   storeCode: string;
 }
 
+type MergeFieldDiff = { oldValue: any; newValue: any };
+
 const ImportDialog = ({ open, onOpenChange, onSuccess, clientId, mergeMode = false }: ImportDialogProps) => {
   const { user } = useAuth();
   const [file, setFile] = useState<File | null>(null);
@@ -56,6 +58,7 @@ const ImportDialog = ({ open, onOpenChange, onSuccess, clientId, mergeMode = fal
   const [allowOverride, setAllowOverride] = useState(false);
   const [activeTab, setActiveTab] = useState<'review' | 'duplicates'>('review');
   const [validationErrors, setValidationErrors] = useState<Map<number, ValidationError[]>>(new Map());
+  const [mergeDiffs, setMergeDiffs] = useState<Map<number, Record<string, MergeFieldDiff>>>(new Map());
 
   // Field mappings aligned with database schema - ordered by specificity
   const fieldMappings: Record<string, string[]> = {
@@ -487,11 +490,29 @@ const ImportDialog = ({ open, onOpenChange, onSuccess, clientId, mergeMode = fal
         return;
       }
 
+      // Determine effective client_id for merge-mode isolation
+      let effectiveClientId = clientId;
+      if (!effectiveClientId) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('client_id')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        effectiveClientId = profile?.client_id || undefined;
+      }
+
       // Check which store codes already exist in the database
-      const { data: existingBusinesses, error } = await supabase
+      // NOTE: In merge mode, we scope by client_id to avoid cross-client corruption.
+      let existingQuery = supabase
         .from('businesses')
         .select('*')
         .in('storeCode', importStoreCodes);
+
+      if (mergeMode && effectiveClientId) {
+        existingQuery = existingQuery.eq('client_id', effectiveClientId);
+      }
+
+      const { data: existingBusinesses, error } = await existingQuery;
 
       if (error) throw error;
 
@@ -531,35 +552,117 @@ const ImportDialog = ({ open, onOpenChange, onSuccess, clientId, mergeMode = fal
 
   const previewImport = () => {
     if (!validateMappings()) return;
-    
-    // Validate each business and store errors
-    const errorsMap = new Map<number, ValidationError[]>();
-    parsedData.forEach((row, index) => {
-      const mappedRow: any = {};
-      columnMappings.forEach(mapping => {
-        if (mapping.mapped) {
-          // Include the field even if empty to ensure validation catches missing required fields
-          const value = row[mapping.original];
-          mappedRow[mapping.mapped] = value !== undefined && value !== null ? value : '';
+
+    // Standard import only: validate each incoming row against full schema
+    if (!mergeMode) {
+      const errorsMap = new Map<number, ValidationError[]>();
+      parsedData.forEach((row, index) => {
+        const mappedRow: any = {};
+        columnMappings.forEach(mapping => {
+          if (mapping.mapped) {
+            // Include the field even if empty to ensure validation catches missing required fields
+            const value = row[mapping.original];
+            mappedRow[mapping.mapped] = value !== undefined && value !== null ? value : '';
+          }
+        });
+
+        // Also ensure all essential required fields exist in the object for validation
+        essentialFields.forEach(field => {
+          if (!(field in mappedRow)) {
+            mappedRow[field] = '';
+          }
+        });
+
+        const validation = validateBusiness(mappedRow);
+        if (!validation.isValid) {
+          errorsMap.set(index, validation.errors);
         }
       });
-      
-      // Also ensure all essential required fields exist in the object for validation
-      essentialFields.forEach(field => {
-        if (!(field in mappedRow)) {
-          mappedRow[field] = '';
-        }
-      });
-      
-      const validation = validateBusiness(mappedRow);
-      if (!validation.isValid) {
-        errorsMap.set(index, validation.errors);
-      }
-    });
-    
-    setValidationErrors(errorsMap);
+
+      setValidationErrors(errorsMap);
+      setMergeDiffs(new Map());
+    } else {
+      // Merge import: validation is computed AFTER we fetch existing businesses
+      setValidationErrors(new Map());
+      setMergeDiffs(new Map());
+    }
+
     checkForDuplicates();
   };
+
+  // In merge mode, compute row diffs + validate against the MERGED record (existing + changes)
+  // This prevents missing-required-field errors when the import is intentionally partial.
+  useEffect(() => {
+    if (!mergeMode || step !== 'preview') return;
+
+    const storeCodeMapping = columnMappings.find(m => m.mapped === 'storeCode');
+    if (!storeCodeMapping) return;
+
+    const diffsMap = new Map<number, Record<string, MergeFieldDiff>>();
+    const errorsMap = new Map<number, ValidationError[]>();
+
+    const mappedUpdatableFields = columnMappings
+      .filter(m => m.mapped && m.mapped !== 'storeCode')
+      .map(m => m.mapped);
+
+    parsedData.forEach((row, rowIndex) => {
+      const rowStoreCode = String(row[storeCodeMapping.original] || '').trim();
+      if (!rowStoreCode) return;
+
+      const dup = duplicateBusinesses.find(d => d.storeCode === rowStoreCode);
+      const existing = dup?.existingBusiness;
+
+      if (!existing) {
+        errorsMap.set(rowIndex, [
+          {
+            field: 'storeCode',
+            message: 'No existing location found for this store code',
+            suggestion: 'Check the store code or use standard Import to create new locations.'
+          }
+        ]);
+        return;
+      }
+
+      // Build patch: only fields that (a) have a value in the import and (b) differ from existing.
+      const rowDiffs: Record<string, MergeFieldDiff> = {};
+      columnMappings.forEach(mapping => {
+        if (!mapping.mapped || mapping.mapped === 'storeCode') return;
+        const raw = row[mapping.original];
+        const hasValue = raw !== undefined && raw !== null && String(raw).trim() !== '';
+        if (!hasValue) return;
+
+        const incoming = raw;
+        const prev = (existing as any)[mapping.mapped];
+
+        // Compare as strings for most fields to avoid false negatives with type differences
+        const incomingComparable = String(incoming).trim();
+        const prevComparable = prev === null || prev === undefined ? '' : String(prev).trim();
+        if (incomingComparable === prevComparable) return;
+
+        rowDiffs[mapping.mapped] = { oldValue: prev, newValue: incoming };
+      });
+
+      diffsMap.set(rowIndex, rowDiffs);
+
+      // Validate merged record but only surface errors related to changed fields.
+      const merged = { ...existing };
+      Object.entries(rowDiffs).forEach(([field, diff]) => {
+        (merged as any)[field] = diff.newValue;
+      });
+
+      const validation = validateBusiness(merged);
+      if (!validation.isValid) {
+        const changedFields = new Set(Object.keys(rowDiffs));
+        const relevantErrors = validation.errors.filter(e => changedFields.has(e.field) || e.field === 'storeCode');
+        if (relevantErrors.length > 0) {
+          errorsMap.set(rowIndex, relevantErrors);
+        }
+      }
+    });
+
+    setMergeDiffs(diffsMap);
+    setValidationErrors(errorsMap);
+  }, [mergeMode, step, parsedData, columnMappings, duplicateBusinesses]);
 
   const importData = async () => {
     if (!user) return;
@@ -1203,7 +1306,8 @@ const ImportDialog = ({ open, onOpenChange, onSuccess, clientId, mergeMode = fal
                           .map(mapping => (
                             <th key={mapping.mapped} className="py-1.5 px-2 text-left text-xs">
                               {mapping.mapped.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                              {requiredFields.includes(mapping.mapped) && <span className="text-red-500 ml-0.5">*</span>}
+                              {!mergeMode && requiredFields.includes(mapping.mapped) && <span className="text-red-500 ml-0.5">*</span>}
+                              {mergeMode && mapping.mapped === 'storeCode' && <span className="text-red-500 ml-0.5">*</span>}
                             </th>
                           ))}
                       </tr>
@@ -1211,6 +1315,7 @@ const ImportDialog = ({ open, onOpenChange, onSuccess, clientId, mergeMode = fal
                     <tbody>
                       {parsedData
                         .filter(row => {
+                          if (mergeMode) return true;
                           const storeCodeMapping = columnMappings.find(m => m.mapped === 'storeCode');
                           if (!storeCodeMapping) return true;
                           const rowStoreCode = String(row[storeCodeMapping.original] || '').trim();
@@ -1220,6 +1325,8 @@ const ImportDialog = ({ open, onOpenChange, onSuccess, clientId, mergeMode = fal
                         .map((row, index) => {
                           const originalIndex = parsedData.indexOf(row);
                           const rowErrors = validationErrors.get(originalIndex);
+                          const rowDiff = mergeMode ? mergeDiffs.get(originalIndex) : undefined;
+
                           return (
                             <tr key={index} className="border-t hover:bg-muted/30">
                               <td className="py-1 px-2">
@@ -1250,19 +1357,53 @@ const ImportDialog = ({ open, onOpenChange, onSuccess, clientId, mergeMode = fal
                               </td>
                               {columnMappings
                                 .filter(m => m.mapped)
-                                .map(mapping => (
-                                  <td key={mapping.mapped} className="py-1 px-2 text-xs max-w-[150px] truncate" title={String(row[mapping.original] || '')}>
-                                    {row[mapping.original] || '-'}
-                                  </td>
-                                ))}
+                                .map(mapping => {
+                                  if (!mergeMode) {
+                                    return (
+                                      <td key={mapping.mapped} className="py-1 px-2 text-xs max-w-[150px] truncate" title={String(row[mapping.original] || '')}>
+                                        {row[mapping.original] || '-'}
+                                      </td>
+                                    );
+                                  }
+
+                                  // Merge mode: show diffs only (old value in tooltip)
+                                  if (mapping.mapped === 'storeCode') {
+                                    const value = row[mapping.original] || '-';
+                                    return (
+                                      <td key={mapping.mapped} className="py-1 px-2 text-xs max-w-[150px] truncate" title={String(value)}>
+                                        {value}
+                                      </td>
+                                    );
+                                  }
+
+                                  const diff = rowDiff?.[mapping.mapped];
+                                  if (!diff) {
+                                    return (
+                                      <td key={mapping.mapped} className="py-1 px-2 text-xs max-w-[150px] truncate text-muted-foreground" title="No change">
+                                        —
+                                      </td>
+                                    );
+                                  }
+
+                                  return (
+                                    <td key={mapping.mapped} className="py-1 px-2 text-xs max-w-[150px] truncate" title={`Old: ${String(diff.oldValue ?? '')}\nNew: ${String(diff.newValue ?? '')}`}>
+                                      {String(diff.newValue ?? '') || '—'}
+                                    </td>
+                                  );
+                                })}
                             </tr>
                           );
                         })}
                     </tbody>
                   </table>
-                  {(parsedData.length - duplicateBusinesses.length) > 10 && (
+                  {(!mergeMode && (parsedData.length - duplicateBusinesses.length) > 10) && (
                     <div className="py-1.5 px-2 text-center text-xs text-muted-foreground border-t bg-muted/30">
                       ... and {(parsedData.length - duplicateBusinesses.length) - 10} more new businesses
+                    </div>
+                  )}
+                  {(mergeMode && parsedData.length > 10) && (
+                    <div className="py-1.5 px-2 text-center text-xs text-muted-foreground border-t bg-muted/30">
+                      ... and {parsedData.length - 10} more rows
                     </div>
                   )}
                 </div>
