@@ -28,6 +28,7 @@ import ClientCustomServicesDialog from '@/components/ClientCustomServicesDialog'
 import { ApiImportDialog } from '@/components/ApiImportDialog';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useTranslation } from 'react-i18next';
+import NeedAttentionBanner from '@/components/NeedAttentionBanner';
 
 // Energie 360° client ID for data source filter
 const ENERGIE_360_CLIENT_ID = 'e77c44c5-0585-4225-a5ea-59a38edb85fb';
@@ -619,6 +620,10 @@ const ClientDashboard = () => {
                 </TabsContent>
 
                 <TabsContent value="pending">
+                  <NeedAttentionBanner 
+                    pendingBusinesses={pendingBusinesses} 
+                    showAsyncInfo={isEnergie360}
+                  />
                   {viewMode === 'table' ? (
                     <BusinessTableView
                       businesses={pendingBusinesses}
@@ -626,6 +631,7 @@ const ClientDashboard = () => {
                       onDelete={handleDeleteBusiness}
                       onMultiEdit={handleMultiEdit}
                       onMultiDelete={handleMultiDelete}
+                      showValidationErrors={true}
                     />
                   ) : (
                     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">

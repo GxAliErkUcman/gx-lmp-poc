@@ -26,7 +26,18 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { Share2, Globe, BarChart3 } from 'lucide-react';
+import { Share2, Globe, BarChart3, Trash2 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 const accountSocialsSchema = z.object({
   facebookUrl: z.string().optional(),
@@ -331,6 +342,76 @@ const AccountSocialsDialog = ({ open, onOpenChange, onSuccess, clientId }: Accou
     }
   };
 
+  const onRemoveAll = async () => {
+    if (!user) return;
+    
+    setLoading(true);
+    try {
+      // Get count of businesses with social media URLs
+      let countQuery = supabase
+        .from('businesses')
+        .select('id, socialMediaUrls');
+
+      if (clientId) {
+        countQuery = countQuery.eq('client_id', clientId);
+      } else {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('client_id')
+          .eq('user_id', user.id)
+          .single();
+
+        countQuery = countQuery.or(`user_id.eq.${user.id}${profile?.client_id ? `,client_id.eq.${profile.client_id}` : ''}`);
+      }
+
+      const { data: businesses, error: fetchError } = await countQuery;
+      if (fetchError) throw fetchError;
+
+      // Count how many actually have social URLs
+      const affectedCount = businesses?.filter(b => 
+        Array.isArray(b.socialMediaUrls) && b.socialMediaUrls.length > 0
+      ).length || 0;
+
+      // Update all businesses to remove social media URLs
+      let updateQuery = supabase
+        .from('businesses')
+        .update({ socialMediaUrls: [] });
+
+      if (clientId) {
+        updateQuery = updateQuery.eq('client_id', clientId);
+      } else {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('client_id')
+          .eq('user_id', user.id)
+          .single();
+
+        updateQuery = updateQuery.or(`user_id.eq.${user.id}${profile?.client_id ? `,client_id.eq.${profile.client_id}` : ''}`);
+      }
+
+      const { error } = await updateQuery;
+      if (error) throw error;
+
+      toast({
+        title: "Social Links Removed",
+        description: `Removed all social media links from ${affectedCount} location${affectedCount !== 1 ? 's' : ''}`,
+      });
+
+      fetchSocialStats();
+      onSuccess();
+      onOpenChange(false);
+    } catch (error) {
+      console.error('Error removing social links:', error);
+      toast({
+        title: "Error",
+        description: "Failed to remove social media links",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -343,18 +424,26 @@ const AccountSocialsDialog = ({ open, onOpenChange, onSuccess, clientId }: Accou
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="analytics" className="flex items-center gap-2">
               <BarChart3 className="w-4 h-4" />
-              Current Status
+              <span className="hidden sm:inline">Current Status</span>
+              <span className="sm:hidden">Status</span>
             </TabsTrigger>
             <TabsTrigger value="single" className="flex items-center gap-2">
               <Globe className="w-4 h-4" />
-              Update Single Platform
+              <span className="hidden sm:inline">Update Single</span>
+              <span className="sm:hidden">Single</span>
             </TabsTrigger>
             <TabsTrigger value="all" className="flex items-center gap-2">
               <Share2 className="w-4 h-4" />
-              Update All Platforms
+              <span className="hidden sm:inline">Update All</span>
+              <span className="sm:hidden">All</span>
+            </TabsTrigger>
+            <TabsTrigger value="remove" className="flex items-center gap-2 text-destructive data-[state=active]:text-destructive">
+              <Trash2 className="w-4 h-4" />
+              <span className="hidden sm:inline">Remove All</span>
+              <span className="sm:hidden">Remove</span>
             </TabsTrigger>
           </TabsList>
 
@@ -648,6 +737,73 @@ const AccountSocialsDialog = ({ open, onOpenChange, onSuccess, clientId }: Accou
                   </Form>
                 </CardContent>
               </ScrollArea>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="remove" className="mt-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg text-destructive flex items-center gap-2">
+                  <Trash2 className="w-5 h-5" />
+                  Remove All Social Links
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  This will remove all social media links from all locations in this account. This action cannot be undone.
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Summary of what will be removed */}
+                {socialStats.some(s => s.locationsWithSocial > 0) ? (
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">Current social links that will be removed:</p>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                      {socialStats.filter(s => s.locationsWithSocial > 0).map(stat => (
+                        <div key={stat.platform} className="flex items-center justify-between p-2 bg-muted rounded-md">
+                          <span className="text-sm">{stat.platformLabel}</span>
+                          <Badge variant="secondary">{stat.locationsWithSocial}</Badge>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No social media links are currently set.</p>
+                )}
+
+                <div className="flex justify-end gap-2 pt-4">
+                  <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                    Cancel
+                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button 
+                        variant="destructive" 
+                        disabled={loading || !socialStats.some(s => s.locationsWithSocial > 0)}
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Remove All Social Links
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This will permanently remove all social media links from all locations in this account. 
+                          This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction 
+                          onClick={onRemoveAll}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                          Yes, Remove All
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              </CardContent>
             </Card>
           </TabsContent>
         </Tabs>

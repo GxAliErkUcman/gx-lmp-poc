@@ -5,10 +5,11 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
-import { Edit, Trash2, Search, ArrowUp, ArrowDown, Settings, Filter, X, AlertCircle, Check, ChevronsUpDown } from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Edit, Trash2, Search, ArrowUp, ArrowDown, Settings, Filter, X, AlertCircle, Check, ChevronsUpDown, Info } from 'lucide-react';
 import { Business } from '@/types/business';
 import ManageColumnsDialog, { type ColumnConfig } from './ManageColumnsDialog';
 import { validateBusiness, ValidationError } from '@/lib/validation';
@@ -231,7 +232,30 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
     return error.message; // fallback to original message
   };
 
-  // Render validation badge
+  // Get action items for fixing validation errors
+  const getActionItems = (error: ValidationError, business: Business): string => {
+    if (error.field === 'storeCode') {
+      return "Edit this location and enter a unique store code that identifies this location in your system.";
+    }
+    if (error.field === 'addressLine1') {
+      return "Edit this location and add a valid street address.";
+    }
+    if (error.field === 'primaryCategory') {
+      return "Edit this location and select a business category from the dropdown.";
+    }
+    if (error.field === 'country') {
+      return "Edit this location and select the country where this business is located.";
+    }
+    if (error.field === 'businessName') {
+      return "Edit this location and enter the business name.";
+    }
+    if (error.field === 'fromTheBusiness') {
+      return "Edit the 'From the Business' description field to remove any URLs or fix formatting issues.";
+    }
+    return "Edit this location to fix this issue.";
+  };
+
+  // Render validation badge with clickable dialog
   const renderValidationBadge = (business: Business) => {
     if (!showValidationErrors) return null;
     
@@ -242,38 +266,76 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
     if (errors.length === 1) {
       const friendlyMessage = getUserFriendlyErrorMessage(errors[0], business);
       return (
-        <Badge variant="destructive" className="flex items-center gap-1">
-          <AlertCircle className="w-3 h-3" />
-          {friendlyMessage}
-        </Badge>
+        <Dialog>
+          <DialogTrigger asChild>
+            <Badge variant="destructive" className="flex items-center gap-1 cursor-pointer hover:bg-destructive/80">
+              <AlertCircle className="w-3 h-3" />
+              {friendlyMessage}
+            </Badge>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-destructive">
+                <AlertCircle className="w-5 h-5" />
+                Validation Issue
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="p-3 bg-destructive/10 rounded-md">
+                <p className="font-medium text-destructive">{friendlyMessage}</p>
+                <p className="text-sm text-muted-foreground mt-1">{errors[0].message}</p>
+              </div>
+              <div className="p-3 bg-muted rounded-md">
+                <p className="text-sm font-medium flex items-center gap-1.5">
+                  <Info className="w-4 h-4" />
+                  How to fix:
+                </p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {getActionItems(errors[0], business)}
+                </p>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       );
     }
     
-    // Multiple errors - show with hover card
+    // Multiple errors - show with dialog
     return (
-      <HoverCard openDelay={100} closeDelay={100}>
-        <HoverCardTrigger asChild>
-          <div className="inline-block">
-            <Badge variant="destructive" className="flex items-center gap-1 cursor-help">
-              <AlertCircle className="w-3 h-3" />
-              Multiple Issues
-            </Badge>
-          </div>
-        </HoverCardTrigger>
-        <HoverCardContent className="w-80 z-50" side="top" align="start">
-          <div className="space-y-2">
-            <p className="text-sm font-semibold text-destructive">Validation Issues:</p>
-            <ul className="space-y-1.5">
+      <Dialog>
+        <DialogTrigger asChild>
+          <Badge variant="destructive" className="flex items-center gap-1 cursor-pointer hover:bg-destructive/80">
+            <AlertCircle className="w-3 h-3" />
+            {errors.length} Issues
+          </Badge>
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertCircle className="w-5 h-5" />
+              Validation Issues ({errors.length})
+            </DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="max-h-[60vh]">
+            <div className="space-y-3 pr-4">
               {errors.map((error, idx) => (
-                <li key={idx} className="text-xs flex items-start gap-1.5">
-                  <span className="text-destructive mt-0.5">•</span>
-                  <span className="font-medium">{getUserFriendlyErrorMessage(error, business)}</span>
-                </li>
+                <div key={idx} className="p-3 bg-destructive/10 rounded-md space-y-2">
+                  <div>
+                    <p className="font-medium text-destructive">
+                      {getUserFriendlyErrorMessage(error, business)}
+                    </p>
+                    <p className="text-sm text-muted-foreground">{error.message}</p>
+                  </div>
+                  <div className="p-2 bg-muted rounded text-sm">
+                    <span className="font-medium">Fix: </span>
+                    <span className="text-muted-foreground">{getActionItems(error, business)}</span>
+                  </div>
+                </div>
               ))}
-            </ul>
-          </div>
-        </HoverCardContent>
-      </HoverCard>
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
     );
   };
 
