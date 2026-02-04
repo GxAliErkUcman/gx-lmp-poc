@@ -1256,27 +1256,76 @@ const ImportDialog = ({ open, onOpenChange, onSuccess, clientId, mergeMode = fal
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-medium">Review Import</h3>
               <div className="flex items-center gap-2">
-                {duplicateBusinesses.length > 0 && (
-                  <Badge variant="destructive" className="flex items-center gap-1">
-                    <AlertTriangle className="h-3 w-3" />
-                    {duplicateBusinesses.length} Duplicates
-                  </Badge>
+                {mergeMode ? (
+                  <>
+                    {duplicateBusinesses.length > 0 && (
+                      <Badge variant="secondary" className="flex items-center gap-1 bg-sage-100 text-sage-800 border-sage-300">
+                        <CheckCircle className="h-3 w-3" />
+                        {duplicateBusinesses.length} Updated
+                      </Badge>
+                    )}
+                    <Badge variant="outline">
+                      {parsedData.length} total
+                    </Badge>
+                  </>
+                ) : (
+                  <>
+                    {duplicateBusinesses.length > 0 && (
+                      <Badge variant="destructive" className="flex items-center gap-1">
+                        <AlertTriangle className="h-3 w-3" />
+                        {duplicateBusinesses.length} Duplicates
+                      </Badge>
+                    )}
+                    <Badge variant="outline">
+                      {parsedData.length} businesses total
+                    </Badge>
+                  </>
                 )}
-                <Badge variant="outline">
-                  {parsedData.length} businesses total
-                </Badge>
               </div>
             </div>
 
             <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'review' | 'duplicates')}>
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="review">Review ({parsedData.length - duplicateBusinesses.length} New)</TabsTrigger>
-                <TabsTrigger value="duplicates" disabled={duplicateBusinesses.length === 0}>
-                  Duplicate Locations ({duplicateBusinesses.length})
-                </TabsTrigger>
+                {mergeMode ? (
+                  <>
+                    <TabsTrigger value="duplicates" disabled={duplicateBusinesses.length === 0}>
+                      Location Updates ({duplicateBusinesses.length})
+                    </TabsTrigger>
+                    <TabsTrigger value="review">
+                      {(parsedData.length - duplicateBusinesses.length) > 0 
+                        ? `New Locations (${parsedData.length - duplicateBusinesses.length})`
+                        : 'Review (0 New)'
+                      }
+                    </TabsTrigger>
+                  </>
+                ) : (
+                  <>
+                    <TabsTrigger value="review">Review ({parsedData.length - duplicateBusinesses.length} New)</TabsTrigger>
+                    <TabsTrigger value="duplicates" disabled={duplicateBusinesses.length === 0}>
+                      Duplicate Locations ({duplicateBusinesses.length})
+                    </TabsTrigger>
+                  </>
+                )}
               </TabsList>
 
               <TabsContent value="review" className="space-y-4">
+                {/* Warning for new locations in merge mode - this is unexpected */}
+                {mergeMode && (parsedData.length - duplicateBusinesses.length) > 0 && (
+                  <Card className="bg-yellow-50 border-yellow-200">
+                    <CardContent className="py-3">
+                      <div className="flex items-center gap-2">
+                        <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                        <span className="text-sm font-medium text-yellow-800">
+                          {parsedData.length - duplicateBusinesses.length} new location{(parsedData.length - duplicateBusinesses.length) > 1 ? 's' : ''} detected
+                        </span>
+                        <span className="text-xs text-yellow-700 ml-2">
+                          These store codes don't exist in your database and will be created as new locations.
+                        </span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+                
                 {/* Validation summary at top of preview */}
                 {validationErrors.size > 0 && (
                   <Card className="bg-destructive/10 border-destructive/20">
@@ -1405,20 +1454,23 @@ const ImportDialog = ({ open, onOpenChange, onSuccess, clientId, mergeMode = fal
               <TabsContent value="duplicates" className="space-y-4">
                 {duplicateBusinesses.length > 0 && (
                   <>
-                    <Card className="bg-yellow-50 border-yellow-200">
-                      <CardContent className="pt-4">
-                        <div className="flex items-start gap-3">
-                          <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5" />
-                          <div>
-                            <h4 className="font-medium text-yellow-800">Duplicate Store Codes Detected</h4>
-                            <p className="text-sm text-yellow-700 mt-1">
-                              The following businesses have store codes that already exist in your database. 
-                              You can choose to override them or skip these duplicates.
-                            </p>
+                    {/* Only show warning banner in standard import mode, not merge mode */}
+                    {!mergeMode && (
+                      <Card className="bg-yellow-50 border-yellow-200">
+                        <CardContent className="pt-4">
+                          <div className="flex items-start gap-3">
+                            <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5" />
+                            <div>
+                              <h4 className="font-medium text-yellow-800">Duplicate Store Codes Detected</h4>
+                              <p className="text-sm text-yellow-700 mt-1">
+                                The following businesses have store codes that already exist in your database. 
+                                You can choose to override them or skip these duplicates.
+                              </p>
+                            </div>
                           </div>
-                        </div>
-                      </CardContent>
-                    </Card>
+                        </CardContent>
+                      </Card>
+                    )}
 
                     <div className="max-h-96 overflow-auto border rounded-md">
                       <table className="w-full text-sm">
@@ -1536,11 +1588,17 @@ const ImportDialog = ({ open, onOpenChange, onSuccess, clientId, mergeMode = fal
 
             <div className="flex justify-between items-center">
               <div className="flex gap-2">
-                <Button onClick={importData} disabled={loading}>
+                <Button onClick={importData} disabled={loading} className={mergeMode ? 'bg-sage-600 hover:bg-sage-700' : ''}>
                   {loading ? 'Importing...' : (
-                    allowOverride && duplicateBusinesses.length > 0 
-                      ? `Import ${parsedData.length} Businesses (Override ${duplicateBusinesses.length} Duplicates)`
-                      : `Import ${parsedData.length - duplicateBusinesses.length} New Businesses`
+                    mergeMode ? (
+                      allowOverride && duplicateBusinesses.length > 0 
+                        ? `Update ${duplicateBusinesses.length} Location${duplicateBusinesses.length > 1 ? 's' : ''}${(parsedData.length - duplicateBusinesses.length) > 0 ? ` + Add ${parsedData.length - duplicateBusinesses.length} New` : ''}`
+                        : `Add ${parsedData.length} New Location${parsedData.length > 1 ? 's' : ''}`
+                    ) : (
+                      allowOverride && duplicateBusinesses.length > 0 
+                        ? `Import ${parsedData.length} Businesses (Override ${duplicateBusinesses.length} Duplicates)`
+                        : `Import ${parsedData.length - duplicateBusinesses.length} New Businesses`
+                    )
                   )}
                 </Button>
               </div>
