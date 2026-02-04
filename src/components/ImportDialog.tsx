@@ -23,6 +23,7 @@ interface ImportDialogProps {
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
   clientId?: string; // when provided, force imported locations to this client
+  mergeMode?: boolean; // when true, only storeCode is required (for partial field updates)
 }
 
 interface ParsedData {
@@ -43,7 +44,7 @@ interface DuplicateBusiness {
   storeCode: string;
 }
 
-const ImportDialog = ({ open, onOpenChange, onSuccess, clientId }: ImportDialogProps) => {
+const ImportDialog = ({ open, onOpenChange, onSuccess, clientId, mergeMode = false }: ImportDialogProps) => {
   const { user } = useAuth();
   const [file, setFile] = useState<File | null>(null);
   const [parsedData, setParsedData] = useState<ParsedData[]>([]);
@@ -428,6 +429,21 @@ const ImportDialog = ({ open, onOpenChange, onSuccess, clientId }: ImportDialogP
 
   const validateMappings = () => {
     const mappedFields = columnMappings.filter(m => m.mapped).map(m => m.mapped);
+    
+    // In merge mode, only storeCode is required (for matching existing locations)
+    if (mergeMode) {
+      if (!mappedFields.includes('storeCode')) {
+        toast({
+          title: "Missing Store Code", 
+          description: "Merge Import requires storeCode to match existing locations.",
+          variant: "destructive",
+        });
+        return false;
+      }
+      return true;
+    }
+    
+    // Standard import: all required fields must be mapped
     const missingRequired = requiredFields.filter(field => !mappedFields.includes(field));
     
     if (missingRequired.length > 0) {
@@ -858,7 +874,14 @@ const ImportDialog = ({ open, onOpenChange, onSuccess, clientId }: ImportDialogP
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-6xl max-h-[95vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Import Businesses from Excel/CSV</DialogTitle>
+          <DialogTitle>
+            {mergeMode ? 'Merge Import - Update Existing Locations' : 'Import Businesses from Excel/CSV'}
+          </DialogTitle>
+          {mergeMode && (
+            <p className="text-sm text-muted-foreground">
+              Only mapped fields will be updated. Existing data in other fields will be preserved.
+            </p>
+          )}
         </DialogHeader>
 
         {step === 'upload' && (
@@ -921,19 +944,38 @@ const ImportDialog = ({ open, onOpenChange, onSuccess, clientId }: ImportDialogP
             </div>
 
             {/* Legend explaining checkmark colors */}
-            <div className="flex items-center gap-4 text-xs text-muted-foreground p-2 bg-muted/50 rounded-md">
-              <div className="flex items-center gap-1.5">
-                <CheckCircle className="h-4 w-4 text-green-600" />
-                <span>Required field (must be filled for active status)</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <CheckCircle className="h-4 w-4 text-blue-600" />
-                <span>Optional field</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span className="text-red-500 font-bold">*</span>
-                <span>= Required</span>
-              </div>
+            <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground p-2 bg-muted/50 rounded-md">
+              {mergeMode ? (
+                <>
+                  <div className="flex items-center gap-1.5">
+                    <CheckCircle className="h-4 w-4 text-green-600" />
+                    <span>Store Code (required for matching)</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <CheckCircle className="h-4 w-4 text-blue-600" />
+                    <span>Field to update</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Info className="h-4 w-4 text-muted-foreground" />
+                    <span>Only mapped fields will be updated</span>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="flex items-center gap-1.5">
+                    <CheckCircle className="h-4 w-4 text-green-600" />
+                    <span>Required field (must be filled for active status)</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <CheckCircle className="h-4 w-4 text-blue-600" />
+                    <span>Optional field</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-red-500 font-bold">*</span>
+                    <span>= Required</span>
+                  </div>
+                </>
+              )}
             </div>
 
             <div className="space-y-3 max-h-96 overflow-y-auto">
@@ -951,7 +993,11 @@ const ImportDialog = ({ open, onOpenChange, onSuccess, clientId }: ImportDialogP
                           <div className="flex items-center gap-2">
                             <label className="text-sm font-medium truncate">
                               {mapping.original}
-                              {mapping.required && <span className="text-red-500 ml-1">*</span>}
+                              {/* In merge mode, only storeCode is required; in standard mode, show asterisk for all required fields */}
+                              {mergeMode 
+                                ? (mapping.mapped === 'storeCode' && <span className="text-red-500 ml-1">*</span>)
+                                : (mapping.required && <span className="text-red-500 ml-1">*</span>)
+                              }
                             </label>
                             {mapping.isCombinedHours && (
                               <TooltipProvider>
@@ -1052,13 +1098,27 @@ const ImportDialog = ({ open, onOpenChange, onSuccess, clientId }: ImportDialogP
                             </HoverCard>
                           ) : (
                             <>
-                              {/* Green checkmark for required fields (including essentialFields for completeness) */}
-                              {mapping.mapped && (requiredFields.includes(mapping.mapped) || essentialFields.includes(mapping.mapped)) && (
-                                <CheckCircle className="h-5 w-5 text-green-600" />
-                              )}
-                              {/* Blue checkmark for optional fields */}
-                              {mapping.mapped && !requiredFields.includes(mapping.mapped) && !essentialFields.includes(mapping.mapped) && (
-                                <CheckCircle className="h-5 w-5 text-blue-600" />
+                              {/* In merge mode, only storeCode is green (required for matching) */}
+                              {mergeMode ? (
+                                <>
+                                  {mapping.mapped === 'storeCode' && (
+                                    <CheckCircle className="h-5 w-5 text-green-600" />
+                                  )}
+                                  {mapping.mapped && mapping.mapped !== 'storeCode' && (
+                                    <CheckCircle className="h-5 w-5 text-blue-600" />
+                                  )}
+                                </>
+                              ) : (
+                                <>
+                                  {/* Green checkmark for required fields (including essentialFields for completeness) */}
+                                  {mapping.mapped && (requiredFields.includes(mapping.mapped) || essentialFields.includes(mapping.mapped)) && (
+                                    <CheckCircle className="h-5 w-5 text-green-600" />
+                                  )}
+                                  {/* Blue checkmark for optional fields */}
+                                  {mapping.mapped && !requiredFields.includes(mapping.mapped) && !essentialFields.includes(mapping.mapped) && (
+                                    <CheckCircle className="h-5 w-5 text-blue-600" />
+                                  )}
+                                </>
                               )}
                             </>
                           )}
