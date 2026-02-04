@@ -59,6 +59,7 @@ const ImportDialog = ({ open, onOpenChange, onSuccess, clientId, mergeMode = fal
   const [activeTab, setActiveTab] = useState<'review' | 'duplicates'>('review');
   const [validationErrors, setValidationErrors] = useState<Map<number, ValidationError[]>>(new Map());
   const [mergeDiffs, setMergeDiffs] = useState<Map<number, Record<string, MergeFieldDiff>>>(new Map());
+  const [selectedValidationRow, setSelectedValidationRow] = useState<{ index: number; errors: ValidationError[]; storeCode: string } | null>(null);
 
   // Field mappings aligned with database schema - ordered by specificity
   const fieldMappings: Record<string, string[]> = {
@@ -1331,28 +1332,23 @@ const ImportDialog = ({ open, onOpenChange, onSuccess, clientId, mergeMode = fal
                             <tr key={index} className="border-t hover:bg-muted/30">
                               <td className="py-1 px-2">
                                 {rowErrors && rowErrors.length > 0 && (
-                                  <HoverCard>
-                                    <HoverCardTrigger>
-                                      <AlertCircle className="h-4 w-4 text-destructive cursor-help" />
-                                    </HoverCardTrigger>
-                                    <HoverCardContent className="w-80 z-50" side="right" align="start">
-                                      <div className="space-y-2">
-                                        <h4 className="text-sm font-semibold text-destructive">
-                                          Validation Issues ({rowErrors.length}):
-                                        </h4>
-                                        <ul className="text-xs space-y-1.5">
-                                          {rowErrors.map((error, errIdx) => (
-                                            <li key={errIdx} className="flex flex-col gap-0.5">
-                                              <span className="font-medium text-destructive">
-                                                {error.field.replace(/([A-Z])/g, ' $1').trim().replace(/^./, str => str.toUpperCase())}
-                                              </span>
-                                              <span className="text-muted-foreground">{error.message}</span>
-                                            </li>
-                                          ))}
-                                        </ul>
-                                      </div>
-                                    </HoverCardContent>
-                                  </HoverCard>
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <button
+                                          type="button"
+                                          onClick={() => setSelectedValidationRow({ index: originalIndex, errors: rowErrors, storeCode: row[columnMappings.find(m => m.mapped === 'storeCode')?.original || ''] })}
+                                          className="flex items-center gap-0.5"
+                                        >
+                                          <AlertCircle className="h-4 w-4 text-destructive cursor-pointer hover:text-destructive/80" />
+                                          <span className="text-[10px] text-destructive font-medium">{rowErrors.length}</span>
+                                        </button>
+                                      </TooltipTrigger>
+                                      <TooltipContent side="top" sideOffset={4}>
+                                        <span className="text-xs">{rowErrors.length} validation issue{rowErrors.length > 1 ? 's' : ''} - Click for details</span>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
                                 )}
                               </td>
                               {columnMappings
@@ -1565,6 +1561,48 @@ const ImportDialog = ({ open, onOpenChange, onSuccess, clientId, mergeMode = fal
           </div>
         )}
       </DialogContent>
+
+      {/* Validation Details Dialog */}
+      <Dialog open={!!selectedValidationRow} onOpenChange={() => setSelectedValidationRow(null)}>
+        <DialogContent className="max-w-lg max-h-[80vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertCircle className="h-5 w-5" />
+              Validation Issues
+            </DialogTitle>
+          </DialogHeader>
+          {selectedValidationRow && (
+            <div className="flex flex-col gap-4 overflow-hidden">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <span className="font-medium">Store Code:</span>
+                <span className="font-mono">{selectedValidationRow.storeCode || 'N/A'}</span>
+              </div>
+              <div className="overflow-y-auto flex-1 pr-2">
+                <div className="space-y-3">
+                  {selectedValidationRow.errors.map((error, idx) => (
+                    <div key={idx} className="border rounded-md p-3 bg-destructive/5 border-destructive/20">
+                      <div className="flex items-start gap-2">
+                        <AlertTriangle className="h-4 w-4 text-destructive mt-0.5 flex-shrink-0" />
+                        <div className="flex-1 space-y-1">
+                          <p className="font-medium text-sm">
+                            {error.field.replace(/([A-Z])/g, ' $1').trim().replace(/^./, str => str.toUpperCase())}
+                          </p>
+                          <p className="text-sm text-muted-foreground">{error.message}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="flex justify-end pt-2 border-t">
+                <Button variant="outline" onClick={() => setSelectedValidationRow(null)}>
+                  Close
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 };
