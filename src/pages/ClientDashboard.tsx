@@ -43,6 +43,7 @@ const ClientDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [businessDialogOpen, setBusinessDialogOpen] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [importMergeMode, setImportMergeMode] = useState(false);
   const [editingBusiness, setEditingBusiness] = useState<Business | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('table');
   const [multiEditDialogOpen, setMultiEditDialogOpen] = useState(false);
@@ -437,7 +438,10 @@ const ClientDashboard = () => {
                   <>
                     <Button 
                       variant="outline" 
-                      onClick={() => setImportDialogOpen(true)}
+                      onClick={() => {
+                        setImportMergeMode(true);
+                        setImportDialogOpen(true);
+                      }}
                       className="bg-sage-100 hover:bg-sage-200 border-sage-300 text-sage-800 dark:bg-sage-900/30 dark:hover:bg-sage-900/50 dark:border-sage-700 dark:text-sage-300"
                     >
                       <Upload className="w-4 h-4 mr-2" />
@@ -445,7 +449,10 @@ const ClientDashboard = () => {
                     </Button>
                     <Button 
                       variant="outline" 
-                      onClick={() => setImportDialogOpen(true)}
+                      onClick={() => {
+                        setImportMergeMode(false);
+                        setImportDialogOpen(true);
+                      }}
                       className="bg-sage-100 hover:bg-sage-200 border-sage-300 text-sage-800 dark:bg-sage-900/30 dark:hover:bg-sage-900/50 dark:border-sage-700 dark:text-sage-300"
                     >
                       <Upload className="w-4 h-4 mr-2" />
@@ -504,7 +511,10 @@ const ClientDashboard = () => {
                         <>
                           <Button 
                             variant="outline" 
-                            onClick={() => setImportDialogOpen(true)} 
+                            onClick={() => {
+                              setImportMergeMode(true);
+                              setImportDialogOpen(true);
+                            }} 
                             className="w-full justify-start bg-sage-100 hover:bg-sage-200 border-sage-300 text-sage-800 dark:bg-sage-900/30 dark:hover:bg-sage-900/50 dark:border-sage-700 dark:text-sage-300"
                           >
                             <Upload className="w-4 h-4 mr-2" />
@@ -512,7 +522,10 @@ const ClientDashboard = () => {
                           </Button>
                           <Button 
                             variant="outline" 
-                            onClick={() => setImportDialogOpen(true)} 
+                            onClick={() => {
+                              setImportMergeMode(false);
+                              setImportDialogOpen(true);
+                            }} 
                             className="w-full justify-start bg-sage-100 hover:bg-sage-200 border-sage-300 text-sage-800 dark:bg-sage-900/30 dark:hover:bg-sage-900/50 dark:border-sage-700 dark:text-sage-300"
                           >
                             <Upload className="w-4 h-4 mr-2" />
@@ -788,9 +801,13 @@ const ClientDashboard = () => {
       />
       <ImportDialog
         open={importDialogOpen}
-        onOpenChange={setImportDialogOpen}
+        onOpenChange={(open) => {
+          setImportDialogOpen(open);
+          if (!open) setImportMergeMode(false);
+        }}
         onSuccess={() => fetchBusinesses(true)}
         clientId={selectedClientId}
+        mergeMode={importMergeMode}
       />
       <MultiEditDialog
         open={multiEditDialogOpen}
