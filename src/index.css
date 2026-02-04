@@ -50,6 +50,14 @@ All colors MUST be HSL.
     --shadow-modern: 0 4px 6px -1px hsl(221 83% 53% / 0.1), 0 2px 4px -2px hsl(221 83% 53% / 0.1);
     --shadow-card: 0 1px 3px 0 hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
 
+    /* Sage color palette */
+    --sage-100: 140 20% 94%;
+    --sage-200: 140 18% 88%;
+    --sage-300: 140 15% 75%;
+    --sage-700: 140 15% 35%;
+    --sage-800: 140 15% 25%;
+    --sage-900: 140 15% 15%;
+
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
