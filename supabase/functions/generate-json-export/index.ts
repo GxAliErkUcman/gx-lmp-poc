@@ -72,8 +72,13 @@ function validateBusiness(business: Business): boolean {
   return true;
 }
 
-function convertToJsonSchema(business: Business) {
-  return {
+// Client IDs that should include goldmine in export
+const GOLDMINE_ENABLED_CLIENTS = [
+  '75d14738-25d0-4c40-9921-bde980bc8e06' // Porsche Test
+];
+
+function convertToJsonSchema(business: Business & { goldmine?: string }, includeGoldmine: boolean = false) {
+  const baseSchema = {
     storeCode: business.storeCode,
     businessName: business.businessName,
     addressLine1: business.addressLine1,
@@ -117,6 +122,17 @@ function convertToJsonSchema(business: Business) {
     customServices: business.customServices || null,
     socialMediaUrls: business.socialMediaUrls || null
   };
+
+  // Add goldmine at the end (without a key name would break JSON, so we use empty string key)
+  // The goldmine value is added as the last field to keep entity boundaries intact
+  if (includeGoldmine && business.goldmine) {
+    return {
+      ...baseSchema,
+      goldmine: business.goldmine
+    };
+  }
+
+  return baseSchema;
 }
 
 Deno.serve(async (req) => {
