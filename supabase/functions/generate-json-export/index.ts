@@ -183,10 +183,14 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Check if this client should include goldmine
+    const includeGoldmine = GOLDMINE_ENABLED_CLIENTS.includes(client_id);
+    console.log(`Goldmine export enabled: ${includeGoldmine}`);
+
     // Filter and validate businesses
     const validBusinesses = (businesses || [])
       .filter(business => validateBusiness(business))
-      .map(business => convertToJsonSchema(business));
+      .map(business => convertToJsonSchema(business, includeGoldmine));
 
     console.log(`Found ${validBusinesses.length} valid businesses for export`);
 
