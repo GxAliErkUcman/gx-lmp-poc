@@ -10,6 +10,85 @@ interface ManualExportRequest {
   clientId: string;
 }
 
+// Client IDs that should include goldmine in export
+const GOLDMINE_ENABLED_CLIENTS = [
+  '75d14738-25d0-4c40-9921-bde980bc8e06' // Porsche Test
+];
+
+// Parse goldmine string (format: "Key1: Value1; Key2: Value2") into key-value pairs
+function parseGoldmine(goldmine: string): Record<string, string> {
+  const result: Record<string, string> = {};
+  
+  if (!goldmine || !goldmine.trim()) {
+    return result;
+  }
+
+  // Split by semicolon and process each pair
+  const pairs = goldmine.split(';');
+  for (const pair of pairs) {
+    const trimmed = pair.trim();
+    if (!trimmed) continue;
+    
+    // Find the first colon to split key from value
+    const colonIndex = trimmed.indexOf(':');
+    if (colonIndex > 0) {
+      const key = trimmed.substring(0, colonIndex).trim();
+      const value = trimmed.substring(colonIndex + 1).trim();
+      if (key) {
+        result[key] = value;
+      }
+    } else {
+      // No colon found - treat entire string as a value with generic key
+      result['additionalData'] = trimmed;
+    }
+  }
+
+  return result;
+}
+
+function convertToJsonSchema(business: any, includeGoldmine: boolean = false): Record<string, any> {
+  const baseSchema: Record<string, any> = {
+    storeCode: business.storeCode,
+    businessName: business.businessName,
+    addressLine1: business.addressLine1,
+    addressLine2: business.addressLine2 ?? null,
+    addressLine3: business.addressLine3 ?? null,
+    addressLine4: business.addressLine4 ?? null,
+    addressLine5: business.addressLine5 ?? null,
+    postalCode: business.postalCode ?? null,
+    city: business.city ?? null,
+    state: business.state ?? null,
+    country: business.country,
+    primaryCategory: business.primaryCategory,
+    additionalCategories: business.additionalCategories ?? null,
+    website: business.website ?? null,
+    primaryPhone: business.primaryPhone ?? null,
+    latitude: business.latitude ?? null,
+    longitude: business.longitude ?? null,
+    mondayHours: business.mondayHours ?? null,
+    tuesdayHours: business.tuesdayHours ?? null,
+    wednesdayHours: business.wednesdayHours ?? null,
+    thursdayHours: business.thursdayHours ?? null,
+    fridayHours: business.fridayHours ?? null,
+    saturdayHours: business.saturdayHours ?? null,
+    sundayHours: business.sundayHours ?? null,
+    logoPhoto: business.logoPhoto ?? null,
+    coverPhoto: business.coverPhoto ?? null,
+    otherPhotos: business.otherPhotos ?? null
+  };
+
+  // Parse goldmine and spread directly into the object (no wrapper key)
+  if (includeGoldmine && business.goldmine) {
+    const goldmineFields = parseGoldmine(business.goldmine);
+    return {
+      ...baseSchema,
+      ...goldmineFields
+    };
+  }
+
+  return baseSchema;
+}
+
 const handler = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -74,36 +153,14 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log(`${validBusinesses.length} businesses passed validation`);
 
+    // Check if this client should include goldmine
+    const includeGoldmine = GOLDMINE_ENABLED_CLIENTS.includes(clientId);
+    console.log(`Goldmine export enabled: ${includeGoldmine}`);
+
     // Generate JSON export as a plain array (no metadata wrapper)
-    const businessesArray = validBusinesses.map(business => ({
-      storeCode: business.storeCode,
-      businessName: business.businessName,
-      addressLine1: business.addressLine1,
-      addressLine2: business.addressLine2 ?? null,
-      addressLine3: business.addressLine3 ?? null,
-      addressLine4: business.addressLine4 ?? null,
-      addressLine5: business.addressLine5 ?? null,
-      postalCode: business.postalCode ?? null,
-      city: business.city ?? null,
-      state: business.state ?? null,
-      country: business.country,
-      primaryCategory: business.primaryCategory,
-      additionalCategories: business.additionalCategories ?? null,
-      website: business.website ?? null,
-      primaryPhone: business.primaryPhone ?? null,
-      latitude: business.latitude ?? null,
-      longitude: business.longitude ?? null,
-      mondayHours: business.mondayHours ?? null,
-      tuesdayHours: business.tuesdayHours ?? null,
-      wednesdayHours: business.wednesdayHours ?? null,
-      thursdayHours: business.thursdayHours ?? null,
-      fridayHours: business.fridayHours ?? null,
-      saturdayHours: business.saturdayHours ?? null,
-      sundayHours: business.sundayHours ?? null,
-      logoPhoto: business.logoPhoto ?? null,
-      coverPhoto: business.coverPhoto ?? null,
-      otherPhotos: business.otherPhotos ?? null
-    }));
+    const businessesArray = validBusinesses.map(business => 
+      convertToJsonSchema(business, includeGoldmine)
+    );
 
     const jsonString = JSON.stringify(businessesArray, null, 2);
     const fileName = `manualexport-${clientId}-businesses.json`;
