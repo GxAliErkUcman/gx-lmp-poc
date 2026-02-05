@@ -12,7 +12,8 @@ interface ManualExportRequest {
 
 // Client IDs that should include goldmine in export
 const GOLDMINE_ENABLED_CLIENTS = [
-  '75d14738-25d0-4c40-9921-bde980bc8e06' // Porsche Test
+  '75d14738-25d0-4c40-9921-bde980bc8e06', // Porsche Test
+  '3c9ceb08-13f9-4f50-9945-857e3770940f'  // Fischer-Bike
 ];
 
 // Parse goldmine string - if it has "Key: Value" format, parse it; otherwise use empty key
