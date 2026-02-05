@@ -15,7 +15,7 @@ const GOLDMINE_ENABLED_CLIENTS = [
   '75d14738-25d0-4c40-9921-bde980bc8e06' // Porsche Test
 ];
 
-// Parse goldmine string (format: "Key1: Value1; Key2: Value2") into key-value pairs
+// Parse goldmine string - if it has "Key: Value" format, parse it; otherwise use empty key
 function parseGoldmine(goldmine: string): Record<string, string> {
   const result: Record<string, string> = {};
   
@@ -23,24 +23,28 @@ function parseGoldmine(goldmine: string): Record<string, string> {
     return result;
   }
 
-  // Split by semicolon and process each pair
-  const pairs = goldmine.split(';');
-  for (const pair of pairs) {
-    const trimmed = pair.trim();
-    if (!trimmed) continue;
-    
-    // Find the first colon to split key from value
-    const colonIndex = trimmed.indexOf(':');
-    if (colonIndex > 0) {
-      const key = trimmed.substring(0, colonIndex).trim();
-      const value = trimmed.substring(colonIndex + 1).trim();
-      if (key) {
-        result[key] = value;
+  // Check if it has "Key: Value" format (contains colon with text before it)
+  const hasKeyValueFormat = goldmine.includes(':') && goldmine.indexOf(':') > 0;
+  
+  if (hasKeyValueFormat) {
+    // Split by semicolon and process each pair
+    const pairs = goldmine.split(';');
+    for (const pair of pairs) {
+      const trimmed = pair.trim();
+      if (!trimmed) continue;
+      
+      const colonIndex = trimmed.indexOf(':');
+      if (colonIndex > 0) {
+        const key = trimmed.substring(0, colonIndex).trim();
+        const value = trimmed.substring(colonIndex + 1).trim();
+        if (key) {
+          result[key] = value;
+        }
       }
-    } else {
-      // No colon found - treat entire string as a value with generic key
-      result['additionalData'] = trimmed;
     }
+  } else {
+    // No key-value format - use empty string key (no wrapper)
+    result[''] = goldmine;
   }
 
   return result;
