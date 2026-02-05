@@ -77,8 +77,39 @@ const GOLDMINE_ENABLED_CLIENTS = [
   '75d14738-25d0-4c40-9921-bde980bc8e06' // Porsche Test
 ];
 
+// Parse goldmine string (format: "Key1: Value1; Key2: Value2") into key-value pairs
+function parseGoldmine(goldmine: string): Record<string, string> {
+  const result: Record<string, string> = {};
+  
+  if (!goldmine || !goldmine.trim()) {
+    return result;
+  }
+
+  // Split by semicolon and process each pair
+  const pairs = goldmine.split(';');
+  for (const pair of pairs) {
+    const trimmed = pair.trim();
+    if (!trimmed) continue;
+    
+    // Find the first colon to split key from value
+    const colonIndex = trimmed.indexOf(':');
+    if (colonIndex > 0) {
+      const key = trimmed.substring(0, colonIndex).trim();
+      const value = trimmed.substring(colonIndex + 1).trim();
+      if (key) {
+        result[key] = value;
+      }
+    } else {
+      // No colon found - treat entire string as a value with generic key
+      result['additionalData'] = trimmed;
+    }
+  }
+
+  return result;
+}
+
 function convertToJsonSchema(business: Business & { goldmine?: string }, includeGoldmine: boolean = false) {
-  const baseSchema = {
+  const baseSchema: Record<string, any> = {
     storeCode: business.storeCode,
     businessName: business.businessName,
     addressLine1: business.addressLine1,
@@ -123,12 +154,12 @@ function convertToJsonSchema(business: Business & { goldmine?: string }, include
     socialMediaUrls: business.socialMediaUrls || null
   };
 
-  // Add goldmine at the end (without a key name would break JSON, so we use empty string key)
-  // The goldmine value is added as the last field to keep entity boundaries intact
+  // Parse goldmine and spread directly into the object (no wrapper key)
   if (includeGoldmine && business.goldmine) {
+    const goldmineFields = parseGoldmine(business.goldmine);
     return {
       ...baseSchema,
-      goldmine: business.goldmine
+      ...goldmineFields
     };
   }
 
