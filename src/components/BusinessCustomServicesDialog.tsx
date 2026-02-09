@@ -204,12 +204,15 @@ const BusinessCustomServicesDialog = ({
                               </p>
                             )}
                             {service.service_category_id && (
-                              <div className="flex items-center gap-2 mt-2">
-                                <span className="text-xs px-2 py-1 bg-muted rounded">
-                                  Requires: {gcidToCategoryName(service.service_category_id)}
-                                </span>
+                              <div className="flex flex-wrap items-center gap-1 mt-2">
+                                <span className="text-xs text-muted-foreground">Requires:</span>
+                                {parseCategoryIds(service.service_category_id).map(gcid => (
+                                  <Badge key={gcid} variant="outline" className="text-xs">
+                                    {gcidToCategoryName(gcid)}
+                                  </Badge>
+                                ))}
                                 {!isCompatible && (
-                                  <span className="text-xs text-destructive">
+                                  <span className="text-xs text-destructive ml-1">
                                     (Not assigned to business)
                                   </span>
                                 )}
