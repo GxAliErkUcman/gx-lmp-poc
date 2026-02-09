@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Badge } from '@/components/ui/badge';
 import {
   Dialog,
   DialogContent,
