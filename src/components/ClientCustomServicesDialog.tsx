@@ -215,7 +215,11 @@ const ClientCustomServicesDialog = ({
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Assigned Categories (Optional)</Label>
+                    <Label>Assigned Categories</Label>
+                    <p className="text-xs text-muted-foreground flex items-start gap-1.5">
+                      <AlertTriangle className="h-3.5 w-3.5 text-yellow-500 shrink-0 mt-0.5" />
+                      <span>Categories added here will restrict the custom service to locations that belong to the categories selected. Leaving this empty will not put any restrictions on the custom service.</span>
+                    </p>
                     {newServiceCategories.length > 0 && (
                       <div className="flex flex-wrap gap-1">
                         {newServiceCategories.map(gcid => (
@@ -251,19 +255,6 @@ const ClientCustomServicesDialog = ({
                         <Plus className="h-4 w-4" />
                       </Button>
                     </div>
-                    {newServiceCategories.length > 0 && (
-                      <Alert variant="default" className="py-2">
-                        <AlertTriangle className="h-4 w-4" />
-                        <AlertDescription className="text-xs">
-                          This service is locked to businesses with {newServiceCategories.length === 1 ? 'this category' : 'one of these categories'}: {newServiceCategories.map(g => gcidToCategoryName(g)).join(', ')}
-                        </AlertDescription>
-                      </Alert>
-                    )}
-                    {newServiceCategories.length === 0 && (
-                      <p className="text-xs text-muted-foreground">
-                        No category restriction — available to all businesses
-                      </p>
-                    )}
                   </div>
 
                   <Button
@@ -304,20 +295,26 @@ const ClientCustomServicesDialog = ({
                       <Card key={service.id} className="p-3">
                         <div className="flex items-start justify-between">
                           <div className="flex-1 min-w-0">
-                            <h4 className="font-semibold">{service.service_name}</h4>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h4 className="font-semibold">{service.service_name}</h4>
+                              {service.service_category_id ? (
+                                <div className="flex flex-wrap gap-1">
+                                  {parseCategoryIds(service.service_category_id).map(gcid => (
+                                    <Badge key={gcid} variant="outline" className="text-xs font-normal">
+                                      {gcidToCategoryName(gcid)}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              ) : (
+                                <Badge variant="secondary" className="text-xs font-normal">
+                                  Eligible for all categories
+                                </Badge>
+                              )}
+                            </div>
                             {service.service_description && (
                               <p className="text-sm text-muted-foreground mt-1">
                                 {service.service_description}
                               </p>
-                            )}
-                            {service.service_category_id && (
-                              <div className="flex flex-wrap gap-1 mt-2">
-                                {parseCategoryIds(service.service_category_id).map(gcid => (
-                                  <Badge key={gcid} variant="outline" className="text-xs">
-                                    {gcidToCategoryName(gcid)}
-                                  </Badge>
-                                ))}
-                              </div>
                             )}
                           </div>
                           <div className="flex gap-1 ml-2 shrink-0">
