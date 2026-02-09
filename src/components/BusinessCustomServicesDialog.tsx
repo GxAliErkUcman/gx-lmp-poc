@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Badge } from '@/components/ui/badge';
 import {
   Dialog,
   DialogContent,
@@ -94,13 +95,25 @@ const BusinessCustomServicesDialog = ({
     return gcid.replace(/^gcid:/, '').replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
 
+  /** Parse comma-separated gcids */
+  const parseCategoryIds = (categoryId: string | null | undefined): string[] => {
+    if (!categoryId) return [];
+    return categoryId.split(',').map(s => s.trim()).filter(Boolean);
+  };
+
   const isServiceCompatible = (service: ClientService): boolean => {
     if (!service.service_category_id) return true;
     
-    const categoryName = gcidToCategoryName(service.service_category_id);
-    return businessCategories.some(cat =>
-      cat.toLowerCase() === categoryName.toLowerCase()
-    );
+    const gcids = parseCategoryIds(service.service_category_id);
+    if (gcids.length === 0) return true;
+    
+    // Business must have at least one of the service's required categories
+    return gcids.some(gcid => {
+      const categoryName = gcidToCategoryName(gcid);
+      return businessCategories.some(cat =>
+        cat.toLowerCase() === categoryName.toLowerCase()
+      );
+    });
   };
 
   const toggleService = (serviceId: string) => {
@@ -191,12 +204,15 @@ const BusinessCustomServicesDialog = ({
                               </p>
                             )}
                             {service.service_category_id && (
-                              <div className="flex items-center gap-2 mt-2">
-                                <span className="text-xs px-2 py-1 bg-muted rounded">
-                                  Requires: {gcidToCategoryName(service.service_category_id)}
-                                </span>
+                              <div className="flex flex-wrap items-center gap-1 mt-2">
+                                <span className="text-xs text-muted-foreground">Requires:</span>
+                                {parseCategoryIds(service.service_category_id).map(gcid => (
+                                  <Badge key={gcid} variant="outline" className="text-xs">
+                                    {gcidToCategoryName(gcid)}
+                                  </Badge>
+                                ))}
                                 {!isCompatible && (
-                                  <span className="text-xs text-destructive">
+                                  <span className="text-xs text-destructive ml-1">
                                     (Not assigned to business)
                                   </span>
                                 )}
