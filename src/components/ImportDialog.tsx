@@ -73,7 +73,7 @@ const ImportDialog = ({ open, onOpenChange, onSuccess, clientId, mergeMode = fal
     'addressLine2': ['address line 2', 'address2', 'addr2', 'al2'],
     'addressLine1': ['address line 1', 'address1', 'addr1', 'al1', 'street address', 'street', 'address'],
     'postalCode': ['postal code', 'postcode', 'zip code', 'zipcode', 'zip'],
-    'city': ['city', 'town'],
+    'city': ['city', 'town', 'locality'],
     'state': ['state', 'region', 'province', 'area'],
     'country': ['country'],
     'district': ['district', 'neighborhood'],
