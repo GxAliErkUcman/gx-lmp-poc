@@ -295,20 +295,26 @@ const ClientCustomServicesDialog = ({
                       <Card key={service.id} className="p-3">
                         <div className="flex items-start justify-between">
                           <div className="flex-1 min-w-0">
-                            <h4 className="font-semibold">{service.service_name}</h4>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h4 className="font-semibold">{service.service_name}</h4>
+                              {service.service_category_id ? (
+                                <div className="flex flex-wrap gap-1">
+                                  {parseCategoryIds(service.service_category_id).map(gcid => (
+                                    <Badge key={gcid} variant="outline" className="text-xs font-normal">
+                                      {gcidToCategoryName(gcid)}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              ) : (
+                                <Badge variant="secondary" className="text-xs font-normal">
+                                  Eligible for all categories
+                                </Badge>
+                              )}
+                            </div>
                             {service.service_description && (
                               <p className="text-sm text-muted-foreground mt-1">
                                 {service.service_description}
                               </p>
-                            )}
-                            {service.service_category_id && (
-                              <div className="flex flex-wrap gap-1 mt-2">
-                                {parseCategoryIds(service.service_category_id).map(gcid => (
-                                  <Badge key={gcid} variant="outline" className="text-xs">
-                                    {gcidToCategoryName(gcid)}
-                                  </Badge>
-                                ))}
-                              </div>
                             )}
                           </div>
                           <div className="flex gap-1 ml-2 shrink-0">
