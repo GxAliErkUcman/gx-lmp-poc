@@ -215,7 +215,11 @@ const ClientCustomServicesDialog = ({
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Assigned Categories (Optional)</Label>
+                    <Label>Assigned Categories</Label>
+                    <p className="text-xs text-muted-foreground flex items-start gap-1.5">
+                      <AlertTriangle className="h-3.5 w-3.5 text-yellow-500 shrink-0 mt-0.5" />
+                      <span>Categories added here will restrict the custom service to locations that belong to the categories selected. Leaving this empty will not put any restrictions on the custom service.</span>
+                    </p>
                     {newServiceCategories.length > 0 && (
                       <div className="flex flex-wrap gap-1">
                         {newServiceCategories.map(gcid => (
@@ -251,19 +255,6 @@ const ClientCustomServicesDialog = ({
                         <Plus className="h-4 w-4" />
                       </Button>
                     </div>
-                    {newServiceCategories.length > 0 && (
-                      <Alert variant="default" className="py-2">
-                        <AlertTriangle className="h-4 w-4" />
-                        <AlertDescription className="text-xs">
-                          This service is locked to businesses with {newServiceCategories.length === 1 ? 'this category' : 'one of these categories'}: {newServiceCategories.map(g => gcidToCategoryName(g)).join(', ')}
-                        </AlertDescription>
-                      </Alert>
-                    )}
-                    {newServiceCategories.length === 0 && (
-                      <p className="text-xs text-muted-foreground">
-                        No category restriction — available to all businesses
-                      </p>
-                    )}
                   </div>
 
                   <Button
