@@ -29,6 +29,7 @@ import { ApiImportDialog } from '@/components/ApiImportDialog';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useTranslation } from 'react-i18next';
 import NeedAttentionBanner from '@/components/NeedAttentionBanner';
+import { hasExportValidationErrors } from '@/lib/exportValidation';
 
 // Energie 360° client ID for data source filter
 const ENERGIE_360_CLIENT_ID = 'e77c44c5-0585-4225-a5ea-59a38edb85fb';
@@ -323,11 +324,11 @@ const ClientDashboard = () => {
       })
     : businesses;
 
-  // Filter by status and async flag
-  // Active: status=active AND not async
-  const activeBusinesses = dataSourceFilteredBusinesses.filter(b => b.status === 'active' && (b as any).is_async !== true);
-  // Need Attention: status=pending OR async=true
-  const pendingBusinesses = dataSourceFilteredBusinesses.filter(b => b.status === 'pending' || (b as any).is_async === true);
+  // Filter by status, async flag, and export validation errors
+  // Active: status=active AND not async AND no export validation errors
+  const activeBusinesses = dataSourceFilteredBusinesses.filter(b => b.status === 'active' && (b as any).is_async !== true && !hasExportValidationErrors(b));
+  // Need Attention: status=pending OR async=true OR (active but has export validation errors)
+  const pendingBusinesses = dataSourceFilteredBusinesses.filter(b => b.status === 'pending' || (b as any).is_async === true || (b.status === 'active' && (b as any).is_async !== true && hasExportValidationErrors(b)));
   // Async only (for Energie 360° tab)
   const asyncBusinesses = dataSourceFilteredBusinesses.filter(b => (b as any).is_async === true);
   
