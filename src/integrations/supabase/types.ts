@@ -581,6 +581,27 @@ export type Database = {
           },
         ]
       }
+      user_country_access: {
+        Row: {
+          country_code: string
+          created_at: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          country_code: string
+          created_at?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          country_code?: string
+          created_at?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string | null

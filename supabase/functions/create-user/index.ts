@@ -14,6 +14,7 @@ interface CreateUserRequest {
   role?: 'client_admin' | 'user' | 'store_owner' | 'service_user';
   storeIds?: string[];
   password?: string;
+  countryCodes?: string[];
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -85,9 +86,9 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
-    const { email, firstName, lastName, role, storeIds, password } = requestBody;
+    const { email, firstName, lastName, role, storeIds, password, countryCodes } = requestBody;
 
-    console.log('Creating user:', { email, firstName, lastName, clientId, role, storeCount: storeIds?.length || 0, hasPassword: !!password });
+    console.log('Creating user:', { email, firstName, lastName, clientId, role, storeCount: storeIds?.length || 0, hasPassword: !!password, countryCount: countryCodes?.length || 0 });
 
     // If password provided (admin-only), require the caller to be an admin
     if (password) {
@@ -196,6 +197,20 @@ const handler = async (req: Request): Promise<Response> => {
         .insert({ user_id: newUserId, client_id: clientId });
       if (clientAccessError) {
         console.error('Error assigning client access:', clientAccessError);
+      }
+    }
+
+    // Assign country-based access restrictions if provided
+    if (countryCodes && countryCodes.length > 0) {
+      const countryRows = countryCodes.map((country_code: string) => ({
+        user_id: newUserId,
+        country_code,
+      }));
+      const { error: countryAccessError } = await supabaseAdmin
+        .from('user_country_access')
+        .insert(countryRows);
+      if (countryAccessError) {
+        console.error('Error assigning country access:', countryAccessError);
       }
     }
 

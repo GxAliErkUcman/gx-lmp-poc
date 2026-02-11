@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,11 +6,12 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Search, Lock, Eye, EyeOff } from 'lucide-react';
+import { Search, Lock, Eye, EyeOff, Globe } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useAdmin } from '@/hooks/use-admin';
 import type { Business } from '@/types/business';
+import { COUNTRIES, formatCountryDisplay } from '@/components/CountrySelect';
 
 interface ServiceUserCreateDialogProps {
   open: boolean;
@@ -43,12 +44,29 @@ export default function ServiceUserCreateDialog({
   const [selectedStoreIds, setSelectedStoreIds] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Country restriction
+  const [enableCountryRestriction, setEnableCountryRestriction] = useState(false);
+  const [selectedCountryCodes, setSelectedCountryCodes] = useState<string[]>([]);
+  const [availableCountries, setAvailableCountries] = useState<string[]>([]);
+
   useEffect(() => {
     if (open) hasRole('admin').then(setIsAdmin);
   }, [open, hasRole]);
 
   useEffect(() => {
     if (!open) return;
+    // Fetch available countries for this client
+    const fetchCountries = async () => {
+      const { data } = await supabase
+        .from('businesses')
+        .select('country')
+        .eq('client_id', clientId)
+        .not('country', 'is', null);
+      const codes = [...new Set((data || []).map(b => b.country).filter(Boolean))] as string[];
+      setAvailableCountries(codes.sort());
+    };
+    fetchCountries();
+
     if (role !== 'store_owner') return;
 
     const fetchStores = async () => {
@@ -109,6 +127,7 @@ export default function ServiceUserCreateDialog({
           role,
           storeIds: role === 'store_owner' ? selectedStoreIds : [],
           ...(password ? { password } : {}),
+          ...(enableCountryRestriction && selectedCountryCodes.length > 0 ? { countryCodes: selectedCountryCodes } : {}),
         },
       });
 
@@ -151,7 +170,15 @@ export default function ServiceUserCreateDialog({
     setSearchQuery('');
     setPassword('');
     setShowPassword(false);
+    setEnableCountryRestriction(false);
+    setSelectedCountryCodes([]);
     onOpenChange(false);
+  };
+
+  const handleCountryToggle = (code: string) => {
+    setSelectedCountryCodes(prev =>
+      prev.includes(code) ? prev.filter(c => c !== code) : [...prev, code]
+    );
   };
 
   return (
@@ -308,6 +335,49 @@ export default function ServiceUserCreateDialog({
                 <p className="text-xs text-destructive">
                   Password must be at least 6 characters long.
                 </p>
+              )}
+            </div>
+          )}
+
+          {/* Country Restriction */}
+          {availableCountries.length > 0 && (
+            <div className="space-y-3">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="svc-enable-country-restriction"
+                  checked={enableCountryRestriction}
+                  onCheckedChange={(checked) => {
+                    setEnableCountryRestriction(checked as boolean);
+                    if (!checked) setSelectedCountryCodes([]);
+                  }}
+                />
+                <Label htmlFor="svc-enable-country-restriction" className="flex items-center gap-2 cursor-pointer">
+                  <Globe className="h-4 w-4" />
+                  Restrict access to specific countries
+                </Label>
+              </div>
+              {enableCountryRestriction && (
+                <div className="border rounded-lg p-3 space-y-2">
+                  <div className="text-sm text-muted-foreground">
+                    Select which countries this user can access ({selectedCountryCodes.length} selected)
+                  </div>
+                  <ScrollArea className="h-[160px]">
+                    <div className="space-y-1">
+                      {availableCountries.map(code => (
+                        <div key={code} className="flex items-center space-x-2 p-1.5 rounded hover:bg-muted/50">
+                          <Checkbox
+                            id={`svc-country-${code}`}
+                            checked={selectedCountryCodes.includes(code)}
+                            onCheckedChange={() => handleCountryToggle(code)}
+                          />
+                          <Label htmlFor={`svc-country-${code}`} className="text-sm cursor-pointer font-normal">
+                            {formatCountryDisplay(code)}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                </div>
               )}
             </div>
           )}
