@@ -18,6 +18,7 @@ import ClientDashboard from "./pages/ClientDashboard";
 import ClientAdminPanel from "./pages/ClientAdminPanel";
 import StoreOwnerDashboard from "./pages/StoreOwnerDashboard";
 import AuthCallback from "./pages/AuthCallback";
+import UserGuide from "./pages/UserGuide";
 
 const queryClient = new QueryClient();
 
