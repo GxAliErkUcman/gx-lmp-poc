@@ -55,6 +55,18 @@ export default function ServiceUserCreateDialog({
 
   useEffect(() => {
     if (!open) return;
+    // Fetch available countries for this client
+    const fetchCountries = async () => {
+      const { data } = await supabase
+        .from('businesses')
+        .select('country')
+        .eq('client_id', clientId)
+        .not('country', 'is', null);
+      const codes = [...new Set((data || []).map(b => b.country).filter(Boolean))] as string[];
+      setAvailableCountries(codes.sort());
+    };
+    fetchCountries();
+
     if (role !== 'store_owner') return;
 
     const fetchStores = async () => {
