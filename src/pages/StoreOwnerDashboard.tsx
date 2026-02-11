@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Grid, Table2 } from 'lucide-react';
+import { Grid, Table2, HelpCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import BusinessDialog from '@/components/BusinessDialog';
@@ -204,6 +204,10 @@ const StoreOwnerDashboard = () => {
               </div>
             )}
             <UserSettingsDialog variant="outline" />
+            <Button onClick={() => window.open('/guide', '_blank')} variant="outline" className="shadow-modern text-xs sm:text-sm">
+              <HelpCircle className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Help</span>
+            </Button>
             <Button onClick={signOut} variant="outline" className="shadow-modern text-xs sm:text-sm">
               <span className="hidden sm:inline">Sign Out</span>
               <span className="sm:hidden">Exit</span>
