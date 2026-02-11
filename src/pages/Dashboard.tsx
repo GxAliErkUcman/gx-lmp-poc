@@ -23,6 +23,7 @@ import { UserSettingsDialog } from '@/components/UserSettingsDialog';
 import jasonerLogo from '@/assets/jasoner-horizontal-logo.png';
 import { useTranslation } from 'react-i18next';
 import NeedAttentionBanner from '@/components/NeedAttentionBanner';
+import { hasExportValidationErrors } from '@/lib/exportValidation';
 
 const Dashboard = () => {
   const { t } = useTranslation();
@@ -212,8 +213,8 @@ useEffect(() => {
     }
   };
 
-  const activeBusinesses = businesses.filter(b => (b as any).status === 'active');
-  const pendingBusinesses = businesses.filter(b => (b as any).status === 'pending');
+  const activeBusinesses = businesses.filter(b => (b as any).status === 'active' && !hasExportValidationErrors(b));
+  const pendingBusinesses = businesses.filter(b => (b as any).status === 'pending' || ((b as any).status === 'active' && hasExportValidationErrors(b)));
 
   if (loading) {
     return (

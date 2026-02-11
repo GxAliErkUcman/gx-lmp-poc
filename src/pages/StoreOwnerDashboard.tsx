@@ -17,6 +17,7 @@ import DeleteConfirmationDialog from '@/components/DeleteConfirmationDialog';
 import { UserSettingsDialog } from '@/components/UserSettingsDialog';
 import jasonerLogo from '@/assets/jasoner-horizontal-logo.png';
 import NeedAttentionBanner from '@/components/NeedAttentionBanner';
+import { hasExportValidationErrors } from '@/lib/exportValidation';
 
 const StoreOwnerDashboard = () => {
   const { user, signOut, loading: authLoading, urlAuthProcessing } = useAuth();
@@ -167,8 +168,8 @@ const StoreOwnerDashboard = () => {
     }
   };
 
-  const activeBusinesses = businesses.filter(b => (b as any).status === 'active');
-  const pendingBusinesses = businesses.filter(b => (b as any).status === 'pending');
+  const activeBusinesses = businesses.filter(b => (b as any).status === 'active' && !hasExportValidationErrors(b));
+  const pendingBusinesses = businesses.filter(b => (b as any).status === 'pending' || ((b as any).status === 'active' && hasExportValidationErrors(b)));
 
   if (loading) {
     return (
