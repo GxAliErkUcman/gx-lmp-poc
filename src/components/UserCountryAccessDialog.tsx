@@ -81,10 +81,12 @@ export default function UserCountryAccessDialog({
     }
   };
 
-  const handleToggleCountry = (code: string) => {
-    setSelectedCountries(prev =>
-      prev.includes(code) ? prev.filter(c => c !== code) : [...prev, code]
-    );
+  const handleAddCountry = (code: string) => {
+    setSelectedCountries(prev => (prev.includes(code) ? prev : [...prev, code]));
+  };
+
+  const handleRemoveCountry = (code: string) => {
+    setSelectedCountries(prev => prev.filter(c => c !== code));
   };
 
   const handleSave = async () => {
