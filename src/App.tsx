@@ -18,6 +18,7 @@ import ClientDashboard from "./pages/ClientDashboard";
 import ClientAdminPanel from "./pages/ClientAdminPanel";
 import StoreOwnerDashboard from "./pages/StoreOwnerDashboard";
 import AuthCallback from "./pages/AuthCallback";
+import UserGuide from "./pages/UserGuide";
 
 const queryClient = new QueryClient();
 
@@ -41,6 +42,7 @@ const App = () => (
             <Route path="/store-owner" element={<StoreOwnerDashboard />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/set-password/*" element={<SetPassword />} />
+            <Route path="/guide" element={<UserGuide />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
