@@ -13,6 +13,7 @@ interface CreateUserRequest {
   clientId: string;
   role?: 'client_admin' | 'user' | 'store_owner' | 'service_user';
   storeIds?: string[];
+  password?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -84,19 +85,50 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
-    const { email, firstName, lastName, role, storeIds } = requestBody;
+    const { email, firstName, lastName, role, storeIds, password } = requestBody;
 
-    console.log('Creating user:', { email, firstName, lastName, clientId, role, storeCount: storeIds?.length || 0 });
+    console.log('Creating user:', { email, firstName, lastName, clientId, role, storeCount: storeIds?.length || 0, hasPassword: !!password });
 
-    // Create user using Supabase's built-in invite functionality
-    const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
-      data: {
-        first_name: firstName,
-        last_name: lastName,
-        client_id: clientId
-      },
-      redirectTo: `https://gx-lmp.lovable.app/set-password?email=${encodeURIComponent(email)}`
-    });
+    // If password provided (admin-only), require the caller to be an admin
+    if (password) {
+      if (!hasAdminRole) {
+        throw new Error('Only admins can set passwords directly');
+      }
+      if (password.length < 6) {
+        throw new Error('Password must be at least 6 characters');
+      }
+    }
+
+    let newUser;
+    let createError;
+
+    if (password) {
+      // Create user with password directly (no invite email)
+      const result = await supabaseAdmin.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: {
+          first_name: firstName,
+          last_name: lastName,
+          client_id: clientId
+        },
+      });
+      newUser = result.data;
+      createError = result.error;
+    } else {
+      // Create user using Supabase's built-in invite functionality
+      const result = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
+        data: {
+          first_name: firstName,
+          last_name: lastName,
+          client_id: clientId
+        },
+        redirectTo: `https://gx-lmp.lovable.app/set-password?email=${encodeURIComponent(email)}`
+      });
+      newUser = result.data;
+      createError = result.error;
+    }
 
     if (createError) {
       console.error('Error creating user:', createError);
