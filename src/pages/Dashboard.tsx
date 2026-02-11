@@ -305,7 +305,7 @@ useEffect(() => {
                 <Upload className="w-4 h-4 sm:mr-2" />
                 <span className="hidden sm:inline">{t('actions.import')}</span>
               </Button>
-              <JsonExport businesses={businesses} clientName={clientName || 'Export'} />
+              <JsonExport businesses={businesses} clientName={clientName || 'Export'} onNavigateToBusiness={handleEditBusiness} />
               <Button 
                 onClick={() => setBusinessDialogOpen(true)}
                 size="sm"

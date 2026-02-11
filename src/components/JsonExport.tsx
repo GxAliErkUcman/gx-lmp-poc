@@ -13,9 +13,10 @@ import * as XLSX from 'xlsx';
 interface JsonExportProps {
   businesses: Business[];
   clientName?: string;
+  onNavigateToBusiness?: (business: Business) => void;
 }
 
-export const JsonExport = ({ businesses, clientName }: JsonExportProps) => {
+export const JsonExport = ({ businesses, clientName, onNavigateToBusiness }: JsonExportProps) => {
   const [open, setOpen] = useState(false);
   const [validationResults, setValidationResults] = useState<Array<{ business: Business; isValid: boolean; errors: any[] }>>([]);
 
@@ -224,7 +225,16 @@ export const JsonExport = ({ businesses, clientName }: JsonExportProps) => {
                 <div key={result.business.id} className="border rounded-lg p-4">
                   <div className="flex items-center justify-between mb-2">
                     <h4 className="font-medium">{result.business.businessName}</h4>
-                    <Badge variant={result.isValid ? "default" : "destructive"}>
+                    <Badge 
+                      variant={result.isValid ? "default" : "destructive"}
+                      className={!result.isValid && onNavigateToBusiness ? "cursor-pointer hover:opacity-80" : ""}
+                      onClick={() => {
+                        if (!result.isValid && onNavigateToBusiness) {
+                          setOpen(false);
+                          onNavigateToBusiness(result.business);
+                        }
+                      }}
+                    >
                       {result.isValid ? "Valid" : "Invalid"}
                     </Badge>
                   </div>

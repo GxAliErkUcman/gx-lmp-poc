@@ -411,6 +411,7 @@ const ClientDashboard = () => {
                 <JsonExport 
                   businesses={businesses} 
                   clientName={accessibleClients.find(c => c.id === selectedClientId)?.name} 
+                  onNavigateToBusiness={handleEditBusiness}
                 />
                 <Button 
                   variant="outline" 
@@ -490,6 +491,7 @@ const ClientDashboard = () => {
                       <JsonExport 
                         businesses={businesses} 
                         clientName={accessibleClients.find(c => c.id === selectedClientId)?.name} 
+                        onNavigateToBusiness={handleEditBusiness}
                       />
                       <Button 
                         variant="outline" 
