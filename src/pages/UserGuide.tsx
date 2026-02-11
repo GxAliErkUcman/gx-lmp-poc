@@ -427,6 +427,16 @@ const UserGuide = () => {
           <p className="text-sm text-muted-foreground mb-3">
             You can bulk-create or update locations by uploading an Excel (.xlsx) or CSV file.
           </p>
+          <SubSection title="Preparing Your File">
+            <p className="text-sm text-muted-foreground mb-2">
+              If your data is in <strong>Google Sheets</strong>, go to <strong>File → Download → Microsoft Excel (.xlsx)</strong> to save it as an Excel file first.
+            </p>
+            <p className="text-sm text-muted-foreground">
+              If your data is already in <strong>Excel</strong>, simply save your file as <code className="bg-muted px-1 py-0.5 rounded text-xs">.xlsx</code> or <code className="bg-muted px-1 py-0.5 rounded text-xs">.csv</code>. 
+              Make sure your data has column headers in the first row (e.g., "Store Code", "Business Name", "Address", etc.).
+            </p>
+          </SubSection>
+          <SubSection title="Import Steps">
           <StepList steps={[
             'Click the "Import" button (upload icon) in the action bar.',
             'Drag and drop your file, or click to browse.',
