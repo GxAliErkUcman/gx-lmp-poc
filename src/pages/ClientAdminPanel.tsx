@@ -452,7 +452,7 @@ const ClientAdminPanel = () => {
                     Import
                   </Button>
                 )}
-                <JsonExport businesses={businesses} clientName={clientName || 'Export'} />
+                <JsonExport businesses={businesses} clientName={clientName || 'Export'} onNavigateToBusiness={handleEditBusiness} />
                 <Button onClick={() => setBusinessDialogOpen(true)}>
                   <Plus className="w-4 h-4 mr-2" />
                   Add Store
