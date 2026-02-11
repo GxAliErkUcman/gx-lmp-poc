@@ -448,6 +448,7 @@ const UserGuide = () => {
             'A summary shows how many locations were created or updated.',
           ]} />
           <Tip>Use the same Store Codes as existing locations to update them instead of creating duplicates.</Tip>
+          </SubSection>
         </Section>
 
         {/* 16. Export */}
