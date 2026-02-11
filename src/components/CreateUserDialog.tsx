@@ -128,6 +128,7 @@ export default function CreateUserDialog({
           role,
           storeIds: role === 'store_owner' ? selectedStoreIds : [],
           ...(password ? { password } : {}),
+          ...(enableCountryRestriction && selectedCountryCodes.length > 0 ? { countryCodes: selectedCountryCodes } : {}),
         },
       });
 
