@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { MapPin, Navigation } from 'lucide-react';
@@ -67,7 +66,6 @@ const LocationMap = ({ latitude, longitude, onLocationChange, address, addressLi
   };
 
   const geocodeAddress = async () => {
-    // Build structured address from components
     const addressComponents = [addressLine1, city, state, country].filter(Boolean);
     const fullAddress = address || addressComponents.join(', ');
     
@@ -84,7 +82,6 @@ const LocationMap = ({ latitude, longitude, onLocationChange, address, addressLi
     try {
       let results = null;
       
-      // Strategy 1: Try structured search with individual components
       if (addressLine1 && city && country) {
         const structuredQuery = new URLSearchParams({
           format: 'json',
@@ -107,7 +104,6 @@ const LocationMap = ({ latitude, longitude, onLocationChange, address, addressLi
         }
       }
       
-      // Strategy 2: Fallback to free-form search with better formatting
       if (!results) {
         const freeformQuery = new URLSearchParams({
           format: 'json',
@@ -154,144 +150,14 @@ const LocationMap = ({ latitude, longitude, onLocationChange, address, addressLi
     }
   };
 
-  // Helper function to get country codes for better geocoding
   const getCountryCode = (countryName: string): string => {
     const countryCodes: { [key: string]: string } = {
-      'Austria': 'AT',
-      'Germany': 'DE', 
-      'Switzerland': 'CH',
-      'Turkey': 'TR',
-      'United States': 'US',
-      'United Kingdom': 'GB',
-      'France': 'FR',
-      'Italy': 'IT',
-      'Spain': 'ES',
-      'Netherlands': 'NL',
-      'Belgium': 'BE',
-      'Poland': 'PL',
-      'Czech Republic': 'CZ',
-      'Hungary': 'HU',
-      'Slovakia': 'SK',
-      'Slovenia': 'SI',
-      'Croatia': 'HR'
+      'Austria': 'AT', 'Germany': 'DE', 'Switzerland': 'CH', 'Turkey': 'TR',
+      'United States': 'US', 'United Kingdom': 'GB', 'France': 'FR', 'Italy': 'IT',
+      'Spain': 'ES', 'Netherlands': 'NL', 'Belgium': 'BE', 'Poland': 'PL',
+      'Czech Republic': 'CZ', 'Hungary': 'HU', 'Slovakia': 'SK', 'Slovenia': 'SI', 'Croatia': 'HR'
     };
-    
     return countryCodes[countryName] || '';
-  };
-
-  const updateCoordinates = () => {
-    const isBothEmpty = mapLatitude.trim() === '' && mapLongitude.trim() === '';
-
-    if (isBothEmpty) {
-      onLocationChange(null, null);
-      toast({
-        title: "Coordinates cleared",
-        description: "Latitude and longitude have been removed",
-      });
-      return;
-    }
-
-    // If one field is empty but not both, this is invalid
-    if (mapLatitude.trim() === '' || mapLongitude.trim() === '') {
-      toast({
-        title: "Invalid coordinates",
-        description: "Please enter both latitude and longitude or leave both empty",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const lat = parseFloat(mapLatitude);
-    const lng = parseFloat(mapLongitude);
-
-    if (isNaN(lat) || isNaN(lng)) {
-      toast({
-        title: "Invalid coordinates",
-        description: "Please enter valid latitude and longitude values",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (lat < -90 || lat > 90) {
-      toast({
-        title: "Invalid latitude",
-        description: "Latitude must be between -90 and 90",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (lng < -180 || lng > 180) {
-      toast({
-        title: "Invalid longitude",
-        description: "Longitude must be between -180 and 180",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    onLocationChange(lat, lng);
-    toast({
-      title: "Coordinates updated",
-      description: "Location coordinates have been set",
-    });
-  };
-
-  const openInMaps = () => {
-    if (mapLatitude && mapLongitude) {
-      // Copy coordinates to clipboard
-      const coordinates = `${mapLatitude},${mapLongitude}`;
-      navigator.clipboard.writeText(coordinates).then(() => {
-        toast({
-          title: "Coordinates copied!",
-          description: "Paste them into Google Maps search to view the location",
-        });
-      }).catch(() => {
-        // Fallback: show coordinates to user
-        toast({
-          title: "Coordinates",
-          description: `${mapLatitude}, ${mapLongitude} - Copy these to Google Maps`,
-        });
-      });
-    }
-  };
-
-  const openInOpenStreetMap = () => {
-    if (mapLatitude && mapLongitude) {
-      const url = `https://www.openstreetmap.org/?mlat=${mapLatitude}&mlon=${mapLongitude}#map=18/${mapLatitude}/${mapLongitude}`;
-      try {
-        // Try direct window.open first
-        const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
-        if (!newWindow) {
-          // If popup blocked, copy URL to clipboard
-          navigator.clipboard.writeText(url).then(() => {
-            toast({
-              title: "OpenStreetMap URL copied!",
-              description: "Paste the URL in your browser to view the location",
-            });
-          }).catch(() => {
-            toast({
-              title: "OpenStreetMap",
-              description: "Please manually navigate to: " + url,
-            });
-          });
-        }
-      } catch (error) {
-        // Fallback: copy URL to clipboard
-        navigator.clipboard.writeText(url).then(() => {
-          toast({
-            title: "OpenStreetMap URL copied!",
-            description: "Paste the URL in your browser to view the location",
-          });
-        }).catch(() => {
-          toast({
-            title: "OpenStreetMap",
-            description: "Please manually navigate to: " + url,
-          });
-        });
-      }
-    }
   };
 
   const handleLatChange = (e: React.ChangeEvent<HTMLInputElement>) => {
