@@ -204,10 +204,16 @@ const ClientDashboard = () => {
           .from('user_country_access')
           .select('country_code')
           .eq('user_id', user.id);
-        
+
         if (countryAccess && countryAccess.length > 0) {
+          // NOTE: businesses.country is historically inconsistent (sometimes code like "UZ", sometimes name like "Uzbekistan").
+          // Normalize both sides to ISO code before filtering.
+          const { getCountryCode } = await import('@/components/CountrySelect');
           const allowedCountries = countryAccess.map(ca => ca.country_code);
-          businessList = businessList.filter(b => b.country && allowedCountries.includes(b.country));
+          businessList = businessList.filter(b => {
+            const normalized = b.country ? getCountryCode(b.country) : '';
+            return normalized && allowedCountries.includes(normalized);
+          });
         }
       }
 
