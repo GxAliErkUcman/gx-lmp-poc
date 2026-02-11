@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Download, FileText, FileSpreadsheet, Table } from 'lucide-react';
+import { Download, FileText, FileSpreadsheet, Table, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
@@ -247,10 +247,31 @@ export const JsonExport = ({ businesses, clientName, onNavigateToBusiness }: Jso
                 .map((result) => (
                 <div key={result.business.id} className="border rounded-lg p-4">
                   <div className="flex items-center justify-between mb-2">
-                    <h4 className="font-medium">{result.business.businessName}</h4>
-                    <Badge variant={result.isValid ? "default" : "destructive"}>
-                      {result.isValid ? "Valid" : "Invalid"}
-                    </Badge>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-medium">{result.business.businessName}</h4>
+                      {result.business.storeCode && (
+                        <p className="text-xs text-muted-foreground">Store Code: {result.business.storeCode}</p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {!result.isValid && onNavigateToBusiness && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="gap-1"
+                          onClick={() => {
+                            setOpen(false);
+                            onNavigateToBusiness(result.business);
+                          }}
+                        >
+                          <Pencil className="h-3 w-3" />
+                          Edit
+                        </Button>
+                      )}
+                      <Badge variant={result.isValid ? "default" : "destructive"}>
+                        {result.isValid ? "Valid" : "Invalid"}
+                      </Badge>
+                    </div>
                   </div>
                   
                   {!result.isValid && (
