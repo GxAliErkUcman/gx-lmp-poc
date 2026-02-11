@@ -339,6 +339,49 @@ export default function ServiceUserCreateDialog({
             </div>
           )}
 
+          {/* Country Restriction */}
+          {availableCountries.length > 0 && (
+            <div className="space-y-3">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="svc-enable-country-restriction"
+                  checked={enableCountryRestriction}
+                  onCheckedChange={(checked) => {
+                    setEnableCountryRestriction(checked as boolean);
+                    if (!checked) setSelectedCountryCodes([]);
+                  }}
+                />
+                <Label htmlFor="svc-enable-country-restriction" className="flex items-center gap-2 cursor-pointer">
+                  <Globe className="h-4 w-4" />
+                  Restrict access to specific countries
+                </Label>
+              </div>
+              {enableCountryRestriction && (
+                <div className="border rounded-lg p-3 space-y-2">
+                  <div className="text-sm text-muted-foreground">
+                    Select which countries this user can access ({selectedCountryCodes.length} selected)
+                  </div>
+                  <ScrollArea className="h-[160px]">
+                    <div className="space-y-1">
+                      {availableCountries.map(code => (
+                        <div key={code} className="flex items-center space-x-2 p-1.5 rounded hover:bg-muted/50">
+                          <Checkbox
+                            id={`svc-country-${code}`}
+                            checked={selectedCountryCodes.includes(code)}
+                            onCheckedChange={() => handleCountryToggle(code)}
+                          />
+                          <Label htmlFor={`svc-country-${code}`} className="text-sm cursor-pointer font-normal">
+                            {formatCountryDisplay(code)}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="flex justify-end gap-2 pt-4 border-t">
             <Button variant="outline" onClick={handleClose} disabled={loading}>
               Cancel
