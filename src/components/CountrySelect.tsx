@@ -288,6 +288,20 @@ export const getCountryCode = (nameOrCode: string): string => {
   return nameOrCode;
 };
 
+// Helper function to get full country name from code
+export const getCountryName = (code: string): string => {
+  if (!code) return '';
+  const country = COUNTRIES.find(c => c.code === code.trim().toUpperCase());
+  return country ? country.name : code;
+};
+
+// Helper to format country display: "Germany (DE)"
+export const formatCountryDisplay = (code: string): string => {
+  if (!code) return '-';
+  const country = COUNTRIES.find(c => c.code === code.trim().toUpperCase());
+  return country ? `${country.name} (${country.code})` : code;
+};
+
 interface CountrySelectProps {
   value?: string;
   onValueChange: (value: string) => void;

@@ -12,6 +12,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Edit, Trash2, Search, ArrowUp, ArrowDown, Settings, Filter, X, AlertCircle, Check, ChevronsUpDown, Info } from 'lucide-react';
 import { Business } from '@/types/business';
 import ManageColumnsDialog, { type ColumnConfig } from './ManageColumnsDialog';
+import { formatCountryDisplay } from '@/components/CountrySelect';
 import { validateBusiness, ValidationError } from '@/lib/validation';
 import { cn } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
@@ -428,7 +429,7 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
                 <SelectItem value="all">All countries</SelectItem>
                 {uniqueCountries.map(country => (
                   <SelectItem key={country} value={country}>
-                    {country}
+                    {formatCountryDisplay(country)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -573,7 +574,7 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
                       </div>
                     )}
                     {column.key === 'country' && (
-                      <span className="text-sm">{business.country || '-'}</span>
+                      <span className="text-sm">{business.country ? formatCountryDisplay(business.country) : '-'}</span>
                     )}
                     {column.key === 'postalCode' && (
                       <span className="text-sm">{business.postalCode || '-'}</span>
