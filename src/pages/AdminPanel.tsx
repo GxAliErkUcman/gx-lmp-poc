@@ -1686,7 +1686,33 @@ const AdminPanel = () => {
         />
       )}
 
-      {/* User Management Dialog */}
+      {/* Country Access Dialog */}
+      {selectedUserForCountry && (
+        <UserCountryAccessDialog
+          open={countryAccessDialogOpen}
+          onOpenChange={setCountryAccessDialogOpen}
+          userId={selectedUserForCountry.user_id}
+          userName={`${selectedUserForCountry.first_name} ${selectedUserForCountry.last_name}`}
+          clientId={selectedUserForCountry.client_id}
+          onUpdated={() => {
+            fetchAllUsers(true);
+          }}
+        />
+      )}
+
+      {/* Store Owner Assignment Dialog */}
+      {selectedUserForStoreAccess && selectedUserForStoreAccess.client_id && (
+        <StoreOwnerAssignmentDialog
+          open={storeAccessDialogOpen}
+          onOpenChange={setStoreAccessDialogOpen}
+          userId={selectedUserForStoreAccess.user_id}
+          clientId={selectedUserForStoreAccess.client_id}
+          onAssigned={() => {
+            fetchAllUsers(true);
+          }}
+        />
+      )}
+
         <Dialog open={isUserManagementDialogOpen} onOpenChange={setIsUserManagementDialogOpen}>
           <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
             <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
