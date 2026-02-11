@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
-import { Clock, AlertCircle } from 'lucide-react';
+import { Clock, AlertCircle, Plus, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 interface Hours {
@@ -111,25 +111,68 @@ const OpeningHours = ({ hours, onHoursChange, disabled = false }: OpeningHoursPr
     });
   };
 
-  const parseHourRange = (hourString: string | null) => {
-    // Treat null or empty as closed
-    if (!hourString || hourString.toLowerCase() === 'closed') {
-      return { open: '', close: '', isClosed: true };
+  // Parse a day's hours string into multiple time periods
+  const parseTimePeriods = (hourString: string | null): { open: string; close: string }[] => {
+    if (!hourString || hourString.toLowerCase() === 'closed' || hourString === 'x') {
+      return [];
     }
-    
-    const parts = hourString.split('-');
-    if (parts.length === 2) {
-      return { open: parts[0], close: parts[1], isClosed: false };
-    }
-    
-    return { open: '', close: '', isClosed: false };
+    const ranges = hourString.split(',').map(r => r.trim());
+    return ranges.map(range => {
+      const parts = range.split('-');
+      return { open: parts[0]?.trim() || '', close: parts[1]?.trim() || '' };
+    }).filter(p => p.open || p.close);
   };
 
-  const formatHourRange = (open: string, close: string, isClosed: boolean) => {
-    if (isClosed || (!open && !close)) {
-      return 'Closed';
+  // Format periods array back to validated string
+  const formatPeriods = (periods: { open: string; close: string }[]): string => {
+    if (periods.length === 0) return 'Closed';
+    const valid = periods.filter(p => p.open && p.close);
+    if (valid.length === 0) return 'Closed';
+    return valid.map(p => `${p.open}-${p.close}`).join(', ');
+  };
+
+  const isDayClosed = (hourString: string | null): boolean => {
+    return !hourString || hourString.toLowerCase() === 'closed' || hourString === 'x';
+  };
+
+  const addPeriod = (day: keyof Hours) => {
+    const periods = parseTimePeriods(hours[day]);
+    periods.push({ open: '', close: '' });
+    // Don't format yet - keep empty so user can fill
+    const currentPeriods = periods.filter(p => p.open && p.close);
+    if (currentPeriods.length === periods.length) {
+      updateHour(day, formatPeriods(periods));
+    } else {
+      // Store with placeholder
+      const parts = periods.map(p => {
+        if (p.open && p.close) return `${p.open}-${p.close}`;
+        return `${p.open || '00:00'}-${p.close || '00:00'}`;
+      });
+      updateHour(day, parts.join(', '));
     }
-    return `${open}-${close}`;
+  };
+
+  const removePeriod = (day: keyof Hours, index: number) => {
+    const periods = parseTimePeriods(hours[day]);
+    periods.splice(index, 1);
+    updateHour(day, formatPeriods(periods));
+  };
+
+  const updatePeriod = (day: keyof Hours, index: number, field: 'open' | 'close', value: string) => {
+    const periods = parseTimePeriods(hours[day]);
+    if (!periods[index]) {
+      periods[index] = { open: '', close: '' };
+    }
+    periods[index][field] = value;
+    updateHour(day, formatPeriods(periods));
+  };
+
+  const toggleClosed = (day: keyof Hours) => {
+    if (isDayClosed(hours[day])) {
+      updateHour(day, '09:00-18:00');
+    } else {
+      updateHour(day, 'Closed');
+    }
   };
 
   // Validate all hours and collect errors
@@ -192,97 +235,113 @@ const OpeningHours = ({ hours, onHoursChange, disabled = false }: OpeningHoursPr
           </Button>
         </div>
 
-        {/* Individual day inputs */}
-        <div className="grid gap-3">
+        {/* Google-style day rows with multiple time periods */}
+        <div className="space-y-3">
           {daysOfWeek.map(({ key, label }) => {
-            const { open, close, isClosed } = parseHourRange(hours[key]);
-            
+            const closed = isDayClosed(hours[key]);
+            const periods = closed ? [] : parseTimePeriods(hours[key]);
+            const hasError = validationErrors.some(e => e.day === label);
+
             return (
-              <div key={key} className="grid grid-cols-4 gap-3 items-center">
-                <Label className="font-medium">{label}</Label>
-                
-                <div className="flex items-center gap-2">
-                  <Input
-                    type="time"
-                    value={open}
-                    onChange={(e) => {
-                      const newValue = formatHourRange(e.target.value, close, false);
-                      updateHour(key, newValue);
-                    }}
-                    disabled={isClosed || disabled}
-                    className="text-sm"
-                  />
+              <div key={key} className={`rounded-lg border p-3 space-y-2 ${hasError ? 'border-destructive' : 'border-border'}`}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Label className="font-medium w-24">{label}</Label>
+                    <Button
+                      type="button"
+                      variant={closed ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => toggleClosed(key)}
+                      disabled={disabled}
+                      className="text-xs h-7"
+                    >
+                      {closed ? t('actions.closed') : t('actions.close')}
+                    </Button>
+                  </div>
+                  {!closed && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => addPeriod(key)}
+                      disabled={disabled}
+                      className="text-xs h-7 gap-1"
+                    >
+                      <Plus className="w-3 h-3" />
+                      Add period
+                    </Button>
+                  )}
                 </div>
-                
-                <div className="flex items-center gap-2">
-                  <Input
-                    type="time"
-                    value={close}
-                    onChange={(e) => {
-                      const newValue = formatHourRange(open, e.target.value, false);
-                      updateHour(key, newValue);
-                    }}
-                    disabled={isClosed || disabled}
-                    className="text-sm"
-                  />
-                </div>
-                
-                <div className="flex items-center gap-2">
-                  <Button
-                    type="button"
-                    variant={isClosed ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => {
-                      const newValue = isClosed ? '09:00-18:00' : 'Closed';
-                      updateHour(key, newValue);
-                    }}
-                    disabled={disabled}
-                  >
-                    {isClosed ? t('actions.closed') : t('actions.close')}
-                  </Button>
-                </div>
+
+                {!closed && periods.length > 0 && (
+                  <div className="space-y-2 ml-0 sm:ml-[108px]">
+                    {periods.map((period, idx) => (
+                      <div key={idx} className="flex items-center gap-2">
+                        <div className="flex items-center gap-1.5">
+                          <div className="relative">
+                            <Label className="absolute -top-2 left-2 bg-background px-1 text-[10px] text-muted-foreground z-10">
+                              Opens at
+                            </Label>
+                            <Input
+                              type="time"
+                              value={period.open}
+                              onChange={(e) => updatePeriod(key, idx, 'open', e.target.value)}
+                              disabled={disabled}
+                              className="text-sm h-10 w-[120px]"
+                            />
+                          </div>
+                          <span className="text-muted-foreground">–</span>
+                          <div className="relative">
+                            <Label className="absolute -top-2 left-2 bg-background px-1 text-[10px] text-muted-foreground z-10">
+                              Closes at
+                            </Label>
+                            <Input
+                              type="time"
+                              value={period.close}
+                              onChange={(e) => updatePeriod(key, idx, 'close', e.target.value)}
+                              disabled={disabled}
+                              className="text-sm h-10 w-[120px]"
+                            />
+                          </div>
+                        </div>
+                        {periods.length > 1 && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removePeriod(key, idx)}
+                            disabled={disabled}
+                            className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {closed && (
+                  <p className="text-sm text-muted-foreground ml-0 sm:ml-[108px]">No hours set</p>
+                )}
               </div>
             );
           })}
         </div>
 
-        {/* Raw input for custom formats */}
-        <div className="pt-4 border-t">
-          <Label className="text-sm font-medium mb-2 block">
-            Custom Format (Advanced)
-          </Label>
-          <div className="grid gap-2 text-xs">
-            {daysOfWeek.map(({ key, label }) => {
-              const hasError = validationErrors.some(e => e.day === label);
-              return (
-                <div key={key} className="grid grid-cols-3 gap-2 items-center">
-                  <span className="text-muted-foreground">{label}:</span>
-                  <Input
-                    value={hours[key] || 'Closed'}
-                    onChange={(e) => updateHour(key, e.target.value)}
-                    placeholder="e.g., 09:00-18:00 or Closed"
-                    className={`text-xs col-span-2 ${hasError ? 'border-destructive focus-visible:ring-destructive' : ''}`}
-                    disabled={disabled}
-                  />
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Validation error banner */}
-          {validationErrors.length > 0 && (
-            <Button
-              type="button"
-              variant="destructive"
-              size="sm"
-              className="mt-3 w-full"
-              onClick={() => setValidationDialogOpen(true)}
-            >
-              <AlertCircle className="w-4 h-4 mr-2" />
-              {validationErrors.length} Format Issue{validationErrors.length > 1 ? 's' : ''} Detected - Click to View
-            </Button>
-          )}
-        </div>
+        {/* Validation error banner */}
+        {validationErrors.length > 0 && (
+          <Button
+            type="button"
+            variant="destructive"
+            size="sm"
+            className="w-full"
+            onClick={() => setValidationDialogOpen(true)}
+          >
+            <AlertCircle className="w-4 h-4 mr-2" />
+            {validationErrors.length} Format Issue{validationErrors.length > 1 ? 's' : ''} Detected - Click to View
+          </Button>
+        )}
       </CardContent>
 
       {/* Validation Error Dialog */}
@@ -299,7 +358,6 @@ const OpeningHours = ({ hours, onHoursChange, disabled = false }: OpeningHoursPr
           </DialogHeader>
 
           <div className="space-y-4">
-            {/* Error list */}
             <div className="space-y-2">
               <Label className="text-sm font-medium">Issues Found:</Label>
               <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3 space-y-2">
@@ -313,7 +371,6 @@ const OpeningHours = ({ hours, onHoursChange, disabled = false }: OpeningHoursPr
               </div>
             </div>
 
-            {/* Correct format guide */}
             <div className="space-y-2">
               <Label className="text-sm font-medium">Correct Format:</Label>
               <div className="bg-muted rounded-lg p-3 space-y-2 text-sm">
@@ -321,28 +378,6 @@ const OpeningHours = ({ hours, onHoursChange, disabled = false }: OpeningHoursPr
                 <p><strong>Multiple ranges:</strong> <code className="bg-background px-1 rounded">HH:MM-HH:MM, HH:MM-HH:MM</code></p>
                 <p><strong>Closed:</strong> <code className="bg-background px-1 rounded">Closed</code> or <code className="bg-background px-1 rounded">x</code></p>
               </div>
-            </div>
-
-            {/* Examples */}
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">Examples:</Label>
-              <div className="bg-primary/10 border border-primary/20 rounded-lg p-3 space-y-1 text-sm font-mono">
-                <p>09:00-18:00</p>
-                <p>08:00-12:00, 14:00-18:00</p>
-                <p>06:00-22:00</p>
-                <p>Closed</p>
-              </div>
-            </div>
-
-            {/* Important notes */}
-            <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 text-sm">
-              <p className="font-medium text-amber-700 dark:text-amber-400">Common Mistakes:</p>
-              <ul className="list-disc list-inside mt-1 text-muted-foreground space-y-1">
-                <li>Using semicolon (;) instead of comma (,) for multiple ranges</li>
-                <li>Missing colon in time (2100 instead of 21:00)</li>
-                <li>Missing hyphen between start and end times</li>
-                <li>Spaces in wrong places (use <code className="bg-background px-1 rounded">09:00-18:00</code> not <code className="bg-background px-1 rounded">09:00 - 18:00</code>)</li>
-              </ul>
             </div>
           </div>
 
