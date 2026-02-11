@@ -28,6 +28,7 @@ export default function UserCountryAccessDialog({
 }: UserCountryAccessDialogProps) {
   const [availableCountries, setAvailableCountries] = useState<string[]>([]);
   const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
