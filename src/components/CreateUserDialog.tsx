@@ -30,7 +30,7 @@ export default function CreateUserDialog({
   const [lastName, setLastName] = useState('');
   const [role, setRole] = useState<'client_admin' | 'user' | 'store_owner' | 'service_user'>('user');
   const [loading, setLoading] = useState(false);
-  const [setPasswordManually, setSetPasswordManually] = useState(false);
+  
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -89,7 +89,7 @@ export default function CreateUserDialog({
       return;
     }
 
-    if (setPasswordManually && password.length < 6) {
+    if (password && password.length < 6) {
       toast({ title: 'Error', description: 'Password must be at least 6 characters', variant: 'destructive' });
       return;
     }
@@ -109,7 +109,7 @@ export default function CreateUserDialog({
           clientId,
           role,
           storeIds: role === 'store_owner' ? selectedStoreIds : [],
-          ...(setPasswordManually && password ? { password } : {}),
+          ...(password ? { password } : {}),
         },
       });
 
@@ -128,7 +128,7 @@ export default function CreateUserDialog({
 
       toast({
         title: 'Success',
-        description: setPasswordManually
+        description: password
           ? 'User created successfully with the specified password.'
           : 'User invited successfully. They will receive an email to set their password.',
       });
@@ -150,7 +150,7 @@ export default function CreateUserDialog({
     setRole('user');
     setSelectedStoreIds([]);
     setSearchQuery('');
-    setSetPasswordManually(false);
+    
     setPassword('');
     setShowPassword(false);
     onOpenChange(false);
@@ -211,44 +211,32 @@ export default function CreateUserDialog({
           </div>
 
           {isAdmin && (
-            <div className="space-y-3 rounded-lg border border-dashed p-3">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="setPassword"
-                  checked={setPasswordManually}
-                  onCheckedChange={(checked) => {
-                    setSetPasswordManually(!!checked);
-                    if (!checked) { setPassword(''); setShowPassword(false); }
-                  }}
+            <div className="space-y-2">
+              <Label htmlFor="password">Password (optional)</Label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Leave empty to send invite email"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="pr-10"
                 />
-                <Label htmlFor="setPassword" className="text-sm cursor-pointer">
-                  Set password manually (skip invite email)
-                </Label>
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
               </div>
-              {setPasswordManually && (
-                <div className="space-y-2">
-                  <Label htmlFor="password">Password *</Label>
-                  <div className="relative">
-                    <Input
-                      id="password"
-                      type={showPassword ? 'text' : 'password'}
-                      placeholder="Min. 6 characters"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="pr-10"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    >
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    The user will be created with this password and no invite email will be sent.
-                  </p>
-                </div>
+              <p className="text-xs text-muted-foreground">
+                If set, the user will be created with this password and no invite email will be sent. Minimum 6 characters.
+              </p>
+              {password && password.length > 0 && password.length < 6 && (
+                <p className="text-xs text-destructive">
+                  Password must be at least 6 characters long.
+                </p>
               )}
             </div>
           )}
@@ -314,7 +302,7 @@ export default function CreateUserDialog({
               Cancel
             </Button>
             <Button onClick={handleSubmit} disabled={loading}>
-              {loading ? 'Creating...' : setPasswordManually ? 'Create User' : 'Create & Invite User'}
+              {loading ? 'Creating...' : password ? 'Create User' : 'Create & Invite User'}
             </Button>
           </div>
         </div>
