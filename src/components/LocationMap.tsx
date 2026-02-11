@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -67,7 +66,6 @@ const LocationMap = ({ latitude, longitude, onLocationChange, address, addressLi
   };
 
   const geocodeAddress = async () => {
-    // Build structured address from components
     const addressComponents = [addressLine1, city, state, country].filter(Boolean);
     const fullAddress = address || addressComponents.join(', ');
     
@@ -84,7 +82,6 @@ const LocationMap = ({ latitude, longitude, onLocationChange, address, addressLi
     try {
       let results = null;
       
-      // Strategy 1: Try structured search with individual components
       if (addressLine1 && city && country) {
         const structuredQuery = new URLSearchParams({
           format: 'json',
@@ -107,7 +104,6 @@ const LocationMap = ({ latitude, longitude, onLocationChange, address, addressLi
         }
       }
       
-      // Strategy 2: Fallback to free-form search with better formatting
       if (!results) {
         const freeformQuery = new URLSearchParams({
           format: 'json',
@@ -154,253 +150,93 @@ const LocationMap = ({ latitude, longitude, onLocationChange, address, addressLi
     }
   };
 
-  // Helper function to get country codes for better geocoding
   const getCountryCode = (countryName: string): string => {
     const countryCodes: { [key: string]: string } = {
-      'Austria': 'AT',
-      'Germany': 'DE', 
-      'Switzerland': 'CH',
-      'Turkey': 'TR',
-      'United States': 'US',
-      'United Kingdom': 'GB',
-      'France': 'FR',
-      'Italy': 'IT',
-      'Spain': 'ES',
-      'Netherlands': 'NL',
-      'Belgium': 'BE',
-      'Poland': 'PL',
-      'Czech Republic': 'CZ',
-      'Hungary': 'HU',
-      'Slovakia': 'SK',
-      'Slovenia': 'SI',
-      'Croatia': 'HR'
+      'Austria': 'AT', 'Germany': 'DE', 'Switzerland': 'CH', 'Turkey': 'TR',
+      'United States': 'US', 'United Kingdom': 'GB', 'France': 'FR', 'Italy': 'IT',
+      'Spain': 'ES', 'Netherlands': 'NL', 'Belgium': 'BE', 'Poland': 'PL',
+      'Czech Republic': 'CZ', 'Hungary': 'HU', 'Slovakia': 'SK', 'Slovenia': 'SI', 'Croatia': 'HR'
     };
-    
     return countryCodes[countryName] || '';
   };
 
-  const updateCoordinates = () => {
-    const isBothEmpty = mapLatitude.trim() === '' && mapLongitude.trim() === '';
-
-    if (isBothEmpty) {
-      onLocationChange(null, null);
-      toast({
-        title: "Coordinates cleared",
-        description: "Latitude and longitude have been removed",
-      });
-      return;
-    }
-
-    // If one field is empty but not both, this is invalid
-    if (mapLatitude.trim() === '' || mapLongitude.trim() === '') {
-      toast({
-        title: "Invalid coordinates",
-        description: "Please enter both latitude and longitude or leave both empty",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const lat = parseFloat(mapLatitude);
+  const handleLatChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setMapLatitude(val);
+    const lat = parseFloat(val);
     const lng = parseFloat(mapLongitude);
-
-    if (isNaN(lat) || isNaN(lng)) {
-      toast({
-        title: "Invalid coordinates",
-        description: "Please enter valid latitude and longitude values",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (lat < -90 || lat > 90) {
-      toast({
-        title: "Invalid latitude",
-        description: "Latitude must be between -90 and 90",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (lng < -180 || lng > 180) {
-      toast({
-        title: "Invalid longitude",
-        description: "Longitude must be between -180 and 180",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    onLocationChange(lat, lng);
-    toast({
-      title: "Coordinates updated",
-      description: "Location coordinates have been set",
-    });
-  };
-
-  const openInMaps = () => {
-    if (mapLatitude && mapLongitude) {
-      // Copy coordinates to clipboard
-      const coordinates = `${mapLatitude},${mapLongitude}`;
-      navigator.clipboard.writeText(coordinates).then(() => {
-        toast({
-          title: "Coordinates copied!",
-          description: "Paste them into Google Maps search to view the location",
-        });
-      }).catch(() => {
-        // Fallback: show coordinates to user
-        toast({
-          title: "Coordinates",
-          description: `${mapLatitude}, ${mapLongitude} - Copy these to Google Maps`,
-        });
-      });
+    if (!isNaN(lat) && lat >= -90 && lat <= 90 && !isNaN(lng) && lng >= -180 && lng <= 180) {
+      onLocationChange(lat, lng);
+    } else if (val.trim() === '' && mapLongitude.trim() === '') {
+      onLocationChange(null, null);
     }
   };
 
-  const openInOpenStreetMap = () => {
-    if (mapLatitude && mapLongitude) {
-      const url = `https://www.openstreetmap.org/?mlat=${mapLatitude}&mlon=${mapLongitude}#map=18/${mapLatitude}/${mapLongitude}`;
-      try {
-        // Try direct window.open first
-        const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
-        if (!newWindow) {
-          // If popup blocked, copy URL to clipboard
-          navigator.clipboard.writeText(url).then(() => {
-            toast({
-              title: "OpenStreetMap URL copied!",
-              description: "Paste the URL in your browser to view the location",
-            });
-          }).catch(() => {
-            toast({
-              title: "OpenStreetMap",
-              description: "Please manually navigate to: " + url,
-            });
-          });
-        }
-      } catch (error) {
-        // Fallback: copy URL to clipboard
-        navigator.clipboard.writeText(url).then(() => {
-          toast({
-            title: "OpenStreetMap URL copied!",
-            description: "Paste the URL in your browser to view the location",
-          });
-        }).catch(() => {
-          toast({
-            title: "OpenStreetMap",
-            description: "Please manually navigate to: " + url,
-          });
-        });
-      }
+  const handleLngChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setMapLongitude(val);
+    const lat = parseFloat(mapLatitude);
+    const lng = parseFloat(val);
+    if (!isNaN(lat) && lat >= -90 && lat <= 90 && !isNaN(lng) && lng >= -180 && lng <= 180) {
+      onLocationChange(lat, lng);
+    } else if (val.trim() === '' && mapLatitude.trim() === '') {
+      onLocationChange(null, null);
     }
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <MapPin className="w-5 h-5" />
-          {t('sections.locationCoordinates')}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="latitude">{tFields('latitude')}</Label>
-            <Input
-              id="latitude"
-              type="number"
-              step="any"
-              value={mapLatitude}
-              onChange={(e) => setMapLatitude(e.target.value)}
-              placeholder="e.g., 40.7128"
-            />
-          </div>
-          <div>
-            <Label htmlFor="longitude">{tFields('longitude')}</Label>
-            <Input
-              id="longitude"
-              type="number"
-              step="any"
-              value={mapLongitude}
-              onChange={(e) => setMapLongitude(e.target.value)}
-              placeholder="e.g., -74.0060"
-            />
-          </div>
+    <div className="space-y-3">
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="map-latitude" className="text-sm">{tFields('latitude')}</Label>
+          <Input
+            id="map-latitude"
+            type="number"
+            step="any"
+            value={mapLatitude}
+            onChange={handleLatChange}
+            placeholder="e.g., 40.7128"
+            className="mt-1"
+          />
         </div>
-
-        <div className="flex flex-wrap gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={getCurrentLocation}
-            disabled={loading}
-          >
-            <Navigation className="w-4 h-4 mr-2" />
-            {loading ? t('actions.gettingLocation') : t('actions.useCurrentLocation')}
-          </Button>
-          
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={geocodeAddress}
-            disabled={loading || (!address && !addressLine1)}
-          >
-            <MapPin className="w-4 h-4 mr-2" />
-            {loading ? t('actions.geocoding') : t('actions.findFromAddress')}
-          </Button>
-          
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={updateCoordinates}
-          >
-            {t('actions.updateCoordinates')}
-          </Button>
-          
-          {mapLatitude && mapLongitude && (
-            <>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={openInMaps}
-              >
-                {t('actions.copyCoordinates')}
-              </Button>
-
-              <Button asChild variant="outline" size="sm">
-                <a
-                  href={`https://www.bing.com/maps?cp=${mapLatitude}~${mapLongitude}&lvl=18&sp=point.${mapLatitude}_${mapLongitude}_Location`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <MapPin className="w-4 h-4 mr-2" />
-                  {t('actions.openInBingMaps')}
-                </a>
-              </Button>
-            </>
-          )}
+        <div>
+          <Label htmlFor="map-longitude" className="text-sm">{tFields('longitude')}</Label>
+          <Input
+            id="map-longitude"
+            type="number"
+            step="any"
+            value={mapLongitude}
+            onChange={handleLngChange}
+            placeholder="e.g., -74.0060"
+            className="mt-1"
+          />
         </div>
+      </div>
 
-        {latitude && longitude && (
-          <div className="p-3 bg-muted rounded-lg">
-            <p className="text-sm font-medium">{t('location.currentCoordinates')}:</p>
-            <p className="text-sm text-muted-foreground">
-              {latitude.toFixed(6)}, {longitude.toFixed(6)}
-            </p>
-          </div>
-        )}
-
-        <div className="text-xs text-muted-foreground space-y-1">
-          <p>• {t('location.useCurrentLocationHint')}</p>
-          <p>• {t('location.findFromAddressHint')}</p>
-          <p>• {t('location.manualEntryHint')}</p>
-        </div>
-      </CardContent>
-    </Card>
+      <div className="flex gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={getCurrentLocation}
+          disabled={loading}
+        >
+          <Navigation className="w-4 h-4 mr-2" />
+          {loading ? t('actions.gettingLocation') : t('actions.useCurrentLocation')}
+        </Button>
+        
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={geocodeAddress}
+          disabled={loading || (!address && !addressLine1)}
+        >
+          <MapPin className="w-4 h-4 mr-2" />
+          {loading ? t('actions.geocoding') : t('actions.findFromAddress')}
+        </Button>
+      </div>
+    </div>
   );
 };
 
