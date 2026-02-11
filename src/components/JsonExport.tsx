@@ -19,6 +19,7 @@ interface JsonExportProps {
 export const JsonExport = ({ businesses, clientName, onNavigateToBusiness }: JsonExportProps) => {
   const [open, setOpen] = useState(false);
   const [validationResults, setValidationResults] = useState<Array<{ business: Business; isValid: boolean; errors: any[] }>>([]);
+  const [filter, setFilter] = useState<'all' | 'valid' | 'invalid'>('all');
 
   const validateAllBusinesses = () => {
     // Only validate and export active businesses that are not async (out-of-sync)
@@ -185,6 +186,7 @@ export const JsonExport = ({ businesses, clientName, onNavigateToBusiness }: Jso
     setOpen(isOpen);
     if (isOpen) {
       validateAllBusinesses();
+      setFilter('all');
     }
   };
 
@@ -209,11 +211,26 @@ export const JsonExport = ({ businesses, clientName, onNavigateToBusiness }: Jso
 
         <div className="space-y-4">
           {validationResults.length > 0 && (
-            <div className="flex gap-4">
-              <Badge variant={validCount > 0 ? "default" : "secondary"}>
+            <div className="flex gap-2">
+              <Badge 
+                variant={filter === 'all' ? "default" : "outline"}
+                className="cursor-pointer hover:opacity-80"
+                onClick={() => setFilter('all')}
+              >
+                All ({validationResults.length})
+              </Badge>
+              <Badge 
+                variant={filter === 'valid' ? "default" : "outline"}
+                className="cursor-pointer hover:opacity-80"
+                onClick={() => setFilter('valid')}
+              >
                 {validCount} Valid
               </Badge>
-              <Badge variant={invalidCount > 0 ? "destructive" : "secondary"}>
+              <Badge 
+                variant={filter === 'invalid' ? "destructive" : "outline"}
+                className={`cursor-pointer hover:opacity-80 ${filter !== 'invalid' && invalidCount > 0 ? 'text-destructive border-destructive' : ''}`}
+                onClick={() => setFilter('invalid')}
+              >
                 {invalidCount} Invalid
               </Badge>
             </div>
@@ -221,20 +238,17 @@ export const JsonExport = ({ businesses, clientName, onNavigateToBusiness }: Jso
 
           {validationResults.length > 0 && (
             <div className="space-y-4 max-h-96 overflow-y-auto">
-              {validationResults.map((result, index) => (
+              {validationResults
+                .filter(result => {
+                  if (filter === 'valid') return result.isValid;
+                  if (filter === 'invalid') return !result.isValid;
+                  return true;
+                })
+                .map((result) => (
                 <div key={result.business.id} className="border rounded-lg p-4">
                   <div className="flex items-center justify-between mb-2">
                     <h4 className="font-medium">{result.business.businessName}</h4>
-                    <Badge 
-                      variant={result.isValid ? "default" : "destructive"}
-                      className={!result.isValid && onNavigateToBusiness ? "cursor-pointer hover:opacity-80" : ""}
-                      onClick={() => {
-                        if (!result.isValid && onNavigateToBusiness) {
-                          setOpen(false);
-                          onNavigateToBusiness(result.business);
-                        }
-                      }}
-                    >
+                    <Badge variant={result.isValid ? "default" : "destructive"}>
                       {result.isValid ? "Valid" : "Invalid"}
                     </Badge>
                   </div>
