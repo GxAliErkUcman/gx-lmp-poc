@@ -14,6 +14,7 @@ interface CreateUserRequest {
   role?: 'client_admin' | 'user' | 'store_owner' | 'service_user';
   storeIds?: string[];
   password?: string;
+  countryCodes?: string[];
 }
 
 const handler = async (req: Request): Promise<Response> => {
