@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Users, MapPin, Clock, Download, UserPlus, Plus, Trash2, Settings, Mail, RefreshCw, Edit, Handshake, Shield, Eye, Copy, Wrench, KeyRound } from 'lucide-react';
+import { Loader2, Users, MapPin, Clock, Download, UserPlus, Plus, Trash2, Settings, Mail, RefreshCw, Edit, Handshake, Shield, Eye, EyeOff, Copy, Wrench, KeyRound } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
@@ -102,8 +102,10 @@ const AdminPanel = () => {
     lastName: '',
     email: '',
     clientId: '',
-    role: 'user' as 'client_admin' | 'user' | 'store_owner' | 'service_user'
+    role: 'user' as 'client_admin' | 'user' | 'store_owner' | 'service_user',
+    password: '',
   });
+  const [showNewUserPassword, setShowNewUserPassword] = useState(false);
 
   useEffect(() => {
     const handleUserAuth = async () => {
@@ -418,6 +420,7 @@ const AdminPanel = () => {
           lastName: newUser.lastName,
           clientId: newUser.clientId,
           role: newUser.role,
+          ...(newUser.password ? { password: newUser.password } : {}),
         },
       });
 
@@ -436,10 +439,13 @@ const AdminPanel = () => {
 
       toast({
         title: 'User Created',
-        description: 'User invitation sent successfully. They will receive an email to set up their password.',
+        description: newUser.password
+          ? 'User created successfully with the specified password.'
+          : 'User invitation sent successfully. They will receive an email to set up their password.',
       });
 
-      setNewUser({ firstName: '', lastName: '', email: '', clientId: '', role: 'user' });
+      setNewUser({ firstName: '', lastName: '', email: '', clientId: '', role: 'user', password: '' });
+      setShowNewUserPassword(false);
       setIsCreateUserDialogOpen(false);
       fetchData(true); // Refresh the data silently
     } catch (error: any) {
@@ -1036,13 +1042,36 @@ const AdminPanel = () => {
                     : 'Store Owners can only access stores assigned to them'}
                 </p>
               </div>
+              <div>
+                <Label htmlFor="password">Password (optional)</Label>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showNewUserPassword ? 'text' : 'password'}
+                    placeholder="Leave empty to send invite email"
+                    value={newUser.password}
+                    onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewUserPassword(!showNewUserPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showNewUserPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  If set, the user will be created with this password and no invite email will be sent.
+                </p>
+              </div>
               <Button
                 onClick={handleCreateUser}
                 disabled={createUserLoading}
                 className="w-full"
               >
                 {createUserLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                Create User & Send Invitation
+                {newUser.password ? 'Create User' : 'Create User & Send Invitation'}
               </Button>
             </div>
           </DialogContent>
@@ -1521,12 +1550,13 @@ const AdminPanel = () => {
               <Button 
                 size="sm"
                 onClick={() => {
-                  setNewUser({ 
+                   setNewUser({ 
                     firstName: '', 
                     lastName: '', 
                     email: '', 
                     clientId: selectedClient?.id || '', 
-                    role: 'user' 
+                    role: 'user',
+                    password: '',
                   });
                   setIsCreateUserDialogOpen(true);
                 }}
