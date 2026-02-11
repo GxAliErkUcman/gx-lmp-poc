@@ -99,6 +99,10 @@ const AdminPanel = () => {
   const [reassignDialogOpen, setReassignDialogOpen] = useState(false);
   const [selectedUserForReassign, setSelectedUserForReassign] = useState<User | null>(null);
   const [userSearchTerm, setUserSearchTerm] = useState('');
+  const [countryAccessDialogOpen, setCountryAccessDialogOpen] = useState(false);
+  const [selectedUserForCountry, setSelectedUserForCountry] = useState<User | null>(null);
+  const [storeAccessDialogOpen, setStoreAccessDialogOpen] = useState(false);
+  const [selectedUserForStoreAccess, setSelectedUserForStoreAccess] = useState<User | null>(null);
   const [clientFilter, setClientFilter] = useState<string>('all');
   
   const [newUser, setNewUser] = useState({
