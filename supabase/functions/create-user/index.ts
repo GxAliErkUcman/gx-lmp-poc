@@ -200,6 +200,20 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
+    // Assign country-based access restrictions if provided
+    if (countryCodes && countryCodes.length > 0) {
+      const countryRows = countryCodes.map((country_code: string) => ({
+        user_id: newUserId,
+        country_code,
+      }));
+      const { error: countryAccessError } = await supabaseAdmin
+        .from('user_country_access')
+        .insert(countryRows);
+      if (countryAccessError) {
+        console.error('Error assigning country access:', countryAccessError);
+      }
+    }
+
     console.log('User created successfully:', newUser);
 
     return new Response(
