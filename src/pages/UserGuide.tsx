@@ -310,14 +310,20 @@ const UserGuide = () => {
         {/* 9. Opening Hours */}
         <Section number="9" title="Opening Hours">
           <p className="text-sm text-muted-foreground mb-3">
-            Each day of the week has its own hours field. You can set hours per location in the edit dialog.
+            Each day of the week has its own hours field. You can set hours per location in the edit dialog using a structured time picker.
           </p>
-          <SubSection title="Format">
-            <p className="text-sm text-muted-foreground">
-              Hours must follow the format: <code className="bg-muted px-1 py-0.5 rounded text-xs">HH:MM-HH:MM</code> (e.g., <code className="bg-muted px-1 py-0.5 rounded text-xs">09:00-18:00</code>).
+          <SubSection title="How It Works">
+            <p className="text-sm text-muted-foreground mb-2">
+              For each day, you'll see an <strong>"Opens at"</strong> and <strong>"Closes at"</strong> time selector to define when the store is open.
             </p>
-            <p className="text-sm text-muted-foreground mt-1">
-              For multiple time slots (e.g., split shifts): <code className="bg-muted px-1 py-0.5 rounded text-xs">09:00-12:00, 14:00-18:00</code>
+            <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground ml-2">
+              <li>Select the opening time in the first dropdown and the closing time in the second.</li>
+              <li>If the store has a <strong>break</strong> (e.g., closed during lunch), click <strong>"Add period"</strong> to add a second time range for the same day.</li>
+              <li>You can add as many periods as needed (e.g., morning shift + afternoon shift).</li>
+              <li>Remove a period by clicking the delete (trash) icon next to it.</li>
+            </ul>
+            <p className="text-sm text-muted-foreground mt-2">
+              Example: A store open 09:00–12:00 and 14:00–18:00 would have two periods for that day.
             </p>
           </SubSection>
           <SubSection title="Closed Days">
