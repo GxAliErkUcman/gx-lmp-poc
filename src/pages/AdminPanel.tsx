@@ -1566,10 +1566,33 @@ const AdminPanel = () => {
                             <Button
                               size="sm"
                               variant="outline"
+                              onClick={() => {
+                                setSelectedUserForCountry(user);
+                                setCountryAccessDialogOpen(true);
+                              }}
+                            >
+                              <Globe className="w-4 h-4" />
+                              Country
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
                               onClick={() => handleSendPasswordRecovery(user.email)}
                             >
                               <Mail className="w-4 h-4" />
                               Recovery
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              disabled={!user.roles?.includes('store_owner')}
+                              onClick={() => {
+                                setSelectedUserForStoreAccess(user);
+                                setStoreAccessDialogOpen(true);
+                              }}
+                            >
+                              <Store className="w-4 h-4" />
+                              Stores
                             </Button>
                             <Button
                               size="sm"
