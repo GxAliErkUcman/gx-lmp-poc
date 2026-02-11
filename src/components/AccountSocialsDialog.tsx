@@ -411,7 +411,71 @@ const AccountSocialsDialog = ({ open, onOpenChange, onSuccess, clientId }: Accou
       setLoading(false);
     }
   };
+  const [removePlatform, setRemovePlatform] = useState<string>('');
 
+  const onRemoveSingle = async (platformKey: string) => {
+    if (!user) return;
+    
+    setLoading(true);
+    try {
+      let fetchQuery = supabase
+        .from('businesses')
+        .select('id, socialMediaUrls');
+
+      if (clientId) {
+        fetchQuery = fetchQuery.eq('client_id', clientId);
+      } else {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('client_id')
+          .eq('user_id', user.id)
+          .single();
+
+        fetchQuery = fetchQuery.or(`user_id.eq.${user.id}${profile?.client_id ? `,client_id.eq.${profile.client_id}` : ''}`);
+      }
+
+      const { data: businesses, error: fetchError } = await fetchQuery;
+      if (fetchError) throw fetchError;
+
+      const platformName = `url_${platformKey.replace('Url', '')}`;
+      let removedCount = 0;
+
+      for (const business of businesses || []) {
+        const existingSocials = Array.isArray(business.socialMediaUrls) ? business.socialMediaUrls : [];
+        const hasPlatform = existingSocials.some((social: any) => social.name === platformName);
+        
+        if (hasPlatform) {
+          const updatedSocials = existingSocials.filter((social: any) => social.name !== platformName);
+          const { error: updateError } = await supabase
+            .from('businesses')
+            .update({ socialMediaUrls: updatedSocials })
+            .eq('id', business.id);
+          if (updateError) throw updateError;
+          removedCount++;
+        }
+      }
+
+      const platformLabel = SOCIAL_PLATFORMS.find(p => p.key === platformKey)?.label || 'Social media';
+      toast({
+        title: "Platform Links Removed",
+        description: `Removed ${platformLabel} links from ${removedCount} location${removedCount !== 1 ? 's' : ''}`,
+      });
+
+      setRemovePlatform('');
+      fetchSocialStats();
+      onSuccess();
+      onOpenChange(false);
+    } catch (error) {
+      console.error('Error removing platform links:', error);
+      toast({
+        title: "Error",
+        description: "Failed to remove platform links",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -424,7 +488,7 @@ const AccountSocialsDialog = ({ open, onOpenChange, onSuccess, clientId }: Accou
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="analytics" className="flex items-center gap-2">
               <BarChart3 className="w-4 h-4" />
               <span className="hidden sm:inline">Current Status</span>
@@ -433,7 +497,12 @@ const AccountSocialsDialog = ({ open, onOpenChange, onSuccess, clientId }: Accou
             <TabsTrigger value="single" className="flex items-center gap-2">
               <Globe className="w-4 h-4" />
               <span className="hidden sm:inline">Update Single</span>
-              <span className="sm:hidden">Single</span>
+              <span className="sm:hidden">Update</span>
+            </TabsTrigger>
+            <TabsTrigger value="remove-single" className="flex items-center gap-2 text-destructive data-[state=active]:text-destructive">
+              <Trash2 className="w-4 h-4" />
+              <span className="hidden sm:inline">Remove Single</span>
+              <span className="sm:hidden">Remove 1</span>
             </TabsTrigger>
             <TabsTrigger value="all" className="flex items-center gap-2">
               <Share2 className="w-4 h-4" />
@@ -643,6 +712,97 @@ const AccountSocialsDialog = ({ open, onOpenChange, onSuccess, clientId }: Accou
                   </Form>
                 </CardContent>
               </ScrollArea>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="remove-single" className="mt-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg text-destructive flex items-center gap-2">
+                  <Trash2 className="w-5 h-5" />
+                  Remove Single Platform
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Select a platform to remove its links from all locations. Other platform links will remain untouched.
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {socialStats.some(s => s.locationsWithSocial > 0) ? (
+                  <div className="space-y-3">
+                    <p className="text-sm font-medium">Select a platform to remove:</p>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                      {socialStats.filter(s => s.locationsWithSocial > 0).map(stat => (
+                        <button
+                          key={stat.platform}
+                          type="button"
+                          onClick={() => setRemovePlatform(stat.platform)}
+                          className={`flex items-center justify-between p-3 rounded-md border transition-colors text-left ${
+                            removePlatform === stat.platform
+                              ? 'border-destructive bg-destructive/10'
+                              : 'border-border hover:border-destructive/50 hover:bg-muted'
+                          }`}
+                        >
+                          <span className="text-sm font-medium">{stat.platformLabel}</span>
+                          <Badge variant="secondary">{stat.locationsWithSocial}</Badge>
+                        </button>
+                      ))}
+                    </div>
+
+                    {removePlatform && (() => {
+                      const selectedStat = socialStats.find(s => s.platform === removePlatform);
+                      return selectedStat ? (
+                        <div className="p-3 bg-destructive/5 border border-destructive/20 rounded-md space-y-1">
+                          <p className="text-sm font-medium text-destructive">
+                            This will remove {selectedStat.platformLabel} links from {selectedStat.locationsWithSocial} location{selectedStat.locationsWithSocial !== 1 ? 's' : ''}.
+                          </p>
+                          {selectedStat.mostCommonUrl && (
+                            <p className="text-xs text-muted-foreground font-mono break-all">
+                              Most common: {selectedStat.mostCommonUrl}
+                            </p>
+                          )}
+                        </div>
+                      ) : null;
+                    })()}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No social media links are currently set.</p>
+                )}
+
+                <div className="flex justify-end gap-2 pt-4">
+                  <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                    Cancel
+                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button 
+                        variant="destructive" 
+                        disabled={loading || !removePlatform}
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Remove {SOCIAL_PLATFORMS.find(p => p.key === removePlatform)?.label || 'Platform'} Links
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This will remove all {SOCIAL_PLATFORMS.find(p => p.key === removePlatform)?.label} links from all locations in this account. 
+                          This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction 
+                          onClick={() => onRemoveSingle(removePlatform)}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                          Yes, Remove {SOCIAL_PLATFORMS.find(p => p.key === removePlatform)?.label}
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              </CardContent>
             </Card>
           </TabsContent>
 
