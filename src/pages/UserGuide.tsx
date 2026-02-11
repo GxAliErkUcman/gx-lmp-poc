@@ -271,10 +271,15 @@ const UserGuide = () => {
           </SubSection>
           <SubSection title="Location Coordinates">
             <FieldTable fields={[
-              { name: 'Latitude', description: 'GPS latitude. Can be set via the interactive map.' },
-              { name: 'Longitude', description: 'GPS longitude. Can be set via the interactive map.' },
+              { name: 'Latitude', description: 'GPS latitude. Enter manually or use the buttons below to auto-detect.' },
+              { name: 'Longitude', description: 'GPS longitude. Enter manually or use the buttons below to auto-detect.' },
             ]} />
-            <Tip>Click on the map in the edit dialog to set coordinates, or enter them manually.</Tip>
+            <p className="text-sm text-muted-foreground mt-2 mb-1">Two options are available to set coordinates automatically:</p>
+            <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground ml-2">
+              <li><strong>Use Current Location</strong> — Uses your browser's GPS to detect your current latitude and longitude.</li>
+              <li><strong>Find from Address</strong> — Geocodes the address fields you've already filled in (Street, City, Country) to find the coordinates automatically.</li>
+            </ul>
+            <Tip>You can also type latitude and longitude values directly into the input fields if you already know them.</Tip>
           </SubSection>
           <SubSection title="Contact & Web">
             <FieldTable fields={[
