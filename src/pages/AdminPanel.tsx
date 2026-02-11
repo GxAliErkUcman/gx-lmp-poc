@@ -10,7 +10,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Users, MapPin, Clock, Download, UserPlus, Plus, Trash2, Settings, Mail, RefreshCw, Edit, Handshake, Shield, Eye, EyeOff, Copy, Wrench, KeyRound } from 'lucide-react';
+import { Loader2, Users, MapPin, Clock, Download, UserPlus, Plus, Trash2, Settings, Mail, RefreshCw, Edit, Handshake, Shield, Eye, EyeOff, Copy, Wrench, KeyRound, Search } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
@@ -106,6 +108,36 @@ const AdminPanel = () => {
     password: '',
   });
   const [showNewUserPassword, setShowNewUserPassword] = useState(false);
+
+  const [newUserStores, setNewUserStores] = useState<any[]>([]);
+  const [newUserStoresLoading, setNewUserStoresLoading] = useState(false);
+  const [newUserSelectedStoreIds, setNewUserSelectedStoreIds] = useState<string[]>([]);
+  const [newUserStoreSearch, setNewUserStoreSearch] = useState('');
+
+  // Fetch stores when role is store_owner and client is selected
+  useEffect(() => {
+    if (newUser.role !== 'store_owner' || !newUser.clientId) {
+      setNewUserStores([]);
+      setNewUserSelectedStoreIds([]);
+      return;
+    }
+    const fetchStores = async () => {
+      setNewUserStoresLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('businesses')
+          .select('id, businessName, storeCode, city, state')
+          .eq('client_id', newUser.clientId)
+          .order('businessName');
+        if (!error) setNewUserStores(data || []);
+      } catch (err) {
+        console.error('Error loading stores:', err);
+      } finally {
+        setNewUserStoresLoading(false);
+      }
+    };
+    fetchStores();
+  }, [newUser.role, newUser.clientId]);
 
   useEffect(() => {
     const handleUserAuth = async () => {
@@ -419,6 +451,15 @@ const AdminPanel = () => {
       return;
     }
 
+    if (newUser.role === 'store_owner' && newUserSelectedStoreIds.length === 0) {
+      toast({
+        title: "Select Stores",
+        description: "Please select at least one store for the store owner.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
       setCreateUserLoading(true);
 
@@ -429,6 +470,7 @@ const AdminPanel = () => {
           lastName: newUser.lastName,
           clientId: newUser.clientId,
           role: newUser.role,
+          storeIds: newUser.role === 'store_owner' ? newUserSelectedStoreIds : [],
           ...(newUser.password ? { password: newUser.password } : {}),
         },
       });
@@ -455,6 +497,8 @@ const AdminPanel = () => {
 
       setNewUser({ firstName: '', lastName: '', email: '', clientId: '', role: 'user', password: '' });
       setShowNewUserPassword(false);
+      setNewUserSelectedStoreIds([]);
+      setNewUserStoreSearch('');
       setIsCreateUserDialogOpen(false);
       fetchData(true); // Refresh the data silently
     } catch (error: any) {
@@ -1050,7 +1094,64 @@ const AdminPanel = () => {
                     ? 'Users can view and manage all stores for this client'
                     : 'Store Owners can only access stores assigned to them'}
                 </p>
-              </div>
+               </div>
+              {newUser.role === 'store_owner' && newUser.clientId && (
+                <div className="space-y-3">
+                  <Label>Assign Stores *</Label>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search by name, store code, or city..."
+                      value={newUserStoreSearch}
+                      onChange={(e) => setNewUserStoreSearch(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    {newUserSelectedStoreIds.length} of {newUserStores.length} stores selected
+                  </div>
+                  {newUserStoresLoading ? (
+                    <div className="text-center py-6 text-muted-foreground">Loading stores...</div>
+                  ) : (
+                    <ScrollArea className="h-[200px] rounded-md border p-3">
+                      <div className="space-y-2">
+                        {newUserStores
+                          .filter((b) =>
+                            (b.businessName || '').toLowerCase().includes(newUserStoreSearch.toLowerCase()) ||
+                            (b.storeCode || '').toLowerCase().includes(newUserStoreSearch.toLowerCase()) ||
+                            (b.city || '').toLowerCase().includes(newUserStoreSearch.toLowerCase())
+                          )
+                          .map((b) => (
+                            <div key={b.id} className="flex items-start space-x-3 p-2 rounded-lg hover:bg-muted/50">
+                              <Checkbox
+                                id={`admin-store-${b.id}`}
+                                checked={newUserSelectedStoreIds.includes(b.id)}
+                                onCheckedChange={() =>
+                                  setNewUserSelectedStoreIds(prev =>
+                                    prev.includes(b.id) ? prev.filter(x => x !== b.id) : [...prev, b.id]
+                                  )
+                                }
+                              />
+                              <div className="flex-1 space-y-0.5">
+                                <Label htmlFor={`admin-store-${b.id}`} className="text-sm font-medium cursor-pointer">
+                                  {b.businessName || 'Unnamed'}
+                                </Label>
+                                <div className="text-xs text-muted-foreground">
+                                  {b.storeCode}{b.city ? ` · ${b.city}` : ''}{b.state ? `, ${b.state}` : ''}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        {newUserStores.length === 0 && (
+                          <div className="text-center py-4 text-muted-foreground text-sm">
+                            No stores found for this client
+                          </div>
+                        )}
+                      </div>
+                    </ScrollArea>
+                  )}
+                </div>
+              )}
               <div>
                 <Label htmlFor="password">Password (optional)</Label>
                 <div className="relative">
