@@ -574,7 +574,7 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
                       </div>
                     )}
                     {column.key === 'country' && (
-                      <span className="text-sm">{business.country || '-'}</span>
+                      <span className="text-sm">{business.country ? formatCountryDisplay(business.country) : '-'}</span>
                     )}
                     {column.key === 'postalCode' && (
                       <span className="text-sm">{business.postalCode || '-'}</span>
