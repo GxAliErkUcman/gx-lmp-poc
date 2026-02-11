@@ -170,7 +170,15 @@ export default function ServiceUserCreateDialog({
     setSearchQuery('');
     setPassword('');
     setShowPassword(false);
+    setEnableCountryRestriction(false);
+    setSelectedCountryCodes([]);
     onOpenChange(false);
+  };
+
+  const handleCountryToggle = (code: string) => {
+    setSelectedCountryCodes(prev =>
+      prev.includes(code) ? prev.filter(c => c !== code) : [...prev, code]
+    );
   };
 
   return (
