@@ -86,9 +86,9 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
-    const { email, firstName, lastName, role, storeIds, password } = requestBody;
+    const { email, firstName, lastName, role, storeIds, password, countryCodes } = requestBody;
 
-    console.log('Creating user:', { email, firstName, lastName, clientId, role, storeCount: storeIds?.length || 0, hasPassword: !!password });
+    console.log('Creating user:', { email, firstName, lastName, clientId, role, storeCount: storeIds?.length || 0, hasPassword: !!password, countryCount: countryCodes?.length || 0 });
 
     // If password provided (admin-only), require the caller to be an admin
     if (password) {
