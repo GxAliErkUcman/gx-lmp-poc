@@ -152,28 +152,83 @@ export default function UserCountryAccessDialog({
                 : `${selectedCountries.length} ${selectedCountries.length === 1 ? 'country' : 'countries'} selected`}
             </div>
 
-            <ScrollArea className="h-[300px] rounded-md border p-4">
-              <div className="space-y-2">
-                {availableCountries.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground text-sm">
-                    No countries found in client locations
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {/* Available */}
+              <div className="rounded-md border p-3 space-y-3">
+                <div className="space-y-2">
+                  <div className="text-sm font-medium">Available</div>
+                  <input
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Search countries..."
+                    className="w-full h-9 rounded-md border bg-background px-3 text-sm"
+                  />
+                </div>
+
+                <ScrollArea className="h-[260px]">
+                  <div className="space-y-1 pr-2">
+                    {availableCountries
+                      .filter(code => !selectedCountries.includes(code))
+                      .filter(code => formatCountryDisplay(code).toLowerCase().includes(searchTerm.toLowerCase()))
+                      .map(code => (
+                        <button
+                          type="button"
+                          key={code}
+                          onClick={() => handleAddCountry(code)}
+                          className="w-full text-left rounded-md px-2 py-2 text-sm hover:bg-muted/50 transition-colors"
+                        >
+                          {formatCountryDisplay(code)}
+                        </button>
+                      ))}
+
+                    {availableCountries.length === 0 && (
+                      <div className="text-center py-8 text-muted-foreground text-sm">
+                        No countries found in client locations
+                      </div>
+                    )}
+
+                    {availableCountries.length > 0 &&
+                      availableCountries.filter(code => !selectedCountries.includes(code)).length === 0 && (
+                        <div className="text-center py-8 text-muted-foreground text-sm">
+                          All available countries selected
+                        </div>
+                      )}
                   </div>
-                ) : (
-                  availableCountries.map(code => (
-                    <div key={code} className="flex items-center space-x-3 p-2 rounded-lg hover:bg-muted/50">
-                      <Checkbox
-                        id={`country-${code}`}
-                        checked={selectedCountries.includes(code)}
-                        onCheckedChange={() => handleToggleCountry(code)}
-                      />
-                      <Label htmlFor={`country-${code}`} className="text-sm cursor-pointer flex-1">
-                        {formatCountryDisplay(code)}
-                      </Label>
-                    </div>
-                  ))
-                )}
+                </ScrollArea>
               </div>
-            </ScrollArea>
+
+              {/* Selected */}
+              <div className="rounded-md border p-3 space-y-3">
+                <div className="text-sm font-medium">Selected</div>
+
+                <ScrollArea className="h-[320px] sm:h-[305px]">
+                  <div className="space-y-1 pr-2">
+                    {selectedCountries.length === 0 ? (
+                      <div className="text-center py-8 text-muted-foreground text-sm">
+                        None — user can access all countries
+                      </div>
+                    ) : (
+                      selectedCountries
+                        .slice()
+                        .sort((a, b) => formatCountryDisplay(a).localeCompare(formatCountryDisplay(b)))
+                        .map(code => (
+                          <div key={code} className="flex items-center justify-between gap-2 rounded-md px-2 py-2 hover:bg-muted/50">
+                            <div className="text-sm">{formatCountryDisplay(code)}</div>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleRemoveCountry(code)}
+                            >
+                              Remove
+                            </Button>
+                          </div>
+                        ))
+                    )}
+                  </div>
+                </ScrollArea>
+              </div>
+            </div>
 
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
