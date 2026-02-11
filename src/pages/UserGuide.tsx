@@ -73,10 +73,10 @@ const UserGuide = () => {
       <div className="max-w-4xl mx-auto px-6 py-12 print:px-0 print:py-0">
         {/* Cover / Title */}
         <div className="text-center mb-16 print:mb-10 break-after-page">
-          <img src={jasonerLogo} alt="Jasoner" className="h-24 mx-auto mb-8" />
+          <img src={jasonerLogo} alt="Jasoner" className="h-40 mx-auto mb-8" />
           <h1 className="text-4xl font-bold mb-4 text-foreground">Jasoner User Guide</h1>
-          <p className="text-xl text-muted-foreground mb-2">Location Management Platform</p>
-          <p className="text-sm text-muted-foreground">For Users — Step-by-Step Reference</p>
+          <p className="text-xl text-muted-foreground mb-2">The Location Management Platform</p>
+          <p className="text-sm text-muted-foreground">A Step by Step Guide on how to manage your locations</p>
           <div className="mt-8 text-xs text-muted-foreground">
             Version 1.0 • {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long' })}
           </div>
