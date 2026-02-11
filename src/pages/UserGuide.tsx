@@ -271,10 +271,15 @@ const UserGuide = () => {
           </SubSection>
           <SubSection title="Location Coordinates">
             <FieldTable fields={[
-              { name: 'Latitude', description: 'GPS latitude. Can be set via the interactive map.' },
-              { name: 'Longitude', description: 'GPS longitude. Can be set via the interactive map.' },
+              { name: 'Latitude', description: 'GPS latitude. Enter manually or use the buttons below to auto-detect.' },
+              { name: 'Longitude', description: 'GPS longitude. Enter manually or use the buttons below to auto-detect.' },
             ]} />
-            <Tip>Click on the map in the edit dialog to set coordinates, or enter them manually.</Tip>
+            <p className="text-sm text-muted-foreground mt-2 mb-1">Two options are available to set coordinates automatically:</p>
+            <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground ml-2">
+              <li><strong>Use Current Location</strong> — Uses your browser's GPS to detect your current latitude and longitude.</li>
+              <li><strong>Find from Address</strong> — Geocodes the address fields you've already filled in (Street, City, Country) to find the coordinates automatically.</li>
+            </ul>
+            <Tip>You can also type latitude and longitude values directly into the input fields if you already know them.</Tip>
           </SubSection>
           <SubSection title="Contact & Web">
             <FieldTable fields={[
@@ -305,14 +310,20 @@ const UserGuide = () => {
         {/* 9. Opening Hours */}
         <Section number="9" title="Opening Hours">
           <p className="text-sm text-muted-foreground mb-3">
-            Each day of the week has its own hours field. You can set hours per location in the edit dialog.
+            Each day of the week has its own hours field. You can set hours per location in the edit dialog using a structured time picker.
           </p>
-          <SubSection title="Format">
-            <p className="text-sm text-muted-foreground">
-              Hours must follow the format: <code className="bg-muted px-1 py-0.5 rounded text-xs">HH:MM-HH:MM</code> (e.g., <code className="bg-muted px-1 py-0.5 rounded text-xs">09:00-18:00</code>).
+          <SubSection title="How It Works">
+            <p className="text-sm text-muted-foreground mb-2">
+              For each day, you'll see an <strong>"Opens at"</strong> and <strong>"Closes at"</strong> time selector to define when the store is open.
             </p>
-            <p className="text-sm text-muted-foreground mt-1">
-              For multiple time slots (e.g., split shifts): <code className="bg-muted px-1 py-0.5 rounded text-xs">09:00-12:00, 14:00-18:00</code>
+            <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground ml-2">
+              <li>Select the opening time in the first dropdown and the closing time in the second.</li>
+              <li>If the store has a <strong>break</strong> (e.g., closed during lunch), click <strong>"Add period"</strong> to add a second time range for the same day.</li>
+              <li>You can add as many periods as needed (e.g., morning shift + afternoon shift).</li>
+              <li>Remove a period by clicking the delete (trash) icon next to it.</li>
+            </ul>
+            <p className="text-sm text-muted-foreground mt-2">
+              Example: A store open 09:00–12:00 and 14:00–18:00 would have two periods for that day.
             </p>
           </SubSection>
           <SubSection title="Closed Days">
@@ -408,6 +419,7 @@ const UserGuide = () => {
             'Click "Apply Changes" to update all selected locations.',
           ]} />
           <Tip>Multi-edit only changes fields you actively fill in. Blank fields in the multi-edit form are ignored.</Tip>
+          <Tip>Combine Multi-Edit with the filter functionality for powerful bulk updates. For example, filter by a specific city, country, or category first, then select all filtered results and multi-edit — this lets you make city-wide, country-wide, or industry-wide changes in seconds.</Tip>
         </Section>
 
         {/* 15. Import */}
@@ -415,6 +427,16 @@ const UserGuide = () => {
           <p className="text-sm text-muted-foreground mb-3">
             You can bulk-create or update locations by uploading an Excel (.xlsx) or CSV file.
           </p>
+          <SubSection title="Preparing Your File">
+            <p className="text-sm text-muted-foreground mb-2">
+              If your data is in <strong>Google Sheets</strong>, go to <strong>File → Download → Microsoft Excel (.xlsx)</strong> to save it as an Excel file first.
+            </p>
+            <p className="text-sm text-muted-foreground">
+              If your data is already in <strong>Excel</strong>, simply save your file as <code className="bg-muted px-1 py-0.5 rounded text-xs">.xlsx</code> or <code className="bg-muted px-1 py-0.5 rounded text-xs">.csv</code>. 
+              Make sure your data has column headers in the first row (e.g., "Store Code", "Business Name", "Address", etc.).
+            </p>
+          </SubSection>
+          <SubSection title="Import Steps">
           <StepList steps={[
             'Click the "Import" button (upload icon) in the action bar.',
             'Drag and drop your file, or click to browse.',
@@ -426,6 +448,7 @@ const UserGuide = () => {
             'A summary shows how many locations were created or updated.',
           ]} />
           <Tip>Use the same Store Codes as existing locations to update them instead of creating duplicates.</Tip>
+          </SubSection>
         </Section>
 
         {/* 16. Export */}
@@ -543,7 +566,7 @@ const UserGuide = () => {
             <li><strong>Use Multi-Edit for bulk changes</strong> — Instead of editing locations one by one, select multiple and apply changes at once.</li>
             <li><strong>Use Import for large updates</strong> — When updating many fields across many locations, export to Excel, make changes, and re-import using matching Store Codes.</li>
             <li><strong>Goldmine is private</strong> — Use the Goldmine field for internal notes. It is never exported or published.</li>
-            <li><strong>Map coordinates help accuracy</strong> — Click the map in the edit dialog to precisely set your location's GPS pin.</li>
+            <li><strong>Set coordinates easily</strong> — Use "Find from Address" to auto-detect GPS coordinates, or "Use Current Location" if you're at the store.</li>
             <li><strong>Description guidelines</strong> — The "From the Business" description should not contain URLs, phone numbers, or promotional offers per Google guidelines.</li>
           </ul>
         </Section>
