@@ -566,8 +566,9 @@ const UserGuide = () => {
             <li><strong>Use Multi-Edit for bulk changes</strong> — Instead of editing locations one by one, select multiple and apply changes at once.</li>
             <li><strong>Use Import for large updates</strong> — When updating many fields across many locations, export to Excel, make changes, and re-import using matching Store Codes.</li>
             <li><strong>Goldmine is private</strong> — Use the Goldmine field for internal notes. It is never exported or published.</li>
-            <li><strong>Set coordinates easily</strong> — Use "Find from Address" to auto-detect GPS coordinates, or "Use Current Location" if you're at the store.</li>
+            <li><strong>Set coordinates easily</strong> — In the edit dialog, use "Find from Address" to auto-detect GPS coordinates from your address fields, or "Use Current Location" if you're physically at the store. You can also type latitude and longitude manually.</li>
             <li><strong>Description guidelines</strong> — The "From the Business" description should not contain URLs, phone numbers, or promotional offers per Google guidelines.</li>
+            <li><strong>Google-optimized categories</strong> — Jasoner checks your data for suitability against Google Business Profile guidelines to optimize your listing. Categories are curated and pre-selected to best match your business type. If you have a new type of business among your locations that isn't covered by the available categories, contact your administrator to have it added.</li>
           </ul>
         </Section>
 
