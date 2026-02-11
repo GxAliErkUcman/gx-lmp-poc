@@ -269,6 +269,10 @@ useEffect(() => {
               </div>
             )}
             <UserSettingsDialog variant="outline" />
+            <Button onClick={() => window.open('/guide', '_blank')} variant="outline" className="shadow-modern text-xs sm:text-sm">
+              <HelpCircle className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Help</span>
+            </Button>
             <Button onClick={signOut} variant="outline" className="shadow-modern text-xs sm:text-sm">
               <span className="hidden sm:inline">Sign Out</span>
               <span className="sm:hidden">Exit</span>

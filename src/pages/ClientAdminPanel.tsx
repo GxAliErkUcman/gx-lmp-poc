@@ -314,6 +314,10 @@ const ClientAdminPanel = () => {
             </Button>
             <span className="text-sm text-muted-foreground">{user.email}</span>
             <UserSettingsDialog variant="outline" />
+            <Button onClick={() => window.open('/guide', '_blank')} variant="outline" className="shadow-modern">
+              <HelpCircle className="w-4 h-4 mr-2" />
+              Help
+            </Button>
             <Button onClick={signOut} variant="outline" className="shadow-modern">
               Sign Out
             </Button>
