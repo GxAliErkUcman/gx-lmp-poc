@@ -6,9 +6,10 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Search } from 'lucide-react';
+import { Search, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { useAdmin } from '@/hooks/use-admin';
 import type { Business } from '@/types/business';
 
 interface CreateUserDialogProps {
@@ -29,12 +30,23 @@ export default function CreateUserDialog({
   const [lastName, setLastName] = useState('');
   const [role, setRole] = useState<'client_admin' | 'user' | 'store_owner' | 'service_user'>('user');
   const [loading, setLoading] = useState(false);
+  const [setPasswordManually, setSetPasswordManually] = useState(false);
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const { hasRole } = useAdmin();
 
   // Store selection (only for owners)
   const [stores, setStores] = useState<Business[]>([]);
   const [storesLoading, setStoresLoading] = useState(false);
   const [selectedStoreIds, setSelectedStoreIds] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+
+  useEffect(() => {
+    if (open) {
+      hasRole('admin').then(setIsAdmin);
+    }
+  }, [open, hasRole]);
 
   useEffect(() => {
     if (!open) return;
@@ -77,6 +89,11 @@ export default function CreateUserDialog({
       return;
     }
 
+    if (setPasswordManually && password.length < 6) {
+      toast({ title: 'Error', description: 'Password must be at least 6 characters', variant: 'destructive' });
+      return;
+    }
+
     if (role === 'store_owner' && selectedStoreIds.length === 0) {
       toast({ title: 'Select stores', description: 'Pick at least one store for the owner.', variant: 'destructive' });
       return;
@@ -92,6 +109,7 @@ export default function CreateUserDialog({
           clientId,
           role,
           storeIds: role === 'store_owner' ? selectedStoreIds : [],
+          ...(setPasswordManually && password ? { password } : {}),
         },
       });
 
@@ -110,7 +128,9 @@ export default function CreateUserDialog({
 
       toast({
         title: 'Success',
-        description: 'User invited successfully. They will receive an email to set their password.',
+        description: setPasswordManually
+          ? 'User created successfully with the specified password.'
+          : 'User invited successfully. They will receive an email to set their password.',
       });
 
       handleClose();
@@ -130,6 +150,9 @@ export default function CreateUserDialog({
     setRole('user');
     setSelectedStoreIds([]);
     setSearchQuery('');
+    setSetPasswordManually(false);
+    setPassword('');
+    setShowPassword(false);
     onOpenChange(false);
   };
 
@@ -186,6 +209,49 @@ export default function CreateUserDialog({
                 : 'Store Owners can only access stores assigned to them'}
             </p>
           </div>
+
+          {isAdmin && (
+            <div className="space-y-3 rounded-lg border border-dashed p-3">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="setPassword"
+                  checked={setPasswordManually}
+                  onCheckedChange={(checked) => {
+                    setSetPasswordManually(!!checked);
+                    if (!checked) { setPassword(''); setShowPassword(false); }
+                  }}
+                />
+                <Label htmlFor="setPassword" className="text-sm cursor-pointer">
+                  Set password manually (skip invite email)
+                </Label>
+              </div>
+              {setPasswordManually && (
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password *</Label>
+                  <div className="relative">
+                    <Input
+                      id="password"
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="Min. 6 characters"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    The user will be created with this password and no invite email will be sent.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
 
           {role === 'store_owner' && (
             <div className="space-y-3">
@@ -248,7 +314,7 @@ export default function CreateUserDialog({
               Cancel
             </Button>
             <Button onClick={handleSubmit} disabled={loading}>
-              {loading ? 'Creating...' : 'Create & Invite User'}
+              {loading ? 'Creating...' : setPasswordManually ? 'Create User' : 'Create & Invite User'}
             </Button>
           </div>
         </div>
