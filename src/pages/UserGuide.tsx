@@ -419,6 +419,7 @@ const UserGuide = () => {
             'Click "Apply Changes" to update all selected locations.',
           ]} />
           <Tip>Multi-edit only changes fields you actively fill in. Blank fields in the multi-edit form are ignored.</Tip>
+          <Tip>Combine Multi-Edit with the filter functionality for powerful bulk updates. For example, filter by a specific city, country, or category first, then select all filtered results and multi-edit — this lets you make city-wide, country-wide, or industry-wide changes in seconds.</Tip>
         </Section>
 
         {/* 15. Import */}
