@@ -26,6 +26,8 @@ import { UserReassignDialog } from '@/components/UserReassignDialog';
 import { AllClientsView } from '@/components/AllClientsView';
 import TranslationEditor from '@/components/TranslationEditor';
 import { useTranslation } from 'react-i18next';
+import UserCountryAccessDialog from '@/components/UserCountryAccessDialog';
+import StoreOwnerAssignmentDialog from '@/components/StoreOwnerAssignmentDialog';
 
 
 interface Client {
