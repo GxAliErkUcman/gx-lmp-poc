@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Users, MapPin, Clock, Download, UserPlus, Plus, Trash2, Settings, Mail, RefreshCw, Edit, Handshake, Shield, Eye, EyeOff, Copy, Wrench, KeyRound, Search } from 'lucide-react';
+import { Loader2, Users, MapPin, Clock, Download, UserPlus, Plus, Trash2, Settings, Mail, RefreshCw, Edit, Handshake, Shield, Eye, EyeOff, Copy, Wrench, KeyRound, Search, Globe, Store } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -26,6 +26,8 @@ import { UserReassignDialog } from '@/components/UserReassignDialog';
 import { AllClientsView } from '@/components/AllClientsView';
 import TranslationEditor from '@/components/TranslationEditor';
 import { useTranslation } from 'react-i18next';
+import UserCountryAccessDialog from '@/components/UserCountryAccessDialog';
+import StoreOwnerAssignmentDialog from '@/components/StoreOwnerAssignmentDialog';
 
 
 interface Client {
@@ -97,6 +99,10 @@ const AdminPanel = () => {
   const [reassignDialogOpen, setReassignDialogOpen] = useState(false);
   const [selectedUserForReassign, setSelectedUserForReassign] = useState<User | null>(null);
   const [userSearchTerm, setUserSearchTerm] = useState('');
+  const [countryAccessDialogOpen, setCountryAccessDialogOpen] = useState(false);
+  const [selectedUserForCountry, setSelectedUserForCountry] = useState<User | null>(null);
+  const [storeAccessDialogOpen, setStoreAccessDialogOpen] = useState(false);
+  const [selectedUserForStoreAccess, setSelectedUserForStoreAccess] = useState<User | null>(null);
   const [clientFilter, setClientFilter] = useState<string>('all');
   
   const [newUser, setNewUser] = useState({
@@ -1560,10 +1566,33 @@ const AdminPanel = () => {
                             <Button
                               size="sm"
                               variant="outline"
+                              onClick={() => {
+                                setSelectedUserForCountry(user);
+                                setCountryAccessDialogOpen(true);
+                              }}
+                            >
+                              <Globe className="w-4 h-4" />
+                              Country
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
                               onClick={() => handleSendPasswordRecovery(user.email)}
                             >
                               <Mail className="w-4 h-4" />
                               Recovery
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              disabled={!user.roles?.includes('store_owner')}
+                              onClick={() => {
+                                setSelectedUserForStoreAccess(user);
+                                setStoreAccessDialogOpen(true);
+                              }}
+                            >
+                              <Store className="w-4 h-4" />
+                              Stores
                             </Button>
                             <Button
                               size="sm"
@@ -1657,7 +1686,33 @@ const AdminPanel = () => {
         />
       )}
 
-      {/* User Management Dialog */}
+      {/* Country Access Dialog */}
+      {selectedUserForCountry && (
+        <UserCountryAccessDialog
+          open={countryAccessDialogOpen}
+          onOpenChange={setCountryAccessDialogOpen}
+          userId={selectedUserForCountry.user_id}
+          userName={`${selectedUserForCountry.first_name} ${selectedUserForCountry.last_name}`}
+          clientId={selectedUserForCountry.client_id}
+          onUpdated={() => {
+            fetchAllUsers(true);
+          }}
+        />
+      )}
+
+      {/* Store Owner Assignment Dialog */}
+      {selectedUserForStoreAccess && selectedUserForStoreAccess.client_id && (
+        <StoreOwnerAssignmentDialog
+          open={storeAccessDialogOpen}
+          onOpenChange={setStoreAccessDialogOpen}
+          userId={selectedUserForStoreAccess.user_id}
+          clientId={selectedUserForStoreAccess.client_id}
+          onAssigned={() => {
+            fetchAllUsers(true);
+          }}
+        />
+      )}
+
         <Dialog open={isUserManagementDialogOpen} onOpenChange={setIsUserManagementDialogOpen}>
           <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
             <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
