@@ -196,7 +196,21 @@ const ClientDashboard = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      const businessList = (data || []) as Business[];
+      let businessList = (data || []) as Business[];
+
+      // Apply country restrictions if user has them
+      if (user) {
+        const { data: countryAccess } = await supabase
+          .from('user_country_access')
+          .select('country_code')
+          .eq('user_id', user.id);
+        
+        if (countryAccess && countryAccess.length > 0) {
+          const allowedCountries = countryAccess.map(ca => ca.country_code);
+          businessList = businessList.filter(b => b.country && allowedCountries.includes(b.country));
+        }
+      }
+
       setBusinesses(businessList);
       
       const logoUrl = businessList.length > 0 ? businessList[0].logoPhoto : null;
