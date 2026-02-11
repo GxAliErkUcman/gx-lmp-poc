@@ -1,6 +1,8 @@
+import { useState, useEffect, useRef } from 'react';
 import jasonerLogo from '@/assets/jasoner-horizontal-logo.png';
 import { Button } from '@/components/ui/button';
-import { Printer } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Printer, Search, X } from 'lucide-react';
 
 const Section = ({ number, title, children }: { number: string; title: string; children: React.ReactNode }) => (
   <section className="mb-10 break-inside-avoid-page">
