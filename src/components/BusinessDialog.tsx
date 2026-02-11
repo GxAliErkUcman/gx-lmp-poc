@@ -797,35 +797,6 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
                 <Input {...register('state')} id="state" className="mt-1" />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                <div>
-                  <Label htmlFor="latitude" className="text-sm">{tFields('latitude')}</Label>
-                  <Input 
-                    {...register('latitude', { valueAsNumber: true })}
-                    id="latitude" 
-                    type="number" 
-                    step="any"
-                    placeholder="e.g., 40.7128"
-                  />
-                  {errors.latitude && (
-                    <p className="text-sm text-destructive mt-1">{errors.latitude.message}</p>
-                  )}
-                </div>
-                <div>
-                  <Label htmlFor="longitude">{tFields('longitude')}</Label>
-                  <Input 
-                    {...register('longitude', { valueAsNumber: true })} 
-                    id="longitude" 
-                    type="number" 
-                    step="any"
-                    placeholder="e.g., -74.0060"
-                  />
-                  {errors.longitude && (
-                    <p className="text-sm text-destructive mt-1">{errors.longitude.message}</p>
-                  )}
-                </div>
-              </div>
-
               <LocationMap 
                 latitude={watch('latitude')} 
                 longitude={watch('longitude')}
@@ -833,6 +804,12 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
                   setValue('latitude', lat);
                   setValue('longitude', lng);
                 }}
+                address=""
+                addressLine1={watch('addressLine1')}
+                city={watch('city')}
+                state={watch('state')}
+                country={watch('country')}
+                postalCode={watch('postalCode')}
               />
             </CardContent>
           </Card>

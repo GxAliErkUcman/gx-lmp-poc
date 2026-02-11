@@ -294,113 +294,83 @@ const LocationMap = ({ latitude, longitude, onLocationChange, address, addressLi
     }
   };
 
+  const handleLatChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setMapLatitude(val);
+    const lat = parseFloat(val);
+    const lng = parseFloat(mapLongitude);
+    if (!isNaN(lat) && lat >= -90 && lat <= 90 && !isNaN(lng) && lng >= -180 && lng <= 180) {
+      onLocationChange(lat, lng);
+    } else if (val.trim() === '' && mapLongitude.trim() === '') {
+      onLocationChange(null, null);
+    }
+  };
+
+  const handleLngChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setMapLongitude(val);
+    const lat = parseFloat(mapLatitude);
+    const lng = parseFloat(val);
+    if (!isNaN(lat) && lat >= -90 && lat <= 90 && !isNaN(lng) && lng >= -180 && lng <= 180) {
+      onLocationChange(lat, lng);
+    } else if (val.trim() === '' && mapLatitude.trim() === '') {
+      onLocationChange(null, null);
+    }
+  };
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <MapPin className="w-5 h-5" />
-          {t('sections.locationCoordinates')}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="latitude">{tFields('latitude')}</Label>
-            <Input
-              id="latitude"
-              type="number"
-              step="any"
-              value={mapLatitude}
-              onChange={(e) => setMapLatitude(e.target.value)}
-              placeholder="e.g., 40.7128"
-            />
-          </div>
-          <div>
-            <Label htmlFor="longitude">{tFields('longitude')}</Label>
-            <Input
-              id="longitude"
-              type="number"
-              step="any"
-              value={mapLongitude}
-              onChange={(e) => setMapLongitude(e.target.value)}
-              placeholder="e.g., -74.0060"
-            />
-          </div>
+    <div className="space-y-3">
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="map-latitude" className="text-sm">{tFields('latitude')}</Label>
+          <Input
+            id="map-latitude"
+            type="number"
+            step="any"
+            value={mapLatitude}
+            onChange={handleLatChange}
+            placeholder="e.g., 40.7128"
+            className="mt-1"
+          />
         </div>
-
-        <div className="flex flex-wrap gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={getCurrentLocation}
-            disabled={loading}
-          >
-            <Navigation className="w-4 h-4 mr-2" />
-            {loading ? t('actions.gettingLocation') : t('actions.useCurrentLocation')}
-          </Button>
-          
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={geocodeAddress}
-            disabled={loading || (!address && !addressLine1)}
-          >
-            <MapPin className="w-4 h-4 mr-2" />
-            {loading ? t('actions.geocoding') : t('actions.findFromAddress')}
-          </Button>
-          
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={updateCoordinates}
-          >
-            {t('actions.updateCoordinates')}
-          </Button>
-          
-          {mapLatitude && mapLongitude && (
-            <>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={openInMaps}
-              >
-                {t('actions.copyCoordinates')}
-              </Button>
-
-              <Button asChild variant="outline" size="sm">
-                <a
-                  href={`https://www.bing.com/maps?cp=${mapLatitude}~${mapLongitude}&lvl=18&sp=point.${mapLatitude}_${mapLongitude}_Location`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <MapPin className="w-4 h-4 mr-2" />
-                  {t('actions.openInBingMaps')}
-                </a>
-              </Button>
-            </>
-          )}
+        <div>
+          <Label htmlFor="map-longitude" className="text-sm">{tFields('longitude')}</Label>
+          <Input
+            id="map-longitude"
+            type="number"
+            step="any"
+            value={mapLongitude}
+            onChange={handleLngChange}
+            placeholder="e.g., -74.0060"
+            className="mt-1"
+          />
         </div>
+      </div>
 
-        {latitude && longitude && (
-          <div className="p-3 bg-muted rounded-lg">
-            <p className="text-sm font-medium">{t('location.currentCoordinates')}:</p>
-            <p className="text-sm text-muted-foreground">
-              {latitude.toFixed(6)}, {longitude.toFixed(6)}
-            </p>
-          </div>
-        )}
-
-        <div className="text-xs text-muted-foreground space-y-1">
-          <p>• {t('location.useCurrentLocationHint')}</p>
-          <p>• {t('location.findFromAddressHint')}</p>
-          <p>• {t('location.manualEntryHint')}</p>
-        </div>
-      </CardContent>
-    </Card>
+      <div className="flex gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={getCurrentLocation}
+          disabled={loading}
+        >
+          <Navigation className="w-4 h-4 mr-2" />
+          {loading ? t('actions.gettingLocation') : t('actions.useCurrentLocation')}
+        </Button>
+        
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={geocodeAddress}
+          disabled={loading || (!address && !addressLine1)}
+        >
+          <MapPin className="w-4 h-4 mr-2" />
+          {loading ? t('actions.geocoding') : t('actions.findFromAddress')}
+        </Button>
+      </div>
+    </div>
   );
 };
 
