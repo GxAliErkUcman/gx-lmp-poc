@@ -59,6 +59,89 @@ const FieldTable = ({ fields }: { fields: { name: string; description: string; r
 );
 
 const UserGuide = () => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!searchQuery || !contentRef.current) {
+      // Remove existing highlights
+      const existing = contentRef.current?.querySelectorAll('mark[data-search-highlight]');
+      existing?.forEach(el => {
+        const parent = el.parentNode;
+        if (parent) {
+          parent.replaceChild(document.createTextNode(el.textContent || ''), el);
+          parent.normalize();
+        }
+      });
+      return;
+    }
+
+    // Remove old highlights first
+    const existing = contentRef.current.querySelectorAll('mark[data-search-highlight]');
+    existing.forEach(el => {
+      const parent = el.parentNode;
+      if (parent) {
+        parent.replaceChild(document.createTextNode(el.textContent || ''), el);
+        parent.normalize();
+      }
+    });
+
+    // Highlight matches
+    const walker = document.createTreeWalker(contentRef.current, NodeFilter.SHOW_TEXT);
+    const matches: { node: Text; index: number }[] = [];
+    const query = searchQuery.toLowerCase();
+    
+    while (walker.nextNode()) {
+      const node = walker.currentNode as Text;
+      const idx = node.textContent?.toLowerCase().indexOf(query) ?? -1;
+      if (idx !== -1) {
+        matches.push({ node, index: idx });
+      }
+    }
+
+    if (matches.length > 0) {
+      // Highlight first match and scroll to it
+      const { node, index } = matches[0];
+      const range = document.createRange();
+      range.setStart(node, index);
+      range.setEnd(node, index + searchQuery.length);
+      const mark = document.createElement('mark');
+      mark.setAttribute('data-search-highlight', 'true');
+      mark.style.backgroundColor = 'hsl(var(--primary) / 0.3)';
+      mark.style.padding = '1px 2px';
+      mark.style.borderRadius = '2px';
+      range.surroundContents(mark);
+      mark.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+      // Highlight remaining matches
+      for (let i = 1; i < matches.length; i++) {
+        try {
+          const w2 = document.createTreeWalker(contentRef.current, NodeFilter.SHOW_TEXT);
+          let count = 0;
+          while (w2.nextNode()) {
+            const n = w2.currentNode as Text;
+            const idx = n.textContent?.toLowerCase().indexOf(query) ?? -1;
+            if (idx !== -1) {
+              count++;
+              if (count > i - 1) {
+                const r = document.createRange();
+                r.setStart(n, idx);
+                r.setEnd(n, idx + searchQuery.length);
+                const m = document.createElement('mark');
+                m.setAttribute('data-search-highlight', 'true');
+                m.style.backgroundColor = 'hsl(var(--primary) / 0.15)';
+                m.style.padding = '1px 2px';
+                m.style.borderRadius = '2px';
+                r.surroundContents(m);
+                break;
+              }
+            }
+          }
+        } catch {}
+      }
+    }
+  }, [searchQuery]);
+
   return (
     <div className="min-h-screen bg-background font-montserrat">
       {/* Print button - hidden in print */}
