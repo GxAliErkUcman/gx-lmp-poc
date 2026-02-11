@@ -92,10 +92,16 @@ const handler = async (req: Request): Promise<Response> => {
     // If password provided (admin-only), require the caller to be an admin
     if (password) {
       if (!hasAdminRole) {
-        throw new Error('Only admins can set passwords directly');
+        return new Response(
+          JSON.stringify({ success: false, error: 'Only admins can set passwords directly' }),
+          { status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+        );
       }
       if (password.length < 6) {
-        throw new Error('Password must be at least 6 characters');
+        return new Response(
+          JSON.stringify({ success: false, error: 'Password must be at least 6 characters' }),
+          { status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+        );
       }
     }
 
