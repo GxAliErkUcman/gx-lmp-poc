@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Plus, Upload, Edit, Trash2, Grid, Table2, Settings } from 'lucide-react';
+import { Plus, Upload, Edit, Trash2, Grid, Table2, Settings, HelpCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 import { toast } from '@/hooks/use-toast';
