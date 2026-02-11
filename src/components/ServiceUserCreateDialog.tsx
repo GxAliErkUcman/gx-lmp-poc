@@ -6,9 +6,10 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Search, Lock } from 'lucide-react';
+import { Search, Lock, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { useAdmin } from '@/hooks/use-admin';
 import type { Business } from '@/types/business';
 
 interface ServiceUserCreateDialogProps {
@@ -31,12 +32,20 @@ export default function ServiceUserCreateDialog({
   const [lastName, setLastName] = useState('');
   const [role, setRole] = useState<'client_admin' | 'user' | 'store_owner' | 'service_user'>('user');
   const [loading, setLoading] = useState(false);
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const { hasRole } = useAdmin();
 
   // Store selection (only for owners)
   const [stores, setStores] = useState<Business[]>([]);
   const [storesLoading, setStoresLoading] = useState(false);
   const [selectedStoreIds, setSelectedStoreIds] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+
+  useEffect(() => {
+    if (open) hasRole('admin').then(setIsAdmin);
+  }, [open, hasRole]);
 
   useEffect(() => {
     if (!open) return;
@@ -84,6 +93,11 @@ export default function ServiceUserCreateDialog({
       return;
     }
 
+    if (password && password.length < 6) {
+      toast({ title: 'Error', description: 'Password must be at least 6 characters', variant: 'destructive' });
+      return;
+    }
+
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('create-user', {
@@ -94,6 +108,7 @@ export default function ServiceUserCreateDialog({
           clientId,
           role,
           storeIds: role === 'store_owner' ? selectedStoreIds : [],
+          ...(password ? { password } : {}),
         },
       });
 
@@ -112,7 +127,9 @@ export default function ServiceUserCreateDialog({
 
       toast({
         title: 'Success',
-        description: 'User invited successfully. They will receive an email to set their password.',
+        description: password
+          ? 'User created successfully with the specified password.'
+          : 'User invited successfully. They will receive an email to set their password.',
       });
 
       handleClose();
@@ -132,6 +149,8 @@ export default function ServiceUserCreateDialog({
     setRole('user');
     setSelectedStoreIds([]);
     setSearchQuery('');
+    setPassword('');
+    setShowPassword(false);
     onOpenChange(false);
   };
 
@@ -262,12 +281,43 @@ export default function ServiceUserCreateDialog({
             </div>
           )}
 
+          {isAdmin && (
+            <div className="space-y-2">
+              <Label htmlFor="svc-password">Password (optional)</Label>
+              <div className="relative">
+                <Input
+                  id="svc-password"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Leave empty to send invite email"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                If set, the user will be created with this password and no invite email will be sent. Minimum 6 characters.
+              </p>
+              {password && password.length > 0 && password.length < 6 && (
+                <p className="text-xs text-destructive">
+                  Password must be at least 6 characters long.
+                </p>
+              )}
+            </div>
+          )}
+
           <div className="flex justify-end gap-2 pt-4 border-t">
             <Button variant="outline" onClick={handleClose} disabled={loading}>
               Cancel
             </Button>
             <Button onClick={handleSubmit} disabled={loading}>
-              {loading ? 'Creating...' : 'Create & Invite User'}
+              {loading ? 'Creating...' : password ? 'Create User' : 'Create & Invite User'}
             </Button>
           </div>
         </div>
