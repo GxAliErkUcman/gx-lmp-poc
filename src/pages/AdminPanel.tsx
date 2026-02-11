@@ -410,6 +410,15 @@ const AdminPanel = () => {
       return;
     }
 
+    if (newUser.password && newUser.password.length < 6) {
+      toast({
+        title: "Invalid Password",
+        description: "Password must be at least 6 characters long.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
       setCreateUserLoading(true);
 
@@ -1062,8 +1071,13 @@ const AdminPanel = () => {
                   </button>
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  If set, the user will be created with this password and no invite email will be sent.
+                  If set, the user will be created with this password and no invite email will be sent. Minimum 6 characters.
                 </p>
+                {newUser.password && newUser.password.length > 0 && newUser.password.length < 6 && (
+                  <p className="text-xs text-destructive mt-1">
+                    Password must be at least 6 characters long.
+                  </p>
+                )}
               </div>
               <Button
                 onClick={handleCreateUser}
