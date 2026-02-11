@@ -145,7 +145,21 @@ const UserGuide = () => {
   return (
     <div className="min-h-screen bg-background font-montserrat">
       {/* Print button - hidden in print */}
-      <div className="fixed top-4 right-4 z-50 print:hidden flex gap-2">
+      <div className="fixed top-4 right-4 z-50 print:hidden flex gap-2 items-center">
+        <div className="relative">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Search guide..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9 pr-8 w-48 h-9 shadow-lg bg-background"
+          />
+          {searchQuery && (
+            <button onClick={() => setSearchQuery('')} className="absolute right-2 top-1/2 -translate-y-1/2">
+              <X className="w-4 h-4 text-muted-foreground hover:text-foreground" />
+            </button>
+          )}
+        </div>
         <Button onClick={() => window.print()} className="shadow-lg">
           <Printer className="w-4 h-4 mr-2" />
           Save as PDF
@@ -155,7 +169,7 @@ const UserGuide = () => {
         </Button>
       </div>
 
-      <div className="max-w-4xl mx-auto px-6 py-12 print:px-0 print:py-0">
+      <div ref={contentRef} className="max-w-4xl mx-auto px-6 py-12 print:px-0 print:py-0">
         {/* Cover / Title */}
         <div className="text-center mb-16 print:mb-10 break-after-page">
           <img src={jasonerLogo} alt="Jasoner" className="h-40 mx-auto mb-8" />
