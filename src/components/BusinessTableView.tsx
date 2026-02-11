@@ -429,7 +429,7 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
                 <SelectItem value="all">All countries</SelectItem>
                 {uniqueCountries.map(country => (
                   <SelectItem key={country} value={country}>
-                    {country}
+                    {formatCountryDisplay(country)}
                   </SelectItem>
                 ))}
               </SelectContent>
