@@ -43,6 +43,11 @@ export default function CreateUserDialog({
   const [selectedStoreIds, setSelectedStoreIds] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Country restriction
+  const [enableCountryRestriction, setEnableCountryRestriction] = useState(false);
+  const [selectedCountryCodes, setSelectedCountryCodes] = useState<string[]>([]);
+  const [availableCountries, setAvailableCountries] = useState<string[]>([]);
+
   useEffect(() => {
     if (open) {
       hasRole('admin').then(setIsAdmin);
