@@ -53,21 +53,89 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// Validation logic (simplified version from validation.ts)
+// Validation patterns - MUST match frontend src/lib/validation.ts exactly
+const dayOpeningHoursPattern = /^$|x|^((([0-9]{1,2}):([0-9]{2}) ?- ?([0-9]{1,2}):([0-9]{2}), ?)*(([0-9]{1,2}):([0-9]{2}) ?- ?([0-9]{1,2}):([0-9]{2})))$/;
+const singleUrlPattern = /^$|^(https?:\/\/)?(www\.)?[-A-ÿ0-9ZŠĐČĆŽzšđčćž@:%._\+~#=]{1,256}\.[A-ÿ0-9ZŠĐČĆŽzšđčćž()]{1,6}\b(?:[-A-ÿ0-9ZŠĐČĆŽzšđčćž()@:%_\+.~#?&\/=]*(\s)*)$/;
+const multipleUrlsPattern = /^$|^(https?:\/\/)?(www\.)?[-A-ÿ0-9ZŠĐČĆŽzšđčćž@:%._\+~#=]{1,256}\.[A-ÿ0-9ZŠĐČĆŽzšđčćž()]{1,6}\b(?:[-A-ÿ0-9ZŠĐČĆŽzšđčćž()@:%_\+.~#?&\/=]*)((\s)*,(\s)*(https?:\/\/)?(www\.)?[-A-ÿ0-9ZŠĐČĆŽzšđčćž@:%._\+~#=]{1,256}\.[A-ÿ0-9ZŠĐČĆŽzšđčćž()]{1,6}\b(?:[-A-ÿ0-9ZŠĐČĆŽzšđčćž()@:%_\+.~#?&\/=]*)){0,}$/;
+const phonePattern = /^\(?[+]?[0-9a-zA-Z  ()./–-]*$/;
+const additionalPhonesPattern = /^(\(?[+]?[0-9a-zA-Z  ()./–-]*, ?)*(\(?[+]?[0-9a-zA-Z  ()./–-]*)$/;
+const specialHoursPattern = /^(([0-9]{4}-[0-9]{2}-[0-9]{2}: ?(([0-9]{1,2}:[0-9]{2} ?- ?[0-9]{1,2}:[0-9]{2})|x), ?)*([0-9]{4}-[0-9]{2}-[0-9]{2}: ?(([0-9]{1,2}:[0-9]{2} ?- ?[0-9]{1,2}:[0-9]{2})|x))|x|)$/;
+
+// Validation logic - mirrors frontend src/lib/validation.ts exactly
 function validateBusiness(business: Business): boolean {
-  // Check required fields
-  if (!business.storeCode || !business.businessName || !business.addressLine1 || 
-      !business.country || !business.primaryCategory) {
-    return false;
+  // Required fields
+  if (!business.storeCode || business.storeCode.length > 64) return false;
+  if (!business.businessName || business.businessName.length > 300) return false;
+  if (!business.addressLine1 || business.addressLine1.length > 80 || !/^.*[^ ].*$/.test(business.addressLine1)) return false;
+  if (!business.country || business.country.length < 2) return false;
+  if (!business.primaryCategory || business.primaryCategory.length < 2) return false;
+
+  // Auto-generated store code check
+  if (/^STORE\d+$/.test(business.storeCode)) return false;
+
+  // Optional address fields (max 80)
+  const addressFields: (keyof Business)[] = ['addressLine2', 'addressLine3', 'addressLine4', 'addressLine5', 'postalCode', 'district', 'city', 'state'];
+  for (const field of addressFields) {
+    const val = business[field] as string | undefined;
+    if (val && String(val).length > 80) return false;
   }
 
-  // Validate URLs if present
-  const urlRegex = /^https?:\/\/.+/;
-  if (business.website && !urlRegex.test(business.website)) return false;
-  if (business.appointmentURL && !urlRegex.test(business.appointmentURL)) return false;
-  if (business.menuURL && !urlRegex.test(business.menuURL)) return false;
-  if (business.reservationsURL && !urlRegex.test(business.reservationsURL)) return false;
-  if (business.orderAheadURL && !urlRegex.test(business.orderAheadURL)) return false;
+  // Coordinates
+  if (business.latitude != null && (business.latitude < -90 || business.latitude > 90)) return false;
+  if (business.longitude != null && (business.longitude < -180 || business.longitude > 180)) return false;
+
+  // Additional categories
+  if (business.additionalCategories && !/^(([^,])*,){0,9}(([^,])*)$/.test(business.additionalCategories)) return false;
+
+  // Single URL fields
+  if (business.website && (business.website.length > 2083 || !singleUrlPattern.test(business.website))) return false;
+  if (business.menuURL && (String(business.menuURL).length > 2083 || !singleUrlPattern.test(String(business.menuURL)))) return false;
+  if (business.logoPhoto && !singleUrlPattern.test(business.logoPhoto)) return false;
+  if (business.coverPhoto && !singleUrlPattern.test(business.coverPhoto)) return false;
+
+  // Multiple URL fields
+  if (business.otherPhotos && !multipleUrlsPattern.test(business.otherPhotos)) return false;
+  if (business.appointmentURL && !multipleUrlsPattern.test(business.appointmentURL)) return false;
+  if (business.reservationsURL && !multipleUrlsPattern.test(business.reservationsURL)) return false;
+  if (business.orderAheadURL && !multipleUrlsPattern.test(business.orderAheadURL)) return false;
+
+  // Phone
+  if (business.primaryPhone && !phonePattern.test(business.primaryPhone)) return false;
+  if (business.additionalPhones && !additionalPhonesPattern.test(business.additionalPhones)) return false;
+
+  // Adwords
+  if (business.adwords && !/^[+]?[0-9a-zA-Z  ()./–-]*$/.test(business.adwords)) return false;
+
+  // Opening date
+  if (business.openingDate && !/^([0-9]{4})-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])$/.test(business.openingDate)) return false;
+
+  // From the business (description) - no URLs allowed
+  if (business.fromTheBusiness) {
+    if (business.fromTheBusiness.length > 750) return false;
+    const urlInDesc = /(https?:\/\/|www\.)[^\s]+/i;
+    if (urlInDesc.test(business.fromTheBusiness)) return false;
+  }
+
+  // Labels
+  if (business.labels && !/^(?:[^,]{1,50},){0,9}[^,]{1,50}$|^$/.test(business.labels)) return false;
+
+  // Opening hours
+  const hourFields: (keyof Business)[] = ['mondayHours', 'tuesdayHours', 'wednesdayHours', 'thursdayHours', 'fridayHours', 'saturdayHours', 'sundayHours'];
+  for (const field of hourFields) {
+    const val = business[field] as string | undefined;
+    if (val && !dayOpeningHoursPattern.test(val)) return false;
+  }
+
+  // Special hours
+  if (business.specialHours && !specialHoursPattern.test(business.specialHours)) return false;
+
+  // Social media URLs
+  if (business.socialMediaUrls && Array.isArray(business.socialMediaUrls)) {
+    const socialUrlPattern = /^$|^(https?:\/\/)?(www\.)?(facebook|instagram|linkedin|pinterest|tiktok|twitter|x|youtube)\.com\b(?:[-A-ÿ0-9ZŠĐČĆŽzšđčćž()@:%_\+.~#?&\/=]*(\s)*)$/;
+    for (const social of business.socialMediaUrls) {
+      if (social.url && !socialUrlPattern.test(social.url)) return false;
+    }
+  }
 
   return true;
 }

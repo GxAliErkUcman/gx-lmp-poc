@@ -148,12 +148,16 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log(`Found ${businesses?.length || 0} active businesses for client ${clientId}`);
 
-    // Validate businesses using the same logic as automatic export
+    // Validate businesses using the same logic as automatic export and frontend
     const validBusinesses = businesses?.filter(business => {
-      return business.businessName && 
-             business.addressLine1 && 
-             business.country && 
-             business.primaryCategory;
+      // Required fields
+      if (!business.storeCode || !business.businessName || !business.addressLine1 || 
+          !business.country || !business.primaryCategory) return false;
+      // Auto-generated store code check
+      if (/^STORE\d+$/.test(business.storeCode)) return false;
+      // All other validation matches frontend - but manual export only checks essentials
+      // to stay consistent with the automated generate-json-export
+      return true;
     }) || [];
 
     console.log(`${validBusinesses.length} businesses passed validation`);
