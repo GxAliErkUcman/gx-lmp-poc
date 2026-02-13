@@ -287,6 +287,50 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
     return "Edit this location to fix this issue.";
   };
 
+  // Map field keys to human-readable names
+  const getFieldDisplayName = (field: string): string => {
+    const fieldNames: Record<string, string> = {
+      storeCode: 'Store Code',
+      businessName: 'Business Name',
+      addressLine1: 'Street Address',
+      addressLine2: 'Address Line 2',
+      country: 'Country',
+      primaryCategory: 'Primary Category',
+      additionalCategories: 'Additional Categories',
+      website: 'Website',
+      primaryPhone: 'Primary Phone',
+      additionalPhones: 'Additional Phones',
+      adwords: 'AdWords Phone',
+      openingDate: 'Opening Date',
+      fromTheBusiness: 'From the Business',
+      labels: 'Labels',
+      latitude: 'Latitude',
+      longitude: 'Longitude',
+      mondayHours: 'Monday Hours',
+      tuesdayHours: 'Tuesday Hours',
+      wednesdayHours: 'Wednesday Hours',
+      thursdayHours: 'Thursday Hours',
+      fridayHours: 'Friday Hours',
+      saturdayHours: 'Saturday Hours',
+      sundayHours: 'Sunday Hours',
+      specialHours: 'Special Hours',
+      moreHours: 'More Hours',
+      logoPhoto: 'Logo Photo',
+      coverPhoto: 'Cover Photo',
+      otherPhotos: 'Other Photos',
+      appointmentURL: 'Appointment URL',
+      menuURL: 'Menu URL',
+      reservationsURL: 'Reservations URL',
+      orderAheadURL: 'Order Ahead URL',
+      customServices: 'Custom Services',
+      socialMediaUrls: 'Social Media URLs',
+      temporarilyClosed: 'Temporarily Closed',
+      status: 'Status',
+      async: 'Async Status',
+    };
+    return fieldNames[field] || field;
+  };
+
   // Render validation badge with clickable dialog
   const renderValidationBadge = (business: Business) => {
     if (!showValidationErrors) return null;
@@ -318,23 +362,22 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
               <AlertCircle className="w-5 h-5" />
               {errorCount === 1 ? 'Validation Issue' : `Validation Issues (${errorCount})`}
             </DialogTitle>
+            <p className="text-sm text-muted-foreground">Store Code: {business.storeCode}</p>
           </DialogHeader>
           <ScrollArea className="max-h-[60vh]">
             <div className="space-y-3 pr-4">
               {errors.map((error, idx) => (
                 <div key={idx} className="p-3 bg-destructive/10 rounded-md space-y-2">
                   <div>
-                    <p className="font-medium text-destructive">
-                      {getUserFriendlyErrorMessage(error, business)}
-                    </p>
-                    <p className="text-sm text-muted-foreground">{error.message}</p>
+                    <p className="font-semibold text-foreground">{getFieldDisplayName(error.field)}</p>
+                    <p className="text-sm text-destructive">{error.message}</p>
                   </div>
                   <div className="p-2 bg-muted rounded text-sm">
                     <span className="font-medium flex items-center gap-1.5 mb-1">
                       <Info className="w-3.5 h-3.5" />
                       How to fix:
                     </span>
-                    <span className="text-muted-foreground">{getActionItems(error, business)}</span>
+                    <span className="text-muted-foreground">{error.suggestion || getActionItems(error, business)}</span>
                   </div>
                 </div>
               ))}

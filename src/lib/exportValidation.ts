@@ -5,6 +5,21 @@ import type { Business } from '@/types/business';
 const REQUIRED_FIELDS = ['storeCode', 'businessName', 'addressLine1', 'country', 'primaryCategory'];
 
 /**
+ * Safely parse a JSON field that might be stored as a string inside jsonb.
+ */
+function parseJsonField(value: any): any {
+  if (value === null || value === undefined) return null;
+  if (typeof value === 'string') {
+    try {
+      return JSON.parse(value);
+    } catch {
+      return value; // Return as-is, validation will catch the type error
+    }
+  }
+  return value;
+}
+
+/**
  * Convert business to the same format used by validation
  */
 function convertForValidation(business: Business) {
@@ -40,7 +55,7 @@ function convertForValidation(business: Business) {
     saturdayHours: business.saturdayHours || null,
     sundayHours: business.sundayHours || null,
     specialHours: business.specialHours || null,
-    moreHours: business.moreHours || null,
+    moreHours: parseJsonField(business.moreHours) || null,
     temporarilyClosed: business.temporarilyClosed || false,
     logoPhoto: business.logoPhoto || null,
     coverPhoto: business.coverPhoto || null,
@@ -49,8 +64,8 @@ function convertForValidation(business: Business) {
     menuURL: business.menuURL || null,
     reservationsURL: business.reservationsURL || null,
     orderAheadURL: business.orderAheadURL || null,
-    customServices: business.customServices || null,
-    socialMediaUrls: business.socialMediaUrls || null,
+    customServices: parseJsonField(business.customServices) || null,
+    socialMediaUrls: parseJsonField(business.socialMediaUrls) || null,
   };
 }
 
