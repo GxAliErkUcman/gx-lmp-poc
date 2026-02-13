@@ -55,12 +55,70 @@ function convertForValidation(business: Business) {
 }
 
 /**
- * Get all validation errors for a business (same logic as export edge functions).
+ * Get all validation errors for a business (schema + data quality).
+ * Includes both schema validation errors AND data quality warnings for
+ * missing important optional fields (lat/lng, hours, phone, etc.).
  */
 export function getExportValidationErrors(business: Business): ValidationError[] {
   const converted = convertForValidation(business);
   const { errors } = validateBusiness(converted);
-  return errors;
+  
+  // Add data quality warnings for missing important optional fields
+  const qualityWarnings = getDataQualityWarnings(business);
+  
+  return [...errors, ...qualityWarnings];
+}
+
+/**
+ * Data quality warnings for missing optional but important fields.
+ * These are NOT schema violations — they flag incomplete data that
+ * could affect listing quality on Google Business Profile.
+ */
+function getDataQualityWarnings(business: Business): ValidationError[] {
+  const warnings: ValidationError[] = [];
+
+  if (business.latitude == null || business.latitude === 0) {
+    warnings.push({
+      field: 'latitude',
+      message: 'Latitude is missing',
+      suggestion: 'Add latitude coordinates (e.g. 48.2082) for accurate map placement'
+    });
+  }
+  if (business.longitude == null || business.longitude === 0) {
+    warnings.push({
+      field: 'longitude',
+      message: 'Longitude is missing',
+      suggestion: 'Add longitude coordinates (e.g. 16.3738) for accurate map placement'
+    });
+  }
+
+  const dayFields = ['mondayHours', 'tuesdayHours', 'wednesdayHours', 'thursdayHours', 'fridayHours', 'saturdayHours', 'sundayHours'] as const;
+  const allHoursMissing = dayFields.every(d => !business[d]);
+  if (allHoursMissing) {
+    warnings.push({
+      field: 'openingHours',
+      message: 'No opening hours set',
+      suggestion: 'Add opening hours so customers know when you are open'
+    });
+  }
+
+  if (!business.primaryPhone) {
+    warnings.push({
+      field: 'primaryPhone',
+      message: 'Primary phone number is missing',
+      suggestion: 'Add a phone number so customers can reach you'
+    });
+  }
+
+  if (!business.website) {
+    warnings.push({
+      field: 'website',
+      message: 'Website URL is missing',
+      suggestion: 'Add your website URL for better online visibility'
+    });
+  }
+
+  return warnings;
 }
 
 /**
