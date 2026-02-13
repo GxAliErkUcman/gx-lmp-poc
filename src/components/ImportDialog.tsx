@@ -1589,30 +1589,28 @@ const ImportDialog = ({ open, onOpenChange, onSuccess, clientId, mergeMode = fal
 
             </div>
 
-            <div className="flex justify-between items-center border-t pt-4 pb-2 mt-2">
-              <div className="flex gap-2">
-                <Button 
-                  onClick={importData} 
-                  disabled={loading || (mergeMode && duplicateBusinesses.length > 0 && (parsedData.length - duplicateBusinesses.length) === 0 && !allowOverride)} 
-                  className={mergeMode ? 'bg-sage-600 hover:bg-sage-700' : ''}
-                >
-                  {loading ? 'Importing...' : (
-                    mergeMode ? (
-                      duplicateBusinesses.length > 0 && allowOverride
-                        ? `Update ${duplicateBusinesses.length} Location${duplicateBusinesses.length > 1 ? 's' : ''}${(parsedData.length - duplicateBusinesses.length) > 0 ? ` + Add ${parsedData.length - duplicateBusinesses.length} New` : ''}`
-                        : (parsedData.length - duplicateBusinesses.length) > 0
-                          ? `Add ${parsedData.length - duplicateBusinesses.length} New Location${(parsedData.length - duplicateBusinesses.length) > 1 ? 's' : ''}`
-                          : `Update ${duplicateBusinesses.length} Location${duplicateBusinesses.length > 1 ? 's' : ''}`
-                    ) : (
-                      allowOverride && duplicateBusinesses.length > 0 
-                        ? `Import ${parsedData.length} Businesses (Override ${duplicateBusinesses.length} Duplicates)`
-                        : `Import ${parsedData.length - duplicateBusinesses.length} New Businesses`
-                    )
-                  )}
-                </Button>
-              </div>
+            <div className="flex justify-end items-center gap-2 border-t pt-4 pb-2 mt-2">
               <Button variant="outline" onClick={() => setStep('mapping')}>
                 Back to Mapping
+              </Button>
+              <Button 
+                onClick={importData} 
+                disabled={loading || (mergeMode && duplicateBusinesses.length > 0 && (parsedData.length - duplicateBusinesses.length) === 0 && !allowOverride)} 
+                className={mergeMode ? 'bg-sage-600 hover:bg-sage-700' : ''}
+              >
+                {loading ? 'Importing...' : (
+                  mergeMode ? (
+                    duplicateBusinesses.length > 0 && allowOverride
+                      ? `Update ${duplicateBusinesses.length} Location${duplicateBusinesses.length > 1 ? 's' : ''}${(parsedData.length - duplicateBusinesses.length) > 0 ? ` + Add ${parsedData.length - duplicateBusinesses.length} New` : ''}`
+                      : (parsedData.length - duplicateBusinesses.length) > 0
+                        ? `Add ${parsedData.length - duplicateBusinesses.length} New Location${(parsedData.length - duplicateBusinesses.length) > 1 ? 's' : ''}`
+                        : `Update ${duplicateBusinesses.length} Location${duplicateBusinesses.length > 1 ? 's' : ''}`
+                  ) : (
+                    allowOverride && duplicateBusinesses.length > 0 
+                      ? `Import ${parsedData.length} Businesses (Override ${duplicateBusinesses.length} Duplicates)`
+                      : `Import ${parsedData.length - duplicateBusinesses.length} New Businesses`
+                  )
+                )}
               </Button>
             </div>
           </div>
