@@ -1588,12 +1588,18 @@ const ImportDialog = ({ open, onOpenChange, onSuccess, clientId, mergeMode = fal
 
             <div className="flex justify-between items-center">
               <div className="flex gap-2">
-                <Button onClick={importData} disabled={loading} className={mergeMode ? 'bg-sage-600 hover:bg-sage-700' : ''}>
+                <Button 
+                  onClick={importData} 
+                  disabled={loading || (mergeMode && duplicateBusinesses.length > 0 && (parsedData.length - duplicateBusinesses.length) === 0 && !allowOverride)} 
+                  className={mergeMode ? 'bg-sage-600 hover:bg-sage-700' : ''}
+                >
                   {loading ? 'Importing...' : (
                     mergeMode ? (
-                      allowOverride && duplicateBusinesses.length > 0 
+                      duplicateBusinesses.length > 0 && allowOverride
                         ? `Update ${duplicateBusinesses.length} Location${duplicateBusinesses.length > 1 ? 's' : ''}${(parsedData.length - duplicateBusinesses.length) > 0 ? ` + Add ${parsedData.length - duplicateBusinesses.length} New` : ''}`
-                        : `Add ${parsedData.length} New Location${parsedData.length > 1 ? 's' : ''}`
+                        : (parsedData.length - duplicateBusinesses.length) > 0
+                          ? `Add ${parsedData.length - duplicateBusinesses.length} New Location${(parsedData.length - duplicateBusinesses.length) > 1 ? 's' : ''}`
+                          : `Update ${duplicateBusinesses.length} Location${duplicateBusinesses.length > 1 ? 's' : ''}`
                     ) : (
                       allowOverride && duplicateBusinesses.length > 0 
                         ? `Import ${parsedData.length} Businesses (Override ${duplicateBusinesses.length} Duplicates)`
