@@ -18,8 +18,8 @@ const GOLDMINE_ENABLED_CLIENTS = [
 
 // Validation patterns - MUST match frontend src/lib/validation.ts and generate-json-export exactly
 const dayOpeningHoursPattern = /^$|x|^((([0-9]{1,2}):([0-9]{2}) ?- ?([0-9]{1,2}):([0-9]{2}), ?)*(([0-9]{1,2}):([0-9]{2}) ?- ?([0-9]{1,2}):([0-9]{2})))$/;
-const singleUrlPattern = /^$|^(https?:\/\/)?(www\.)?[-A-ÿ0-9ZŠĐČĆŽzšđčćž@:%._\+~#=]{1,256}\.[A-ÿ0-9ZŠĐČĆŽzšđčćž()]{1,6}\b(?:[-A-ÿ0-9ZŠĐČĆŽzšđčćž()@:%_\+.~#?&\/=]*(\s)*)$/;
-const multipleUrlsPattern = /^$|^(https?:\/\/)?(www\.)?[-A-ÿ0-9ZŠĐČĆŽzšđčćž@:%._\+~#=]{1,256}\.[A-ÿ0-9ZŠĐČĆŽzšđčćž()]{1,6}\b(?:[-A-ÿ0-9ZŠĐČĆŽzšđčćž()@:%_\+.~#?&\/=]*)((\s)*,(\s)*(https?:\/\/)?(www\.)?[-A-ÿ0-9ZŠĐČĆŽzšđčćž@:%._\+~#=]{1,256}\.[A-ÿ0-9ZŠĐČĆŽzšđčćž()]{1,6}\b(?:[-A-ÿ0-9ZŠĐČĆŽzšđčćž()@:%_\+.~#?&\/=]*)){0,}$/;
+const singleUrlPattern = /^$|^https?:\/\/(www\.)?[-A-ÿ0-9ZŠĐČĆŽzšđčćž@:%._\+~#=]{1,256}\.[A-ÿ0-9ZŠĐČĆŽzšđčćž()]{1,6}\b(?:[-A-ÿ0-9ZŠĐČĆŽzšđčćž()@:%_\+.~#?&\/=]*(\s)*)$/;
+const multipleUrlsPattern = /^$|^https?:\/\/(www\.)?[-A-ÿ0-9ZŠĐČĆŽzšđčćž@:%._\+~#=]{1,256}\.[A-ÿ0-9ZŠĐČĆŽzšđčćž()]{1,6}\b(?:[-A-ÿ0-9ZŠĐČĆŽzšđčćž()@:%_\+.~#?&\/=]*)((\s)*,(\s)*https?:\/\/(www\.)?[-A-ÿ0-9ZŠĐČĆŽzšđčćž@:%._\+~#=]{1,256}\.[A-ÿ0-9ZŠĐČĆŽzšđčćž()]{1,6}\b(?:[-A-ÿ0-9ZŠĐČĆŽzšđčćž()@:%_\+.~#?&\/=]*)){0,}$/;
 const phonePattern = /^\(?[+]?[0-9a-zA-Z  ()./–-]*$/;
 const additionalPhonesPattern = /^(\(?[+]?[0-9a-zA-Z  ()./–-]*, ?)*(\(?[+]?[0-9a-zA-Z  ()./–-]*)$/;
 const specialHoursPattern = /^(([0-9]{4}-[0-9]{2}-[0-9]{2}: ?(([0-9]{1,2}:[0-9]{2} ?- ?[0-9]{1,2}:[0-9]{2})|x), ?)*([0-9]{4}-[0-9]{2}-[0-9]{2}: ?(([0-9]{1,2}:[0-9]{2} ?- ?[0-9]{1,2}:[0-9]{2})|x))|x|)$/;
@@ -94,7 +94,7 @@ function validateBusiness(business: any): boolean {
 
   // Social media URLs
   if (business.socialMediaUrls && Array.isArray(business.socialMediaUrls)) {
-    const socialUrlPattern = /^$|^(https?:\/\/)?(www\.)?(facebook|instagram|linkedin|pinterest|tiktok|twitter|x|youtube)\.com\b(?:[-A-ÿ0-9ZŠĐČĆŽzšđčćž()@:%_\+.~#?&\/=]*(\s)*)$/;
+    const socialUrlPattern = /^$|^https?:\/\/(www\.)?(facebook|instagram|linkedin|pinterest|tiktok|twitter|x|youtube)\.com\b(?:[-A-ÿ0-9ZŠĐČĆŽzšđčćž()@:%_\+.~#?&\/=]*(\s)*)$/;
     for (const social of business.socialMediaUrls) {
       if (social.url && !socialUrlPattern.test(social.url)) return false;
     }
