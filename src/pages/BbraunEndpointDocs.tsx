@@ -1,16 +1,34 @@
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Download } from 'lucide-react';
 
 const BbraunEndpointDocs = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <div className="max-w-4xl mx-auto px-6 py-12">
-        <Button variant="ghost" onClick={() => navigate(-1)} className="mb-8 gap-2">
-          <ArrowLeft className="h-4 w-4" /> Back
-        </Button>
+    <>
+      <style>{`
+        @media print {
+          body * { visibility: hidden; }
+          .print-area, .print-area * { visibility: visible; }
+          .print-area { position: absolute; left: 0; top: 0; width: 100%; padding: 20px; }
+          .no-print { display: none !important; }
+          table { page-break-inside: auto; }
+          tr { page-break-inside: avoid; }
+          section { page-break-inside: avoid; }
+          pre { white-space: pre-wrap; word-wrap: break-word; }
+        }
+      `}</style>
+      <div className="min-h-screen bg-background text-foreground print-area">
+        <div className="max-w-4xl mx-auto px-6 py-12">
+          <div className="flex items-center justify-between mb-8 no-print">
+            <Button variant="ghost" onClick={() => navigate(-1)} className="gap-2">
+              <ArrowLeft className="h-4 w-4" /> Back
+            </Button>
+            <Button variant="outline" onClick={() => window.print()} className="gap-2">
+              <Download className="h-4 w-4" /> Save as PDF
+            </Button>
+          </div>
 
         <h1 className="text-3xl font-bold mb-2">B. Braun — JSON Data Endpoint Documentation</h1>
         <p className="text-muted-foreground mb-8">Version 1.0 — Last updated: February 2026</p>
@@ -242,6 +260,7 @@ const BbraunEndpointDocs = () => {
         </footer>
       </div>
     </div>
+    </>
   );
 };
 
