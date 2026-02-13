@@ -110,30 +110,30 @@ export function getMinorValidationErrors(business: Business): ValidationError[] 
 }
 
 /**
- * Check if business has critical issues (required fields missing, pending, async).
+ * Check if business has issues that prevent export.
+ * ANY validation error blocks export, plus pending/async status.
  */
 export function hasCriticalErrors(business: Business): boolean {
-  return getCriticalValidationErrors(business).length > 0 || 
+  return getExportValidationErrors(business).length > 0 || 
     business.status === 'pending' || 
     (business as any).is_async === true;
 }
 
 /**
- * Check if business is active and exportable (no critical errors).
- * A business can be active AND have minor issues — they are not mutually exclusive.
+ * Check if business is active and exportable.
+ * Must pass ALL validation — any error means it won't be exported.
+ * Active count MUST match exactly what the export edge functions produce.
  */
 export function isActiveBusiness(business: Business): boolean {
   return business.status === 'active' && 
     (business as any).is_async !== true && 
-    getCriticalValidationErrors(business).length === 0;
+    getExportValidationErrors(business).length === 0;
 }
 
 /**
- * Check if business has minor issues (optional field format errors, no critical ones).
- * A business with minor issues can also be active/exportable.
+ * Check if business has minor issues (kept for backward compat, but now empty
+ * since all validation errors are treated as export-blocking).
  */
 export function hasMinorErrors(business: Business): boolean {
-  if (business.status !== 'active') return false;
-  if ((business as any).is_async === true) return false;
-  return getMinorValidationErrors(business).length > 0;
+  return false;
 }
