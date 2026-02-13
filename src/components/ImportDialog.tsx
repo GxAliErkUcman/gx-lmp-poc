@@ -1594,7 +1594,7 @@ const ImportDialog = ({ open, onOpenChange, onSuccess, clientId, mergeMode = fal
                 <Button 
                   onClick={importData} 
                   disabled={loading || (mergeMode && duplicateBusinesses.length > 0 && (parsedData.length - duplicateBusinesses.length) === 0 && !allowOverride)} 
-                  className={mergeMode ? 'bg-sage-600 hover:bg-sage-700' : ''}
+                  className={mergeMode ? 'bg-sage-700 hover:bg-sage-800 text-white' : ''}
                 >
                   {loading ? 'Importing...' : (
                     mergeMode ? (
