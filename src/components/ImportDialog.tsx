@@ -1586,7 +1586,7 @@ const ImportDialog = ({ open, onOpenChange, onSuccess, clientId, mergeMode = fal
               </TabsContent>
             </Tabs>
 
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center sticky bottom-0 bg-background pt-4 pb-2 border-t mt-4 -mx-6 px-6">
               <div className="flex gap-2">
                 <Button 
                   onClick={importData} 
