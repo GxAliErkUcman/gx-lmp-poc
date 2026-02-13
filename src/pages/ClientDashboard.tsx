@@ -571,18 +571,36 @@ const ClientDashboard = () => {
               </div>
             </div>
 
-            <div className="mb-6 hidden md:block">
-              <Button 
-                onClick={() => setCreateUserDialogOpen(true)}
-                size="lg"
-                className="w-full sm:w-auto"
-              >
-                <UserPlus className="w-5 h-5 mr-2" />
-                {t('actions.createUser')} {selectedClient?.name}
-              </Button>
-              <p className="text-xs text-muted-foreground mt-2">
-                {t('messages.createUserDescription')}
-              </p>
+            <div className="mb-6 hidden md:flex md:items-start md:justify-between">
+              <div>
+                <Button 
+                  onClick={() => setCreateUserDialogOpen(true)}
+                  size="lg"
+                  className="w-full sm:w-auto"
+                >
+                  <UserPlus className="w-5 h-5 mr-2" />
+                  {t('actions.createUser')} {selectedClient?.name}
+                </Button>
+                <p className="text-xs text-muted-foreground mt-2">
+                  {t('messages.createUserDescription')}
+                </p>
+              </div>
+              <div>
+                <Button 
+                  onClick={() => {
+                    setEditingBusiness(null);
+                    setBusinessDialogOpen(true);
+                  }}
+                  size="lg"
+                  className="w-full sm:w-auto"
+                >
+                  <Plus className="w-5 h-5 mr-2" />
+                  {t('actions.addBusiness')}
+                </Button>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Add a new location for {selectedClient?.name}
+                </p>
+              </div>
             </div>
 
             <div className="flex items-center justify-between mb-4">
