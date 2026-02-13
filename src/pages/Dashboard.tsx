@@ -23,7 +23,7 @@ import { UserSettingsDialog } from '@/components/UserSettingsDialog';
 import jasonerLogo from '@/assets/jasoner-horizontal-logo.png';
 import { useTranslation } from 'react-i18next';
 import NeedAttentionBanner from '@/components/NeedAttentionBanner';
-import { isActiveBusiness, hasCriticalErrors, hasMinorErrors } from '@/lib/exportValidation';
+import { isActiveBusiness, hasCriticalErrors } from '@/lib/exportValidation';
 
 const Dashboard = () => {
   const { t } = useTranslation();
@@ -38,7 +38,7 @@ const Dashboard = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('table');
   const [multiEditDialogOpen, setMultiEditDialogOpen] = useState(false);
   const [selectedBusinessIds, setSelectedBusinessIds] = useState<string[]>([]);
-  const [activeTab, setActiveTab] = useState<'active' | 'minor' | 'pending'>('active');
+  const [activeTab, setActiveTab] = useState<'active' | 'pending'>('active');
   const [userLogo, setUserLogo] = useState<string | null>(null);
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
   const [deleteConfirmDialogOpen, setDeleteConfirmDialogOpen] = useState(false);
@@ -235,7 +235,6 @@ useEffect(() => {
 
   const activeBusinesses = businesses.filter(b => isActiveBusiness(b));
   const pendingBusinesses = businesses.filter(b => hasCriticalErrors(b));
-  const minorIssueBusinesses = businesses.filter(b => hasMinorErrors(b));
 
   if (loading) {
     return (
@@ -364,8 +363,8 @@ useEffect(() => {
             </CardContent>
           </Card>
         ) : (
-          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'active' | 'minor' | 'pending')}>
-            <TabsList className="grid w-full grid-cols-3 mb-4 sm:mb-6 h-auto gap-1 p-1">
+          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'active' | 'pending')}>
+            <TabsList className="grid w-full grid-cols-2 mb-4 sm:mb-6 h-auto gap-1 p-1">
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -381,25 +380,6 @@ useEffect(() => {
                   </TooltipTrigger>
                   <TooltipContent>
                     <p>These locations are validated and sent to g-Xperts for publishing.</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <TabsTrigger value="minor" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm py-2">
-                      <span className="hidden sm:inline">Minor Issues</span>
-                      <span className="sm:hidden">Minor</span>
-                      {minorIssueBusinesses.length > 0 && (
-                        <Badge variant="secondary" className="ml-1 text-xs bg-amber-100 text-amber-800">
-                          {minorIssueBusinesses.length}
-                        </Badge>
-                      )}
-                    </TabsTrigger>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>These locations have non-critical issues in optional fields. They will be excluded from export until fixed.</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -497,57 +477,6 @@ useEffect(() => {
                     </Card>
                   ))}
                 </div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="minor">
-              {minorIssueBusinesses.length === 0 ? (
-                <Card className="shadow-card">
-                  <CardContent className="py-16 text-center">
-                    <p className="text-muted-foreground">No minor issues found. All optional fields are valid.</p>
-                  </CardContent>
-                </Card>
-              ) : (
-                <>
-                  <Card className="bg-amber-50/50 border-amber-200 mb-4">
-                    <CardContent className="py-3">
-                      <div className="flex items-start gap-3">
-                        <Edit className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
-                        <div className="space-y-1">
-                          <p className="text-sm font-medium text-amber-800">
-                            {minorIssueBusinesses.length} location{minorIssueBusinesses.length !== 1 ? 's' : ''} with minor issues
-                          </p>
-                          <p className="text-xs text-amber-700">
-                            These locations have non-critical validation issues in optional fields (e.g. URL format, phone format). They will be excluded from export until fixed. Click the exclamation mark to see details.
-                          </p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                  {viewMode === 'table' ? (
-                    <BusinessTableView
-                      businesses={minorIssueBusinesses}
-                      onEdit={handleEditBusiness}
-                      onDelete={handleDeleteBusiness}
-                      onMultiEdit={handleMultiEdit}
-                      onMultiDelete={handleMultiDelete}
-                      showValidationErrors={true}
-                    />
-                  ) : (
-                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                      {minorIssueBusinesses.map((business) => (
-                        <Card key={business.id} className="shadow-card hover:shadow-modern transition-shadow duration-300 cursor-pointer" onClick={() => handleEditBusiness(business)}>
-                          <CardContent className="pt-6">
-                            <div className="space-y-2">
-                              <h3 className="font-semibold text-lg line-clamp-2">{business.businessName}</h3>
-                              <Badge variant="secondary" className="bg-amber-100 text-amber-800">Minor Issues</Badge>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  )}
-                </>
               )}
             </TabsContent>
             
