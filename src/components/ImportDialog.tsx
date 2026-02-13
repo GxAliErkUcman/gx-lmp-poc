@@ -1593,8 +1593,7 @@ const ImportDialog = ({ open, onOpenChange, onSuccess, clientId, mergeMode = fal
               <div className="flex flex-wrap gap-2">
                 <Button 
                   onClick={importData} 
-                  disabled={loading || (mergeMode && duplicateBusinesses.length > 0 && (parsedData.length - duplicateBusinesses.length) === 0 && !allowOverride)} 
-                  className={mergeMode ? 'bg-sage-700 hover:bg-sage-800 text-white' : ''}
+                  disabled={loading}
                 >
                   {loading ? 'Importing...' : (
                     mergeMode ? (
