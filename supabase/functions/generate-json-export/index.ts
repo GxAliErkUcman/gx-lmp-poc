@@ -324,7 +324,7 @@ Deno.serve(async (req) => {
 
     console.log(`Successfully uploaded JSON export: ${fileName}`);
 
-    // Auto-sync with GCP
+    // Auto-sync with GCP (pass clientId for BBraun dual-copy logic)
     try {
       console.log('Auto-syncing to GCP...');
       const syncResponse = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/sync-to-gcp`, {
@@ -335,13 +335,17 @@ Deno.serve(async (req) => {
         },
         body: JSON.stringify({
           fileName,
-          bucketName: 'json-exports'
+          bucketName: 'json-exports',
+          clientId: client_id
         })
       });
 
       const syncResult = await syncResponse.json();
       if (syncResult.success) {
         console.log(`Successfully synced to GCP: ${syncResult.gcpPath}`);
+        if (syncResult.bbraunCopyPath) {
+          console.log(`BBraun extra copy: ${syncResult.bbraunCopyPath}`);
+        }
       } else {
         console.warn('GCP sync failed:', syncResult.error);
       }
