@@ -29,7 +29,7 @@ import { ApiImportDialog } from '@/components/ApiImportDialog';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useTranslation } from 'react-i18next';
 import NeedAttentionBanner from '@/components/NeedAttentionBanner';
-import { hasExportValidationErrors } from '@/lib/exportValidation';
+import { hasExportValidationErrors, hasCriticalErrors, hasOnlyMinorErrors } from '@/lib/exportValidation';
 
 // Energie 360° client ID for data source filter
 const ENERGIE_360_CLIENT_ID = 'e77c44c5-0585-4225-a5ea-59a38edb85fb';
@@ -49,7 +49,7 @@ const ClientDashboard = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('table');
   const [multiEditDialogOpen, setMultiEditDialogOpen] = useState(false);
   const [selectedBusinessIds, setSelectedBusinessIds] = useState<string[]>([]);
-  const [activeTab, setActiveTab] = useState<'active' | 'pending' | 'new' | 'async'>('active');
+  const [activeTab, setActiveTab] = useState<'active' | 'pending' | 'minor' | 'new' | 'async'>('active');
   const [userLogo, setUserLogo] = useState<string | null>(null);
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
   const [deleteConfirmDialogOpen, setDeleteConfirmDialogOpen] = useState(false);
@@ -345,10 +345,12 @@ const ClientDashboard = () => {
     : businesses;
 
   // Filter by status, async flag, and export validation errors
-  // Active: status=active AND not async AND no export validation errors
+  // Active: status=active AND not async AND no export validation errors at all
   const activeBusinesses = dataSourceFilteredBusinesses.filter(b => b.status === 'active' && (b as any).is_async !== true && !hasExportValidationErrors(b));
-  // Need Attention: status=pending OR async=true OR (active but has export validation errors)
-  const pendingBusinesses = dataSourceFilteredBusinesses.filter(b => b.status === 'pending' || (b as any).is_async === true || (b.status === 'active' && (b as any).is_async !== true && hasExportValidationErrors(b)));
+  // Critical Issues (Need Attention): status=pending OR async=true OR missing required fields
+  const pendingBusinesses = dataSourceFilteredBusinesses.filter(b => hasCriticalErrors(b));
+  // Minor Issues: active locations with only non-critical validation errors (optional field format issues)
+  const minorIssueBusinesses = dataSourceFilteredBusinesses.filter(b => hasOnlyMinorErrors(b));
   // Async only (for Energie 360° tab)
   const asyncBusinesses = dataSourceFilteredBusinesses.filter(b => (b as any).is_async === true);
   
@@ -627,10 +629,13 @@ const ClientDashboard = () => {
                 </CardContent>
               </Card>
             ) : (
-              <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'active' | 'pending' | 'new' | 'async')}>
+              <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'active' | 'pending' | 'minor' | 'new' | 'async')}>
                 <TabsList className="mb-4 w-full flex flex-wrap h-auto gap-1 p-1">
                   <TabsTrigger value="active" className="flex-1 min-w-[80px] text-xs sm:text-sm">
                     {t('status.active')} ({activeBusinesses.length})
+                  </TabsTrigger>
+                  <TabsTrigger value="minor" className="flex-1 min-w-[80px] text-xs sm:text-sm">
+                    Minor Issues ({minorIssueBusinesses.length})
                   </TabsTrigger>
                   <TabsTrigger value="pending" className="flex-1 min-w-[80px] text-xs sm:text-sm">
                     {t('tabs.needAttention')} ({pendingBusinesses.length})
@@ -657,6 +662,60 @@ const ClientDashboard = () => {
                   ) : (
                     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                       {activeBusinesses.map((business) => (
+                        <Card key={business.id}>
+                          <CardHeader>
+                            <CardTitle>{business.businessName}</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="space-y-2 text-sm">
+                              <p className="text-muted-foreground">{business.addressLine1}</p>
+                              <p className="text-muted-foreground">{business.city}, {business.state}</p>
+                              <div className="flex gap-2 mt-4">
+                                <Button size="sm" variant="outline" onClick={() => handleEditBusiness(business)}>
+                                  <Edit className="w-4 h-4 mr-2" />
+                                  Edit
+                                </Button>
+                                <Button size="sm" variant="destructive" onClick={() => handleDeleteBusiness(business.id)}>
+                                  <Trash2 className="w-4 h-4 mr-2" />
+                                  Delete
+                                </Button>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="minor">
+                  <Card className="bg-amber-50/50 border-amber-200 mb-4">
+                    <CardContent className="py-3">
+                      <div className="flex items-start gap-3">
+                        <Edit className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                        <div className="space-y-1">
+                          <p className="text-sm font-medium text-amber-800">
+                            {minorIssueBusinesses.length} location{minorIssueBusinesses.length !== 1 ? 's' : ''} with minor issues
+                          </p>
+                          <p className="text-xs text-amber-700">
+                            These locations have non-critical validation issues in optional fields (e.g. URL format, phone format). They will be excluded from export until fixed. Click the exclamation mark on each location to see details.
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  {viewMode === 'table' ? (
+                    <BusinessTableView
+                      businesses={minorIssueBusinesses}
+                      onEdit={handleEditBusiness}
+                      onDelete={handleDeleteBusiness}
+                      onMultiEdit={handleMultiEdit}
+                      onMultiDelete={handleMultiDelete}
+                      showValidationErrors={true}
+                    />
+                  ) : (
+                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                      {minorIssueBusinesses.map((business) => (
                         <Card key={business.id}>
                           <CardHeader>
                             <CardTitle>{business.businessName}</CardTitle>

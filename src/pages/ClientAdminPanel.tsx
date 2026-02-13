@@ -18,7 +18,7 @@ import BusinessTableView from '@/components/BusinessTableView';
 import BusinessDialog from '@/components/BusinessDialog';
 import ImportDialog from '@/components/ImportDialog';
 import { JsonExport } from '@/components/JsonExport';
-import { hasExportValidationErrors } from '@/lib/exportValidation';
+import { hasExportValidationErrors, hasCriticalErrors, hasOnlyMinorErrors } from '@/lib/exportValidation';
 import { useFieldPermissions } from '@/hooks/use-field-permissions';
 import type { Business } from '@/types/business';
 import { UserSettingsDialog } from '@/components/UserSettingsDialog';
@@ -271,7 +271,8 @@ const ClientAdminPanel = () => {
   const ownerUsers = users.filter((u) => u.role === 'store_owner');
   const clientUserCount = regularUsers.length + ownerUsers.length;
   const activeBusinesses = businesses.filter((b) => b.status === 'active' && !hasExportValidationErrors(b));
-  const pendingBusinesses = businesses.filter((b) => b.status === 'pending' || (b.status === 'active' && hasExportValidationErrors(b)));
+  const pendingBusinesses = businesses.filter((b) => hasCriticalErrors(b));
+  const minorIssueBusinesses = businesses.filter((b) => hasOnlyMinorErrors(b));
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/30 font-montserrat">
