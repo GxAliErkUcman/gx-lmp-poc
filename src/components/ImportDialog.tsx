@@ -1590,27 +1590,25 @@ const ImportDialog = ({ open, onOpenChange, onSuccess, clientId, mergeMode = fal
             </div>
 
             <div className="border-t pt-4 pb-2 mt-2">
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2 justify-end">
+                <Button variant="outline" onClick={() => setStep('mapping')}>
+                  Back to Mapping
+                </Button>
                 <Button 
                   onClick={importData} 
-                  disabled={loading}
+                  disabled={loading || (mergeMode && duplicateBusinesses.length > 0 && !allowOverride)}
                 >
                   {loading ? 'Importing...' : (
                     mergeMode ? (
-                      duplicateBusinesses.length > 0 && allowOverride
+                      duplicateBusinesses.length > 0
                         ? `Update ${duplicateBusinesses.length} Location${duplicateBusinesses.length > 1 ? 's' : ''}`
-                        : (parsedData.length - duplicateBusinesses.length) > 0
-                          ? `Add ${parsedData.length - duplicateBusinesses.length} New`
-                          : `Update ${duplicateBusinesses.length} Location${duplicateBusinesses.length > 1 ? 's' : ''}`
+                        : `Add ${parsedData.length} New`
                     ) : (
                       allowOverride && duplicateBusinesses.length > 0 
                         ? `Import ${parsedData.length} (Override ${duplicateBusinesses.length})`
                         : `Import ${parsedData.length - duplicateBusinesses.length} New Businesses`
                     )
                   )}
-                </Button>
-                <Button variant="outline" onClick={() => setStep('mapping')}>
-                  Back to Mapping
                 </Button>
               </div>
             </div>
