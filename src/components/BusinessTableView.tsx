@@ -13,7 +13,8 @@ import { Edit, Trash2, Search, ArrowUp, ArrowDown, Settings, Filter, X, AlertCir
 import { Business } from '@/types/business';
 import ManageColumnsDialog, { type ColumnConfig } from './ManageColumnsDialog';
 import { formatCountryDisplay } from '@/components/CountrySelect';
-import { validateBusiness, ValidationError } from '@/lib/validation';
+import { ValidationError } from '@/lib/validation';
+import { getExportValidationErrors } from '@/lib/exportValidation';
 import { cn } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
 
@@ -193,10 +194,9 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
 
   const visibleColumns = columns.filter(col => col.visible);
 
-  // Get validation errors for a business
+  // Get validation errors for a business (uses centralized export validation)
   const getValidationErrors = (business: Business): ValidationError[] => {
-    const { errors } = validateBusiness(business);
-    return errors;
+    return getExportValidationErrors(business);
   };
 
   // Map validation errors to user-friendly messages
