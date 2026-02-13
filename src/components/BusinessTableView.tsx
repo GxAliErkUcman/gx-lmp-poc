@@ -198,19 +198,19 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
   const getValidationErrors = (business: Business): ValidationError[] => {
     const errors = [...getExportValidationErrors(business)];
     
-    // Add status-based issues that aren't schema errors but prevent export
+    // Add status-based context (shown separately from validation errors)
     if (business.status === 'pending') {
       errors.push({
         field: 'status',
-        message: 'Location status is "pending" — it will not be exported until activated',
-        suggestion: 'Change the status to "active" once the location data is complete'
+        message: 'Location has not been activated yet',
+        suggestion: 'Review the location data and change the status from "Pending" to "Active" in the edit dialog to include it in exports'
       });
     }
     if ((business as any).is_async === true) {
       errors.push({
-        field: 'status',
-        message: 'Location is marked as async — waiting for external data sync',
-        suggestion: 'This location will be updated automatically when the external sync completes'
+        field: 'async',
+        message: 'Location exists in Jasoner but is missing from the external API feed',
+        suggestion: 'This location was not found in the latest API import. It will be automatically resolved when it reappears in the feed, or you can investigate why it is missing'
       });
     }
     
@@ -248,6 +248,13 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
       return "Please select a country and replace the address";
     }
     
+    if (error.field === 'status') {
+      return "Status: Pending — needs activation";
+    }
+    if (error.field === 'async') {
+      return "Async: Missing from external API feed";
+    }
+    
     return error.message; // fallback to original message
   };
 
@@ -270,6 +277,12 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
     }
     if (error.field === 'fromTheBusiness') {
       return "Edit the 'From the Business' description field to remove any URLs or fix formatting issues.";
+    }
+    if (error.field === 'status') {
+      return error.suggestion || "Review the location and change its status to 'Active' in the edit dialog.";
+    }
+    if (error.field === 'async') {
+      return error.suggestion || "This location was not found in the latest external data feed.";
     }
     return "Edit this location to fix this issue.";
   };
