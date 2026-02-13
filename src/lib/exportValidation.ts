@@ -55,70 +55,12 @@ function convertForValidation(business: Business) {
 }
 
 /**
- * Get all validation errors for a business (schema + data quality).
- * Includes both schema validation errors AND data quality warnings for
- * missing important optional fields (lat/lng, hours, phone, etc.).
+ * Get all validation errors for a business (same logic as export edge functions).
  */
 export function getExportValidationErrors(business: Business): ValidationError[] {
   const converted = convertForValidation(business);
   const { errors } = validateBusiness(converted);
-  
-  // Add data quality warnings for missing important optional fields
-  const qualityWarnings = getDataQualityWarnings(business);
-  
-  return [...errors, ...qualityWarnings];
-}
-
-/**
- * Data quality warnings for missing optional but important fields.
- * These are NOT schema violations — they flag incomplete data that
- * could affect listing quality on Google Business Profile.
- */
-function getDataQualityWarnings(business: Business): ValidationError[] {
-  const warnings: ValidationError[] = [];
-
-  if (business.latitude == null || business.latitude === 0) {
-    warnings.push({
-      field: 'latitude',
-      message: 'Latitude is missing',
-      suggestion: 'Add latitude coordinates (e.g. 48.2082) for accurate map placement'
-    });
-  }
-  if (business.longitude == null || business.longitude === 0) {
-    warnings.push({
-      field: 'longitude',
-      message: 'Longitude is missing',
-      suggestion: 'Add longitude coordinates (e.g. 16.3738) for accurate map placement'
-    });
-  }
-
-  const dayFields = ['mondayHours', 'tuesdayHours', 'wednesdayHours', 'thursdayHours', 'fridayHours', 'saturdayHours', 'sundayHours'] as const;
-  const allHoursMissing = dayFields.every(d => !business[d]);
-  if (allHoursMissing) {
-    warnings.push({
-      field: 'openingHours',
-      message: 'No opening hours set',
-      suggestion: 'Add opening hours so customers know when you are open'
-    });
-  }
-
-  if (!business.primaryPhone) {
-    warnings.push({
-      field: 'primaryPhone',
-      message: 'Primary phone number is missing',
-      suggestion: 'Add a phone number so customers can reach you'
-    });
-  }
-
-  if (!business.website) {
-    warnings.push({
-      field: 'website',
-      message: 'Website URL is missing',
-      suggestion: 'Add your website URL for better online visibility'
-    });
-  }
-
-  return warnings;
+  return errors;
 }
 
 /**
@@ -133,16 +75,13 @@ export function hasExportValidationErrors(business: Business): boolean {
  * Critical errors prevent export entirely.
  */
 export function isCriticalError(error: ValidationError): boolean {
-  // Required field errors are always critical
   if (REQUIRED_FIELDS.includes(error.field)) return true;
-  // Auto-generated store code
   if (error.field === 'storeCode' && error.message.includes('auto-generated')) return true;
   return false;
 }
 
 /**
  * Get only critical validation errors (missing required fields, auto-generated store codes).
- * These go in the "Need Attention" / "Critical Issues" tab.
  */
 export function getCriticalValidationErrors(business: Business): ValidationError[] {
   return getExportValidationErrors(business).filter(isCriticalError);
@@ -150,14 +89,13 @@ export function getCriticalValidationErrors(business: Business): ValidationError
 
 /**
  * Get only minor validation errors (optional field format issues).
- * These go in the "Minor Issues" tab.
  */
 export function getMinorValidationErrors(business: Business): ValidationError[] {
   return getExportValidationErrors(business).filter(e => !isCriticalError(e));
 }
 
 /**
- * Check if business has critical issues (required fields missing).
+ * Check if business has critical issues (required fields missing, pending, async).
  */
 export function hasCriticalErrors(business: Business): boolean {
   return getCriticalValidationErrors(business).length > 0 || 
@@ -166,14 +104,21 @@ export function hasCriticalErrors(business: Business): boolean {
 }
 
 /**
- * Check if business has ONLY minor issues (optional field validation errors, no critical ones).
- * Business must be active, not async, and have no critical errors but some minor errors.
+ * Check if business is active and exportable (no critical errors).
+ * A business can be active AND have minor issues — they are not mutually exclusive.
  */
-export function hasOnlyMinorErrors(business: Business): boolean {
+export function isActiveBusiness(business: Business): boolean {
+  return business.status === 'active' && 
+    (business as any).is_async !== true && 
+    getCriticalValidationErrors(business).length === 0;
+}
+
+/**
+ * Check if business has minor issues (optional field format errors, no critical ones).
+ * A business with minor issues can also be active/exportable.
+ */
+export function hasMinorErrors(business: Business): boolean {
   if (business.status !== 'active') return false;
   if ((business as any).is_async === true) return false;
-  const errors = getExportValidationErrors(business);
-  if (errors.length === 0) return false;
-  // Has errors, but none are critical
-  return errors.every(e => !isCriticalError(e));
+  return getMinorValidationErrors(business).length > 0;
 }

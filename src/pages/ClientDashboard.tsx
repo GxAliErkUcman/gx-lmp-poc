@@ -29,7 +29,7 @@ import { ApiImportDialog } from '@/components/ApiImportDialog';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useTranslation } from 'react-i18next';
 import NeedAttentionBanner from '@/components/NeedAttentionBanner';
-import { hasExportValidationErrors, hasCriticalErrors, hasOnlyMinorErrors } from '@/lib/exportValidation';
+import { isActiveBusiness, hasCriticalErrors, hasMinorErrors } from '@/lib/exportValidation';
 
 // Energie 360° client ID for data source filter
 const ENERGIE_360_CLIENT_ID = 'e77c44c5-0585-4225-a5ea-59a38edb85fb';
@@ -346,11 +346,11 @@ const ClientDashboard = () => {
 
   // Filter by status, async flag, and export validation errors
   // Active: status=active AND not async AND no export validation errors at all
-  const activeBusinesses = dataSourceFilteredBusinesses.filter(b => b.status === 'active' && (b as any).is_async !== true && !hasExportValidationErrors(b));
+  const activeBusinesses = dataSourceFilteredBusinesses.filter(b => isActiveBusiness(b));
   // Critical Issues (Need Attention): status=pending OR async=true OR missing required fields
   const pendingBusinesses = dataSourceFilteredBusinesses.filter(b => hasCriticalErrors(b));
-  // Minor Issues: active locations with only non-critical validation errors (optional field format issues)
-  const minorIssueBusinesses = dataSourceFilteredBusinesses.filter(b => hasOnlyMinorErrors(b));
+  // Minor Issues: active locations with non-critical validation errors (can also be in Active)
+  const minorIssueBusinesses = dataSourceFilteredBusinesses.filter(b => hasMinorErrors(b));
   // Async only (for Energie 360° tab)
   const asyncBusinesses = dataSourceFilteredBusinesses.filter(b => (b as any).is_async === true);
   
