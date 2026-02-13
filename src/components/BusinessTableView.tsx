@@ -194,9 +194,27 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
 
   const visibleColumns = columns.filter(col => col.visible);
 
-  // Get validation errors for a business (uses centralized export validation)
+  // Get validation errors for a business (uses centralized export validation + status issues)
   const getValidationErrors = (business: Business): ValidationError[] => {
-    return getExportValidationErrors(business);
+    const errors = [...getExportValidationErrors(business)];
+    
+    // Add status-based issues that aren't schema errors but prevent export
+    if (business.status === 'pending') {
+      errors.push({
+        field: 'status',
+        message: 'Location status is "pending" — it will not be exported until activated',
+        suggestion: 'Change the status to "active" once the location data is complete'
+      });
+    }
+    if ((business as any).is_async === true) {
+      errors.push({
+        field: 'status',
+        message: 'Location is marked as async — waiting for external data sync',
+        suggestion: 'This location will be updated automatically when the external sync completes'
+      });
+    }
+    
+    return errors;
   };
 
   // Map validation errors to user-friendly messages
