@@ -976,7 +976,7 @@ const ImportDialog = ({ open, onOpenChange, onSuccess, clientId, mergeMode = fal
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl max-h-[95vh] overflow-y-auto">
+      <DialogContent className="max-w-6xl max-h-[95vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>
             {mergeMode ? 'Merge Import - Update Existing Locations' : 'Import Businesses from Excel/CSV'}
@@ -1252,7 +1252,8 @@ const ImportDialog = ({ open, onOpenChange, onSuccess, clientId, mergeMode = fal
         )}
 
         {step === 'preview' && (
-          <div className="space-y-4">
+          <div className="flex flex-col min-h-0 flex-1">
+            <div className="space-y-4 overflow-y-auto flex-1 min-h-0">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-medium">Review Import</h3>
               <div className="flex items-center gap-2">
@@ -1586,7 +1587,9 @@ const ImportDialog = ({ open, onOpenChange, onSuccess, clientId, mergeMode = fal
               </TabsContent>
             </Tabs>
 
-            <div className="flex justify-between items-center sticky bottom-0 bg-background pt-4 pb-2 border-t mt-4 -mx-6 px-6">
+            </div>
+
+            <div className="flex justify-between items-center border-t pt-4 pb-2 mt-2">
               <div className="flex gap-2">
                 <Button 
                   onClick={importData} 
