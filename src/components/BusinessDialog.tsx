@@ -52,12 +52,12 @@ const businessSchema = z.object({
   additionalPhones: z.string().optional(),
   adwords: z.string().optional(),
   openingDate: z.string().optional().refine((date) => {
-    if (!date) return true; // Optional field
-    const selectedDate = new Date(date);
-    const today = new Date();
-    today.setHours(23, 59, 59, 999); // End of today
-    return selectedDate <= today;
-  }, { message: "Opening date cannot be in the future" }),
+    if (!date) return true;
+    const selectedDate = new Date(date + 'T00:00:00Z');
+    const sixMonthsFromNow = new Date();
+    sixMonthsFromNow.setMonth(sixMonthsFromNow.getMonth() + 6);
+    return selectedDate <= sixMonthsFromNow;
+  }, { message: "Opening date cannot be more than 6 months in the future" }),
   fromTheBusiness: z.string().optional(),
   labels: z.string().optional(),
   temporarilyClosed: z.boolean().optional(),
