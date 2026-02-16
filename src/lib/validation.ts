@@ -65,7 +65,14 @@ export const businessValidationSchema = z.object({
   primaryPhone: z.string().nullable().refine((val) => !val || phonePattern.test(val), "Invalid phone number format").optional(),
   additionalPhones: z.string().nullable().refine((val) => !val || additionalPhonesPattern.test(val), "Invalid additional phones format").optional(),
   adwords: z.string().nullable().refine((val) => !val || /^[+]?[0-9a-zA-Z  ()./–-]*$/.test(val), "Invalid adwords phone format").optional(),
-  openingDate: z.string().nullable().refine((val) => !val || /^([0-9]{4})-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])$/.test(val), "Invalid opening date format (YYYY-MM-DD)").optional(),
+  openingDate: z.string().nullable().refine((val) => {
+    if (!val) return true;
+    if (!/^([0-9]{4})-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])$/.test(val)) return false;
+    const date = new Date(val + 'T00:00:00Z');
+    const sixMonthsFromNow = new Date();
+    sixMonthsFromNow.setMonth(sixMonthsFromNow.getMonth() + 6);
+    return date <= sixMonthsFromNow;
+  }, "Invalid opening date — must be YYYY-MM-DD and no more than 6 months in the future").optional(),
   fromTheBusiness: z.string().max(750).nullable().refine((val) => {
     if (!val) return true;
     // Check for URLs - only match explicit URLs with protocol or www prefix

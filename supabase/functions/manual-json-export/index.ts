@@ -69,8 +69,13 @@ function validateBusiness(business: any): boolean {
   // Adwords
   if (business.adwords && !/^[+]?[0-9a-zA-Z  ()./–-]*$/.test(business.adwords)) return false;
 
-  // Opening date
-  if (business.openingDate && !/^([0-9]{4})-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])$/.test(business.openingDate)) return false;
+  // Opening date - must be valid format and no more than 6 months in the future
+  if (business.openingDate) {
+    if (!/^([0-9]{4})-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])$/.test(business.openingDate)) return false;
+    const d = new Date(business.openingDate + 'T00:00:00Z');
+    const sixMonths = new Date(); sixMonths.setMonth(sixMonths.getMonth() + 6);
+    if (d > sixMonths) return false;
+  }
 
   // From the business (description) - no URLs allowed
   if (business.fromTheBusiness) {
