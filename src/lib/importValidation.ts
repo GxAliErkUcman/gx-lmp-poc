@@ -419,25 +419,44 @@ function validateAdditionalCategoriesColumn(data: string[]): ColumnValidationRes
 
 function validateDateColumn(data: string[]): ColumnValidationResult | null {
   const datePattern = /^([0-9]{4})-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])$/;
-  const invalidEntries: string[] = [];
+  const invalidFormat: string[] = [];
+  const tooFarFuture: string[] = [];
+  const sixMonthsFromNow = new Date();
+  sixMonthsFromNow.setMonth(sixMonthsFromNow.getMonth() + 6);
   
   for (const value of data) {
     const trimmed = String(value).trim();
     if (!trimmed) continue;
     
     if (!datePattern.test(trimmed)) {
-      invalidEntries.push(trimmed);
+      invalidFormat.push(trimmed);
+    } else {
+      const d = new Date(trimmed + 'T00:00:00Z');
+      if (d > sixMonthsFromNow) {
+        tooFarFuture.push(trimmed);
+      }
     }
   }
   
-  if (invalidEntries.length > 0) {
+  if (invalidFormat.length > 0) {
     return {
       isValid: false,
       severity: 'warning',
-      message: `${invalidEntries.length} dates not in YYYY-MM-DD format`,
-      details: `Expected format: "2025-03-15". Found: "${invalidEntries[0]}". Dates will be converted during import.`,
-      invalidSamples: invalidEntries.slice(0, 3),
-      invalidCount: invalidEntries.length
+      message: `${invalidFormat.length} dates not in YYYY-MM-DD format`,
+      details: `Expected format: "2025-03-15". Found: "${invalidFormat[0]}". Dates will be converted during import.`,
+      invalidSamples: invalidFormat.slice(0, 3),
+      invalidCount: invalidFormat.length
+    };
+  }
+  
+  if (tooFarFuture.length > 0) {
+    return {
+      isValid: false,
+      severity: 'warning',
+      message: `${tooFarFuture.length} dates are more than 6 months in the future`,
+      details: `Opening dates can be at most 6 months in the future. Found: "${tooFarFuture[0]}".`,
+      invalidSamples: tooFarFuture.slice(0, 3),
+      invalidCount: tooFarFuture.length
     };
   }
   
