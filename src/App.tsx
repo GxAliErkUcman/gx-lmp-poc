@@ -19,6 +19,7 @@ import ClientAdminPanel from "./pages/ClientAdminPanel";
 import StoreOwnerDashboard from "./pages/StoreOwnerDashboard";
 import AuthCallback from "./pages/AuthCallback";
 import UserGuide from "./pages/UserGuide";
+import AdminGuide from "./pages/AdminGuide";
 import BbraunEndpointDocs from "./pages/BbraunEndpointDocs";
 
 const queryClient = new QueryClient();
@@ -44,6 +45,7 @@ const App = () => (
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/set-password/*" element={<SetPassword />} />
             <Route path="/guide" element={<UserGuide />} />
+            <Route path="/admin-guide" element={<AdminGuide />} />
             <Route path="/docs/bbraun-endpoint" element={<BbraunEndpointDocs />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
