@@ -205,14 +205,18 @@ const AdminGuide = () => {
     'Location (Business) Data Model',
     'Location Lifecycle & Status',
     'Validation Layers',
-    'Import System',
+    'Import System (Add & Standard)',
+    'Merge Import',
+    'Multi-Edit (Bulk Operations)',
+    'Account-Wide Settings',
+    'Photo Uploads & Media',
     'Export System',
     'Backup & Version History',
     'Field-Level Access Control (Permissions)',
     'Custom Services Management',
     'Edge Functions Reference',
     'Database Triggers & Automations',
-    'Storage Buckets',
+    'Storage Buckets & File Management',
     'Authentication & Security',
     'Integrations',
     'Troubleshooting & FAQ',
@@ -702,7 +706,7 @@ const AdminGuide = () => {
         </Section>
 
         {/* 10. Import System */}
-        <Section id="section-10" number="10" title="Import System">
+        <Section id="section-10" number="10" title="Import System (Add & Standard)">
           <SubSection title="Supported Formats">
             <BulletList items={[
               'CSV (comma-separated)',
@@ -710,21 +714,44 @@ const AdminGuide = () => {
               'JSON (array format, or object with "businesses" or "locations" key)',
             ]} />
           </SubSection>
-          <SubSection title="Import Workflow">
+          <SubSection title="Import Workflow (Add New)">
             <StepList steps={[
               'Click "Import" on the dashboard.',
               'Upload your file (drag & drop or browse).',
               'The system auto-detects columns and maps them to business fields.',
-              'Review the column mapping — green checkmarks for required fields, blue for optional.',
+              'Review the column mapping — green checkmarks (✅) for required fields, blue for optional.',
               'Asterisk (*) next to green checkmarks indicates required fields.',
+              'Required mapping fields: storeCode, businessName, addressLine1, country, primaryCategory.',
               'Fix any validation warnings shown in the preview.',
-              'Choose import mode: "Add new only" or "Update existing + add new".',
-              'Click Import — locations are created/updated in the database.',
+              'Choose "Add new only" mode.',
+              'Click Import — new locations are created in the database.',
+              'New locations are tracked with a special "business_created" history record.',
             ]} />
           </SubSection>
           <SubSection title="Column Mapping Aliases">
             <p className="text-sm text-muted-foreground">
               The import system recognizes common aliases. For example, <code className="bg-muted px-1 rounded">locality</code> maps to <code className="bg-muted px-1 rounded">city</code>. This helps when importing from Google Takeout or other systems with different naming conventions.
+            </p>
+          </SubSection>
+          <SubSection title="Import Validation Checks">
+            <BulletList items={[
+              'Missing required fields detected and flagged',
+              'Duplicate storeCode detection within the import file',
+              'DMS coordinate format detection (e.g., 48°51\'24"N) — warns user to convert to decimal',
+              'Opening hours format validation (must be HH:MM-HH:MM or "x")',
+              'HTML tag detection in text fields',
+              'URL protocol enforcement (http:// or https:// required)',
+              'Opening date future limit (max 6 months from today)',
+            ]} />
+          </SubSection>
+          <SubSection title="New Location vs. Update Distinction">
+            <p className="text-sm text-muted-foreground">
+              The system distinguishes between truly new locations and updates to existing ones. New locations trigger a "business_created" history record and are shown as a separate "New Locations Added" notification with count and tooltip. Existing locations only show field-level changes.
+            </p>
+          </SubSection>
+          <SubSection title="Missing Address Handling">
+            <p className="text-sm text-muted-foreground">
+              If addressLine1 is missing during import, the location is set to "pending" status (Need Attention) rather than copying addressLine2 into it. This avoids duplicate address line issues and lets users fix missing data manually.
             </p>
           </SubSection>
           <SubSection title="Field History Tracking on Import">
@@ -734,8 +761,221 @@ const AdminGuide = () => {
           </SubSection>
         </Section>
 
-        {/* 11. Export System */}
-        <Section id="section-11" number="11" title="Export System">
+        {/* 11. Merge Import */}
+        <Section id="section-11" number="11" title="Merge Import">
+          <SubSection title="Purpose">
+            <p className="text-sm text-muted-foreground">
+              Merge Import allows partial data updates — merging specific fields from an import file into existing locations matched by <code className="bg-muted px-1 rounded">storeCode</code>. Unlike standard import, it only updates the fields present in the import file, leaving all other fields untouched.
+            </p>
+          </SubSection>
+          <SubSection title="Merge Import Workflow">
+            <StepList steps={[
+              'Click "Import" on the dashboard.',
+              'Upload your file containing partial data (must include storeCode column).',
+              'Map columns as usual.',
+              'Choose "Update existing + add new" mode (Merge).',
+              'A review table appears showing inline "oldValue → newValue" transitions for each modified field.',
+              'Carefully review the proposed changes.',
+              'Type "UPDATE" in the confirmation field to confirm.',
+              'Check the mandatory confirmation checkbox.',
+              'Click "Update" — only changed fields are written to the database.',
+            ]} />
+          </SubSection>
+          <SubSection title="Visual Indicators">
+            <BulletList items={[
+              'Merge Import uses sage-colored (green-tinted) buttons to visually distinguish it from Add Import',
+              'The action footer is sticky at the bottom of the dialog',
+              '"Back to Mapping" and "Update" buttons are grouped on the right',
+              'Each row in the review table shows field-by-field old → new transitions',
+            ]} />
+          </SubSection>
+          <SubSection title="Safety Features">
+            <BulletList items={[
+              'Double confirmation required: text input ("UPDATE") + checkbox',
+              'Preview of all changes before committing',
+              'Field-level change tracking records each update with source "import"',
+              'Only fields present in the import file are modified — empty cells do not clear existing data',
+            ]} />
+          </SubSection>
+          <Warning>Merge Import matches locations by storeCode. If a storeCode in the import file doesn't exist in the database, it is treated as a new location and created.</Warning>
+        </Section>
+
+        {/* 12. Multi-Edit */}
+        <Section id="section-12" number="12" title="Multi-Edit (Bulk Operations)">
+          <SubSection title="Overview">
+            <p className="text-sm text-muted-foreground">
+              Multi-Edit allows you to apply the same change to multiple locations simultaneously. Select locations, choose a field, and set the new value — it's applied to all selected locations at once.
+            </p>
+          </SubSection>
+          <SubSection title="How to Use Multi-Edit">
+            <StepList steps={[
+              'In Table View, select multiple locations using the checkboxes.',
+              'Click the "Multi-Edit" button that appears.',
+              'In the dialog, select the field you want to change from the dropdown.',
+              'Enter the new value for that field.',
+              'Review the list of affected locations.',
+              'Click "Apply" to update all selected locations.',
+            ]} />
+          </SubSection>
+          <SubSection title="Supported Fields">
+            <p className="text-sm text-muted-foreground mb-2">
+              Most business fields can be multi-edited, including:
+            </p>
+            <BulletList items={[
+              'Status (active/pending)',
+              'Opening hours (any day)',
+              'Website, phone numbers',
+              'Categories (primary, additional)',
+              'Address fields (city, state, country, postal code)',
+              'Service URLs (appointment, menu, reservations, order ahead)',
+              'Labels, goldmine, fromTheBusiness',
+              'Temporarily closed flag',
+            ]} />
+          </SubSection>
+          <SubSection title="Field History on Multi-Edit">
+            <p className="text-sm text-muted-foreground">
+              Each field change on each location is individually recorded in <code className="bg-muted px-1 rounded">business_field_history</code> with change_source = "multi_edit". This means if you update 50 locations, 50 separate history records are created.
+            </p>
+          </SubSection>
+          <SubSection title="Field Permissions Apply">
+            <p className="text-sm text-muted-foreground">
+              Multi-edit respects field-level permissions. If a field is locked for your role, you won't be able to select it in the multi-edit dropdown.
+            </p>
+          </SubSection>
+        </Section>
+
+        {/* 13. Account-Wide Settings */}
+        <Section id="section-13" number="13" title="Account-Wide Settings">
+          <p className="text-sm text-muted-foreground mb-3">
+            Account-wide settings allow you to apply configurations to ALL locations in a client at once. Access via the "Account Settings" button on the Client Dashboard or Admin Panel.
+          </p>
+
+          <SubSection title="Logo Upload (Account-Wide)">
+            <p className="text-sm text-muted-foreground mb-2">
+              Upload a logo that applies to all locations in the client:
+            </p>
+            <BulletList items={[
+              'Click "Account Settings" → Logo section',
+              'Upload a logo image (JPG, PNG, TIFF, BMP)',
+              'Logo requirements: 1:1 aspect ratio, 250×250 to 5000×5000 pixels, minimum 10KB',
+              'The logo is uploaded to the business-photos storage bucket',
+              'The public URL is then applied to all locations\' logoPhoto field',
+              'Previous individual logos are overwritten',
+            ]} />
+          </SubSection>
+
+          <SubSection title="Opening Hours (Account-Wide)">
+            <p className="text-sm text-muted-foreground mb-2">
+              Set default opening hours for all locations at once:
+            </p>
+            <StepList steps={[
+              'Click "Account Settings" → Opening Hours',
+              'Set hours for each day of the week (Monday through Sunday)',
+              'Format: HH:MM-HH:MM (e.g., "09:00-17:00")',
+              'Use "x" for closed days',
+              'Use comma separation for split shifts (e.g., "09:00-12:00, 13:00-17:00")',
+              'Click "Apply to All Locations" — hours are written to all locations in the client',
+            ]} />
+            <Info>This overwrites existing opening hours for ALL locations. Use with caution if locations have different schedules.</Info>
+          </SubSection>
+
+          <SubSection title="Social Media Links (Account-Wide)">
+            <p className="text-sm text-muted-foreground mb-2">
+              Manage social media URLs across all locations:
+            </p>
+            <BulletList items={[
+              'Supported platforms: Facebook, Instagram, LinkedIn, Twitter/X, YouTube, TikTok, Pinterest',
+              'Set a URL for any platform — it will be applied to all locations',
+              'URLs must include the protocol prefix (https://)',
+              '"Remove All Social Links" — clears ALL social media from ALL locations',
+              '"Remove Single Platform" — removes a specific platform from all locations, showing affected count and a preview of the most common URL before confirming',
+            ]} />
+          </SubSection>
+
+          <SubSection title="Service URLs (Account-Wide)">
+            <p className="text-sm text-muted-foreground mb-2">
+              Set service URLs (appointment, menu, reservations, order ahead) for all locations:
+            </p>
+            <BulletList items={[
+              'Enter the URL for each service type',
+              'All URLs must include http:// or https:// prefix',
+              'Applied to all locations in the client',
+              'Leave empty to skip — won\'t clear existing values unless explicitly set',
+            ]} />
+          </SubSection>
+
+          <SubSection title="Categories Management">
+            <p className="text-sm text-muted-foreground mb-2">
+              Manage the list of categories available for locations in this client:
+            </p>
+            <BulletList items={[
+              'Categories are a subset of the master category list (categories table)',
+              'Add categories from the master list to make them available for this client',
+              'Remove categories to restrict what users can select',
+              'Stored in client_categories table, linked to the master category via source_category_id',
+              'Client admins, service users, and admins can manage categories',
+            ]} />
+          </SubSection>
+
+          <SubSection title="Custom Services (Account-Wide)">
+            <p className="text-sm text-muted-foreground">
+              See section 18 (Custom Services Management) for detailed documentation on creating, editing, and managing custom services for a client.
+            </p>
+          </SubSection>
+
+          <SubSection title="Field Permissions (Account-Wide)">
+            <p className="text-sm text-muted-foreground">
+              See section 17 (Field-Level Access Control) for detailed documentation on locking fields per role.
+            </p>
+          </SubSection>
+        </Section>
+
+        {/* 14. Photo Uploads & Media */}
+        <Section id="section-14" number="14" title="Photo Uploads & Media">
+          <SubSection title="Photo Types">
+            <FieldTable fields={[
+              { name: 'Logo Photo', description: '1:1 aspect ratio, 250×250 to 5000×5000 px, min 10KB. JPG/PNG/TIFF/BMP.' },
+              { name: 'Cover Photo', description: '16:9 aspect ratio, 480×270 to 2120×1192 px, min 10KB. JPG/PNG/TIFF/BMP.' },
+              { name: 'Other Photos', description: 'Additional photos as comma-separated URLs. No specific validation.' },
+            ]} />
+          </SubSection>
+          <SubSection title="Upload Workflow">
+            <StepList steps={[
+              'Open a location for editing.',
+              'Navigate to the Photos section.',
+              'Click "Upload" for Logo or Cover photo.',
+              'Select an image file from your device.',
+              'The system validates aspect ratio, dimensions, file size, and format.',
+              'If validation passes, the image is uploaded to the business-photos storage bucket.',
+              'The public URL is saved to the location\'s logoPhoto or coverPhoto field.',
+              'If validation fails, a user-friendly error message explains the issue.',
+            ]} />
+          </SubSection>
+          <SubSection title="Validation Rules (imageValidation.ts)">
+            <BulletList items={[
+              'Logo: Must be exactly 1:1 aspect ratio (square)',
+              'Logo: Minimum 250×250, maximum 5000×5000 pixels',
+              'Cover: Must be exactly 16:9 aspect ratio',
+              'Cover: Minimum 480×270, maximum 2120×1192 pixels',
+              'Both: Minimum file size 10KB',
+              'Both: Accepted formats: JPG, PNG, TIFF, BMP',
+              'Validation runs client-side before upload to prevent unnecessary storage writes',
+            ]} />
+          </SubSection>
+          <SubSection title="Storage">
+            <p className="text-sm text-muted-foreground">
+              All photos are stored in the <code className="bg-muted px-1 rounded">business-photos</code> Supabase storage bucket, which is <strong>public</strong> — photos are accessible via direct URL. File paths are organized by upload and stored as the full public URL in the business record.
+            </p>
+          </SubSection>
+          <SubSection title="Account-Wide Logo Upload">
+            <p className="text-sm text-muted-foreground">
+              Admins and Client Admins can upload a logo via Account Settings that is applied to ALL locations in the client. See section 13 (Account-Wide Settings) for details.
+            </p>
+          </SubSection>
+        </Section>
+
+        {/* 15. Export System */}
+        <Section id="section-15" number="15" title="Export System">
           <SubSection title="Export Formats">
             <BulletList items={[
               'JSON — Google Business Profile compatible schema',
@@ -762,10 +1002,15 @@ const AdminGuide = () => {
               Users can manually export via the "Export" button on the dashboard. The <code className="bg-muted px-1 rounded">manual-json-export</code> edge function generates the file on demand in the selected format. File naming: <code className="bg-muted px-1 rounded">ClientName-DD-MM-YYYY.{'{ext}'}</code>.
             </p>
           </SubSection>
+          <SubSection title="GCP Sync After Export">
+            <p className="text-sm text-muted-foreground">
+              After export, admins can sync files to Google Cloud Storage via the "Sync" button. The sync uses a "delete-then-upload" pattern to ensure fresh files. For the B Braun client, files are dual-copied to both the root bucket and a "Bbraun Export Copy/" subfolder.
+            </p>
+          </SubSection>
         </Section>
 
-        {/* 12. Backup & Version History */}
-        <Section id="section-12" number="12" title="Backup & Version History">
+        {/* 16. Backup & Version History */}
+        <Section id="section-16" number="16" title="Backup & Version History">
           <SubSection title="CRUD Backups (Automatic)">
             <BulletList items={[
               'Triggered on every INSERT/UPDATE/DELETE via the trigger_crud_backup database trigger',
@@ -807,8 +1052,8 @@ const AdminGuide = () => {
           </SubSection>
         </Section>
 
-        {/* 13. Field-Level Access Control */}
-        <Section id="section-13" number="13" title="Field-Level Access Control (Permissions)">
+        {/* 17. Field-Level Access Control */}
+        <Section id="section-17" number="17" title="Field-Level Access Control (Permissions)">
           <SubSection title="How It Works">
             <p className="text-sm text-muted-foreground mb-2">
               Admins and Service Users can lock specific fields for Users, Store Owners, and/or Client Admins. Client Admins can lock fields for Users and Store Owners (but not for themselves).
@@ -828,8 +1073,8 @@ const AdminGuide = () => {
           </SubSection>
         </Section>
 
-        {/* 14. Custom Services */}
-        <Section id="section-14" number="14" title="Custom Services Management">
+        {/* 18. Custom Services */}
+        <Section id="section-18" number="18" title="Custom Services Management">
           <SubSection title="Overview">
             <p className="text-sm text-muted-foreground mb-2">
               Custom services are configured at the client level and assigned to individual locations. Each service has:
@@ -852,8 +1097,8 @@ const AdminGuide = () => {
           </SubSection>
         </Section>
 
-        {/* 15. Edge Functions Reference */}
-        <Section id="section-15" number="15" title="Edge Functions Reference">
+        {/* 19. Edge Functions Reference */}
+        <Section id="section-19" number="19" title="Edge Functions Reference">
           <FieldTable fields={[
             { name: 'create-user', description: 'Creates a new user with role, profile, and access records. Supports invite flow and direct password. Validates caller permissions.' },
             { name: 'create-admin-user', description: 'Bootstrap function to create the initial admin user. No JWT required (verify_jwt = false). Should be disabled after first use.' },
@@ -866,8 +1111,8 @@ const AdminGuide = () => {
             { name: 'generate-lsc-magic-link', description: 'LSC integration: generates magic link for existing users. Validates API key. No JWT.' },
             { name: 'crud-backup', description: 'Creates a CRUD backup JSON file. Triggered by DB on business changes. Maintains 5-backup rolling window.' },
             { name: 'scheduled-backup', description: 'Weekly backup function. Runs every Monday 10 AM. Maintains 12-week rolling window.' },
-            { name: 'sync-to-gcp', description: 'Syncs JSON export files to Google Cloud Storage. Uses SERVICE_ACCOUNT_KEY secret.' },
-            { name: 'import-eco-movement', description: 'Imports location data from Eco Movement API. Uses ECO_MOVEMENT_API_TOKEN secret.' },
+            { name: 'sync-to-gcp', description: 'Syncs JSON export files to Google Cloud Storage. Uses SERVICE_ACCOUNT_KEY secret. Delete-then-upload pattern.' },
+            { name: 'import-eco-movement', description: 'Imports location data from Eco Movement API. Uses ECO_MOVEMENT_API_TOKEN. Supports OCPI 2.2 pagination.' },
           ]} />
           <SubSection title="JWT Configuration">
             <p className="text-sm text-muted-foreground mb-2">
@@ -881,8 +1126,8 @@ const AdminGuide = () => {
           </SubSection>
         </Section>
 
-        {/* 16. Database Triggers */}
-        <Section id="section-16" number="16" title="Database Triggers & Automations">
+        {/* 20. Database Triggers */}
+        <Section id="section-20" number="20" title="Database Triggers & Automations">
           <FieldTable fields={[
             { name: 'handle_new_user', description: 'Fires on auth.users INSERT. Creates profile, assigns client (from metadata or auto-generates new client).' },
             { name: 'trigger_json_export', description: 'Fires on businesses INSERT/UPDATE/DELETE. Calls generate-json-export edge function for automatic export regeneration.' },
@@ -894,17 +1139,34 @@ const AdminGuide = () => {
           ]} />
         </Section>
 
-        {/* 17. Storage Buckets */}
-        <Section id="section-17" number="17" title="Storage Buckets">
-          <FieldTable fields={[
-            { name: 'business-photos', description: 'Stores uploaded logo and cover photos for locations. Public bucket — photos accessible via URL.' },
-            { name: 'json-exports', description: 'Stores auto-generated JSON export files per client. Private bucket. Path: {client_id}/businesses.json.' },
-            { name: 'json-backups', description: 'Stores CRUD and weekly backup files. Private bucket. Paths: {client_id}/crud/ and {client_id}/weekly/.' },
-          ]} />
+        {/* 21. Storage Buckets */}
+        <Section id="section-21" number="21" title="Storage Buckets & File Management">
+          <SubSection title="Bucket Overview">
+            <FieldTable fields={[
+              { name: 'business-photos', description: 'Stores uploaded logo and cover photos for locations. Public bucket — photos accessible via direct URL. No authentication required to view.' },
+              { name: 'json-exports', description: 'Stores auto-generated JSON export files per client. Private bucket. Path: {client_id}/businesses.json. Only accessible via authenticated edge functions.' },
+              { name: 'json-backups', description: 'Stores CRUD and weekly backup files. Private bucket. Paths: {client_id}/crud/ and {client_id}/weekly/. Only accessible via authenticated requests.' },
+            ]} />
+          </SubSection>
+          <SubSection title="File Organization">
+            <BulletList items={[
+              'business-photos: Flat structure, files named by upload timestamp/UUID',
+              'json-exports: Organized by client_id — each client has one businesses.json file that is continuously overwritten',
+              'json-backups: Two subfolders per client — crud/ (rolling 5 backups) and weekly/ (rolling 12 weeks)',
+            ]} />
+          </SubSection>
+          <SubSection title="Access Control">
+            <BulletList items={[
+              'business-photos is public — anyone with the URL can view photos',
+              'json-exports and json-backups are private — access requires authentication',
+              'Edge functions use the service role key to read/write to private buckets',
+              'Frontend accesses backup files via authenticated Supabase client for download/restore operations',
+            ]} />
+          </SubSection>
         </Section>
 
-        {/* 18. Authentication & Security */}
-        <Section id="section-18" number="18" title="Authentication & Security">
+        {/* 22. Authentication & Security */}
+        <Section id="section-22" number="22" title="Authentication & Security">
           <SubSection title="Authentication Flow">
             <BulletList items={[
               'Email/password authentication via Supabase Auth',
@@ -940,11 +1202,11 @@ const AdminGuide = () => {
           </SubSection>
         </Section>
 
-        {/* 19. Integrations */}
-        <Section id="section-19" number="19" title="Integrations">
+        {/* 23. Integrations */}
+        <Section id="section-23" number="23" title="Integrations">
           <SubSection title="Google Cloud Platform (GCP) Sync">
             <p className="text-sm text-muted-foreground mb-2">
-              The <code className="bg-muted px-1 rounded">sync-to-gcp</code> edge function uploads JSON export files from the <code className="bg-muted px-1 rounded">json-exports</code> bucket to a GCS bucket. Triggered manually via the "Sync" button in the Admin Panel.
+              The <code className="bg-muted px-1 rounded">sync-to-gcp</code> edge function uploads JSON export files from the <code className="bg-muted px-1 rounded">json-exports</code> bucket to a GCS bucket. Triggered manually via the "Sync" button in the Admin Panel. Uses a "delete-then-upload" pattern to ensure files are fully refreshed.
             </p>
           </SubSection>
           <SubSection title="LSC Magic Link Integration">
@@ -957,17 +1219,27 @@ const AdminGuide = () => {
               'Looks up existing user by email — if not found, returns error (no user creation).',
               'Generates a magic link redirecting to /client-dashboard.',
               'User clicks link and is authenticated automatically.',
+              'All changes tracked via existing field history with user email.',
             ]} />
           </SubSection>
           <SubSection title="Eco Movement API Import">
-            <p className="text-sm text-muted-foreground">
-              The <code className="bg-muted px-1 rounded">import-eco-movement</code> function fetches charging station data from the Eco Movement API, maps it to the Jasoner business schema, and creates/updates locations. Import logs are stored in <code className="bg-muted px-1 rounded">api_import_logs</code>.
+            <p className="text-sm text-muted-foreground mb-2">
+              Automated daily import from Eco Movement OCPI API:
             </p>
+            <BulletList items={[
+              'Supports OCPI 2.2 pagination via Link headers (rel="next")',
+              'Fallback pagination via x-total-count and x-limit headers',
+              'Safety limit of 50 pages per sync',
+              'Creates/updates locations matched by store code',
+              'All changes tracked in business_field_history with source "eco_movement"',
+              'Import logs stored in api_import_logs table',
+              'Feed locations tracked in api_feed_locations table',
+            ]} />
           </SubSection>
         </Section>
 
-        {/* 20. Troubleshooting & FAQ */}
-        <Section id="section-20" number="20" title="Troubleshooting & FAQ">
+        {/* 24. Troubleshooting & FAQ */}
+        <Section id="section-24" number="24" title="Troubleshooting & FAQ">
           <SubSection title="User can't log in after invitation">
             <BulletList items={[
               'Verify the invitation email was received (check spam).',
@@ -1011,6 +1283,26 @@ const AdminGuide = () => {
               'Verify stores have been assigned via the Store icon in User Management.',
               'Check that the user has the store_owner role (not user).',
               'Verify the assigned stores have the correct client_id.',
+            ]} />
+          </SubSection>
+          <SubSection title="Photo upload rejected">
+            <BulletList items={[
+              'Logo: Must be 1:1 aspect ratio, 250×250 to 5000×5000 px, min 10KB, JPG/PNG/TIFF/BMP.',
+              'Cover: Must be 16:9 aspect ratio, 480×270 to 2120×1192 px, min 10KB, JPG/PNG/TIFF/BMP.',
+              'Check the error message for the specific issue (wrong ratio, too small, wrong format).',
+            ]} />
+          </SubSection>
+          <SubSection title="Multi-edit field not available">
+            <p className="text-sm text-muted-foreground">
+              The field may be locked for your role via field permissions. Only unlocked fields appear in the multi-edit dropdown. Contact your admin to unlock the field if needed.
+            </p>
+          </SubSection>
+          <SubSection title="Merge import not updating as expected">
+            <BulletList items={[
+              'Ensure storeCode column is mapped — merge matches on storeCode.',
+              'Empty cells in the import file do NOT clear existing values.',
+              'Check the review table for the exact old → new transitions before confirming.',
+              'If a storeCode doesn\'t exist, it creates a new location instead of updating.',
             ]} />
           </SubSection>
         </Section>
