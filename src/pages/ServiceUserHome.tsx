@@ -6,7 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Eye, MapPin, Users, Loader2, LogOut, UserPlus } from 'lucide-react';
+import { Eye, MapPin, Users, Loader2, LogOut, UserPlus, HelpCircle } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import jasonerLogo from '@/assets/jasoner-horizontal-logo.png';
 import ServiceUserCreateDialog from '@/components/ServiceUserCreateDialog';
@@ -237,6 +237,10 @@ const ServiceUserHome = () => {
             <div className="flex items-center gap-4">
               <span className="text-sm text-muted-foreground">{user.email}</span>
               <UserSettingsDialog variant="ghost" />
+              <Button variant="ghost" size="sm" onClick={() => window.open('/admin-guide', '_blank')}>
+                <HelpCircle className="w-4 h-4 mr-2" />
+                Help
+              </Button>
               <Button variant="ghost" size="sm" onClick={handleSignOut}>
                 <LogOut className="w-4 h-4 mr-2" />
                 Sign Out
