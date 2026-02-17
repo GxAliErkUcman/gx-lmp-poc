@@ -269,7 +269,7 @@ useEffect(() => {
               </div>
             )}
             <UserSettingsDialog variant="outline" />
-            <Button onClick={() => window.open('/guide', '_blank')} variant="outline" className="shadow-modern text-xs sm:text-sm">
+            <Button onClick={async () => { const isAdmin = await hasRole('admin'); window.open(isAdmin ? '/admin-guide' : '/guide', '_blank'); }} variant="outline" className="shadow-modern text-xs sm:text-sm">
               <HelpCircle className="w-4 h-4 sm:mr-2" />
               <span className="hidden sm:inline">Help</span>
             </Button>
