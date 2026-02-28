@@ -194,7 +194,7 @@ const ClientCustomServicesDialog = ({
                       className="mt-1"
                     />
                     <p className="text-xs text-muted-foreground mt-1">
-                      {newServiceName.length}/140 characters
+                      {newServiceName.length}/140 characters — The name of the service your locations offer. Examples: "EV Charging", "Wheelchair Accessible Parking", "Drive-Through Service".
                     </p>
                   </div>
 
