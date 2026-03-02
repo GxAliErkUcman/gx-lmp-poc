@@ -937,36 +937,35 @@ const AdminGuide = () => {
             <FieldTable fields={[
               { name: 'Logo Photo', description: '1:1 aspect ratio, 250×250 to 5000×5000 px, min 10KB. JPG/PNG/TIFF/BMP.' },
               { name: 'Cover Photo', description: '16:9 aspect ratio, 480×270 to 2120×1192 px, min 10KB. JPG/PNG/TIFF/BMP.' },
+              { name: 'Custom Photos (New)', description: 'Location-level custom gallery photos. Max 10 per location. Same validation as cover photos. Stored in GCP.' },
               { name: 'Other Photos', description: 'Additional photos as comma-separated URLs. No specific validation.' },
             ]} />
           </SubSection>
-          <SubSection title="Upload Workflow">
+          <SubSection title="Gallery Workflow (New)">
             <StepList steps={[
-              'Open a location for editing.',
-              'Navigate to the Photos section.',
-              'Click "Upload" for Logo or Cover photo.',
-              'Select an image file from your device.',
-              'The system validates aspect ratio, dimensions, file size, and format.',
-              'If validation passes, the image is uploaded to the business-photos storage bucket.',
-              'The public URL is saved to the location\'s logoPhoto or coverPhoto field.',
-              'If validation fails, a user-friendly error message explains the issue.',
+              'In table view, click the Gallery button (image icon) in the Actions column.',
+              'LocationGalleryDialog opens with Logo, Cover Photo, and Custom Photos tabs.',
+              'Use Custom Photos tab for drag-and-drop uploads or click-to-select.',
+              'Delete custom photos directly from the grid (with confirmation).',
             ]} />
           </SubSection>
           <SubSection title="Validation Rules (imageValidation.ts)">
             <BulletList items={[
               'Logo: Must be exactly 1:1 aspect ratio (square)',
               'Logo: Minimum 250×250, maximum 5000×5000 pixels',
-              'Cover: Must be exactly 16:9 aspect ratio',
-              'Cover: Minimum 480×270, maximum 2120×1192 pixels',
-              'Both: Minimum file size 10KB',
-              'Both: Accepted formats: JPG, PNG, TIFF, BMP',
-              'Validation runs client-side before upload to prevent unnecessary storage writes',
+              'Cover + Custom: Must be exactly 16:9 aspect ratio',
+              'Cover + Custom: Minimum 480×270, maximum 2120×1192 pixels',
+              'All uploads: Minimum file size 10KB',
+              'All uploads: Accepted formats: JPG, PNG, TIFF, BMP',
+              'Validation runs client-side before upload to prevent unnecessary writes',
             ]} />
           </SubSection>
           <SubSection title="Storage">
-            <p className="text-sm text-muted-foreground">
-              All photos are stored in the <code className="bg-muted px-1 rounded">business-photos</code> Supabase storage bucket, which is <strong>public</strong> — photos are accessible via direct URL. File paths are organized by upload and stored as the full public URL in the business record.
-            </p>
+            <BulletList items={[
+              'Logo/Cover photos: Supabase storage bucket business-photos (public URLs saved on businesses table).',
+              'Custom photos: Google Cloud Storage path Custom Photos/{clientName}/{storeCode}/ via manage-custom-photos edge function.',
+              'Custom photos do not use Supabase storage and are not persisted in businesses table columns.',
+            ]} />
           </SubSection>
           <SubSection title="Account-Wide Logo Upload">
             <p className="text-sm text-muted-foreground">
