@@ -117,6 +117,8 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
   const [pendingFormData, setPendingFormData] = useState<any>(null);
   const [customServicesDialogOpen, setCustomServicesDialogOpen] = useState(false);
   const [customServices, setCustomServices] = useState<any[]>([]);
+  const [galleryDialogOpen, setGalleryDialogOpen] = useState(false);
+  const [resolvedClientName, setResolvedClientName] = useState<string>('');
   
   // Store original business data for field history tracking
   const originalBusinessDataRef = useRef<Record<string, any> | null>(null);
