@@ -1308,6 +1308,35 @@ const AdminGuide = () => {
           </SubSection>
         </Section>
 
+        {/* 25. Product Updates */}
+        <Section id="section-25" number="25" title="Product Updates (Photo Gallery & GCP Custom Photos)">
+          <SubSection title="Release Summary">
+            <BulletList items={[
+              'Added a Gallery action button in table row actions (next to edit/delete).',
+              'Introduced LocationGalleryDialog with Logo, Cover, and Custom Photos tabs.',
+              'Implemented custom photo storage in GCP path Custom Photos/{clientName}/{storeCode}/.',
+              'Enabled drag-and-drop + click upload for location-level custom photos.',
+              'Added custom photo delete and list operations through manage-custom-photos edge function.',
+            ]} />
+          </SubSection>
+          <SubSection title="Operational Notes for Admins/Service Users">
+            <BulletList items={[
+              'Custom photos are not stored in Supabase storage buckets or businesses table columns.',
+              'Validation for custom photos follows cover photo rules and limit is 10 photos per location.',
+              'If photos do not render, confirm SERVICE_ACCOUNT_KEY is valid and function deployment is current.',
+              'Expected folder structure in GCP: Custom Photos/{clientName}/{storeCode}/',
+            ]} />
+          </SubSection>
+          <SubSection title="Support Checklist">
+            <StepList steps={[
+              'Verify user can open Gallery from table action icon.',
+              'Upload one custom photo and confirm immediate preview in gallery grid.',
+              'Delete the same photo and confirm it disappears from list.',
+              'Check edge function logs for manage-custom-photos if any step fails.',
+            ]} />
+          </SubSection>
+        </Section>
+
         {/* Footer */}
         <div className="mt-16 pt-8 border-t border-border text-center text-xs text-muted-foreground print:mt-8">
           <p>Jasoner Admin & Service User Guide — {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long' })} — Confidential</p>
