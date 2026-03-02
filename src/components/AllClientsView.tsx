@@ -164,6 +164,31 @@ export const AllClientsView = () => {
     fetchAllClientData();
   };
 
+  const handleToggleCustomPhotos = async (clientId: string, enabled: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('clients')
+        .update({ custom_photos_enabled: enabled } as any)
+        .eq('id', clientId);
+
+      if (error) throw error;
+
+      setClients(prev => prev.map(c => c.id === clientId ? { ...c, custom_photos_enabled: enabled } : c));
+
+      toast({
+        title: enabled ? 'Custom Photos Enabled' : 'Custom Photos Disabled',
+        description: `Custom photos ${enabled ? 'enabled' : 'disabled'} for this client.`,
+      });
+    } catch (error: any) {
+      console.error('Error toggling custom photos:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to update custom photos setting.',
+        variant: 'destructive',
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
