@@ -70,10 +70,13 @@ const StoreOwnerDashboard = () => {
         // Fetch client name
         const { data: clientData } = await supabase
           .from('clients')
-          .select('name')
+          .select('name, custom_photos_enabled')
           .eq('id', businessList[0].client_id)
           .single();
-        if (clientData) setClientName(clientData.name);
+        if (clientData) {
+          setClientName(clientData.name);
+          setCustomPhotosEnabled((clientData as any).custom_photos_enabled ?? false);
+        }
       }
       
       // Get user's logo from any business

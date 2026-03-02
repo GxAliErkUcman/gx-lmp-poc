@@ -85,7 +85,7 @@ const ClientAdminPanel = () => {
       // Get current user's profile to find their client_id
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
-        .select('client_id, clients(name)')
+        .select('client_id, clients(name, custom_photos_enabled)')
         .eq('user_id', user?.id)
         .single();
 
@@ -94,6 +94,7 @@ const ClientAdminPanel = () => {
       const userClientId = profileData.client_id;
       setClientId(userClientId);
       setClientName((profileData as any).clients?.name || '');
+      setCustomPhotosEnabled((profileData as any).clients?.custom_photos_enabled ?? false);
 
       // Fetch users for this client
       const { data: profilesData, error: profilesError } = await supabase
