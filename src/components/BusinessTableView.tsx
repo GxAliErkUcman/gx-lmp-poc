@@ -27,6 +27,7 @@ interface BusinessTableViewProps {
   onMultiEdit: (selectedIds: string[]) => void;
   onMultiDelete: (selectedIds: string[]) => void;
   showValidationErrors?: boolean;
+  clientName?: string;
 }
 
 const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiDelete, showValidationErrors = true }: BusinessTableViewProps) => {
