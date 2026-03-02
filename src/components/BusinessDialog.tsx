@@ -1266,6 +1266,17 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
         currentServices={customServices}
         onSave={(services) => setCustomServices(services)}
       />
+
+      {business && resolvedClientName && (
+        <LocationGalleryDialog
+          open={galleryDialogOpen}
+          onOpenChange={setGalleryDialogOpen}
+          business={business}
+          clientName={resolvedClientName}
+          onLogoChange={(url) => setValue('logoPhoto', url)}
+          onCoverChange={(url) => setCoverPhoto(url)}
+        />
+      )}
     </Dialog>
   );
 };
