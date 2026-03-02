@@ -56,7 +56,7 @@ const ClientDashboard = () => {
   const [businessesToDelete, setBusinessesToDelete] = useState<string[]>([]);
   const [isServiceUser, setIsServiceUser] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [accessibleClients, setAccessibleClients] = useState<{id: string; name: string}[]>([]);
+  const [accessibleClients, setAccessibleClients] = useState<{id: string; name: string; custom_photos_enabled?: boolean}[]>([]);
   const [selectedClientId, setSelectedClientId] = useState<string>('');
   const [createUserDialogOpen, setCreateUserDialogOpen] = useState(false);
   const [versionHistoryOpen, setVersionHistoryOpen] = useState(false);
