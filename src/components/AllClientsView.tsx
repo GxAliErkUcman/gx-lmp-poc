@@ -4,7 +4,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Eye, MapPin, Users, Loader2, UserPlus } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Eye, MapPin, Users, Loader2, UserPlus, Image } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import ServiceUserCreateDialog from '@/components/ServiceUserCreateDialog';
 
@@ -13,6 +15,7 @@ interface ClientInfo {
   name: string;
   active_locations: number;
   pending_locations: number;
+  custom_photos_enabled: boolean;
   users: {
     user_id: string;
     first_name: string;
@@ -40,7 +43,7 @@ export const AllClientsView = () => {
       // Fetch ALL clients (admins have access to all)
       const { data: clientsData, error: clientsError } = await supabase
         .from('clients')
-        .select('id, name')
+        .select('id, name, custom_photos_enabled')
         .order('name');
 
       if (clientsError) throw clientsError;
@@ -129,6 +132,7 @@ export const AllClientsView = () => {
           name: client.name,
           active_locations,
           pending_locations,
+          custom_photos_enabled: (client as any).custom_photos_enabled ?? false,
           users: usersWithRoles.filter(u => u !== null) as typeof usersWithRoles[0][]
         };
       });
@@ -158,6 +162,31 @@ export const AllClientsView = () => {
 
   const handleUserCreated = () => {
     fetchAllClientData();
+  };
+
+  const handleToggleCustomPhotos = async (clientId: string, enabled: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('clients')
+        .update({ custom_photos_enabled: enabled } as any)
+        .eq('id', clientId);
+
+      if (error) throw error;
+
+      setClients(prev => prev.map(c => c.id === clientId ? { ...c, custom_photos_enabled: enabled } : c));
+
+      toast({
+        title: enabled ? 'Custom Photos Enabled' : 'Custom Photos Disabled',
+        description: `Custom photos ${enabled ? 'enabled' : 'disabled'} for this client.`,
+      });
+    } catch (error: any) {
+      console.error('Error toggling custom photos:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to update custom photos setting.',
+        variant: 'destructive',
+      });
+    }
   };
 
   if (loading) {
@@ -222,7 +251,21 @@ export const AllClientsView = () => {
                   </div>
                 </div>
 
-                {/* Users Summary */}
+                {/* Custom Photos Toggle */}
+                <div className="border-t pt-4">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor={`custom-photos-${client.id}`} className="flex items-center gap-2 text-sm cursor-pointer">
+                      <Image className="w-4 h-4 text-muted-foreground" />
+                      Custom Photos
+                    </Label>
+                    <Switch
+                      id={`custom-photos-${client.id}`}
+                      checked={client.custom_photos_enabled}
+                      onCheckedChange={(checked) => handleToggleCustomPhotos(client.id, checked)}
+                    />
+                  </div>
+                </div>
+
                 <div className="border-t pt-4">
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-sm font-medium flex items-center gap-2">

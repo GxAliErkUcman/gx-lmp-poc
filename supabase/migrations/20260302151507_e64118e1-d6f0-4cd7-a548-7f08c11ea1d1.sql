@@ -1,0 +1,1 @@
+ALTER TABLE public.clients ADD COLUMN custom_photos_enabled boolean NOT NULL DEFAULT false;

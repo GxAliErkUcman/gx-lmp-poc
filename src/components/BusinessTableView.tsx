@@ -28,9 +28,10 @@ interface BusinessTableViewProps {
   onMultiDelete: (selectedIds: string[]) => void;
   showValidationErrors?: boolean;
   clientName?: string;
+  customPhotosEnabled?: boolean;
 }
 
-const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiDelete, showValidationErrors = true, clientName = '' }: BusinessTableViewProps) => {
+const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiDelete, showValidationErrors = true, clientName = '', customPhotosEnabled = false }: BusinessTableViewProps) => {
   const { t, i18n } = useTranslation('fields');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [galleryBusiness, setGalleryBusiness] = useState<Business | null>(null);
@@ -693,14 +694,16 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
                     >
                       <Edit className="w-4 h-4" />
                     </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => setGalleryBusiness(business)}
-                      title="Photo Gallery"
-                    >
-                      <Image className="w-4 h-4" />
-                    </Button>
+                    {customPhotosEnabled && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setGalleryBusiness(business)}
+                        title="Photo Gallery"
+                      >
+                        <Image className="w-4 h-4" />
+                      </Button>
+                    )}
                     <Button
                       size="sm"
                       variant="ghost"

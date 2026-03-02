@@ -56,7 +56,7 @@ const ClientDashboard = () => {
   const [businessesToDelete, setBusinessesToDelete] = useState<string[]>([]);
   const [isServiceUser, setIsServiceUser] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [accessibleClients, setAccessibleClients] = useState<{id: string; name: string}[]>([]);
+  const [accessibleClients, setAccessibleClients] = useState<{id: string; name: string; custom_photos_enabled?: boolean}[]>([]);
   const [selectedClientId, setSelectedClientId] = useState<string>('');
   const [createUserDialogOpen, setCreateUserDialogOpen] = useState(false);
   const [versionHistoryOpen, setVersionHistoryOpen] = useState(false);
@@ -145,7 +145,7 @@ const ClientDashboard = () => {
         // Admins can access all clients
         const { data: clientsData, error: clientsError } = await supabase
           .from('clients')
-          .select('id, name')
+          .select('id, name, custom_photos_enabled')
           .order('name');
 
         if (clientsError) throw clientsError;
@@ -168,7 +168,7 @@ const ClientDashboard = () => {
 
         const { data: clientsData, error: clientsError } = await supabase
           .from('clients')
-          .select('id, name')
+          .select('id, name, custom_photos_enabled')
           .in('id', clientIds)
           .order('name');
 
@@ -672,6 +672,7 @@ const ClientDashboard = () => {
                       onMultiEdit={handleMultiEdit}
                       onMultiDelete={handleMultiDelete}
                       clientName={selectedClient?.name || ''}
+                      customPhotosEnabled={selectedClient?.custom_photos_enabled ?? false}
                     />
                   ) : (
                     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -716,6 +717,7 @@ const ClientDashboard = () => {
                       onMultiDelete={handleMultiDelete}
                       showValidationErrors={true}
                       clientName={selectedClient?.name || ''}
+                      customPhotosEnabled={selectedClient?.custom_photos_enabled ?? false}
                     />
                   ) : (
                     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -755,6 +757,7 @@ const ClientDashboard = () => {
                       onMultiEdit={handleMultiEdit}
                       onMultiDelete={handleMultiDelete}
                       clientName={selectedClient?.name || ''}
+                      customPhotosEnabled={selectedClient?.custom_photos_enabled ?? false}
                     />
                   ) : (
                     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -796,6 +799,7 @@ const ClientDashboard = () => {
                         onMultiEdit={handleMultiEdit}
                         onMultiDelete={handleMultiDelete}
                         clientName={selectedClient?.name || ''}
+                        customPhotosEnabled={selectedClient?.custom_photos_enabled ?? false}
                       />
                     ) : (
                       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">

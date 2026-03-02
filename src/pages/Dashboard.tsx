@@ -45,6 +45,7 @@ const Dashboard = () => {
   const [businessesToDelete, setBusinessesToDelete] = useState<string[]>([]);
   const [clientId, setClientId] = useState<string | null>(null);
   const [clientName, setClientName] = useState<string>('');
+  const [customPhotosEnabled, setCustomPhotosEnabled] = useState(false);
 
   const handleLogoUploaded = () => {
     // Refresh businesses to get updated logo
@@ -99,13 +100,14 @@ useEffect(() => {
       if (user) {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('client_id, clients(name)')
+          .select('client_id, clients(name, custom_photos_enabled)')
           .eq('user_id', user.id)
           .maybeSingle();
         
         if (profile?.client_id) {
           setClientId(profile.client_id);
           setClientName((profile as any).clients?.name || '');
+          setCustomPhotosEnabled((profile as any).clients?.custom_photos_enabled ?? false);
         }
       }
       
@@ -420,6 +422,7 @@ useEffect(() => {
                   onMultiDelete={handleMultiDelete}
                   showValidationErrors={false}
                   clientName={clientName}
+                  customPhotosEnabled={customPhotosEnabled}
                 />
               ) : (
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -498,6 +501,7 @@ useEffect(() => {
                   onMultiDelete={handleMultiDelete}
                   showValidationErrors={true}
                   clientName={clientName}
+                  customPhotosEnabled={customPhotosEnabled}
                 />
               ) : (
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">

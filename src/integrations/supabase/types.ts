@@ -431,6 +431,7 @@ export type Database = {
       clients: {
         Row: {
           created_at: string
+          custom_photos_enabled: boolean
           id: string
           lsc_id: number | null
           name: string
@@ -438,6 +439,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          custom_photos_enabled?: boolean
           id?: string
           lsc_id?: number | null
           name: string
@@ -445,6 +447,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          custom_photos_enabled?: boolean
           id?: string
           lsc_id?: number | null
           name?: string
