@@ -145,7 +145,7 @@ const ClientDashboard = () => {
         // Admins can access all clients
         const { data: clientsData, error: clientsError } = await supabase
           .from('clients')
-          .select('id, name')
+          .select('id, name, custom_photos_enabled')
           .order('name');
 
         if (clientsError) throw clientsError;
