@@ -482,6 +482,7 @@ const ClientAdminPanel = () => {
                 onMultiDelete={() => {}}
                 showValidationErrors={true}
                 clientName={clientName}
+                customPhotosEnabled={customPhotosEnabled}
               />
             )}
           </TabsContent>
