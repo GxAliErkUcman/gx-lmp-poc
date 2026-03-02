@@ -689,13 +689,23 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
                       size="sm"
                       variant="ghost"
                       onClick={() => onEdit(business)}
+                      title="Edit"
                     >
                       <Edit className="w-4 h-4" />
                     </Button>
                     <Button
                       size="sm"
                       variant="ghost"
+                      onClick={() => setGalleryBusiness(business)}
+                      title="Photo Gallery"
+                    >
+                      <Image className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
                       onClick={() => onDelete(business.id)}
+                      title="Delete"
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>
