@@ -51,6 +51,7 @@ const ClientAdminPanel = () => {
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [clientId, setClientId] = useState<string | null>(null);
   const [clientName, setClientName] = useState<string>('');
+  const [customPhotosEnabled, setCustomPhotosEnabled] = useState(false);
   const [createUserDialogOpen, setCreateUserDialogOpen] = useState(false);
   const [storeAssignmentDialogOpen, setStoreAssignmentDialogOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
