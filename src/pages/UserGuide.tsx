@@ -35,6 +35,14 @@ const StepList = ({ steps }: { steps: string[] }) => (
   </ol>
 );
 
+const BulletList = ({ items }: { items: string[] }) => (
+  <ul className="list-disc list-inside space-y-1 ml-2 text-sm text-muted-foreground">
+    {items.map((item, i) => (
+      <li key={i}>{item}</li>
+    ))}
+  </ul>
+);
+
 const FieldTable = ({ fields }: { fields: { name: string; description: string; required?: boolean }[] }) => (
   <div className="overflow-x-auto my-3">
     <table className="w-full text-sm border border-border rounded-lg">
