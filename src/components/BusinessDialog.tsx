@@ -1075,6 +1075,31 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
             </Card>
           </LockedFieldWrapper>
 
+          {/* Custom Photos (GCP) - only for existing businesses */}
+          {business && resolvedClientName && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span>Custom Photos</span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setGalleryDialogOpen(true)}
+                  >
+                    <span className="text-xs">View All Photos</span>
+                  </Button>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <CustomPhotoUpload
+                  storeCode={watch('storeCode')}
+                  clientName={resolvedClientName}
+                />
+              </CardContent>
+            </Card>
+          )}
+
           {/* Service URLs */}
           <LockedFieldWrapper 
             isLocked={isGroupLocked('service_urls')}
