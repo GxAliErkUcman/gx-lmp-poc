@@ -192,6 +192,17 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
     }
   };
 
+  // Fetch client name for gallery/custom photos
+  useEffect(() => {
+    const fetchClientName = async () => {
+      const cid = clientId || business?.client_id;
+      if (!cid) { setResolvedClientName(''); return; }
+      const { data } = await supabase.from('clients').select('name').eq('id', cid).maybeSingle();
+      setResolvedClientName(data?.name || '');
+    };
+    if (open) fetchClientName();
+  }, [open, clientId, business?.client_id]);
+
   useEffect(() => {
     const loadBusinessData = async () => {
       if (business && open) {
