@@ -694,6 +694,27 @@ const UserGuide = () => {
           </ul>
         </Section>
 
+        {/* 22. Product Updates */}
+        <Section number="22" title="Product Updates: Photo Gallery & Custom Photos">
+          <SubSection title="What Changed">
+            <BulletList items={[
+              'New Gallery action button in table row actions (next to Edit and Delete)',
+              'New unified Photo Gallery dialog with Logo, Cover Photo, and Custom Photos tabs',
+              'New location-level custom photo uploads with drag-and-drop support',
+              'Custom photos are now managed in Google Cloud Storage per location folder',
+            ]} />
+          </SubSection>
+          <SubSection title="How to Use the Update">
+            <StepList steps={[
+              'Open your dashboard table view.',
+              'Click the Gallery image icon for a location.',
+              'Open the Custom Photos tab to upload, view, or delete custom photos.',
+              'Use Logo and Cover tabs to review and update those images in one place.',
+            ]} />
+          </SubSection>
+          <Tip>This update is location-level: each store has its own custom photo set and limits.</Tip>
+        </Section>
+
         {/* Footer */}
         <div className="text-center text-xs text-muted-foreground mt-16 pt-8 border-t border-border print:mt-8">
           <p>Jasoner User Guide • Generated {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>

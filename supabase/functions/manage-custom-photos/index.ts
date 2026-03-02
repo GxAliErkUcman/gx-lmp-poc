@@ -132,7 +132,7 @@ serve(async (req) => {
         .filter((item: any) => !item.name.endsWith('/')) // skip folder markers
         .map((item: any) => ({
           name: item.name,
-          url: `https://storage.googleapis.com/${GCP_BUCKET}/${encodeURIComponent(item.name).replace(/%2F/g, '/')}`,
+          url: `https://storage.googleapis.com/storage/v1/b/${GCP_BUCKET}/o/${encodeURIComponent(item.name)}?alt=media&access_token=${accessToken}`,
           size: parseInt(item.size || '0'),
           created: item.timeCreated,
         }))
