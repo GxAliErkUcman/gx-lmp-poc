@@ -13,6 +13,7 @@ interface ClientInfo {
   name: string;
   active_locations: number;
   pending_locations: number;
+  custom_photos_enabled: boolean;
   users: {
     user_id: string;
     first_name: string;
