@@ -1121,7 +1121,7 @@ const AdminGuide = () => {
             </p>
             <BulletList items={[
               'verify_jwt = true: create-user, manual-json-export, delete-client, delete-user, update-client-id',
-              'verify_jwt = false: generate-json-export, create-admin-user, generate-invite-link, sync-to-gcp, scheduled-backup, crud-backup, import-eco-movement, generate-lsc-magic-link',
+              'verify_jwt = false: generate-json-export, create-admin-user, generate-invite-link, sync-to-gcp, scheduled-backup, crud-backup, import-eco-movement, generate-lsc-magic-link, manage-custom-photos',
             ]} />
             <Info>Functions with verify_jwt = false implement their own authentication checks internally (API keys, service role checks, etc.).</Info>
           </SubSection>
