@@ -9,9 +9,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Edit, Trash2, Search, ArrowUp, ArrowDown, Settings, Filter, X, AlertCircle, Check, ChevronsUpDown, Info } from 'lucide-react';
+import { Edit, Trash2, Search, ArrowUp, ArrowDown, Settings, Filter, X, AlertCircle, Check, ChevronsUpDown, Info, Image } from 'lucide-react';
 import { Business } from '@/types/business';
 import ManageColumnsDialog, { type ColumnConfig } from './ManageColumnsDialog';
+import LocationGalleryDialog from './LocationGalleryDialog';
 import { formatCountryDisplay } from '@/components/CountrySelect';
 import { ValidationError } from '@/lib/validation';
 import { getExportValidationErrors } from '@/lib/exportValidation';
