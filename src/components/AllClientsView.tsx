@@ -130,6 +130,7 @@ export const AllClientsView = () => {
           name: client.name,
           active_locations,
           pending_locations,
+          custom_photos_enabled: (client as any).custom_photos_enabled ?? false,
           users: usersWithRoles.filter(u => u !== null) as typeof usersWithRoles[0][]
         };
       });
