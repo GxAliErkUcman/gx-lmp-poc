@@ -729,6 +729,15 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
         columns={columns}
         onColumnsChange={setColumns}
       />
+
+      {galleryBusiness && (
+        <LocationGalleryDialog
+          open={!!galleryBusiness}
+          onOpenChange={(open) => { if (!open) setGalleryBusiness(null); }}
+          business={galleryBusiness}
+          clientName={clientName}
+        />
+      )}
     </div>
   );
 };
