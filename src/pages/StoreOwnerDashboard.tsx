@@ -66,6 +66,13 @@ const StoreOwnerDashboard = () => {
       // Get client_id from first business
       if (businessList.length > 0 && businessList[0].client_id) {
         setClientId(businessList[0].client_id);
+        // Fetch client name
+        const { data: clientData } = await supabase
+          .from('clients')
+          .select('name')
+          .eq('id', businessList[0].client_id)
+          .single();
+        if (clientData) setClientName(clientData.name);
       }
       
       // Get user's logo from any business
