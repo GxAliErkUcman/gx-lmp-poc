@@ -9,9 +9,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Edit, Trash2, Search, ArrowUp, ArrowDown, Settings, Filter, X, AlertCircle, Check, ChevronsUpDown, Info } from 'lucide-react';
+import { Edit, Trash2, Search, ArrowUp, ArrowDown, Settings, Filter, X, AlertCircle, Check, ChevronsUpDown, Info, Image } from 'lucide-react';
 import { Business } from '@/types/business';
 import ManageColumnsDialog, { type ColumnConfig } from './ManageColumnsDialog';
+import LocationGalleryDialog from './LocationGalleryDialog';
 import { formatCountryDisplay } from '@/components/CountrySelect';
 import { ValidationError } from '@/lib/validation';
 import { getExportValidationErrors } from '@/lib/exportValidation';
@@ -26,11 +27,13 @@ interface BusinessTableViewProps {
   onMultiEdit: (selectedIds: string[]) => void;
   onMultiDelete: (selectedIds: string[]) => void;
   showValidationErrors?: boolean;
+  clientName?: string;
 }
 
-const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiDelete, showValidationErrors = true }: BusinessTableViewProps) => {
+const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiDelete, showValidationErrors = true, clientName = '' }: BusinessTableViewProps) => {
   const { t, i18n } = useTranslation('fields');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [galleryBusiness, setGalleryBusiness] = useState<Business | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredBusinesses, setFilteredBusinesses] = useState(businesses);
   const [currentSort, setCurrentSort] = useState<{ key: keyof Business, direction: 'asc' | 'desc' } | null>(null);
@@ -686,13 +689,23 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
                       size="sm"
                       variant="ghost"
                       onClick={() => onEdit(business)}
+                      title="Edit"
                     >
                       <Edit className="w-4 h-4" />
                     </Button>
                     <Button
                       size="sm"
                       variant="ghost"
+                      onClick={() => setGalleryBusiness(business)}
+                      title="Photo Gallery"
+                    >
+                      <Image className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
                       onClick={() => onDelete(business.id)}
+                      title="Delete"
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>
@@ -716,6 +729,15 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
         columns={columns}
         onColumnsChange={setColumns}
       />
+
+      {galleryBusiness && (
+        <LocationGalleryDialog
+          open={!!galleryBusiness}
+          onOpenChange={(open) => { if (!open) setGalleryBusiness(null); }}
+          business={galleryBusiness}
+          clientName={clientName}
+        />
+      )}
     </div>
   );
 };

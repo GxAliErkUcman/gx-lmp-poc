@@ -479,6 +479,7 @@ const ClientAdminPanel = () => {
                 onMultiEdit={() => {}}
                 onMultiDelete={() => {}}
                 showValidationErrors={true}
+                clientName={clientName}
               />
             )}
           </TabsContent>

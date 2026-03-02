@@ -33,6 +33,7 @@ const StoreOwnerDashboard = () => {
   const [deleteConfirmDialogOpen, setDeleteConfirmDialogOpen] = useState(false);
   const [businessesToDelete, setBusinessesToDelete] = useState<string[]>([]);
   const [clientId, setClientId] = useState<string | null>(null);
+  const [clientName, setClientName] = useState<string>('');
 
   const fetchBusinesses = async () => {
     try {
@@ -65,6 +66,13 @@ const StoreOwnerDashboard = () => {
       // Get client_id from first business
       if (businessList.length > 0 && businessList[0].client_id) {
         setClientId(businessList[0].client_id);
+        // Fetch client name
+        const { data: clientData } = await supabase
+          .from('clients')
+          .select('name')
+          .eq('id', businessList[0].client_id)
+          .single();
+        if (clientData) setClientName(clientData.name);
       }
       
       // Get user's logo from any business
@@ -310,6 +318,7 @@ const StoreOwnerDashboard = () => {
                   onMultiEdit={handleMultiEdit}
                   onMultiDelete={handleMultiDelete}
                   showValidationErrors={false}
+                  clientName={clientName}
                 />
               ) : (
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -366,6 +375,7 @@ const StoreOwnerDashboard = () => {
                   onMultiEdit={handleMultiEdit}
                   onMultiDelete={handleMultiDelete}
                   showValidationErrors={true}
+                  clientName={clientName}
                 />
               ) : (
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
