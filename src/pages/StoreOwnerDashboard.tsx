@@ -34,6 +34,7 @@ const StoreOwnerDashboard = () => {
   const [businessesToDelete, setBusinessesToDelete] = useState<string[]>([]);
   const [clientId, setClientId] = useState<string | null>(null);
   const [clientName, setClientName] = useState<string>('');
+  const [customPhotosEnabled, setCustomPhotosEnabled] = useState(false);
 
   const fetchBusinesses = async () => {
     try {
