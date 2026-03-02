@@ -220,6 +220,7 @@ const AdminGuide = () => {
     'Authentication & Security',
     'Integrations',
     'Troubleshooting & FAQ',
+    'Product Updates (Photo Gallery & GCP Custom Photos)',
   ];
 
   return (
