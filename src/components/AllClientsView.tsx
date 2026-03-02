@@ -251,7 +251,21 @@ export const AllClientsView = () => {
                   </div>
                 </div>
 
-                {/* Users Summary */}
+                {/* Custom Photos Toggle */}
+                <div className="border-t pt-4">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor={`custom-photos-${client.id}`} className="flex items-center gap-2 text-sm cursor-pointer">
+                      <Image className="w-4 h-4 text-muted-foreground" />
+                      Custom Photos
+                    </Label>
+                    <Switch
+                      id={`custom-photos-${client.id}`}
+                      checked={client.custom_photos_enabled}
+                      onCheckedChange={(checked) => handleToggleCustomPhotos(client.id, checked)}
+                    />
+                  </div>
+                </div>
+
                 <div className="border-t pt-4">
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-sm font-medium flex items-center gap-2">
