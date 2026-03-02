@@ -18,6 +18,8 @@ import { validateBusiness, generateStoreCode } from '@/lib/validation';
 import SpecialHours, { SpecialHourEntry, parseSpecialHoursFromSchema, formatSpecialHoursToSchema } from './SpecialHours';
 import { Business } from '@/types/business';
 import PhotoUpload from '@/components/PhotoUpload';
+import CustomPhotoUpload from '@/components/CustomPhotoUpload';
+import LocationGalleryDialog from '@/components/LocationGalleryDialog';
 import OpeningHours from '@/components/OpeningHours';
 import LocationMap from '@/components/LocationMap';
 import { CategorySelect } from '@/components/CategorySelect';
@@ -115,6 +117,8 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
   const [pendingFormData, setPendingFormData] = useState<any>(null);
   const [customServicesDialogOpen, setCustomServicesDialogOpen] = useState(false);
   const [customServices, setCustomServices] = useState<any[]>([]);
+  const [galleryDialogOpen, setGalleryDialogOpen] = useState(false);
+  const [resolvedClientName, setResolvedClientName] = useState<string>('');
   
   // Store original business data for field history tracking
   const originalBusinessDataRef = useRef<Record<string, any> | null>(null);
@@ -187,6 +191,17 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
       return null;
     }
   };
+
+  // Fetch client name for gallery/custom photos
+  useEffect(() => {
+    const fetchClientName = async () => {
+      const cid = clientId || business?.client_id;
+      if (!cid) { setResolvedClientName(''); return; }
+      const { data } = await supabase.from('clients').select('name').eq('id', cid).maybeSingle();
+      setResolvedClientName(data?.name || '');
+    };
+    if (open) fetchClientName();
+  }, [open, clientId, business?.client_id]);
 
   useEffect(() => {
     const loadBusinessData = async () => {
@@ -1060,6 +1075,31 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
             </Card>
           </LockedFieldWrapper>
 
+          {/* Custom Photos (GCP) - only for existing businesses */}
+          {business && resolvedClientName && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span>Custom Photos</span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setGalleryDialogOpen(true)}
+                  >
+                    <span className="text-xs">View All Photos</span>
+                  </Button>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <CustomPhotoUpload
+                  storeCode={watch('storeCode')}
+                  clientName={resolvedClientName}
+                />
+              </CardContent>
+            </Card>
+          )}
+
           {/* Service URLs */}
           <LockedFieldWrapper 
             isLocked={isGroupLocked('service_urls')}
@@ -1226,6 +1266,17 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
         currentServices={customServices}
         onSave={(services) => setCustomServices(services)}
       />
+
+      {business && resolvedClientName && (
+        <LocationGalleryDialog
+          open={galleryDialogOpen}
+          onOpenChange={setGalleryDialogOpen}
+          business={business}
+          clientName={resolvedClientName}
+          onLogoChange={(url) => setValue('logoPhoto', url)}
+          onCoverChange={(url) => setCoverPhoto(url)}
+        />
+      )}
     </Dialog>
   );
 };
