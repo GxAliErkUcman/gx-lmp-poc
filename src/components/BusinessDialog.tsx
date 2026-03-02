@@ -18,6 +18,8 @@ import { validateBusiness, generateStoreCode } from '@/lib/validation';
 import SpecialHours, { SpecialHourEntry, parseSpecialHoursFromSchema, formatSpecialHoursToSchema } from './SpecialHours';
 import { Business } from '@/types/business';
 import PhotoUpload from '@/components/PhotoUpload';
+import CustomPhotoUpload from '@/components/CustomPhotoUpload';
+import LocationGalleryDialog from '@/components/LocationGalleryDialog';
 import OpeningHours from '@/components/OpeningHours';
 import LocationMap from '@/components/LocationMap';
 import { CategorySelect } from '@/components/CategorySelect';
