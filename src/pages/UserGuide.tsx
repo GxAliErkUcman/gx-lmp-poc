@@ -35,6 +35,14 @@ const StepList = ({ steps }: { steps: string[] }) => (
   </ol>
 );
 
+const BulletList = ({ items }: { items: string[] }) => (
+  <ul className="list-disc list-inside space-y-1 ml-2 text-sm text-muted-foreground">
+    {items.map((item, i) => (
+      <li key={i}>{item}</li>
+    ))}
+  </ul>
+);
+
 const FieldTable = ({ fields }: { fields: { name: string; description: string; required?: boolean }[] }) => (
   <div className="overflow-x-auto my-3">
     <table className="w-full text-sm border border-border rounded-lg">
@@ -205,6 +213,7 @@ const UserGuide = () => {
             <li>Validation & Error Resolution</li>
             <li>Deleting Locations</li>
             <li>Tips & Best Practices</li>
+            <li>Product Updates: Photo Gallery & Custom Photos</li>
           </ol>
         </Section>
 
@@ -454,21 +463,43 @@ const UserGuide = () => {
 
         {/* 11. Photos */}
         <Section number="11" title="Photos & Media">
+          <SubSection title="Location Gallery (New)">
+            <p className="text-sm text-muted-foreground mb-2">
+              In Table view, click the <strong>Gallery</strong> button (image icon) in the Actions column next to Edit and Delete.
+              This opens a single gallery dialog with tabs for <strong>Logo</strong>, <strong>Cover Photo</strong>, and <strong>Custom Photos</strong>.
+            </p>
+            <StepList steps={[
+              'Find a location in the table and click the Gallery (image) icon.',
+              'Use tabs to switch between Logo, Cover Photo, and Custom Photos.',
+              'Upload or replace images directly from each tab.',
+              'Close the dialog when done — your updates are saved immediately.',
+            ]} />
+          </SubSection>
           <SubSection title="Cover Photo">
             <p className="text-sm text-muted-foreground">
-              In the edit dialog, scroll to the Photos section. You can upload a cover photo by clicking the upload area or 
-              dragging and dropping an image. Supported formats: JPG, PNG.
+              In the edit dialog or gallery, you can upload a cover photo by clicking the upload area or dragging and dropping an image.
+              Supported formats: JPG, PNG, TIFF, BMP.
             </p>
           </SubSection>
           <SubSection title="Logo Photo">
             <p className="text-sm text-muted-foreground">
-              The company logo is managed at the account level via <strong>Account Settings → Account Logo</strong>. 
-              It applies to all your locations.
+              Logo photos can be managed per location in the Gallery dialog under the <strong>Logo</strong> tab.
             </p>
           </SubSection>
-          <SubSection title="Other Photos">
+          <SubSection title="Custom Photos (New)">
+            <p className="text-sm text-muted-foreground mb-2">
+              Custom photos are location-specific and support drag-and-drop or click-to-select uploads.
+            </p>
+            <BulletList items={[
+              'Maximum 10 custom photos per location',
+              'Validation is the same as cover photos (JPG/PNG/TIFF/BMP, min 10KB, 480×270 to 2120×1192)',
+              'You can delete custom photos directly from the gallery grid',
+            ]} />
+          </SubSection>
+          <SubSection title="Storage Behavior">
             <p className="text-sm text-muted-foreground">
-              Additional photos can be entered as comma-separated URLs in the "Other Photos" field.
+              Logo and cover photos use the existing storage flow, while custom photos are stored in Google Cloud Storage under
+              <code className="bg-muted px-1 py-0.5 rounded text-xs"> Custom Photos/{'{clientName}'}/{'{storeCode}'}/ </code>.
             </p>
           </SubSection>
         </Section>
@@ -669,6 +700,27 @@ const UserGuide = () => {
             <li><strong>Description guidelines</strong> — The "From the Business" description should not contain URLs, phone numbers, or promotional offers per Google guidelines.</li>
             <li><strong>Google-optimized categories</strong> — Jasoner checks your data for suitability against Google Business Profile guidelines to optimize your listing. Categories are curated and pre-selected to best match your business type. If you have a new type of business among your locations that isn't covered by the available categories, contact your administrator to have it added.</li>
           </ul>
+        </Section>
+
+        {/* 22. Product Updates */}
+        <Section number="22" title="Product Updates: Photo Gallery & Custom Photos">
+          <SubSection title="What Changed">
+            <BulletList items={[
+              'New Gallery action button in table row actions (next to Edit and Delete)',
+              'New unified Photo Gallery dialog with Logo, Cover Photo, and Custom Photos tabs',
+              'New location-level custom photo uploads with drag-and-drop support',
+              'Custom photos are now managed in Google Cloud Storage per location folder',
+            ]} />
+          </SubSection>
+          <SubSection title="How to Use the Update">
+            <StepList steps={[
+              'Open your dashboard table view.',
+              'Click the Gallery image icon for a location.',
+              'Open the Custom Photos tab to upload, view, or delete custom photos.',
+              'Use Logo and Cover tabs to review and update those images in one place.',
+            ]} />
+          </SubSection>
+          <Tip>This update is location-level: each store has its own custom photo set and limits.</Tip>
         </Section>
 
         {/* Footer */}

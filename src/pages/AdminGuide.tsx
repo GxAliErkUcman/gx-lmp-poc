@@ -220,6 +220,7 @@ const AdminGuide = () => {
     'Authentication & Security',
     'Integrations',
     'Troubleshooting & FAQ',
+    'Product Updates (Photo Gallery & GCP Custom Photos)',
   ];
 
   return (
@@ -936,36 +937,35 @@ const AdminGuide = () => {
             <FieldTable fields={[
               { name: 'Logo Photo', description: '1:1 aspect ratio, 250×250 to 5000×5000 px, min 10KB. JPG/PNG/TIFF/BMP.' },
               { name: 'Cover Photo', description: '16:9 aspect ratio, 480×270 to 2120×1192 px, min 10KB. JPG/PNG/TIFF/BMP.' },
+              { name: 'Custom Photos (New)', description: 'Location-level custom gallery photos. Max 10 per location. Same validation as cover photos. Stored in GCP.' },
               { name: 'Other Photos', description: 'Additional photos as comma-separated URLs. No specific validation.' },
             ]} />
           </SubSection>
-          <SubSection title="Upload Workflow">
+          <SubSection title="Gallery Workflow (New)">
             <StepList steps={[
-              'Open a location for editing.',
-              'Navigate to the Photos section.',
-              'Click "Upload" for Logo or Cover photo.',
-              'Select an image file from your device.',
-              'The system validates aspect ratio, dimensions, file size, and format.',
-              'If validation passes, the image is uploaded to the business-photos storage bucket.',
-              'The public URL is saved to the location\'s logoPhoto or coverPhoto field.',
-              'If validation fails, a user-friendly error message explains the issue.',
+              'In table view, click the Gallery button (image icon) in the Actions column.',
+              'LocationGalleryDialog opens with Logo, Cover Photo, and Custom Photos tabs.',
+              'Use Custom Photos tab for drag-and-drop uploads or click-to-select.',
+              'Delete custom photos directly from the grid (with confirmation).',
             ]} />
           </SubSection>
           <SubSection title="Validation Rules (imageValidation.ts)">
             <BulletList items={[
               'Logo: Must be exactly 1:1 aspect ratio (square)',
               'Logo: Minimum 250×250, maximum 5000×5000 pixels',
-              'Cover: Must be exactly 16:9 aspect ratio',
-              'Cover: Minimum 480×270, maximum 2120×1192 pixels',
-              'Both: Minimum file size 10KB',
-              'Both: Accepted formats: JPG, PNG, TIFF, BMP',
-              'Validation runs client-side before upload to prevent unnecessary storage writes',
+              'Cover + Custom: Must be exactly 16:9 aspect ratio',
+              'Cover + Custom: Minimum 480×270, maximum 2120×1192 pixels',
+              'All uploads: Minimum file size 10KB',
+              'All uploads: Accepted formats: JPG, PNG, TIFF, BMP',
+              'Validation runs client-side before upload to prevent unnecessary writes',
             ]} />
           </SubSection>
           <SubSection title="Storage">
-            <p className="text-sm text-muted-foreground">
-              All photos are stored in the <code className="bg-muted px-1 rounded">business-photos</code> Supabase storage bucket, which is <strong>public</strong> — photos are accessible via direct URL. File paths are organized by upload and stored as the full public URL in the business record.
-            </p>
+            <BulletList items={[
+              'Logo/Cover photos: Supabase storage bucket business-photos (public URLs saved on businesses table).',
+              'Custom photos: Google Cloud Storage path Custom Photos/{clientName}/{storeCode}/ via manage-custom-photos edge function.',
+              'Custom photos do not use Supabase storage and are not persisted in businesses table columns.',
+            ]} />
           </SubSection>
           <SubSection title="Account-Wide Logo Upload">
             <p className="text-sm text-muted-foreground">
@@ -1112,6 +1112,7 @@ const AdminGuide = () => {
             { name: 'crud-backup', description: 'Creates a CRUD backup JSON file. Triggered by DB on business changes. Maintains 5-backup rolling window.' },
             { name: 'scheduled-backup', description: 'Weekly backup function. Runs every Monday 10 AM. Maintains 12-week rolling window.' },
             { name: 'sync-to-gcp', description: 'Syncs JSON export files to Google Cloud Storage. Uses SERVICE_ACCOUNT_KEY secret. Delete-then-upload pattern.' },
+            { name: 'manage-custom-photos', description: 'Handles custom photo list/upload/delete in GCP for each location folder (Custom Photos/{clientName}/{storeCode}/). Performs auth and returns success:false responses on logic errors.' },
             { name: 'import-eco-movement', description: 'Imports location data from Eco Movement API. Uses ECO_MOVEMENT_API_TOKEN. Supports OCPI 2.2 pagination.' },
           ]} />
           <SubSection title="JWT Configuration">
@@ -1120,7 +1121,7 @@ const AdminGuide = () => {
             </p>
             <BulletList items={[
               'verify_jwt = true: create-user, manual-json-export, delete-client, delete-user, update-client-id',
-              'verify_jwt = false: generate-json-export, create-admin-user, generate-invite-link, sync-to-gcp, scheduled-backup, crud-backup, import-eco-movement, generate-lsc-magic-link',
+              'verify_jwt = false: generate-json-export, create-admin-user, generate-invite-link, sync-to-gcp, scheduled-backup, crud-backup, import-eco-movement, generate-lsc-magic-link, manage-custom-photos',
             ]} />
             <Info>Functions with verify_jwt = false implement their own authentication checks internally (API keys, service role checks, etc.).</Info>
           </SubSection>
@@ -1303,6 +1304,35 @@ const AdminGuide = () => {
               'Empty cells in the import file do NOT clear existing values.',
               'Check the review table for the exact old → new transitions before confirming.',
               'If a storeCode doesn\'t exist, it creates a new location instead of updating.',
+            ]} />
+          </SubSection>
+        </Section>
+
+        {/* 25. Product Updates */}
+        <Section id="section-25" number="25" title="Product Updates (Photo Gallery & GCP Custom Photos)">
+          <SubSection title="Release Summary">
+            <BulletList items={[
+              'Added a Gallery action button in table row actions (next to edit/delete).',
+              'Introduced LocationGalleryDialog with Logo, Cover, and Custom Photos tabs.',
+              'Implemented custom photo storage in GCP path Custom Photos/{clientName}/{storeCode}/.',
+              'Enabled drag-and-drop + click upload for location-level custom photos.',
+              'Added custom photo delete and list operations through manage-custom-photos edge function.',
+            ]} />
+          </SubSection>
+          <SubSection title="Operational Notes for Admins/Service Users">
+            <BulletList items={[
+              'Custom photos are not stored in Supabase storage buckets or businesses table columns.',
+              'Validation for custom photos follows cover photo rules and limit is 10 photos per location.',
+              'If photos do not render, confirm SERVICE_ACCOUNT_KEY is valid and function deployment is current.',
+              'Expected folder structure in GCP: Custom Photos/{clientName}/{storeCode}/',
+            ]} />
+          </SubSection>
+          <SubSection title="Support Checklist">
+            <StepList steps={[
+              'Verify user can open Gallery from table action icon.',
+              'Upload one custom photo and confirm immediate preview in gallery grid.',
+              'Delete the same photo and confirm it disappears from list.',
+              'Check edge function logs for manage-custom-photos if any step fails.',
             ]} />
           </SubSection>
         </Section>
