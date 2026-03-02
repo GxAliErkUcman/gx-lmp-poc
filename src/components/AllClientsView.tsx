@@ -4,7 +4,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Eye, MapPin, Users, Loader2, UserPlus } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Eye, MapPin, Users, Loader2, UserPlus, Image } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import ServiceUserCreateDialog from '@/components/ServiceUserCreateDialog';
 
