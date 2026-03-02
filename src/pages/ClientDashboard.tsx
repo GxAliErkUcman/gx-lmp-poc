@@ -799,6 +799,7 @@ const ClientDashboard = () => {
                         onMultiEdit={handleMultiEdit}
                         onMultiDelete={handleMultiDelete}
                         clientName={selectedClient?.name || ''}
+                        customPhotosEnabled={selectedClient?.custom_photos_enabled ?? false}
                       />
                     ) : (
                       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
