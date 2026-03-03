@@ -119,7 +119,7 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
     }
 
     return filtered;
-  }, [businesses, searchTerm, categoryFilter, cityFilter, countryFilter, postalCodeFilter, currentSort]);
+  }, [businesses, searchTerm, categoryFilter, cityFilter, countryFilter, postalCodeFilter, noCoordinatesFilter, currentSort]);
 
   // Reset page when filters change
   React.useEffect(() => {
