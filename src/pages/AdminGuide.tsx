@@ -963,8 +963,8 @@ const AdminGuide = () => {
           <SubSection title="Storage">
             <BulletList items={[
               'Logo/Cover photos: Supabase storage bucket business-photos (public URLs saved on businesses table).',
-              'Custom photos: Google Cloud Storage path Custom Photos/{clientName}/{storeCode}/ via manage-custom-photos edge function.',
-              'Custom photos do not use Supabase storage and are not persisted in businesses table columns.',
+              'Other photos: Google Cloud Storage path Other Photos/{clientName}/{storeCode}/ via manage-custom-photos edge function.',
+              'Other photos do not use Supabase storage and are not persisted in businesses table columns.',
             ]} />
           </SubSection>
           <SubSection title="Account-Wide Logo Upload">
