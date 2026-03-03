@@ -823,6 +823,23 @@ const MultiEditDialog = ({ open, onOpenChange, selectedIds, onSuccess, clientId 
               )}
             </div>
 
+            {/* Generate Coordinates */}
+            <div className="space-y-2 pt-4 border-t">
+              <h3 className="text-sm font-medium">Generate Coordinates</h3>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setBulkGeocodeOpen(true)}
+                className="w-full flex items-center gap-2"
+              >
+                <MapPin className="w-4 h-4" />
+                Generate Coordinates for Selected
+              </Button>
+              <p className="text-xs text-muted-foreground">
+                Auto-detect lat/long for {selectedIds.length} selected location(s) missing coordinates.
+              </p>
+            </div>
+
             <div className="flex justify-end gap-2 pt-4">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
