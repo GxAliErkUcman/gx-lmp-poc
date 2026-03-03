@@ -1309,14 +1309,14 @@ const AdminGuide = () => {
         </Section>
 
         {/* 25. Product Updates */}
-        <Section id="section-25" number="25" title="Product Updates (Photo Gallery & GCP Custom Photos)">
+        <Section id="section-25" number="25" title="Product Updates (Photo Gallery & GCP Other Photos)">
           <SubSection title="Release Summary">
             <BulletList items={[
               'Added a Gallery action button in table row actions (next to edit/delete).',
-              'Introduced LocationGalleryDialog with Logo, Cover, and Custom Photos tabs.',
-              'Implemented custom photo storage in GCP path Custom Photos/{clientName}/{storeCode}/.',
-              'Enabled drag-and-drop + click upload for location-level custom photos.',
-              'Added custom photo delete and list operations through manage-custom-photos edge function.',
+              'Introduced LocationGalleryDialog with Logo, Cover, and Other Photos tabs.',
+              'Implemented other photo storage in GCP path Other Photos/{clientName}/{storeCode}/.',
+              'Enabled drag-and-drop + click upload for location-level other photos.',
+              'Added other photo delete and list operations through manage-custom-photos edge function.',
             ]} />
           </SubSection>
           <SubSection title="Operational Notes for Admins/Service Users">
