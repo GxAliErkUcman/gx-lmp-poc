@@ -124,7 +124,7 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
   // Reset page when filters change
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, categoryFilter, cityFilter, countryFilter, postalCodeFilter, businesses]);
+  }, [searchTerm, categoryFilter, cityFilter, countryFilter, postalCodeFilter, noCoordinatesFilter, businesses]);
 
   const handleCategoryFilter = (category: string) => {
     setCategoryFilter(category === "all" ? "" : category);
