@@ -707,9 +707,9 @@ const UserGuide = () => {
           <SubSection title="What Changed">
             <BulletList items={[
               'New Gallery action button in table row actions (next to Edit and Delete)',
-              'New unified Photo Gallery dialog with Logo, Cover Photo, and Custom Photos tabs',
-              'New location-level custom photo uploads with drag-and-drop support',
-              'Custom photos are now managed in Google Cloud Storage per location folder',
+              'New unified Photo Gallery dialog with Logo, Cover Photo, and Other Photos tabs',
+              'New location-level other photo uploads with drag-and-drop support',
+              'Other photos are now managed in Google Cloud Storage per location folder',
             ]} />
           </SubSection>
           <SubSection title="How to Use the Update">
