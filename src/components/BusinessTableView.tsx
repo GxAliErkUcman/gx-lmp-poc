@@ -196,7 +196,15 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
   // Update filtered businesses when businesses prop changes
   React.useEffect(() => {
     applyFilters(searchTerm, categoryFilter, cityFilter, countryFilter, postalCodeFilter);
+    setCurrentPage(1);
   }, [businesses, searchTerm, categoryFilter, cityFilter, countryFilter, postalCodeFilter]);
+
+  // Pagination
+  const totalPages = Math.max(1, Math.ceil(filteredBusinesses.length / PAGE_SIZE));
+  const paginatedBusinesses = useMemo(() => {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    return filteredBusinesses.slice(start, start + PAGE_SIZE);
+  }, [filteredBusinesses, currentPage]);
 
   const visibleColumns = columns.filter(col => col.visible);
 
