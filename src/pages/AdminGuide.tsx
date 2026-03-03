@@ -944,9 +944,9 @@ const AdminGuide = () => {
           <SubSection title="Gallery Workflow (New)">
             <StepList steps={[
               'In table view, click the Gallery button (image icon) in the Actions column.',
-              'LocationGalleryDialog opens with Logo, Cover Photo, and Custom Photos tabs.',
-              'Use Custom Photos tab for drag-and-drop uploads or click-to-select.',
-              'Delete custom photos directly from the grid (with confirmation).',
+              'LocationGalleryDialog opens with Logo, Cover Photo, and Other Photos tabs.',
+              'Use Other Photos tab for drag-and-drop uploads or click-to-select.',
+              'Delete other photos directly from the grid (with confirmation).',
             ]} />
           </SubSection>
           <SubSection title="Validation Rules (imageValidation.ts)">
