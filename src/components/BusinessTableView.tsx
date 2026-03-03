@@ -560,7 +560,7 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
             </Popover>
           </div>
           
-          {(categoryFilter || cityFilter || countryFilter || postalCodeFilter) && (
+              {(categoryFilter || cityFilter || countryFilter || postalCodeFilter || noCoordinatesFilter) && (
             <Button
               variant="ghost"
               size="sm"
