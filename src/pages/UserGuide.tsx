@@ -466,7 +466,7 @@ const UserGuide = () => {
           <SubSection title="Location Gallery (New)">
             <p className="text-sm text-muted-foreground mb-2">
               In Table view, click the <strong>Gallery</strong> button (image icon) in the Actions column next to Edit and Delete.
-              This opens a single gallery dialog with tabs for <strong>Logo</strong>, <strong>Cover Photo</strong>, and <strong>Custom Photos</strong>.
+              This opens a single gallery dialog with tabs for <strong>Logo</strong>, <strong>Cover Photo</strong>, and <strong>Other Photos</strong>.
             </p>
             <StepList steps={[
               'Find a location in the table and click the Gallery (image) icon.',
