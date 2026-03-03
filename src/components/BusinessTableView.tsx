@@ -35,6 +35,7 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
   const { t, i18n } = useTranslation('fields');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [galleryBusiness, setGalleryBusiness] = useState<Business | null>(null);
+  const [showAll, setShowAll] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentSort, setCurrentSort] = useState<{ key: keyof Business, direction: 'asc' | 'desc' } | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<string>('');
