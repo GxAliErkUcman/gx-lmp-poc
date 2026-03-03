@@ -720,7 +720,7 @@ const UserGuide = () => {
               'Use Logo and Cover tabs to review and update those images in one place.',
             ]} />
           </SubSection>
-          <Tip>This update is location-level: each store has its own custom photo set and limits.</Tip>
+          <Tip>This update is location-level: each store has its own other photo set and limits.</Tip>
         </Section>
 
         {/* Footer */}
