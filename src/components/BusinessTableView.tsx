@@ -36,7 +36,6 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [galleryBusiness, setGalleryBusiness] = useState<Business | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filteredBusinesses, setFilteredBusinesses] = useState(businesses);
   const [currentSort, setCurrentSort] = useState<{ key: keyof Business, direction: 'asc' | 'desc' } | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<string>('');
   const [cityFilter, setCityFilter] = useState<string>('');
@@ -85,55 +84,59 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
   const uniqueCountries = [...new Set(businesses.map(b => b.country).filter(Boolean))];
   const uniquePostalCodes = [...new Set(businesses.map(b => b.postalCode).filter(Boolean))];
 
-  // Filter businesses based on search term and filters
-  const handleSearch = (term: string) => {
-    setSearchTerm(term);
-    applyFilters(term, categoryFilter, cityFilter, countryFilter, postalCodeFilter);
-  };
-
-  const handleCategoryFilter = (category: string) => {
-    const filterValue = category === "all" ? "" : category;
-    setCategoryFilter(filterValue);
-    applyFilters(searchTerm, filterValue, cityFilter, countryFilter, postalCodeFilter);
-  };
-
-  const handleCityFilter = (city: string) => {
-    const filterValue = city === "all" ? "" : city;
-    setCityFilter(filterValue);
-    applyFilters(searchTerm, categoryFilter, filterValue, countryFilter, postalCodeFilter);
-  };
-
-  const handleCountryFilter = (country: string) => {
-    const filterValue = country === "all" ? "" : country;
-    setCountryFilter(filterValue);
-    applyFilters(searchTerm, categoryFilter, cityFilter, filterValue, postalCodeFilter);
-  };
-
-  const handlePostalCodeFilter = (postalCode: string) => {
-    const filterValue = postalCode === "all" ? "" : postalCode;
-    setPostalCodeFilter(filterValue);
-    applyFilters(searchTerm, categoryFilter, cityFilter, countryFilter, filterValue);
-  };
-
-  const applyFilters = (search: string, category: string, city: string, country: string, postalCode: string) => {
+  // Derive filtered + sorted businesses via useMemo (no state, no useEffect)
+  const filteredBusinesses = useMemo(() => {
     let filtered = businesses.filter(business => {
-      const matchesSearch = !search || 
-        business.businessName?.toLowerCase().includes(search.toLowerCase()) ||
-        business.city?.toLowerCase().includes(search.toLowerCase()) ||
-        business.primaryCategory?.toLowerCase().includes(search.toLowerCase()) || 
-        business.storeCode?.toLowerCase().includes(search.toLowerCase()) ||
-        business.addressLine1?.toLowerCase().includes(search.toLowerCase()) ||
-        business.postalCode?.toLowerCase().includes(search.toLowerCase());
+      const matchesSearch = !searchTerm || 
+        business.businessName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        business.city?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        business.primaryCategory?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+        business.storeCode?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        business.addressLine1?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        business.postalCode?.toLowerCase().includes(searchTerm.toLowerCase());
       
-      const matchesCategory = !category || business.primaryCategory === category;
-      const matchesCity = !city || business.city === city;
-      const matchesCountry = !country || business.country === country;
-      const matchesPostalCode = !postalCode || business.postalCode === postalCode;
+      const matchesCategory = !categoryFilter || business.primaryCategory === categoryFilter;
+      const matchesCity = !cityFilter || business.city === cityFilter;
+      const matchesCountry = !countryFilter || business.country === countryFilter;
+      const matchesPostalCode = !postalCodeFilter || business.postalCode === postalCodeFilter;
       
       return matchesSearch && matchesCategory && matchesCity && matchesCountry && matchesPostalCode;
     });
-    
-    setFilteredBusinesses(filtered);
+
+    if (currentSort) {
+      const { key, direction } = currentSort;
+      filtered = [...filtered].sort((a, b) => {
+        const sortKey = key === ('address' as keyof Business) ? 'addressLine1' : key;
+        const aValue = a[sortKey as keyof Business] || '';
+        const bValue = b[sortKey as keyof Business] || '';
+        if (aValue < bValue) return direction === 'asc' ? -1 : 1;
+        if (aValue > bValue) return direction === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+
+    return filtered;
+  }, [businesses, searchTerm, categoryFilter, cityFilter, countryFilter, postalCodeFilter, currentSort]);
+
+  // Reset page when filters change
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, categoryFilter, cityFilter, countryFilter, postalCodeFilter, businesses]);
+
+  const handleCategoryFilter = (category: string) => {
+    setCategoryFilter(category === "all" ? "" : category);
+  };
+
+  const handleCityFilter = (city: string) => {
+    setCityFilter(city === "all" ? "" : city);
+  };
+
+  const handleCountryFilter = (country: string) => {
+    setCountryFilter(country === "all" ? "" : country);
+  };
+
+  const handlePostalCodeFilter = (postalCode: string) => {
+    setPostalCodeFilter(postalCode === "all" ? "" : postalCode);
   };
 
   const clearFilters = () => {
@@ -142,7 +145,6 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
     setCityFilter('');
     setCountryFilter('');
     setPostalCodeFilter('');
-    setFilteredBusinesses(businesses);
   };
 
   // Handle individual checkbox selection
@@ -169,35 +171,11 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
 
   const handleSort = (key: string) => {
     let direction: 'asc' | 'desc' = 'asc';
-    
-    // Check if the same column is clicked to toggle the direction
     if (currentSort && currentSort.key === key) {
       direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
     }
-
-    // Sort a copy of the array and update the state
-    const sortedArray = [...filteredBusinesses].sort((a, b) => {
-      // Handle address column specially - sort by addressLine1
-      const sortKey = key === 'address' ? 'addressLine1' : key;
-      const aValue = a[sortKey as keyof Business] || '';
-      const bValue = b[sortKey as keyof Business] || '';
-      if (aValue < bValue) {
-        return direction === 'asc' ? -1 : 1;
-      }
-      if (aValue > bValue) {
-        return direction === 'asc' ? 1 : -1;
-      }
-      return 0;
-    });
-    setCurrentSort({ key: key as keyof Business, direction }); 
-    setFilteredBusinesses(sortedArray);
+    setCurrentSort({ key: key as keyof Business, direction });
   };
-
-  // Update filtered businesses when businesses prop changes
-  React.useEffect(() => {
-    applyFilters(searchTerm, categoryFilter, cityFilter, countryFilter, postalCodeFilter);
-    setCurrentPage(1);
-  }, [businesses, searchTerm, categoryFilter, cityFilter, countryFilter, postalCodeFilter]);
 
   // Pagination
   const totalPages = Math.max(1, Math.ceil(filteredBusinesses.length / PAGE_SIZE));
@@ -412,7 +390,7 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
             <Input
               placeholder="Search businesses..."
               value={searchTerm}
-              onChange={(e) => handleSearch(e.target.value)}
+              onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10 w-full"
             />
           </div>

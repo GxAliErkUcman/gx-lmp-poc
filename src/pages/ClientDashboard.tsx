@@ -89,19 +89,32 @@ const ClientDashboard = () => {
     checkRoleAndFetch();
   }, [user]);
 
+  // Determine selected client from URL or default, and fetch businesses in one effect
   useEffect(() => {
+    if (accessibleClients.length === 0) return;
+
     const clientFromUrl = searchParams.get('client');
-    if (clientFromUrl && accessibleClients.length > 0) {
-      setSelectedClientId(clientFromUrl);
-    } else if (accessibleClients.length > 0 && !selectedClientId) {
-      setSelectedClientId(accessibleClients[0].id);
+    let targetClientId = '';
+    
+    if (clientFromUrl && accessibleClients.some(c => c.id === clientFromUrl)) {
+      targetClientId = clientFromUrl;
+    } else if (!selectedClientId || !accessibleClients.some(c => c.id === selectedClientId)) {
+      targetClientId = accessibleClients[0].id;
+    }
+
+    if (targetClientId && targetClientId !== selectedClientId) {
+      setSelectedClientId(targetClientId);
     }
   }, [searchParams, accessibleClients]);
 
+  // Fetch businesses and API feed when selectedClientId is set
   useEffect(() => {
-    if (selectedClientId) {
-      fetchBusinesses();
-    }
+    if (!selectedClientId) return;
+    
+    const fetchAll = async () => {
+      await fetchBusinesses();
+    };
+    fetchAll();
   }, [selectedClientId]);
 
   // Fetch API feed locations after businesses are loaded (for Energie 360° only)
