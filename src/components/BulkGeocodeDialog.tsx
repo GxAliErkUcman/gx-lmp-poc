@@ -34,6 +34,10 @@ interface BulkGeocodeDialogProps {
 type Phase = 'confirm' | 'processing' | 'complete';
 
 const getCountryCode = (countryName: string): string => {
+  // Handle formats like "Germany (DE)" -> extract code from parentheses
+  const codeMatch = countryName.match(/\(([A-Z]{2})\)/);
+  if (codeMatch) return codeMatch[1];
+  
   const codes: Record<string, string> = {
     'Austria': 'AT', 'Germany': 'DE', 'Switzerland': 'CH', 'Turkey': 'TR',
     'United States': 'US', 'United Kingdom': 'GB', 'France': 'FR', 'Italy': 'IT',
@@ -42,7 +46,12 @@ const getCountryCode = (countryName: string): string => {
     'Romania': 'RO', 'Bulgaria': 'BG', 'Denmark': 'DK', 'Sweden': 'SE', 'Norway': 'NO',
     'Finland': 'FI', 'Portugal': 'PT', 'Greece': 'GR', 'Ireland': 'IE', 'Luxembourg': 'LU',
   };
-  return codes[countryName] || '';
+  return codes[countryName] || (countryName.length === 2 ? countryName : '');
+};
+
+/** Strip parenthetical codes from country names for Nominatim, e.g. "Germany (DE)" -> "Germany" */
+const cleanCountryName = (country: string): string => {
+  return country.replace(/\s*\([A-Z]{2}\)\s*$/, '').trim();
 };
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
