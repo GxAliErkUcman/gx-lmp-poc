@@ -18,14 +18,6 @@ import { ValidationError } from '@/lib/validation';
 import { getExportValidationErrors } from '@/lib/exportValidation';
 import { cn } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
-import { Business } from '@/types/business';
-import ManageColumnsDialog, { type ColumnConfig } from './ManageColumnsDialog';
-import LocationGalleryDialog from './LocationGalleryDialog';
-import { formatCountryDisplay } from '@/components/CountrySelect';
-import { ValidationError } from '@/lib/validation';
-import { getExportValidationErrors } from '@/lib/exportValidation';
-import { cn } from '@/lib/utils';
-import { useTranslation } from 'react-i18next';
 
 
 interface BusinessTableViewProps {
