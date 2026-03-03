@@ -115,6 +115,43 @@ const BulkGeocodeDialog = ({ open, onOpenChange, clientId, onSuccess, specificBu
     }
   };
 
+  const fetchWithRetry = async (url: string, maxRetries = 3): Promise<any> => {
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        const res = await fetch(url, {
+          headers: { 'User-Agent': 'GX-LMP-Geocoder/1.0' },
+        });
+        if (res.status === 429 || res.status >= 500) {
+          if (attempt < maxRetries) {
+            const backoff = Math.pow(2, attempt + 1) * 1000; // 2s, 4s, 8s
+            await sleep(backoff);
+            continue;
+          }
+          throw new Error(`HTTP ${res.status} after ${maxRetries + 1} attempts`);
+        }
+        return await res.json();
+      } catch (err: any) {
+        if (attempt < maxRetries && (err.message?.includes('Failed to fetch') || err.message?.includes('NetworkError'))) {
+          const backoff = Math.pow(2, attempt + 1) * 1000;
+          await sleep(backoff);
+          continue;
+        }
+        throw err;
+      }
+    }
+  };
+
+  const parseResult = (data: any[]): { lat: number; lon: number } | null => {
+    if (data?.length > 0) {
+      const lat = Number(parseFloat(String(data[0].lat)).toFixed(7));
+      const lon = Number(parseFloat(String(data[0].lon)).toFixed(7));
+      if (!isNaN(lat) && !isNaN(lon) && lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180) {
+        return { lat, lon };
+      }
+    }
+    return null;
+  };
+
   const geocodeSingle = async (business: any): Promise<{ lat: number; lon: number } | null> => {
     const { addressLine1, city, state, postalCode } = business;
     const country = business.country ? cleanCountryName(business.country) : '';
@@ -131,15 +168,9 @@ const BulkGeocodeDialog = ({ open, onOpenChange, clientId, onSuccess, specificBu
         limit: '1',
       });
 
-      const res = await fetch(`https://nominatim.openstreetmap.org/search?${params}`);
-      const data = await res.json();
-      if (data?.length > 0) {
-        const lat = Number(parseFloat(String(data[0].lat)).toFixed(7));
-        const lon = Number(parseFloat(String(data[0].lon)).toFixed(7));
-        if (!isNaN(lat) && !isNaN(lon) && lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180) {
-          return { lat, lon };
-        }
-      }
+      const data = await fetchWithRetry(`https://nominatim.openstreetmap.org/search?${params}`);
+      const result = parseResult(data);
+      if (result) return result;
     }
 
     // Fallback to freeform
@@ -154,17 +185,8 @@ const BulkGeocodeDialog = ({ open, onOpenChange, clientId, onSuccess, specificBu
       ...(countryCode && { countrycodes: countryCode }),
     });
 
-    const res = await fetch(`https://nominatim.openstreetmap.org/search?${params}`);
-    const data = await res.json();
-    if (data?.length > 0) {
-      const lat = Number(parseFloat(String(data[0].lat)).toFixed(7));
-      const lon = Number(parseFloat(String(data[0].lon)).toFixed(7));
-      if (!isNaN(lat) && !isNaN(lon) && lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180) {
-        return { lat, lon };
-      }
-    }
-
-    return null;
+    const data = await fetchWithRetry(`https://nominatim.openstreetmap.org/search?${params}`);
+    return parseResult(data);
   };
 
   const startGeocoding = async () => {
