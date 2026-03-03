@@ -624,7 +624,7 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredBusinesses.map((business) => (
+            {paginatedBusinesses.map((business) => (
               <TableRow key={business.id}>
                 <TableCell>
                   <Checkbox
