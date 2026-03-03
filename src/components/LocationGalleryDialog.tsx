@@ -14,6 +14,7 @@ interface LocationGalleryDialogProps {
   onLogoChange?: (url: string) => void;
   onCoverChange?: (url: string) => void;
   disabled?: boolean;
+  customPhotosEnabled?: boolean;
 }
 
 const LocationGalleryDialog = ({
