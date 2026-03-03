@@ -277,9 +277,9 @@ const BulkGeocodeDialog = ({ open, onOpenChange, clientId, onSuccess, specificBu
       setFailureCount(failures);
       setProcessedCount(i + 1);
 
-      // Rate limit: 1 request per second (Nominatim policy)
+      // Rate limit: ~1.5s between requests to avoid Nominatim throttling
       if (i < locations.length - 1 && !cancelledRef.current) {
-        await sleep(1100);
+        await sleep(1500);
       }
     }
 
