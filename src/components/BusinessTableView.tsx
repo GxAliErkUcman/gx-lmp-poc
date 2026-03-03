@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Edit, Trash2, Search, ArrowUp, ArrowDown, Settings, Filter, X, AlertCircle, Check, ChevronsUpDown, Info, Image } from 'lucide-react';
+import { Edit, Trash2, Search, ArrowUp, ArrowDown, Settings, Filter, X, AlertCircle, Check, ChevronsUpDown, Info, Image, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Business } from '@/types/business';
 import ManageColumnsDialog, { type ColumnConfig } from './ManageColumnsDialog';
 import LocationGalleryDialog from './LocationGalleryDialog';
@@ -44,6 +44,8 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
   const [postalCodeFilter, setPostalCodeFilter] = useState<string>('');
   const [showFilters, setShowFilters] = useState(false);
   const [manageColumnsOpen, setManageColumnsOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 50;
   
   // Column definitions with keys only - labels are computed dynamically
   const columnDefs = [
@@ -194,7 +196,15 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
   // Update filtered businesses when businesses prop changes
   React.useEffect(() => {
     applyFilters(searchTerm, categoryFilter, cityFilter, countryFilter, postalCodeFilter);
+    setCurrentPage(1);
   }, [businesses, searchTerm, categoryFilter, cityFilter, countryFilter, postalCodeFilter]);
+
+  // Pagination
+  const totalPages = Math.max(1, Math.ceil(filteredBusinesses.length / PAGE_SIZE));
+  const paginatedBusinesses = useMemo(() => {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    return filteredBusinesses.slice(start, start + PAGE_SIZE);
+  }, [filteredBusinesses, currentPage]);
 
   const visibleColumns = columns.filter(col => col.visible);
 
@@ -614,7 +624,7 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredBusinesses.map((business) => (
+            {paginatedBusinesses.map((business) => (
               <TableRow key={business.id}>
                 <TableCell>
                   <Checkbox
@@ -721,6 +731,36 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
       {filteredBusinesses.length === 0 && (
         <div className="text-center py-8 text-muted-foreground">
           {searchTerm || categoryFilter || cityFilter || countryFilter ? 'No businesses found matching your criteria.' : 'No businesses found.'}
+        </div>
+      )}
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between pt-4">
+          <span className="text-sm text-muted-foreground">
+            Showing {((currentPage - 1) * PAGE_SIZE) + 1}–{Math.min(currentPage * PAGE_SIZE, filteredBusinesses.length)} of {filteredBusinesses.length}
+          </span>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
+            <span className="text-sm">
+              Page {currentPage} of {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+            >
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
       )}
 
