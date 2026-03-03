@@ -498,8 +498,8 @@ const UserGuide = () => {
           </SubSection>
           <SubSection title="Storage Behavior">
             <p className="text-sm text-muted-foreground">
-              Logo and cover photos use the existing storage flow, while custom photos are stored in Google Cloud Storage under
-              <code className="bg-muted px-1 py-0.5 rounded text-xs"> Custom Photos/{'{clientName}'}/{'{storeCode}'}/ </code>.
+               Logo and cover photos use the existing storage flow, while other photos are stored in Google Cloud Storage under
+              <code className="bg-muted px-1 py-0.5 rounded text-xs"> Other Photos/{'{clientName}'}/{'{storeCode}'}/ </code>.
             </p>
           </SubSection>
         </Section>
