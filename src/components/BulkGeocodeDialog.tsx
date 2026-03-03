@@ -34,6 +34,10 @@ interface BulkGeocodeDialogProps {
 type Phase = 'confirm' | 'processing' | 'complete';
 
 const getCountryCode = (countryName: string): string => {
+  // Handle formats like "Germany (DE)" -> extract code from parentheses
+  const codeMatch = countryName.match(/\(([A-Z]{2})\)/);
+  if (codeMatch) return codeMatch[1];
+  
   const codes: Record<string, string> = {
     'Austria': 'AT', 'Germany': 'DE', 'Switzerland': 'CH', 'Turkey': 'TR',
     'United States': 'US', 'United Kingdom': 'GB', 'France': 'FR', 'Italy': 'IT',
@@ -42,7 +46,12 @@ const getCountryCode = (countryName: string): string => {
     'Romania': 'RO', 'Bulgaria': 'BG', 'Denmark': 'DK', 'Sweden': 'SE', 'Norway': 'NO',
     'Finland': 'FI', 'Portugal': 'PT', 'Greece': 'GR', 'Ireland': 'IE', 'Luxembourg': 'LU',
   };
-  return codes[countryName] || '';
+  return codes[countryName] || (countryName.length === 2 ? countryName : '');
+};
+
+/** Strip parenthetical codes from country names for Nominatim, e.g. "Germany (DE)" -> "Germany" */
+const cleanCountryName = (country: string): string => {
+  return country.replace(/\s*\([A-Z]{2}\)\s*$/, '').trim();
 };
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -104,7 +113,8 @@ const BulkGeocodeDialog = ({ open, onOpenChange, clientId, onSuccess, specificBu
   };
 
   const geocodeSingle = async (business: any): Promise<{ lat: number; lon: number } | null> => {
-    const { addressLine1, city, state, country, postalCode } = business;
+    const { addressLine1, city, state, postalCode } = business;
+    const country = business.country ? cleanCountryName(business.country) : '';
 
     // Try structured search first
     if (addressLine1 && city && country) {
@@ -121,9 +131,9 @@ const BulkGeocodeDialog = ({ open, onOpenChange, clientId, onSuccess, specificBu
       const res = await fetch(`https://nominatim.openstreetmap.org/search?${params}`);
       const data = await res.json();
       if (data?.length > 0) {
-        const lat = parseFloat(data[0].lat);
-        const lon = parseFloat(data[0].lon);
-        if (lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180) {
+        const lat = Number(parseFloat(String(data[0].lat)).toFixed(7));
+        const lon = Number(parseFloat(String(data[0].lon)).toFixed(7));
+        if (!isNaN(lat) && !isNaN(lon) && lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180) {
           return { lat, lon };
         }
       }
@@ -133,19 +143,20 @@ const BulkGeocodeDialog = ({ open, onOpenChange, clientId, onSuccess, specificBu
     const parts = [addressLine1, city, state, country].filter(Boolean);
     if (parts.length === 0) return null;
 
+    const countryCode = business.country ? getCountryCode(business.country) : '';
     const params = new URLSearchParams({
       format: 'json',
       q: parts.join(', '),
       limit: '1',
-      ...(country && { countrycodes: getCountryCode(country) }),
+      ...(countryCode && { countrycodes: countryCode }),
     });
 
     const res = await fetch(`https://nominatim.openstreetmap.org/search?${params}`);
     const data = await res.json();
     if (data?.length > 0) {
-      const lat = parseFloat(data[0].lat);
-      const lon = parseFloat(data[0].lon);
-      if (lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180) {
+      const lat = Number(parseFloat(String(data[0].lat)).toFixed(7));
+      const lon = Number(parseFloat(String(data[0].lon)).toFixed(7));
+      if (!isNaN(lat) && !isNaN(lon) && lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180) {
         return { lat, lon };
       }
     }
