@@ -491,9 +491,9 @@ const UserGuide = () => {
               Other photos are location-specific and support drag-and-drop or click-to-select uploads.
             </p>
             <BulletList items={[
-              'Maximum 10 custom photos per location',
+              'Maximum 10 other photos per location',
               'Validation is the same as cover photos (JPG/PNG/TIFF/BMP, min 10KB, 480×270 to 2120×1192)',
-              'You can delete custom photos directly from the gallery grid',
+              'You can delete other photos directly from the gallery grid',
             ]} />
           </SubSection>
           <SubSection title="Storage Behavior">
