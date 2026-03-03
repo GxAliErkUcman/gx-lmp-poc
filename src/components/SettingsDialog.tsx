@@ -38,6 +38,7 @@ const SettingsDialog = ({
   const [openingHoursDialogOpen, setOpeningHoursDialogOpen] = useState(false);
   const [serviceUrlsDialogOpen, setServiceUrlsDialogOpen] = useState(false);
   const [customServicesDialogOpen, setCustomServicesDialogOpen] = useState(false);
+  const [bulkGeocodeDialogOpen, setBulkGeocodeDialogOpen] = useState(false);
 
   const handleSocialsSuccess = () => {
     setSocialsDialogOpen(false);
