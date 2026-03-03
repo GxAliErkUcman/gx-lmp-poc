@@ -32,6 +32,9 @@ export const AllClientsView = () => {
   const [loading, setLoading] = useState(true);
   const [createUserDialogOpen, setCreateUserDialogOpen] = useState(false);
   const [selectedClientForUser, setSelectedClientForUser] = useState<{ id: string; name: string } | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 12;
 
   useEffect(() => {
     fetchAllClientData();
