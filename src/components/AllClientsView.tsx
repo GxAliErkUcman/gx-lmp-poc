@@ -180,10 +180,10 @@ export const AllClientsView = () => {
         description: `Other photos ${enabled ? 'enabled' : 'disabled'} for this client.`,
       });
     } catch (error: any) {
-      console.error('Error toggling custom photos:', error);
+      console.error('Error toggling other photos:', error);
       toast({
         title: 'Error',
-        description: error.message || 'Failed to update custom photos setting.',
+        description: error.message || 'Failed to update other photos setting.',
         variant: 'destructive',
       });
     }
