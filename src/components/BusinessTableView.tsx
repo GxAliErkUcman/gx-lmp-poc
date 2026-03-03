@@ -52,6 +52,8 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
   const [postalCodeFilter, setPostalCodeFilter] = useState<string>('');
   const [showFilters, setShowFilters] = useState(false);
   const [manageColumnsOpen, setManageColumnsOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 50;
   
   // Column definitions with keys only - labels are computed dynamically
   const columnDefs = [
