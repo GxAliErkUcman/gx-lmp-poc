@@ -63,7 +63,7 @@ const CustomPhotoUpload = ({ storeCode, clientName, disabled = false, maxPhotos 
     }
 
     if (photos.length + acceptedFiles.length > maxPhotos) {
-      toast({ title: "Too many photos", description: `Maximum ${maxPhotos} custom photos allowed`, variant: "destructive" });
+      toast({ title: "Too many photos", description: `Maximum ${maxPhotos} other photos allowed`, variant: "destructive" });
       return;
     }
 
@@ -153,7 +153,7 @@ const CustomPhotoUpload = ({ storeCode, clientName, disabled = false, maxPhotos 
     return (
       <div className="flex items-center justify-center py-8">
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-        <span className="ml-2 text-sm text-muted-foreground">Loading custom photos...</span>
+        <span className="ml-2 text-sm text-muted-foreground">Loading other photos...</span>
       </div>
     );
   }
@@ -170,7 +170,7 @@ const CustomPhotoUpload = ({ storeCode, clientName, disabled = false, maxPhotos 
           <input {...getInputProps()} />
           <Upload className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
           <p className="text-sm font-medium">
-            {isDragActive ? 'Drop photos here' : 'Drag & drop or click to upload custom photos'}
+            {isDragActive ? 'Drop photos here' : 'Drag & drop or click to upload other photos'}
           </p>
           <p className="text-xs text-muted-foreground mt-1">
             {photos.length}/{maxPhotos} photos uploaded • JPG, PNG, TIFF, BMP • 480×270 to 2120×1192
@@ -192,7 +192,7 @@ const CustomPhotoUpload = ({ storeCode, clientName, disabled = false, maxPhotos 
                 <div className="relative aspect-video">
                   <img
                     src={photo.url}
-                    alt="Custom photo"
+                    alt="Other photo"
                     className="w-full h-full object-cover rounded"
                     loading="lazy"
                   />
@@ -221,7 +221,7 @@ const CustomPhotoUpload = ({ storeCode, clientName, disabled = false, maxPhotos 
 
       {photos.length === 0 && !uploading && (
         <p className="text-sm text-muted-foreground text-center py-4">
-          No custom photos uploaded yet for this location.
+          No other photos uploaded yet for this location.
         </p>
       )}
     </div>

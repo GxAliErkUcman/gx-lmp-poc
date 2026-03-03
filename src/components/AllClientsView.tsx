@@ -256,7 +256,7 @@ export const AllClientsView = () => {
                   <div className="flex items-center justify-between">
                     <Label htmlFor={`custom-photos-${client.id}`} className="flex items-center gap-2 text-sm cursor-pointer">
                       <Image className="w-4 h-4 text-muted-foreground" />
-                      Custom Photos
+                      Other Photos
                     </Label>
                     <Switch
                       id={`custom-photos-${client.id}`}

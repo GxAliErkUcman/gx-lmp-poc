@@ -42,7 +42,7 @@ const LocationGalleryDialog = ({
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="logo">Logo</TabsTrigger>
             <TabsTrigger value="cover">Cover Photo</TabsTrigger>
-            <TabsTrigger value="custom">Custom Photos</TabsTrigger>
+            <TabsTrigger value="custom">Other Photos</TabsTrigger>
           </TabsList>
 
           <TabsContent value="logo" className="mt-4">
@@ -134,7 +134,7 @@ const LocationGalleryDialog = ({
           <TabsContent value="custom" className="mt-4">
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Custom Photos</CardTitle>
+                <CardTitle className="text-base">Other Photos</CardTitle>
               </CardHeader>
               <CardContent>
                 <CustomPhotoUpload

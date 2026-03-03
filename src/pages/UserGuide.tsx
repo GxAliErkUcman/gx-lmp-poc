@@ -213,7 +213,7 @@ const UserGuide = () => {
             <li>Validation & Error Resolution</li>
             <li>Deleting Locations</li>
             <li>Tips & Best Practices</li>
-            <li>Product Updates: Photo Gallery & Custom Photos</li>
+            <li>Product Updates: Photo Gallery & Other Photos</li>
           </ol>
         </Section>
 
@@ -466,11 +466,11 @@ const UserGuide = () => {
           <SubSection title="Location Gallery (New)">
             <p className="text-sm text-muted-foreground mb-2">
               In Table view, click the <strong>Gallery</strong> button (image icon) in the Actions column next to Edit and Delete.
-              This opens a single gallery dialog with tabs for <strong>Logo</strong>, <strong>Cover Photo</strong>, and <strong>Custom Photos</strong>.
+              This opens a single gallery dialog with tabs for <strong>Logo</strong>, <strong>Cover Photo</strong>, and <strong>Other Photos</strong>.
             </p>
             <StepList steps={[
               'Find a location in the table and click the Gallery (image) icon.',
-              'Use tabs to switch between Logo, Cover Photo, and Custom Photos.',
+              'Use tabs to switch between Logo, Cover Photo, and Other Photos.',
               'Upload or replace images directly from each tab.',
               'Close the dialog when done — your updates are saved immediately.',
             ]} />
@@ -486,20 +486,20 @@ const UserGuide = () => {
               Logo photos can be managed per location in the Gallery dialog under the <strong>Logo</strong> tab.
             </p>
           </SubSection>
-          <SubSection title="Custom Photos (New)">
+          <SubSection title="Other Photos (New)">
             <p className="text-sm text-muted-foreground mb-2">
-              Custom photos are location-specific and support drag-and-drop or click-to-select uploads.
+              Other photos are location-specific and support drag-and-drop or click-to-select uploads.
             </p>
             <BulletList items={[
-              'Maximum 10 custom photos per location',
+              'Maximum 10 other photos per location',
               'Validation is the same as cover photos (JPG/PNG/TIFF/BMP, min 10KB, 480×270 to 2120×1192)',
-              'You can delete custom photos directly from the gallery grid',
+              'You can delete other photos directly from the gallery grid',
             ]} />
           </SubSection>
           <SubSection title="Storage Behavior">
             <p className="text-sm text-muted-foreground">
-              Logo and cover photos use the existing storage flow, while custom photos are stored in Google Cloud Storage under
-              <code className="bg-muted px-1 py-0.5 rounded text-xs"> Custom Photos/{'{clientName}'}/{'{storeCode}'}/ </code>.
+               Logo and cover photos use the existing storage flow, while other photos are stored in Google Cloud Storage under
+              <code className="bg-muted px-1 py-0.5 rounded text-xs"> Other Photos/{'{clientName}'}/{'{storeCode}'}/ </code>.
             </p>
           </SubSection>
         </Section>
@@ -703,24 +703,24 @@ const UserGuide = () => {
         </Section>
 
         {/* 22. Product Updates */}
-        <Section number="22" title="Product Updates: Photo Gallery & Custom Photos">
+        <Section number="22" title="Product Updates: Photo Gallery & Other Photos">
           <SubSection title="What Changed">
             <BulletList items={[
               'New Gallery action button in table row actions (next to Edit and Delete)',
-              'New unified Photo Gallery dialog with Logo, Cover Photo, and Custom Photos tabs',
-              'New location-level custom photo uploads with drag-and-drop support',
-              'Custom photos are now managed in Google Cloud Storage per location folder',
+              'New unified Photo Gallery dialog with Logo, Cover Photo, and Other Photos tabs',
+              'New location-level other photo uploads with drag-and-drop support',
+              'Other photos are now managed in Google Cloud Storage per location folder',
             ]} />
           </SubSection>
           <SubSection title="How to Use the Update">
             <StepList steps={[
               'Open your dashboard table view.',
               'Click the Gallery image icon for a location.',
-              'Open the Custom Photos tab to upload, view, or delete custom photos.',
+              'Open the Other Photos tab to upload, view, or delete other photos.',
               'Use Logo and Cover tabs to review and update those images in one place.',
             ]} />
           </SubSection>
-          <Tip>This update is location-level: each store has its own custom photo set and limits.</Tip>
+          <Tip>This update is location-level: each store has its own other photo set and limits.</Tip>
         </Section>
 
         {/* Footer */}
