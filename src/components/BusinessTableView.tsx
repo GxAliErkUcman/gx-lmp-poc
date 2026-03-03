@@ -181,9 +181,10 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
   // Pagination
   const totalPages = Math.max(1, Math.ceil(filteredBusinesses.length / PAGE_SIZE));
   const paginatedBusinesses = useMemo(() => {
+    if (showAll) return filteredBusinesses;
     const start = (currentPage - 1) * PAGE_SIZE;
     return filteredBusinesses.slice(start, start + PAGE_SIZE);
-  }, [filteredBusinesses, currentPage]);
+  }, [filteredBusinesses, currentPage, showAll]);
 
   const visibleColumns = columns.filter(col => col.visible);
 
