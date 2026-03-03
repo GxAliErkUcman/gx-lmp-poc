@@ -113,7 +113,8 @@ const BulkGeocodeDialog = ({ open, onOpenChange, clientId, onSuccess, specificBu
   };
 
   const geocodeSingle = async (business: any): Promise<{ lat: number; lon: number } | null> => {
-    const { addressLine1, city, state, country, postalCode } = business;
+    const { addressLine1, city, state, postalCode } = business;
+    const country = business.country ? cleanCountryName(business.country) : '';
 
     // Try structured search first
     if (addressLine1 && city && country) {
@@ -142,11 +143,12 @@ const BulkGeocodeDialog = ({ open, onOpenChange, clientId, onSuccess, specificBu
     const parts = [addressLine1, city, state, country].filter(Boolean);
     if (parts.length === 0) return null;
 
+    const countryCode = business.country ? getCountryCode(business.country) : '';
     const params = new URLSearchParams({
       format: 'json',
       q: parts.join(', '),
       limit: '1',
-      ...(country && { countrycodes: getCountryCode(country) }),
+      ...(countryCode && { countrycodes: countryCode }),
     });
 
     const res = await fetch(`https://nominatim.openstreetmap.org/search?${params}`);
