@@ -559,8 +559,18 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
               </PopoverContent>
             </Popover>
           </div>
+
+          <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <Checkbox
+                checked={noCoordinatesFilter}
+                onCheckedChange={(checked) => setNoCoordinatesFilter(checked === true)}
+              />
+              <span className="text-xs sm:text-sm font-medium">No Coordinates</span>
+            </label>
+          </div>
           
-              {(categoryFilter || cityFilter || countryFilter || postalCodeFilter || noCoordinatesFilter) && (
+          {(categoryFilter || cityFilter || countryFilter || postalCodeFilter || noCoordinatesFilter) && (
             <Button
               variant="ghost"
               size="sm"
