@@ -121,9 +121,9 @@ const BulkGeocodeDialog = ({ open, onOpenChange, clientId, onSuccess, specificBu
       const res = await fetch(`https://nominatim.openstreetmap.org/search?${params}`);
       const data = await res.json();
       if (data?.length > 0) {
-        const lat = parseFloat(data[0].lat);
-        const lon = parseFloat(data[0].lon);
-        if (lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180) {
+        const lat = Number(parseFloat(String(data[0].lat)).toFixed(7));
+        const lon = Number(parseFloat(String(data[0].lon)).toFixed(7));
+        if (!isNaN(lat) && !isNaN(lon) && lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180) {
           return { lat, lon };
         }
       }
