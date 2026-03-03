@@ -72,6 +72,7 @@ const MultiEditDialog = ({ open, onOpenChange, selectedIds, onSuccess, clientId 
   const [customServicesDialogOpen, setCustomServicesDialogOpen] = useState(false);
   const [customServices, setCustomServices] = useState<any[]>([]);
   const [specialHoursEntries, setSpecialHoursEntries] = useState<SpecialHourEntry[]>([]);
+  const [bulkGeocodeOpen, setBulkGeocodeOpen] = useState(false);
 
   const form = useForm<MultiEditFormValues>({
     resolver: zodResolver(multiEditFormSchema),
