@@ -192,7 +192,7 @@ const CustomPhotoUpload = ({ storeCode, clientName, disabled = false, maxPhotos 
                 <div className="relative aspect-video">
                   <img
                     src={photo.url}
-                    alt="Custom photo"
+                    alt="Other photo"
                     className="w-full h-full object-cover rounded"
                     loading="lazy"
                   />
