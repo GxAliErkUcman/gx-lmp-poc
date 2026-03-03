@@ -193,14 +193,6 @@ export const AllClientsView = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="w-8 h-8 animate-spin" />
-      </div>
-    );
-  }
-
   const filteredClients = useMemo(() => {
     if (!searchTerm) return clients;
     const term = searchTerm.toLowerCase();
@@ -218,6 +210,14 @@ export const AllClientsView = () => {
 
   // Reset page when search changes
   useEffect(() => { setCurrentPage(1); }, [searchTerm]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="w-8 h-8 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <>
