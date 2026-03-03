@@ -703,7 +703,7 @@ const UserGuide = () => {
         </Section>
 
         {/* 22. Product Updates */}
-        <Section number="22" title="Product Updates: Photo Gallery & Custom Photos">
+        <Section number="22" title="Product Updates: Photo Gallery & Other Photos">
           <SubSection title="What Changed">
             <BulletList items={[
               'New Gallery action button in table row actions (next to Edit and Delete)',
