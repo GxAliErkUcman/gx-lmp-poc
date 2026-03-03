@@ -213,7 +213,7 @@ const UserGuide = () => {
             <li>Validation & Error Resolution</li>
             <li>Deleting Locations</li>
             <li>Tips & Best Practices</li>
-            <li>Product Updates: Photo Gallery & Custom Photos</li>
+            <li>Product Updates: Photo Gallery & Other Photos</li>
           </ol>
         </Section>
 

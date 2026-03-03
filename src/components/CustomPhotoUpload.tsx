@@ -63,7 +63,7 @@ const CustomPhotoUpload = ({ storeCode, clientName, disabled = false, maxPhotos 
     }
 
     if (photos.length + acceptedFiles.length > maxPhotos) {
-      toast({ title: "Too many photos", description: `Maximum ${maxPhotos} custom photos allowed`, variant: "destructive" });
+      toast({ title: "Too many photos", description: `Maximum ${maxPhotos} other photos allowed`, variant: "destructive" });
       return;
     }
 

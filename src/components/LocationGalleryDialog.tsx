@@ -134,7 +134,7 @@ const LocationGalleryDialog = ({
           <TabsContent value="custom" className="mt-4">
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Custom Photos</CardTitle>
+                <CardTitle className="text-base">Other Photos</CardTitle>
               </CardHeader>
               <CardContent>
                 <CustomPhotoUpload
