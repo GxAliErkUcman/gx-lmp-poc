@@ -101,8 +101,9 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
       const matchesCity = !cityFilter || business.city === cityFilter;
       const matchesCountry = !countryFilter || business.country === countryFilter;
       const matchesPostalCode = !postalCodeFilter || business.postalCode === postalCodeFilter;
+      const matchesNoCoordinates = !noCoordinatesFilter || (!business.latitude && !business.longitude);
       
-      return matchesSearch && matchesCategory && matchesCity && matchesCountry && matchesPostalCode;
+      return matchesSearch && matchesCategory && matchesCity && matchesCountry && matchesPostalCode && matchesNoCoordinates;
     });
 
     if (currentSort) {
