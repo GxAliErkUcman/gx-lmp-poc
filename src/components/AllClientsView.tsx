@@ -201,17 +201,51 @@ export const AllClientsView = () => {
     );
   }
 
+  const filteredClients = useMemo(() => {
+    if (!searchTerm) return clients;
+    const term = searchTerm.toLowerCase();
+    return clients.filter(c =>
+      c.name.toLowerCase().includes(term) ||
+      c.users.some(u => u.email.toLowerCase().includes(term) || `${u.first_name} ${u.last_name}`.toLowerCase().includes(term))
+    );
+  }, [clients, searchTerm]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredClients.length / PAGE_SIZE));
+  const paginatedClients = useMemo(() => {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    return filteredClients.slice(start, start + PAGE_SIZE);
+  }, [filteredClients, currentPage]);
+
+  // Reset page when search changes
+  useEffect(() => { setCurrentPage(1); }, [searchTerm]);
+
   return (
     <>
-      {clients.length === 0 ? (
+      {/* Search */}
+      <div className="flex items-center gap-3 mb-6">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Search clients..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+        <span className="text-sm text-muted-foreground">
+          {filteredClients.length} client{filteredClients.length !== 1 ? 's' : ''}
+        </span>
+      </div>
+
+      {filteredClients.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">
-            <p className="text-muted-foreground">No clients found</p>
+            <p className="text-muted-foreground">{searchTerm ? 'No clients matching your search.' : 'No clients found'}</p>
           </CardContent>
         </Card>
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {clients.map((client) => (
+          {paginatedClients.map((client) => (
             <Card key={client.id} className="hover:shadow-lg transition-shadow">
               <CardHeader>
                 <div className="flex items-start justify-between">
