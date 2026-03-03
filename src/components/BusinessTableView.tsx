@@ -147,6 +147,36 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
     setPostalCodeFilter('');
   };
 
+  // Handle individual checkbox selection
+  const handleSelectBusiness = (businessId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedIds([...selectedIds, businessId]);
+    } else {
+      setSelectedIds(selectedIds.filter(id => id !== businessId));
+    }
+  };
+
+  // Handle select all checkbox
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedIds(filteredBusinesses.map(b => b.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  // Check if all visible businesses are selected
+  const isAllSelected = filteredBusinesses.length > 0 && 
+    filteredBusinesses.every(business => selectedIds.includes(business.id));
+
+  const handleSort = (key: string) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (currentSort && currentSort.key === key) {
+      direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+    }
+    setCurrentSort({ key: key as keyof Business, direction });
+  };
+
   // Pagination
   const totalPages = Math.max(1, Math.ceil(filteredBusinesses.length / PAGE_SIZE));
   const paginatedBusinesses = useMemo(() => {
