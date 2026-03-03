@@ -610,7 +610,7 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
                   )}
                 </TableHead>
               ))}
-              <TableHead className="w-20">Actions</TableHead>
+              <TableHead className="w-24 sticky right-0 bg-background z-10 shadow-[-2px_0_4px_-2px_rgba(0,0,0,0.1)]">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
