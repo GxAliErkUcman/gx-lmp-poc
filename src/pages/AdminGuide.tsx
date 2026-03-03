@@ -937,8 +937,8 @@ const AdminGuide = () => {
             <FieldTable fields={[
               { name: 'Logo Photo', description: '1:1 aspect ratio, 250×250 to 5000×5000 px, min 10KB. JPG/PNG/TIFF/BMP.' },
               { name: 'Cover Photo', description: '16:9 aspect ratio, 480×270 to 2120×1192 px, min 10KB. JPG/PNG/TIFF/BMP.' },
-              { name: 'Custom Photos (New)', description: 'Location-level custom gallery photos. Max 10 per location. Same validation as cover photos. Stored in GCP.' },
-              { name: 'Other Photos', description: 'Additional photos as comma-separated URLs. No specific validation.' },
+              { name: 'Other Photos (GCP)', description: 'Location-level gallery photos. Max 10 per location. Same validation as cover photos. Stored in GCP.' },
+              { name: 'Other Photos (URL)', description: 'Additional photos as comma-separated URLs. No specific validation.' },
             ]} />
           </SubSection>
           <SubSection title="Gallery Workflow (New)">
