@@ -225,6 +225,15 @@ const SettingsDialog = ({
         clientId={clientId}
         onSuccess={handleCustomServicesSuccess}
       />
+
+      <BulkGeocodeDialog
+        open={bulkGeocodeDialogOpen}
+        onOpenChange={setBulkGeocodeDialogOpen}
+        clientId={clientId}
+        onSuccess={() => {
+          onLogoUploaded();
+        }}
+      />
     </>
   );
 };

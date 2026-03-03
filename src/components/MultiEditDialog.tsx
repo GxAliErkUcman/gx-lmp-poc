@@ -22,7 +22,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { Upload } from 'lucide-react';
+import { Upload, MapPin } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { CategorySelect } from '@/components/CategorySelect';
 import { CountrySelect } from '@/components/CountrySelect';
