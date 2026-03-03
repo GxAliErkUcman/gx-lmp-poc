@@ -251,7 +251,7 @@ export const AllClientsView = () => {
                   </div>
                 </div>
 
-                {/* Custom Photos Toggle */}
+                {/* Other Photos Toggle */}
                 <div className="border-t pt-4">
                   <div className="flex items-center justify-between">
                     <Label htmlFor={`custom-photos-${client.id}`} className="flex items-center gap-2 text-sm cursor-pointer">

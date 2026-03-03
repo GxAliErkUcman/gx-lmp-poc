@@ -1075,12 +1075,12 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
             </Card>
           </LockedFieldWrapper>
 
-          {/* Custom Photos (GCP) - only for existing businesses */}
+          {/* Other Photos (GCP) - only for existing businesses */}
           {business && resolvedClientName && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
-                  <span>Custom Photos</span>
+                  <span>Other Photos</span>
                   <Button
                     type="button"
                     variant="outline"
