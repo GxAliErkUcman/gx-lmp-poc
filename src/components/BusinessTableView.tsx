@@ -360,7 +360,7 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
             <Input
               placeholder="Search businesses..."
               value={searchTerm}
-              onChange={(e) => handleSearch(e.target.value)}
+              onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10 w-full"
             />
           </div>
