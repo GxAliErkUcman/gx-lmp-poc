@@ -170,7 +170,7 @@ const CustomPhotoUpload = ({ storeCode, clientName, disabled = false, maxPhotos 
           <input {...getInputProps()} />
           <Upload className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
           <p className="text-sm font-medium">
-            {isDragActive ? 'Drop photos here' : 'Drag & drop or click to upload custom photos'}
+            {isDragActive ? 'Drop photos here' : 'Drag & drop or click to upload other photos'}
           </p>
           <p className="text-xs text-muted-foreground mt-1">
             {photos.length}/{maxPhotos} photos uploaded • JPG, PNG, TIFF, BMP • 480×270 to 2120×1192
