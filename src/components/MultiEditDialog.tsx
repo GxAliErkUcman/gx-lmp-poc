@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import BulkGeocodeDialog from './BulkGeocodeDialog';
 import {
   Dialog,
   DialogContent,
@@ -21,7 +22,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { Upload } from 'lucide-react';
+import { Upload, MapPin } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { CategorySelect } from '@/components/CategorySelect';
 import { CountrySelect } from '@/components/CountrySelect';
@@ -71,6 +72,7 @@ const MultiEditDialog = ({ open, onOpenChange, selectedIds, onSuccess, clientId 
   const [customServicesDialogOpen, setCustomServicesDialogOpen] = useState(false);
   const [customServices, setCustomServices] = useState<any[]>([]);
   const [specialHoursEntries, setSpecialHoursEntries] = useState<SpecialHourEntry[]>([]);
+  const [bulkGeocodeOpen, setBulkGeocodeOpen] = useState(false);
 
   const form = useForm<MultiEditFormValues>({
     resolver: zodResolver(multiEditFormSchema),
@@ -821,6 +823,23 @@ const MultiEditDialog = ({ open, onOpenChange, selectedIds, onSuccess, clientId 
               )}
             </div>
 
+            {/* Generate Coordinates */}
+            <div className="space-y-2 pt-4 border-t">
+              <h3 className="text-sm font-medium">Generate Coordinates</h3>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setBulkGeocodeOpen(true)}
+                className="w-full flex items-center gap-2"
+              >
+                <MapPin className="w-4 h-4" />
+                Generate Coordinates for Selected
+              </Button>
+              <p className="text-xs text-muted-foreground">
+                Auto-detect lat/long for {selectedIds.length} selected location(s) missing coordinates.
+              </p>
+            </div>
+
             <div className="flex justify-end gap-2 pt-4">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
@@ -861,6 +880,14 @@ const MultiEditDialog = ({ open, onOpenChange, selectedIds, onSuccess, clientId 
         businessCategories={[]}
         currentServices={customServices}
         onSave={(services) => setCustomServices(services)}
+      />
+
+      <BulkGeocodeDialog
+        open={bulkGeocodeOpen}
+        onOpenChange={setBulkGeocodeOpen}
+        clientId={clientId}
+        onSuccess={onSuccess}
+        specificBusinessIds={selectedIds}
       />
     </Dialog>
   );

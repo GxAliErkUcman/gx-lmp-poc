@@ -6,12 +6,13 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Settings, Clock, Link, Wrench } from 'lucide-react';
+import { Settings, Clock, Link, Wrench, MapPin } from 'lucide-react';
 import LogoUpload from './LogoUpload';
 import AccountSocialsDialog from './AccountSocialsDialog';
 import AccountOpeningHoursDialog from './AccountOpeningHoursDialog';
 import AccountServiceUrlsDialog from './AccountServiceUrlsDialog';
 import ClientCustomServicesDialog from './ClientCustomServicesDialog';
+import BulkGeocodeDialog from './BulkGeocodeDialog';
 import { Button } from '@/components/ui/button';
 
 interface SettingsDialogProps {
@@ -37,6 +38,7 @@ const SettingsDialog = ({
   const [openingHoursDialogOpen, setOpeningHoursDialogOpen] = useState(false);
   const [serviceUrlsDialogOpen, setServiceUrlsDialogOpen] = useState(false);
   const [customServicesDialogOpen, setCustomServicesDialogOpen] = useState(false);
+  const [bulkGeocodeDialogOpen, setBulkGeocodeDialogOpen] = useState(false);
 
   const handleSocialsSuccess = () => {
     setSocialsDialogOpen(false);
@@ -112,6 +114,26 @@ const SettingsDialog = ({
                     >
                       <Wrench className="w-4 h-4" />
                       Manage Custom Services
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base">Generate Coordinates</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <p className="text-muted-foreground mb-3 text-sm">
+                      Auto-detect GPS coordinates for all locations without lat/long using their address.
+                    </p>
+                    <Button 
+                      onClick={() => setBulkGeocodeDialogOpen(true)}
+                      variant="outline"
+                      size="sm"
+                      className="w-full flex items-center gap-2"
+                    >
+                      <MapPin className="w-4 h-4" />
+                      Generate All Coordinates
                     </Button>
                   </CardContent>
                 </Card>
@@ -202,6 +224,15 @@ const SettingsDialog = ({
         onOpenChange={setCustomServicesDialogOpen}
         clientId={clientId}
         onSuccess={handleCustomServicesSuccess}
+      />
+
+      <BulkGeocodeDialog
+        open={bulkGeocodeDialogOpen}
+        onOpenChange={setBulkGeocodeDialogOpen}
+        clientId={clientId}
+        onSuccess={() => {
+          onLogoUploaded();
+        }}
       />
     </>
   );
