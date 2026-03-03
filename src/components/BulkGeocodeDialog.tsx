@@ -289,7 +289,7 @@ const BulkGeocodeDialog = ({ open, onOpenChange, clientId, onSuccess, specificBu
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[600px]" onPointerDownOutside={phase === 'processing' ? (e) => e.preventDefault() : undefined} onEscapeKeyDown={phase === 'processing' ? (e) => e.preventDefault() : undefined}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <MapPin className="w-5 h-5" />
