@@ -715,30 +715,43 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
       )}
 
       {/* Pagination Controls */}
-      {totalPages > 1 && (
+      {filteredBusinesses.length > PAGE_SIZE && (
         <div className="flex items-center justify-between pt-4">
           <span className="text-sm text-muted-foreground">
-            Showing {((currentPage - 1) * PAGE_SIZE) + 1}–{Math.min(currentPage * PAGE_SIZE, filteredBusinesses.length)} of {filteredBusinesses.length}
+            {showAll
+              ? `Showing all ${filteredBusinesses.length} results`
+              : `Showing ${((currentPage - 1) * PAGE_SIZE) + 1}–${Math.min(currentPage * PAGE_SIZE, filteredBusinesses.length)} of ${filteredBusinesses.length}`}
           </span>
           <div className="flex items-center gap-2">
+            {!showAll && (
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+                <span className="text-sm">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </>
+            )}
             <Button
-              variant="outline"
+              variant="ghost"
               size="sm"
-              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
+              onClick={() => { setShowAll(!showAll); setCurrentPage(1); }}
             >
-              <ChevronLeft className="w-4 h-4" />
-            </Button>
-            <span className="text-sm">
-              Page {currentPage} of {totalPages}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
-            >
-              <ChevronRight className="w-4 h-4" />
+              {showAll ? 'Paginate' : 'Show All'}
             </Button>
           </div>
         </div>
