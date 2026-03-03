@@ -486,9 +486,9 @@ const UserGuide = () => {
               Logo photos can be managed per location in the Gallery dialog under the <strong>Logo</strong> tab.
             </p>
           </SubSection>
-          <SubSection title="Custom Photos (New)">
+          <SubSection title="Other Photos (New)">
             <p className="text-sm text-muted-foreground mb-2">
-              Custom photos are location-specific and support drag-and-drop or click-to-select uploads.
+              Other photos are location-specific and support drag-and-drop or click-to-select uploads.
             </p>
             <BulletList items={[
               'Maximum 10 custom photos per location',
