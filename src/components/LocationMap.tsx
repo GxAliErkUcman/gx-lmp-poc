@@ -193,6 +193,7 @@ const LocationMap = ({ latitude, longitude, onLocationChange, address, addressLi
             id="map-latitude"
             type="number"
             step="any"
+            lang="en"
             value={mapLatitude}
             onChange={handleLatChange}
             placeholder="e.g., 40.7128"
