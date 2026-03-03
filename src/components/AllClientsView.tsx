@@ -176,14 +176,14 @@ export const AllClientsView = () => {
       setClients(prev => prev.map(c => c.id === clientId ? { ...c, custom_photos_enabled: enabled } : c));
 
       toast({
-        title: enabled ? 'Custom Photos Enabled' : 'Custom Photos Disabled',
-        description: `Custom photos ${enabled ? 'enabled' : 'disabled'} for this client.`,
+        title: enabled ? 'Other Photos Enabled' : 'Other Photos Disabled',
+        description: `Other photos ${enabled ? 'enabled' : 'disabled'} for this client.`,
       });
     } catch (error: any) {
-      console.error('Error toggling custom photos:', error);
+      console.error('Error toggling other photos:', error);
       toast({
         title: 'Error',
-        description: error.message || 'Failed to update custom photos setting.',
+        description: error.message || 'Failed to update other photos setting.',
         variant: 'destructive',
       });
     }
@@ -251,7 +251,7 @@ export const AllClientsView = () => {
                   </div>
                 </div>
 
-                {/* Custom Photos Toggle */}
+                {/* Other Photos Toggle */}
                 <div className="border-t pt-4">
                   <div className="flex items-center justify-between">
                     <Label htmlFor={`custom-photos-${client.id}`} className="flex items-center gap-2 text-sm cursor-pointer">
