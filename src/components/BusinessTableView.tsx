@@ -684,7 +684,7 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
                     )}
                   </TableCell>
                 ))}
-                <TableCell>
+                <TableCell className="sticky right-0 bg-background z-10 shadow-[-2px_0_4px_-2px_rgba(0,0,0,0.1)]">
                   <div className="flex gap-1">
                     <Button
                       size="sm"
