@@ -1321,10 +1321,10 @@ const AdminGuide = () => {
           </SubSection>
           <SubSection title="Operational Notes for Admins/Service Users">
             <BulletList items={[
-              'Custom photos are not stored in Supabase storage buckets or businesses table columns.',
-              'Validation for custom photos follows cover photo rules and limit is 10 photos per location.',
+              'Other photos are not stored in Supabase storage buckets or businesses table columns.',
+              'Validation for other photos follows cover photo rules and limit is 10 photos per location.',
               'If photos do not render, confirm SERVICE_ACCOUNT_KEY is valid and function deployment is current.',
-              'Expected folder structure in GCP: Custom Photos/{clientName}/{storeCode}/',
+              'Expected folder structure in GCP: Other Photos/{clientName}/{storeCode}/',
             ]} />
           </SubSection>
           <SubSection title="Support Checklist">
