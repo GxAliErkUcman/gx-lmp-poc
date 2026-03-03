@@ -133,20 +133,22 @@ const LocationGalleryDialog = ({
             </Card>
           </TabsContent>
 
-          <TabsContent value="custom" className="mt-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Other Photos</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <CustomPhotoUpload
-                  storeCode={business.storeCode}
-                  clientName={clientName}
-                  disabled={disabled}
-                />
-              </CardContent>
-            </Card>
-          </TabsContent>
+          {customPhotosEnabled && (
+            <TabsContent value="custom" className="mt-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Other Photos</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <CustomPhotoUpload
+                    storeCode={business.storeCode}
+                    clientName={clientName}
+                    disabled={disabled}
+                  />
+                </CardContent>
+              </Card>
+            </TabsContent>
+          )}
         </Tabs>
       </DialogContent>
     </Dialog>
