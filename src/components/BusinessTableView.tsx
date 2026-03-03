@@ -409,9 +409,9 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
             >
               <Filter className="w-4 h-4" />
               <span className="sm:inline">Filters</span>
-              {(categoryFilter || cityFilter || countryFilter || postalCodeFilter) && (
+              {(categoryFilter || cityFilter || countryFilter || postalCodeFilter || noCoordinatesFilter) && (
                 <Badge variant="secondary" className="ml-1">
-                  {[categoryFilter, cityFilter, countryFilter, postalCodeFilter].filter(Boolean).length}
+                  {[categoryFilter, cityFilter, countryFilter, postalCodeFilter, noCoordinatesFilter].filter(Boolean).length}
                 </Badge>
               )}
             </Button>
