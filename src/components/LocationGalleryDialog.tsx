@@ -40,11 +40,11 @@ const LocationGalleryDialog = ({
           </DialogTitle>
         </DialogHeader>
 
-        <Tabs defaultValue="custom" className="mt-4">
-          <TabsList className="grid w-full grid-cols-3">
+        <Tabs defaultValue="logo" className="mt-4">
+          <TabsList className={cn("grid w-full", customPhotosEnabled ? "grid-cols-3" : "grid-cols-2")}>
             <TabsTrigger value="logo">Logo</TabsTrigger>
             <TabsTrigger value="cover">Cover Photo</TabsTrigger>
-            <TabsTrigger value="custom">Other Photos</TabsTrigger>
+            {customPhotosEnabled && <TabsTrigger value="custom">Other Photos</TabsTrigger>}
           </TabsList>
 
           <TabsContent value="logo" className="mt-4">
