@@ -25,6 +25,7 @@ const LocationGalleryDialog = ({
   onLogoChange,
   onCoverChange,
   disabled = false,
+  customPhotosEnabled = false,
 }: LocationGalleryDialogProps) => {
   const logoPhoto = business.logoPhoto || '';
   const coverPhoto = business.coverPhoto || '';

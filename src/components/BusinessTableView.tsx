@@ -737,6 +737,7 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
           onOpenChange={(open) => { if (!open) setGalleryBusiness(null); }}
           business={galleryBusiness}
           clientName={clientName}
+          customPhotosEnabled={customPhotosEnabled}
         />
       )}
     </div>
