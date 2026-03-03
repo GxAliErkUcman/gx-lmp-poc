@@ -42,6 +42,7 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
   const [cityFilter, setCityFilter] = useState<string>('');
   const [countryFilter, setCountryFilter] = useState<string>('');
   const [postalCodeFilter, setPostalCodeFilter] = useState<string>('');
+  const [noCoordinatesFilter, setNoCoordinatesFilter] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [manageColumnsOpen, setManageColumnsOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
