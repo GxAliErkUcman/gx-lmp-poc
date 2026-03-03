@@ -36,7 +36,6 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [galleryBusiness, setGalleryBusiness] = useState<Business | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filteredBusinesses, setFilteredBusinesses] = useState(businesses);
   const [currentSort, setCurrentSort] = useState<{ key: keyof Business, direction: 'asc' | 'desc' } | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<string>('');
   const [cityFilter, setCityFilter] = useState<string>('');
