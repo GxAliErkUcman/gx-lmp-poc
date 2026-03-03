@@ -716,7 +716,7 @@ const UserGuide = () => {
             <StepList steps={[
               'Open your dashboard table view.',
               'Click the Gallery image icon for a location.',
-              'Open the Custom Photos tab to upload, view, or delete custom photos.',
+              'Open the Other Photos tab to upload, view, or delete other photos.',
               'Use Logo and Cover tabs to review and update those images in one place.',
             ]} />
           </SubSection>
