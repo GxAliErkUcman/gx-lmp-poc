@@ -117,6 +117,26 @@ const SettingsDialog = ({
                     </Button>
                   </CardContent>
                 </Card>
+
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base">Generate Coordinates</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <p className="text-muted-foreground mb-3 text-sm">
+                      Auto-detect GPS coordinates for all locations without lat/long using their address.
+                    </p>
+                    <Button 
+                      onClick={() => setBulkGeocodeDialogOpen(true)}
+                      variant="outline"
+                      size="sm"
+                      className="w-full flex items-center gap-2"
+                    >
+                      <MapPin className="w-4 h-4" />
+                      Generate All Coordinates
+                    </Button>
+                  </CardContent>
+                </Card>
               </div>
 
               {/* Right Column */}
