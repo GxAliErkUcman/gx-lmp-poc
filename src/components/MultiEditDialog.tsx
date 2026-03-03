@@ -881,6 +881,14 @@ const MultiEditDialog = ({ open, onOpenChange, selectedIds, onSuccess, clientId 
         currentServices={customServices}
         onSave={(services) => setCustomServices(services)}
       />
+
+      <BulkGeocodeDialog
+        open={bulkGeocodeOpen}
+        onOpenChange={setBulkGeocodeOpen}
+        clientId={clientId}
+        onSuccess={onSuccess}
+        specificBusinessIds={selectedIds}
+      />
     </Dialog>
   );
 };
