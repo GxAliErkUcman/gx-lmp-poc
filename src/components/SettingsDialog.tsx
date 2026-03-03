@@ -6,12 +6,13 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Settings, Clock, Link, Wrench } from 'lucide-react';
+import { Settings, Clock, Link, Wrench, MapPin } from 'lucide-react';
 import LogoUpload from './LogoUpload';
 import AccountSocialsDialog from './AccountSocialsDialog';
 import AccountOpeningHoursDialog from './AccountOpeningHoursDialog';
 import AccountServiceUrlsDialog from './AccountServiceUrlsDialog';
 import ClientCustomServicesDialog from './ClientCustomServicesDialog';
+import BulkGeocodeDialog from './BulkGeocodeDialog';
 import { Button } from '@/components/ui/button';
 
 interface SettingsDialogProps {
