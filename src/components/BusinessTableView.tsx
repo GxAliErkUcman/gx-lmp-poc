@@ -42,6 +42,7 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
   const [cityFilter, setCityFilter] = useState<string>('');
   const [countryFilter, setCountryFilter] = useState<string>('');
   const [postalCodeFilter, setPostalCodeFilter] = useState<string>('');
+  const [noCoordinatesFilter, setNoCoordinatesFilter] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [manageColumnsOpen, setManageColumnsOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -100,8 +101,9 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
       const matchesCity = !cityFilter || business.city === cityFilter;
       const matchesCountry = !countryFilter || business.country === countryFilter;
       const matchesPostalCode = !postalCodeFilter || business.postalCode === postalCodeFilter;
+      const matchesNoCoordinates = !noCoordinatesFilter || (!business.latitude && !business.longitude);
       
-      return matchesSearch && matchesCategory && matchesCity && matchesCountry && matchesPostalCode;
+      return matchesSearch && matchesCategory && matchesCity && matchesCountry && matchesPostalCode && matchesNoCoordinates;
     });
 
     if (currentSort) {
@@ -117,12 +119,12 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
     }
 
     return filtered;
-  }, [businesses, searchTerm, categoryFilter, cityFilter, countryFilter, postalCodeFilter, currentSort]);
+  }, [businesses, searchTerm, categoryFilter, cityFilter, countryFilter, postalCodeFilter, noCoordinatesFilter, currentSort]);
 
   // Reset page when filters change
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, categoryFilter, cityFilter, countryFilter, postalCodeFilter, businesses]);
+  }, [searchTerm, categoryFilter, cityFilter, countryFilter, postalCodeFilter, noCoordinatesFilter, businesses]);
 
   const handleCategoryFilter = (category: string) => {
     setCategoryFilter(category === "all" ? "" : category);
@@ -146,6 +148,7 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
     setCityFilter('');
     setCountryFilter('');
     setPostalCodeFilter('');
+    setNoCoordinatesFilter(false);
   };
 
   // Handle individual checkbox selection
@@ -406,9 +409,9 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
             >
               <Filter className="w-4 h-4" />
               <span className="sm:inline">Filters</span>
-              {(categoryFilter || cityFilter || countryFilter || postalCodeFilter) && (
+              {(categoryFilter || cityFilter || countryFilter || postalCodeFilter || noCoordinatesFilter) && (
                 <Badge variant="secondary" className="ml-1">
-                  {[categoryFilter, cityFilter, countryFilter, postalCodeFilter].filter(Boolean).length}
+                  {[categoryFilter, cityFilter, countryFilter, postalCodeFilter, noCoordinatesFilter].filter(Boolean).length}
                 </Badge>
               )}
             </Button>
@@ -556,8 +559,18 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
               </PopoverContent>
             </Popover>
           </div>
+
+          <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <Checkbox
+                checked={noCoordinatesFilter}
+                onCheckedChange={(checked) => setNoCoordinatesFilter(checked === true)}
+              />
+              <span className="text-xs sm:text-sm font-medium">No Coordinates</span>
+            </label>
+          </div>
           
-          {(categoryFilter || cityFilter || countryFilter || postalCodeFilter) && (
+          {(categoryFilter || cityFilter || countryFilter || postalCodeFilter || noCoordinatesFilter) && (
             <Button
               variant="ghost"
               size="sm"
