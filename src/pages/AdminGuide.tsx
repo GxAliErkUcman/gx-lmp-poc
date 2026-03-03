@@ -1112,7 +1112,7 @@ const AdminGuide = () => {
             { name: 'crud-backup', description: 'Creates a CRUD backup JSON file. Triggered by DB on business changes. Maintains 5-backup rolling window.' },
             { name: 'scheduled-backup', description: 'Weekly backup function. Runs every Monday 10 AM. Maintains 12-week rolling window.' },
             { name: 'sync-to-gcp', description: 'Syncs JSON export files to Google Cloud Storage. Uses SERVICE_ACCOUNT_KEY secret. Delete-then-upload pattern.' },
-            { name: 'manage-custom-photos', description: 'Handles custom photo list/upload/delete in GCP for each location folder (Custom Photos/{clientName}/{storeCode}/). Performs auth and returns success:false responses on logic errors.' },
+            { name: 'manage-custom-photos', description: 'Handles other photo list/upload/delete in GCP for each location folder (Other Photos/{clientName}/{storeCode}/). Performs auth and returns success:false responses on logic errors.' },
             { name: 'import-eco-movement', description: 'Imports location data from Eco Movement API. Uses ECO_MOVEMENT_API_TOKEN. Supports OCPI 2.2 pagination.' },
           ]} />
           <SubSection title="JWT Configuration">
