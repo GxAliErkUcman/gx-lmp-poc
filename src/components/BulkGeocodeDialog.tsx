@@ -80,8 +80,11 @@ const BulkGeocodeDialog = ({ open, onOpenChange, clientId, onSuccess, specificBu
   }, []);
 
   const handleOpenChange = (isOpen: boolean) => {
+    // Block closing during processing — user must cancel first
+    if (!isOpen && phase === 'processing') {
+      return;
+    }
     if (!isOpen) {
-      cancelledRef.current = true;
       resetState();
     }
     onOpenChange(isOpen);
