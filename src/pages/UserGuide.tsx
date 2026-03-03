@@ -470,7 +470,7 @@ const UserGuide = () => {
             </p>
             <StepList steps={[
               'Find a location in the table and click the Gallery (image) icon.',
-              'Use tabs to switch between Logo, Cover Photo, and Custom Photos.',
+              'Use tabs to switch between Logo, Cover Photo, and Other Photos.',
               'Upload or replace images directly from each tab.',
               'Close the dialog when done — your updates are saved immediately.',
             ]} />
