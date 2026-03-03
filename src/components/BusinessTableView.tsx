@@ -148,6 +148,7 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
     setCityFilter('');
     setCountryFilter('');
     setPostalCodeFilter('');
+    setNoCoordinatesFilter(false);
   };
 
   // Handle individual checkbox selection
