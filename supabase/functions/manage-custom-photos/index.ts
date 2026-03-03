@@ -7,7 +7,7 @@ const corsHeaders = {
 }
 
 const GCP_BUCKET = 'jasoner'
-const BASE_PREFIX = 'Custom Photos'
+const BASE_PREFIX = 'Other Photos'
 const MAX_PHOTOS = 10
 
 async function getGcpAccessToken(serviceAccount: any): Promise<string> {
