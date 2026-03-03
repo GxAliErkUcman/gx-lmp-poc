@@ -221,7 +221,7 @@ const CustomPhotoUpload = ({ storeCode, clientName, disabled = false, maxPhotos 
 
       {photos.length === 0 && !uploading && (
         <p className="text-sm text-muted-foreground text-center py-4">
-          No custom photos uploaded yet for this location.
+          No other photos uploaded yet for this location.
         </p>
       )}
     </div>
