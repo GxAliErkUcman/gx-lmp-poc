@@ -5,6 +5,7 @@ import PhotoUpload from '@/components/PhotoUpload';
 import CustomPhotoUpload from '@/components/CustomPhotoUpload';
 import { Business } from '@/types/business';
 import { Image } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface LocationGalleryDialogProps {
   open: boolean;
@@ -14,6 +15,7 @@ interface LocationGalleryDialogProps {
   onLogoChange?: (url: string) => void;
   onCoverChange?: (url: string) => void;
   disabled?: boolean;
+  customPhotosEnabled?: boolean;
 }
 
 const LocationGalleryDialog = ({
@@ -24,6 +26,7 @@ const LocationGalleryDialog = ({
   onLogoChange,
   onCoverChange,
   disabled = false,
+  customPhotosEnabled = false,
 }: LocationGalleryDialogProps) => {
   const logoPhoto = business.logoPhoto || '';
   const coverPhoto = business.coverPhoto || '';
@@ -38,11 +41,11 @@ const LocationGalleryDialog = ({
           </DialogTitle>
         </DialogHeader>
 
-        <Tabs defaultValue="custom" className="mt-4">
-          <TabsList className="grid w-full grid-cols-3">
+        <Tabs defaultValue="logo" className="mt-4">
+          <TabsList className={cn("grid w-full", customPhotosEnabled ? "grid-cols-3" : "grid-cols-2")}>
             <TabsTrigger value="logo">Logo</TabsTrigger>
             <TabsTrigger value="cover">Cover Photo</TabsTrigger>
-            <TabsTrigger value="custom">Other Photos</TabsTrigger>
+            {customPhotosEnabled && <TabsTrigger value="custom">Other Photos</TabsTrigger>}
           </TabsList>
 
           <TabsContent value="logo" className="mt-4">
@@ -131,20 +134,22 @@ const LocationGalleryDialog = ({
             </Card>
           </TabsContent>
 
-          <TabsContent value="custom" className="mt-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Other Photos</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <CustomPhotoUpload
-                  storeCode={business.storeCode}
-                  clientName={clientName}
-                  disabled={disabled}
-                />
-              </CardContent>
-            </Card>
-          </TabsContent>
+          {customPhotosEnabled && (
+            <TabsContent value="custom" className="mt-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Other Photos</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <CustomPhotoUpload
+                    storeCode={business.storeCode}
+                    clientName={clientName}
+                    disabled={disabled}
+                  />
+                </CardContent>
+              </Card>
+            </TabsContent>
+          )}
         </Tabs>
       </DialogContent>
     </Dialog>

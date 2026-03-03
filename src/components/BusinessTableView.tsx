@@ -694,16 +694,14 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
                     >
                       <Edit className="w-4 h-4" />
                     </Button>
-                    {customPhotosEnabled && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => setGalleryBusiness(business)}
-                        title="Photo Gallery"
-                      >
-                        <Image className="w-4 h-4" />
-                      </Button>
-                    )}
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setGalleryBusiness(business)}
+                      title="Photo Gallery"
+                    >
+                      <Image className="w-4 h-4" />
+                    </Button>
                     <Button
                       size="sm"
                       variant="ghost"
@@ -739,6 +737,7 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
           onOpenChange={(open) => { if (!open) setGalleryBusiness(null); }}
           business={galleryBusiness}
           clientName={clientName}
+          customPhotosEnabled={customPhotosEnabled}
         />
       )}
     </div>
