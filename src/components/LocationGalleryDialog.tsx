@@ -5,6 +5,7 @@ import PhotoUpload from '@/components/PhotoUpload';
 import CustomPhotoUpload from '@/components/CustomPhotoUpload';
 import { Business } from '@/types/business';
 import { Image } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface LocationGalleryDialogProps {
   open: boolean;
