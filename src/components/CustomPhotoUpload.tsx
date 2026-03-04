@@ -70,8 +70,8 @@ const CustomPhotoUpload = ({ storeCode, clientName, disabled = false, maxPhotos 
     setUploading(true);
     try {
       for (const file of acceptedFiles) {
-        // Validate using cover photo rules
-        const validation = await validateCoverPhoto(file);
+        // Validate using other photo rules (5MB max only)
+        const validation = await validateOtherPhoto(file);
         if (!validation.valid) {
           toast({ title: "Validation Error", description: validation.error, variant: "destructive" });
           continue;
