@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { validateCoverPhoto } from '@/lib/imageValidation';
+import { validateOtherPhoto } from '@/lib/imageValidation';
 
 interface CustomPhoto {
   name: string;
@@ -70,8 +70,8 @@ const CustomPhotoUpload = ({ storeCode, clientName, disabled = false, maxPhotos 
     setUploading(true);
     try {
       for (const file of acceptedFiles) {
-        // Validate using cover photo rules
-        const validation = await validateCoverPhoto(file);
+        // Validate using other photo rules (5MB max only)
+        const validation = await validateOtherPhoto(file);
         if (!validation.valid) {
           toast({ title: "Validation Error", description: validation.error, variant: "destructive" });
           continue;
