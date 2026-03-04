@@ -1291,6 +1291,7 @@ const AdminGuide = () => {
             <BulletList items={[
               'Logo: Must be 1:1 aspect ratio, 250×250 to 5000×5000 px, min 10KB, JPG/PNG/TIFF/BMP.',
               'Cover: Must be 16:9 aspect ratio, 480×270 to 2120×1192 px, min 10KB, JPG/PNG/TIFF/BMP.',
+              'Other Photos: Max 5 MB per photo only.',
               'Check the error message for the specific issue (wrong ratio, too small, wrong format).',
             ]} />
           </SubSection>
