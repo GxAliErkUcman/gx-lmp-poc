@@ -432,7 +432,7 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
       latitude: safeLatitude,
       longitude: safeLongitude,
       ...normalizedHours,
-      otherPhotos: coverPhoto,
+      coverPhoto: coverPhoto,
       socialMediaUrls: socialMediaUrls.length > 0 ? socialMediaUrls : null
     };
 
