@@ -72,6 +72,56 @@ function buildPrefix(clientName: string, storeCode: string): string {
   return `${BASE_PREFIX}/${clientName}/${storeCode}/`
 }
 
+async function syncOtherPhotosToDb(accessToken: string, prefix: string, storeCode: string, clientName: string) {
+  try {
+    // List all current photos in GCP
+    const listUrl = `https://storage.googleapis.com/storage/v1/b/${GCP_BUCKET}/o?prefix=${encodeURIComponent(prefix)}&maxResults=50`
+    const listResponse = await fetch(listUrl, {
+      headers: { 'Authorization': `Bearer ${accessToken}` }
+    })
+    const listData = await listResponse.json()
+    const items = (listData.items || []).filter((item: any) => !item.name.endsWith('/'))
+
+    // Build public URLs
+    const urls = items.map((item: any) =>
+      `https://storage.googleapis.com/${GCP_BUCKET}/${encodeURIComponent(item.name).replace(/%2F/g, '/')}`
+    )
+
+    // Use service role client to update
+    const serviceClient = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    )
+
+    // Find business by storeCode and client name
+    const { data: clients } = await serviceClient
+      .from('clients')
+      .select('id')
+      .eq('name', clientName)
+
+    if (!clients || clients.length === 0) {
+      console.warn(`syncOtherPhotosToDb: client not found for name=${clientName}`)
+      return
+    }
+
+    const clientIds = clients.map((c: any) => c.id)
+
+    const { error } = await serviceClient
+      .from('businesses')
+      .update({ otherPhotos: urls.length > 0 ? urls.join(', ') : null })
+      .eq('storeCode', storeCode)
+      .in('client_id', clientIds)
+
+    if (error) {
+      console.error('syncOtherPhotosToDb update error:', error)
+    } else {
+      console.log(`Synced ${urls.length} other photo URL(s) to DB for ${storeCode}`)
+    }
+  } catch (err) {
+    console.error('syncOtherPhotosToDb error:', err)
+  }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
@@ -129,7 +179,7 @@ serve(async (req) => {
 
       const listData = await listResponse.json()
       const items = (listData.items || [])
-        .filter((item: any) => !item.name.endsWith('/')) // skip folder markers
+        .filter((item: any) => !item.name.endsWith('/'))
         .map((item: any) => ({
           name: item.name,
           url: `https://storage.googleapis.com/storage/v1/b/${GCP_BUCKET}/o/${encodeURIComponent(item.name)}?alt=media&access_token=${accessToken}`,
@@ -202,6 +252,9 @@ serve(async (req) => {
 
       console.log(`Uploaded custom photo: gs://${GCP_BUCKET}/${objectPath}`)
 
+      // Sync to DB
+      await syncOtherPhotosToDb(accessToken, prefix, storeCode, clientName)
+
       return new Response(JSON.stringify({ success: true, url: publicUrl, objectName: objectPath }), {
         status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
@@ -228,6 +281,10 @@ serve(async (req) => {
 
       if (deleteResponse.ok || deleteResponse.status === 404) {
         console.log(`Deleted custom photo: gs://${GCP_BUCKET}/${objectName}`)
+
+        // Sync to DB
+        await syncOtherPhotosToDb(accessToken, prefix, storeCode, clientName)
+
         return new Response(JSON.stringify({ success: true }), {
           status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         })
