@@ -937,7 +937,7 @@ const AdminGuide = () => {
             <FieldTable fields={[
               { name: 'Logo Photo', description: '1:1 aspect ratio, 250×250 to 5000×5000 px, min 10KB. JPG/PNG/TIFF/BMP.' },
               { name: 'Cover Photo', description: '16:9 aspect ratio, 480×270 to 2120×1192 px, min 10KB. JPG/PNG/TIFF/BMP.' },
-              { name: 'Other Photos (GCP)', description: 'Location-level gallery photos. Max 10 per location. Same validation as cover photos. Stored in GCP.' },
+              { name: 'Other Photos (GCP)', description: 'Location-level gallery photos. Max 10 per location. Max 5 MB per photo. Stored in GCP.' },
               { name: 'Other Photos (URL)', description: 'Additional photos as comma-separated URLs. No specific validation.' },
             ]} />
           </SubSection>
@@ -953,8 +953,9 @@ const AdminGuide = () => {
             <BulletList items={[
               'Logo: Must be exactly 1:1 aspect ratio (square)',
               'Logo: Minimum 250×250, maximum 5000×5000 pixels',
-              'Cover + Other: Must be exactly 16:9 aspect ratio',
-              'Cover + Other: Minimum 480×270, maximum 2120×1192 pixels',
+              'Cover: Must be exactly 16:9 aspect ratio',
+              'Cover: Minimum 480×270, maximum 2120×1192 pixels',
+              'Other Photos: Max 5 MB per photo (no format or dimension restrictions)',
               'All uploads: Minimum file size 10KB',
               'All uploads: Accepted formats: JPG, PNG, TIFF, BMP',
               'Validation runs client-side before upload to prevent unnecessary writes',
@@ -1290,6 +1291,7 @@ const AdminGuide = () => {
             <BulletList items={[
               'Logo: Must be 1:1 aspect ratio, 250×250 to 5000×5000 px, min 10KB, JPG/PNG/TIFF/BMP.',
               'Cover: Must be 16:9 aspect ratio, 480×270 to 2120×1192 px, min 10KB, JPG/PNG/TIFF/BMP.',
+              'Other Photos: Max 5 MB per photo only.',
               'Check the error message for the specific issue (wrong ratio, too small, wrong format).',
             ]} />
           </SubSection>

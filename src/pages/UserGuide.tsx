@@ -492,7 +492,7 @@ const UserGuide = () => {
             </p>
             <BulletList items={[
               'Maximum 10 other photos per location',
-              'Validation is the same as cover photos (JPG/PNG/TIFF/BMP, min 10KB, 480×270 to 2120×1192)',
+              'Validation: max 5 MB per photo (no format or dimension restrictions)',
               'You can delete other photos directly from the gallery grid',
             ]} />
           </SubSection>
