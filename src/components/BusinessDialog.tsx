@@ -432,7 +432,7 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
       latitude: safeLatitude,
       longitude: safeLongitude,
       ...normalizedHours,
-      otherPhotos: coverPhoto,
+      coverPhoto: coverPhoto,
       socialMediaUrls: socialMediaUrls.length > 0 ? socialMediaUrls : null
     };
 
@@ -508,8 +508,8 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
         specialHours: formatSpecialHoursToSchema(specialHours) || null,
         temporarilyClosed: data.temporarilyClosed || false,
         logoPhoto: data.logoPhoto || null,
-        coverPhoto: data.coverPhoto || null,
-        otherPhotos: coverPhoto || null,
+        coverPhoto: coverPhoto || null,
+        otherPhotos: data.otherPhotos || null,
         appointmentURL: data.appointmentURL || null,
         menuURL: data.menuURL || null,
         reservationsURL: data.reservationsURL || null,
