@@ -93,7 +93,7 @@ async function syncOtherPhotosToDb(accessToken: string, prefix: string, storeCod
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     )
 
-    // Find business by storeCode and client name
+    // Find target clients by name
     const { data: clients } = await serviceClient
       .from('clients')
       .select('id')
@@ -106,16 +106,59 @@ async function syncOtherPhotosToDb(accessToken: string, prefix: string, storeCod
 
     const clientIds = clients.map((c: any) => c.id)
 
-    const { error } = await serviceClient
+    // Find exact businesses for this storeCode under those clients
+    const { data: matchedBusinesses, error: matchError } = await serviceClient
       .from('businesses')
-      .update({ otherPhotos: urls.length > 0 ? urls.join(', ') : null })
+      .select('id, client_id')
       .eq('storeCode', storeCode)
       .in('client_id', clientIds)
 
+    if (matchError) {
+      console.error('syncOtherPhotosToDb match error:', matchError)
+      return
+    }
+
+    if (!matchedBusinesses || matchedBusinesses.length === 0) {
+      console.warn(`syncOtherPhotosToDb: no businesses matched storeCode=${storeCode}, clientName=${clientName}`)
+      return
+    }
+
+    const businessIds = matchedBusinesses.map((b: any) => b.id)
+    const targetClientIds = Array.from(new Set(matchedBusinesses.map((b: any) => b.client_id)))
+
+    const { error } = await serviceClient
+      .from('businesses')
+      .update({ otherPhotos: urls.length > 0 ? urls.join(', ') : null })
+      .in('id', businessIds)
+
     if (error) {
       console.error('syncOtherPhotosToDb update error:', error)
-    } else {
-      console.log(`Synced ${urls.length} other photo URL(s) to DB for ${storeCode}`)
+      return
+    }
+
+    console.log(`Synced ${urls.length} other photo URL(s) to DB for ${storeCode}`)
+
+    // Regenerate JSON exports for affected clients so file reflects latest otherPhotos
+    for (const clientId of targetClientIds) {
+      try {
+        const exportRes = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/generate-json-export`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ client_id: clientId })
+        })
+
+        if (!exportRes.ok) {
+          const body = await exportRes.text()
+          console.warn(`syncOtherPhotosToDb export refresh failed for client ${clientId}: ${exportRes.status} ${body}`)
+        } else {
+          console.log(`Refreshed JSON export for client ${clientId}`)
+        }
+      } catch (exportErr) {
+        console.warn(`syncOtherPhotosToDb export refresh error for client ${clientId}:`, exportErr)
+      }
     }
   } catch (err) {
     console.error('syncOtherPhotosToDb error:', err)
