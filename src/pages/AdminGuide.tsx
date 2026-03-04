@@ -953,8 +953,9 @@ const AdminGuide = () => {
             <BulletList items={[
               'Logo: Must be exactly 1:1 aspect ratio (square)',
               'Logo: Minimum 250×250, maximum 5000×5000 pixels',
-              'Cover + Other: Must be exactly 16:9 aspect ratio',
-              'Cover + Other: Minimum 480×270, maximum 2120×1192 pixels',
+              'Cover: Must be exactly 16:9 aspect ratio',
+              'Cover: Minimum 480×270, maximum 2120×1192 pixels',
+              'Other Photos: Max 5 MB per photo (no format or dimension restrictions)',
               'All uploads: Minimum file size 10KB',
               'All uploads: Accepted formats: JPG, PNG, TIFF, BMP',
               'Validation runs client-side before upload to prevent unnecessary writes',
