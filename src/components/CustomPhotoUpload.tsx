@@ -173,7 +173,7 @@ const CustomPhotoUpload = ({ storeCode, clientName, disabled = false, maxPhotos 
             {isDragActive ? 'Drop photos here' : 'Drag & drop or click to upload other photos'}
           </p>
           <p className="text-xs text-muted-foreground mt-1">
-            {photos.length}/{maxPhotos} photos uploaded • JPG, PNG, TIFF, BMP • 480×270 to 2120×1192
+            {photos.length}/{maxPhotos} photos uploaded • Max 5 MB per photo
           </p>
           {uploading && (
             <div className="flex items-center justify-center mt-2">
