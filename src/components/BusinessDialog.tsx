@@ -133,7 +133,7 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
     youtubeUrl: ""
   });
 
-  const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<BusinessFormData>({
+  const { register, handleSubmit, reset, setValue, watch, getValues, formState: { errors } } = useForm<BusinessFormData>({
     resolver: zodResolver(businessSchema),
     defaultValues: {
       storeCode: "",
@@ -156,7 +156,7 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
   // Generate store code when business name changes
   const businessName = watch('businessName');
   useEffect(() => {
-    if (businessName && !business && !watch('storeCode')) {
+    if (businessName && !business && !getValues('storeCode')) {
       // Auto-generate store code for new businesses
       const generateCode = async () => {
         try {
@@ -173,7 +173,7 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
       };
       generateCode();
     }
-  }, [businessName, business, setValue, watch]);
+  }, [businessName, business, setValue, getValues]);
 
   // Fetch fresh business data when dialog opens
   const fetchFreshBusinessData = async (businessId: string) => {
