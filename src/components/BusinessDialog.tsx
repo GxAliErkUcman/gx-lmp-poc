@@ -509,7 +509,7 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
         temporarilyClosed: data.temporarilyClosed || false,
         logoPhoto: data.logoPhoto || null,
         coverPhoto: coverPhoto || null,
-        otherPhotos: data.otherPhotos || null,
+        // otherPhotos is managed by the manage-custom-photos edge function
         appointmentURL: data.appointmentURL || null,
         menuURL: data.menuURL || null,
         reservationsURL: data.reservationsURL || null,
