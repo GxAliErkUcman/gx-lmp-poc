@@ -1,3 +1,4 @@
+import { useState, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,6 +7,8 @@ import CustomPhotoUpload from '@/components/CustomPhotoUpload';
 import { Business } from '@/types/business';
 import { Image } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
 
 interface LocationGalleryDialogProps {
   open: boolean;
@@ -28,8 +31,44 @@ const LocationGalleryDialog = ({
   disabled = false,
   customPhotosEnabled = false,
 }: LocationGalleryDialogProps) => {
-  const logoPhoto = business.logoPhoto || '';
-  const coverPhoto = business.coverPhoto || '';
+  const [localLogoPhoto, setLocalLogoPhoto] = useState(business.logoPhoto || '');
+  const [localCoverPhoto, setLocalCoverPhoto] = useState(business.coverPhoto || '');
+
+  // Sync local state when business prop changes
+  const logoPhoto = onLogoChange ? (business.logoPhoto || '') : localLogoPhoto;
+  const coverPhoto = onCoverChange ? (business.coverPhoto || '') : localCoverPhoto;
+
+  const handleDirectUpdate = useCallback(async (field: 'logoPhoto' | 'coverPhoto', url: string) => {
+    const { error } = await supabase
+      .from('businesses')
+      .update({ [field]: url || null })
+      .eq('id', business.id);
+
+    if (error) {
+      toast({ title: 'Error', description: `Failed to update ${field === 'logoPhoto' ? 'logo' : 'cover photo'}`, variant: 'destructive' });
+      return false;
+    }
+    toast({ title: 'Success', description: `${field === 'logoPhoto' ? 'Logo' : 'Cover photo'} updated` });
+    return true;
+  }, [business.id]);
+
+  const handleLogoChange = useCallback(async (url: string) => {
+    if (onLogoChange) {
+      onLogoChange(url);
+    } else {
+      const success = await handleDirectUpdate('logoPhoto', url);
+      if (success) setLocalLogoPhoto(url);
+    }
+  }, [onLogoChange, handleDirectUpdate]);
+
+  const handleCoverChange = useCallback(async (url: string) => {
+    if (onCoverChange) {
+      onCoverChange(url);
+    } else {
+      const success = await handleDirectUpdate('coverPhoto', url);
+      if (success) setLocalCoverPhoto(url);
+    }
+  }, [onCoverChange, handleDirectUpdate]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -63,28 +102,24 @@ const LocationGalleryDialog = ({
                         className="max-w-[250px] max-h-[250px] object-contain rounded border"
                       />
                     </div>
-                    {onLogoChange && (
-                      <PhotoUpload
-                        photos={[logoPhoto]}
-                        onPhotosChange={(photos) => onLogoChange(photos[0] || '')}
-                        maxPhotos={1}
-                        disabled={disabled}
-                        photoType="logo"
-                      />
-                    )}
+                    <PhotoUpload
+                      photos={[logoPhoto]}
+                      onPhotosChange={(photos) => handleLogoChange(photos[0] || '')}
+                      maxPhotos={1}
+                      disabled={disabled}
+                      photoType="logo"
+                    />
                   </div>
                 ) : (
                   <div className="text-center py-8">
                     <p className="text-sm text-muted-foreground mb-4">No logo uploaded</p>
-                    {onLogoChange && (
-                      <PhotoUpload
-                        photos={[]}
-                        onPhotosChange={(photos) => onLogoChange(photos[0] || '')}
-                        maxPhotos={1}
-                        disabled={disabled}
-                        photoType="logo"
-                      />
-                    )}
+                    <PhotoUpload
+                      photos={[]}
+                      onPhotosChange={(photos) => handleLogoChange(photos[0] || '')}
+                      maxPhotos={1}
+                      disabled={disabled}
+                      photoType="logo"
+                    />
                   </div>
                 )}
               </CardContent>
@@ -106,28 +141,24 @@ const LocationGalleryDialog = ({
                         className="max-w-full max-h-[400px] object-contain rounded border"
                       />
                     </div>
-                    {onCoverChange && (
-                      <PhotoUpload
-                        photos={[coverPhoto]}
-                        onPhotosChange={(photos) => onCoverChange(photos[0] || '')}
-                        maxPhotos={1}
-                        disabled={disabled}
-                        photoType="cover"
-                      />
-                    )}
+                    <PhotoUpload
+                      photos={[coverPhoto]}
+                      onPhotosChange={(photos) => handleCoverChange(photos[0] || '')}
+                      maxPhotos={1}
+                      disabled={disabled}
+                      photoType="cover"
+                    />
                   </div>
                 ) : (
                   <div className="text-center py-8">
                     <p className="text-sm text-muted-foreground mb-4">No cover photo uploaded</p>
-                    {onCoverChange && (
-                      <PhotoUpload
-                        photos={[]}
-                        onPhotosChange={(photos) => onCoverChange(photos[0] || '')}
-                        maxPhotos={1}
-                        disabled={disabled}
-                        photoType="cover"
-                      />
-                    )}
+                    <PhotoUpload
+                      photos={[]}
+                      onPhotosChange={(photos) => handleCoverChange(photos[0] || '')}
+                      maxPhotos={1}
+                      disabled={disabled}
+                      photoType="cover"
+                    />
                   </div>
                 )}
               </CardContent>
