@@ -432,7 +432,7 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
       latitude: safeLatitude,
       longitude: safeLongitude,
       ...normalizedHours,
-      coverPhoto: coverPhoto,
+      // otherPhotos managed by edge function sync, not included here
       socialMediaUrls: socialMediaUrls.length > 0 ? socialMediaUrls : null
     };
 
