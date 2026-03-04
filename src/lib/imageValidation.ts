@@ -99,19 +99,12 @@ export const validateCoverPhoto = async (file: File): Promise<ImageValidationRes
 };
 
 export const validateOtherPhoto = async (file: File): Promise<ImageValidationResult> => {
-  // For other photos, use less strict validation
-  const fileExt = file.name.split('.').pop()?.toLowerCase();
-  if (!fileExt || !ALLOWED_FORMATS.includes(fileExt)) {
-    return {
-      valid: false,
-      error: 'Photo must be in JPG, PNG, TIFF, or BMP format'
-    };
-  }
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 
-  if (file.size < MIN_FILE_SIZE) {
+  if (file.size > MAX_FILE_SIZE) {
     return {
       valid: false,
-      error: `Photo file size must be at least ${MIN_FILE_SIZE / 1024} KB`
+      error: 'Photo file size must not exceed 5 MB'
     };
   }
 
