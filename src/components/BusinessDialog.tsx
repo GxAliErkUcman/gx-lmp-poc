@@ -133,7 +133,7 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: B
     youtubeUrl: ""
   });
 
-  const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<BusinessFormData>({
+  const { register, handleSubmit, reset, setValue, watch, getValues, formState: { errors } } = useForm<BusinessFormData>({
     resolver: zodResolver(businessSchema),
     defaultValues: {
       storeCode: "",
