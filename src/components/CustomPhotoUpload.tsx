@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { validateCoverPhoto } from '@/lib/imageValidation';
+import { validateOtherPhoto } from '@/lib/imageValidation';
 
 interface CustomPhoto {
   name: string;
