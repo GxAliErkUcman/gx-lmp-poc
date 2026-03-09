@@ -23,6 +23,7 @@ import { useFieldPermissions } from '@/hooks/use-field-permissions';
 import type { Business } from '@/types/business';
 import { UserSettingsDialog } from '@/components/UserSettingsDialog';
 import jasonerLogo from '@/assets/jasoner-horizontal-logo.png';
+import { fetchAllBusinesses } from '@/lib/fetchAllRows';
 
 interface UserProfile {
   user_id: string;
@@ -169,15 +170,8 @@ const ClientAdminPanel = () => {
       }
 
       // Fetch businesses for this client
-      const { data: businessData, error: businessError } = await supabase
-        .from('businesses')
-        .select('*')
-        .eq('client_id', userClientId)
-        .order('created_at', { ascending: false });
-
-      if (businessError) throw businessError;
-
-      setBusinesses((businessData || []) as Business[]);
+      const businessList = await fetchAllBusinesses(userClientId);
+      setBusinesses(businessList);
     } catch (error) {
       console.error('Error fetching data:', error);
       toast({

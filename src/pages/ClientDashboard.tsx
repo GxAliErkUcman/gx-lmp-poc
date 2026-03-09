@@ -28,6 +28,7 @@ import ClientCustomServicesDialog from '@/components/ClientCustomServicesDialog'
 import { ApiImportDialog } from '@/components/ApiImportDialog';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useTranslation } from 'react-i18next';
+import { fetchAllBusinesses } from '@/lib/fetchAllRows';
 import NeedAttentionBanner from '@/components/NeedAttentionBanner';
 import { isActiveBusiness, hasCriticalErrors } from '@/lib/exportValidation';
 
@@ -202,14 +203,7 @@ const ClientDashboard = () => {
   const fetchBusinesses = async (silent = false) => {
     try {
       if (!silent) setLoading(true);
-      const { data, error } = await supabase
-        .from('businesses')
-        .select('*')
-        .eq('client_id', selectedClientId)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      let businessList = (data || []) as Business[];
+      let businessList = await fetchAllBusinesses(selectedClientId);
 
       // Apply country restrictions if user has them
       if (user) {
