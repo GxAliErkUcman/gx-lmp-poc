@@ -169,15 +169,8 @@ const ClientAdminPanel = () => {
       }
 
       // Fetch businesses for this client
-      const { data: businessData, error: businessError } = await supabase
-        .from('businesses')
-        .select('*')
-        .eq('client_id', userClientId)
-        .order('created_at', { ascending: false });
-
-      if (businessError) throw businessError;
-
-      setBusinesses((businessData || []) as Business[]);
+      const businessList = await fetchAllBusinesses(userClientId);
+      setBusinesses(businessList);
     } catch (error) {
       console.error('Error fetching data:', error);
       toast({

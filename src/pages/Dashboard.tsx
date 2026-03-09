@@ -68,13 +68,7 @@ useEffect(() => {
 
   const fetchBusinesses = async () => {
     try {
-      const { data, error } = await supabase
-        .from('businesses')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      let businessList = (data || []) as Business[];
+      let businessList = await fetchAllBusinesses();
 
       // Apply country restrictions if user has them
       if (user) {

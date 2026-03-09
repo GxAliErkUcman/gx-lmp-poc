@@ -202,14 +202,7 @@ const ClientDashboard = () => {
   const fetchBusinesses = async (silent = false) => {
     try {
       if (!silent) setLoading(true);
-      const { data, error } = await supabase
-        .from('businesses')
-        .select('*')
-        .eq('client_id', selectedClientId)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      let businessList = (data || []) as Business[];
+      let businessList = await fetchAllBusinesses(selectedClientId);
 
       // Apply country restrictions if user has them
       if (user) {
