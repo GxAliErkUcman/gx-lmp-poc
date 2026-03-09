@@ -84,15 +84,20 @@ const ServiceUserHome = () => {
       // For each client, fetch locations and users
       const clientInfoPromises = clientsData.map(async (client) => {
         // Fetch active and pending locations
-        const { data: businessData, error: businessError } = await supabase
+        const { count: activeCount } = await supabase
           .from('businesses')
-          .select('status')
-          .eq('client_id', client.id);
+          .select('id', { count: 'exact', head: true })
+          .eq('client_id', client.id)
+          .eq('status', 'active');
 
-        if (businessError) throw businessError;
+        const { count: pendingCount } = await supabase
+          .from('businesses')
+          .select('id', { count: 'exact', head: true })
+          .eq('client_id', client.id)
+          .eq('status', 'pending');
 
-        const active_locations = businessData.filter(b => b.status === 'active').length;
-        const pending_locations = businessData.filter(b => b.status === 'pending').length;
+        const active_locations = activeCount || 0;
+        const pending_locations = pendingCount || 0;
 
         // Fetch users from profiles (client users)
         const { data: profilesData, error: profilesError } = await supabase
