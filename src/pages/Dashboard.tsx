@@ -24,6 +24,7 @@ import jasonerLogo from '@/assets/jasoner-horizontal-logo.png';
 import { useTranslation } from 'react-i18next';
 import NeedAttentionBanner from '@/components/NeedAttentionBanner';
 import { isActiveBusiness, hasCriticalErrors } from '@/lib/exportValidation';
+import { fetchAllBusinesses } from '@/lib/fetchAllRows';
 
 const Dashboard = () => {
   const { t } = useTranslation();
