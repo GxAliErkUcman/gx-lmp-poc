@@ -23,6 +23,7 @@ import { useFieldPermissions } from '@/hooks/use-field-permissions';
 import type { Business } from '@/types/business';
 import { UserSettingsDialog } from '@/components/UserSettingsDialog';
 import jasonerLogo from '@/assets/jasoner-horizontal-logo.png';
+import { fetchAllBusinesses } from '@/lib/fetchAllRows';
 
 interface UserProfile {
   user_id: string;
