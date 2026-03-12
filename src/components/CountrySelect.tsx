@@ -267,9 +267,18 @@ export const getCountryCode = (nameOrCode: string): string => {
   
   const normalized = nameOrCode.trim();
   
-  // Check if it's already a valid code
-  const isCode = COUNTRIES.some(c => c.code === normalized);
-  if (isCode) return normalized;
+  // Check if it's already a valid code (case-insensitive, e.g. "UK" -> "GB", "ua" -> "UA")
+  const upperNormalized = normalized.toUpperCase();
+  
+  // Handle common aliases first (e.g., "UK" is commonly used but ISO code is "GB")
+  const CODE_ALIASES: Record<string, string> = {
+    'UK': 'GB',
+  };
+  if (CODE_ALIASES[upperNormalized]) return CODE_ALIASES[upperNormalized];
+  
+  // Check if it's already a valid ISO code
+  const isCode = COUNTRIES.some(c => c.code === upperNormalized);
+  if (isCode) return upperNormalized;
   
   // Try to find by name (case-insensitive exact match)
   const exactMatch = COUNTRIES.find(c => 
@@ -277,12 +286,15 @@ export const getCountryCode = (nameOrCode: string): string => {
   );
   if (exactMatch) return exactMatch.code;
   
-  // Try partial match (for cases like "United States" vs "United States of America")
-  const partialMatch = COUNTRIES.find(c => 
-    c.name.toLowerCase().includes(normalized.toLowerCase()) ||
-    normalized.toLowerCase().includes(c.name.toLowerCase())
-  );
-  if (partialMatch) return partialMatch.code;
+  // Try partial match, but only for longer inputs (3+ chars) to avoid
+  // short strings like "UK" falsely matching "Ukraine"
+  if (normalized.length >= 3) {
+    const partialMatch = COUNTRIES.find(c => 
+      c.name.toLowerCase().includes(normalized.toLowerCase()) ||
+      normalized.toLowerCase().includes(c.name.toLowerCase())
+    );
+    if (partialMatch) return partialMatch.code;
+  }
   
   // Return original if no match found
   return nameOrCode;
