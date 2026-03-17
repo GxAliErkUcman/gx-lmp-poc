@@ -401,6 +401,11 @@ useEffect(() => {
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
+              <TabsTrigger value="seo" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm py-2">
+                <Activity className="w-3.5 h-3.5 hidden sm:inline" />
+                <span className="hidden sm:inline">SEO Health</span>
+                <span className="sm:hidden">SEO</span>
+              </TabsTrigger>
             </TabsList>
             
             <TabsContent value="active">
