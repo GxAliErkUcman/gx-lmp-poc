@@ -1340,6 +1340,98 @@ const AdminGuide = () => {
           </SubSection>
         </Section>
 
+        {/* 26. SEO Health Score & Suggestions Engine */}
+        <Section id="section-26" number="26" title="SEO Health Score & Suggestions Engine">
+          <SubSection title="Overview">
+            <p className="text-sm text-muted-foreground mb-3">
+              The SEO Health Score is a new feature that evaluates every location against local SEO best practices, giving each a completeness score from 0–100% and providing actionable suggestions for improvement. It helps Service Users and Admins quickly identify weak listings across a client's portfolio and prioritize optimization efforts.
+            </p>
+            <Info>
+              This feature is <strong>only available to Service Users and Admins</strong>. Client Admins, Users, and Store Owners do not have access to the SEO Health tab. This is intentional — the scoring engine is a management tool for internal teams, not client-facing.
+            </Info>
+          </SubSection>
+
+          <SubSection title="How to Access">
+            <StepList steps={[
+              'Navigate to the Client Dashboard (as a Service User or Admin).',
+              'Select a client from the client dropdown.',
+              'Click the "SEO Health" tab alongside Active, Need Attention, and New.',
+              'The overview displays the aggregate score, distribution, and lowest-scoring locations.',
+            ]} />
+          </SubSection>
+
+          <SubSection title="Scoring Framework">
+            <p className="text-sm text-muted-foreground mb-3">
+              Each location is scored across 6 weighted categories. The total always adds up to 100 points:
+            </p>
+            <FieldTable fields={[
+              { name: 'Core Identity (25%)', description: 'Business name, primary & additional categories, description ("From the Business"). Description quality is also checked (100–750 chars ideal).', required: true },
+              { name: 'Address & Geo (20%)', description: 'Address line 1, city, postal code, country, and GPS coordinates (latitude/longitude). Note: addressLine2–5 are excluded as they are usually redundant.', required: true },
+              { name: 'Contact & Web (15%)', description: 'Primary phone, website URL, and social media profiles (2+ recommended).', required: false },
+              { name: 'Opening Hours (15%)', description: 'All 7 days of the week filled, plus special/holiday hours.', required: false },
+              { name: 'Photos & Media (15%)', description: 'Logo photo, cover photo, and 3+ additional photos for best results.', required: false },
+              { name: 'Services & Extras (10%)', description: 'Custom services, labels, and service URLs (menu, reservations, appointments, order ahead).', required: false },
+            ]} />
+          </SubSection>
+
+          <SubSection title="Score Bands">
+            <BulletList items={[
+              'Green (80–100%): Good — location is well-optimized for local search.',
+              'Yellow (50–79%): Fair — some important fields are missing or incomplete.',
+              'Red (below 50%): Poor — significant gaps that will hurt local search visibility.',
+            ]} />
+            <p className="text-sm text-muted-foreground mt-2">
+              The default threshold for flagging locations as "needs improvement" is 70%.
+            </p>
+          </SubSection>
+
+          <SubSection title="Dashboard Components">
+            <p className="text-sm text-muted-foreground mb-2">The SEO Health tab shows four summary cards:</p>
+            <BulletList items={[
+              'Average SEO Score — circular indicator with the client-wide average.',
+              'Score Distribution — breakdown of how many locations fall into Green, Yellow, and Red bands.',
+              'Below Threshold — count of locations below 70%, with the percentage of the portfolio affected.',
+              'Top Missing Fields — the 3 most commonly missing fields across all locations, with percentages.',
+            ]} />
+            <p className="text-sm text-muted-foreground mt-3">
+              Below the summary cards, a <strong>Lowest Scoring Locations</strong> table lists the 10 worst-performing locations with their store code, city, country, and score. Each row has an Edit button to jump directly to that location for fixes.
+            </p>
+          </SubSection>
+
+          <SubSection title="Suggestions Engine">
+            <p className="text-sm text-muted-foreground mb-2">
+              Each location generates specific, actionable suggestions sorted by priority:
+            </p>
+            <BulletList items={[
+              'High priority (red): Missing required or high-impact fields like business name, coordinates, or opening hours.',
+              'Medium priority (amber): Missing recommended fields like photos, postal code, or description length issues.',
+              'Low priority (grey): Optional improvements like adding social media profiles or special hours.',
+            ]} />
+            <p className="text-sm text-muted-foreground mt-2">
+              Each suggestion includes the field name, what action to take, and why it matters for local SEO (e.g., "Listings with 3+ photos get 42% more direction requests").
+            </p>
+          </SubSection>
+
+          <SubSection title="Access Restrictions">
+            <FieldTable fields={[
+              { name: 'Admin', description: 'Full access to SEO Health tab for all clients.', required: false },
+              { name: 'Service User', description: 'Full access to SEO Health tab for assigned clients only.', required: false },
+              { name: 'Client Admin', description: 'No access — tab is not visible.', required: false },
+              { name: 'User', description: 'No access — tab is not visible.', required: false },
+              { name: 'Store Owner', description: 'No access — tab is not visible.', required: false },
+            ]} />
+          </SubSection>
+
+          <SubSection title="Technical Notes">
+            <BulletList items={[
+              'All scoring is computed client-side — no database tables or edge functions are required.',
+              'Scores are calculated on already-fetched business data with zero additional API calls.',
+              'The scoring logic lives in src/lib/seoScoring.ts and can be tuned by adjusting point values.',
+              'Data source filters (e.g., API vs CRUD for Energie 360°) are respected — SEO Health scores only the currently filtered set.',
+            ]} />
+          </SubSection>
+        </Section>
+
         {/* Footer */}
         <div className="mt-16 pt-8 border-t border-border text-center text-xs text-muted-foreground print:mt-8">
           <p>Jasoner Admin & Service User Guide — {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long' })} — Confidential</p>
