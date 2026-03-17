@@ -1,0 +1,245 @@
+import type { Business } from '@/types/business';
+
+export type SeoPriority = 'high' | 'medium' | 'low';
+
+export interface SeoSuggestion {
+  field: string;
+  priority: SeoPriority;
+  category: string;
+  message: string;
+  impact: string;
+}
+
+export interface SeoCategoryScore {
+  name: string;
+  score: number;
+  maxScore: number;
+  percentage: number;
+}
+
+export interface SeoScoreResult {
+  overallScore: number;
+  categories: SeoCategoryScore[];
+  suggestions: SeoSuggestion[];
+  band: 'green' | 'yellow' | 'red';
+}
+
+export const SEO_THRESHOLD = 70;
+
+function hasValue(val: any): boolean {
+  if (val === null || val === undefined) return false;
+  if (typeof val === 'string') return val.trim().length > 0;
+  if (Array.isArray(val)) return val.length > 0;
+  return true;
+}
+
+function countOtherPhotos(otherPhotos: string | undefined | null): number {
+  if (!otherPhotos || typeof otherPhotos !== 'string') return 0;
+  return otherPhotos.split(',').filter(u => u.trim().length > 0).length;
+}
+
+function countFilledHours(b: Business): number {
+  const days = [b.mondayHours, b.tuesdayHours, b.wednesdayHours, b.thursdayHours, b.fridayHours, b.saturdayHours, b.sundayHours];
+  return days.filter(d => hasValue(d)).length;
+}
+
+function parseSocialMedia(val: any): any[] {
+  if (!val) return [];
+  if (typeof val === 'string') {
+    try { return JSON.parse(val); } catch { return []; }
+  }
+  if (Array.isArray(val)) return val;
+  return [];
+}
+
+function parseCustomServices(val: any): any[] {
+  if (!val) return [];
+  if (typeof val === 'string') {
+    try { return JSON.parse(val); } catch { return []; }
+  }
+  if (Array.isArray(val)) return val;
+  return [];
+}
+
+export function calculateSeoScore(business: Business): SeoScoreResult {
+  const suggestions: SeoSuggestion[] = [];
+  
+  // === CORE IDENTITY (25 points) ===
+  let coreScore = 0;
+  const coreMax = 25;
+  
+  // businessName (8pts)
+  if (hasValue(business.businessName)) { coreScore += 8; }
+  else { suggestions.push({ field: 'businessName', priority: 'high', category: 'Core Identity', message: 'Add a business name', impact: 'Business name is the most important local SEO signal' }); }
+  
+  // primaryCategory (8pts)
+  if (hasValue(business.primaryCategory)) { coreScore += 8; }
+  else { suggestions.push({ field: 'primaryCategory', priority: 'high', category: 'Core Identity', message: 'Set a primary category', impact: 'Categories help Google understand your business type' }); }
+  
+  // additionalCategories (4pts)
+  if (hasValue(business.additionalCategories)) { coreScore += 4; }
+  else { suggestions.push({ field: 'additionalCategories', priority: 'medium', category: 'Core Identity', message: 'Add additional categories to increase visibility', impact: 'Additional categories help you appear in more search results' }); }
+  
+  // fromTheBusiness / description (5pts)
+  if (hasValue(business.fromTheBusiness)) {
+    const len = business.fromTheBusiness!.length;
+    if (len >= 100 && len <= 750) {
+      coreScore += 5;
+    } else {
+      coreScore += 2;
+      if (len < 100) {
+        suggestions.push({ field: 'fromTheBusiness', priority: 'medium', category: 'Core Identity', message: 'Expand your business description to at least 100 characters', impact: 'Longer descriptions improve keyword relevance and engagement' });
+      } else {
+        suggestions.push({ field: 'fromTheBusiness', priority: 'low', category: 'Core Identity', message: 'Shorten your business description to 750 characters or less', impact: 'Overly long descriptions may be truncated by Google' });
+      }
+    }
+  } else {
+    suggestions.push({ field: 'fromTheBusiness', priority: 'high', category: 'Core Identity', message: 'Add a business description ("From the Business")', impact: 'Descriptions significantly boost local search rankings' });
+  }
+
+  // === ADDRESS & GEO (20 points) ===
+  let addrScore = 0;
+  const addrMax = 20;
+  
+  if (hasValue(business.addressLine1)) { addrScore += 4; }
+  else { suggestions.push({ field: 'addressLine1', priority: 'high', category: 'Address & Geo', message: 'Add an address', impact: 'Address is required for local search visibility' }); }
+  
+  if (hasValue(business.city)) { addrScore += 3; }
+  else { suggestions.push({ field: 'city', priority: 'high', category: 'Address & Geo', message: 'Add a city', impact: 'City is essential for local search targeting' }); }
+  
+  if (hasValue(business.postalCode)) { addrScore += 3; }
+  else { suggestions.push({ field: 'postalCode', priority: 'medium', category: 'Address & Geo', message: 'Add a postal code', impact: 'Postal codes improve proximity-based search results' }); }
+  
+  if (hasValue(business.country)) { addrScore += 3; }
+  else { suggestions.push({ field: 'country', priority: 'high', category: 'Address & Geo', message: 'Set a country', impact: 'Country is required for geographic targeting' }); }
+  
+  if (hasValue(business.latitude) && hasValue(business.longitude)) { addrScore += 7; }
+  else { suggestions.push({ field: 'latitude/longitude', priority: 'high', category: 'Address & Geo', message: 'Add GPS coordinates (latitude & longitude)', impact: 'Coordinates are critical for Google Maps placement and proximity ranking' }); }
+
+  // === CONTACT & WEB (15 points) ===
+  let contactScore = 0;
+  const contactMax = 15;
+  
+  if (hasValue(business.primaryPhone)) { contactScore += 5; }
+  else { suggestions.push({ field: 'primaryPhone', priority: 'high', category: 'Contact & Web', message: 'Add a phone number', impact: 'Phone numbers increase trust and click-to-call conversions' }); }
+  
+  if (hasValue(business.website)) { contactScore += 5; }
+  else { suggestions.push({ field: 'website', priority: 'high', category: 'Contact & Web', message: 'Add a website URL', impact: 'Website links drive traffic and improve search authority' }); }
+  
+  const socialMedia = parseSocialMedia(business.socialMediaUrls);
+  if (socialMedia.length >= 2) { contactScore += 5; }
+  else if (socialMedia.length === 1) { 
+    contactScore += 2;
+    suggestions.push({ field: 'socialMediaUrls', priority: 'low', category: 'Contact & Web', message: 'Add at least 2 social media profiles', impact: 'Social signals strengthen your online presence' });
+  }
+  else { suggestions.push({ field: 'socialMediaUrls', priority: 'low', category: 'Contact & Web', message: 'Add social media profiles', impact: 'Social signals strengthen your online presence' }); }
+
+  // === OPENING HOURS (15 points) ===
+  let hoursScore = 0;
+  const hoursMax = 15;
+  
+  const filledDays = countFilledHours(business);
+  if (filledDays === 7) { hoursScore += 10; }
+  else if (filledDays >= 5) { 
+    hoursScore += 7;
+    suggestions.push({ field: 'openingHours', priority: 'medium', category: 'Opening Hours', message: `Set hours for all 7 days (${filledDays}/7 filled)`, impact: 'Complete hours improve customer experience and search visibility' });
+  }
+  else if (filledDays > 0) {
+    hoursScore += 3;
+    suggestions.push({ field: 'openingHours', priority: 'high', category: 'Opening Hours', message: `Set hours for all 7 days (only ${filledDays}/7 filled)`, impact: 'Incomplete hours may signal an inactive or unreliable business' });
+  }
+  else { suggestions.push({ field: 'openingHours', priority: 'high', category: 'Opening Hours', message: 'Add opening hours for each day of the week', impact: 'Opening hours are one of the top local SEO ranking factors' }); }
+  
+  if (hasValue(business.specialHours)) { hoursScore += 5; }
+  else { suggestions.push({ field: 'specialHours', priority: 'low', category: 'Opening Hours', message: 'Add special/holiday hours', impact: 'Special hours prevent customer frustration and improve trust' }); }
+
+  // === PHOTOS & MEDIA (15 points) ===
+  let photosScore = 0;
+  const photosMax = 15;
+  
+  if (hasValue(business.logoPhoto)) { photosScore += 4; }
+  else { suggestions.push({ field: 'logoPhoto', priority: 'medium', category: 'Photos & Media', message: 'Upload a logo photo', impact: 'Logos improve brand recognition in search results' }); }
+  
+  if (hasValue(business.coverPhoto)) { photosScore += 4; }
+  else { suggestions.push({ field: 'coverPhoto', priority: 'medium', category: 'Photos & Media', message: 'Upload a cover photo', impact: 'Cover photos are the first visual impression on your listing' }); }
+  
+  const photoCount = countOtherPhotos(business.otherPhotos);
+  if (photoCount >= 3) { photosScore += 7; }
+  else if (photoCount > 0) {
+    photosScore += 3;
+    suggestions.push({ field: 'otherPhotos', priority: 'medium', category: 'Photos & Media', message: `Add more photos (${photoCount}/3+ recommended)`, impact: 'Listings with 3+ photos get 42% more direction requests' });
+  }
+  else { suggestions.push({ field: 'otherPhotos', priority: 'medium', category: 'Photos & Media', message: 'Add at least 3 additional photos', impact: 'Listings with photos get 42% more direction requests and 35% more clicks' }); }
+
+  // === SERVICES & EXTRAS (10 points) ===
+  let servicesScore = 0;
+  const servicesMax = 10;
+  
+  const services = parseCustomServices(business.customServices);
+  if (services.length > 0) { servicesScore += 4; }
+  else { suggestions.push({ field: 'customServices', priority: 'low', category: 'Services & Extras', message: 'Add services to showcase your offerings', impact: 'Services help match user search intent' }); }
+  
+  if (hasValue(business.labels)) { servicesScore += 2; }
+  
+  // Service URLs (menuURL, reservationsURL, orderAheadURL, appointmentURL) — 4pts for having any
+  const serviceUrls = [business.menuURL, business.reservationsURL, business.orderAheadURL, business.appointmentURL];
+  const filledUrls = serviceUrls.filter(u => hasValue(u)).length;
+  if (filledUrls >= 1) { servicesScore += Math.min(filledUrls, 4); }
+
+  // === CALCULATE TOTALS ===
+  const overallScore = Math.round(coreScore + addrScore + contactScore + hoursScore + photosScore + servicesScore);
+  
+  const categories: SeoCategoryScore[] = [
+    { name: 'Core Identity', score: coreScore, maxScore: coreMax, percentage: Math.round((coreScore / coreMax) * 100) },
+    { name: 'Address & Geo', score: addrScore, maxScore: addrMax, percentage: Math.round((addrScore / addrMax) * 100) },
+    { name: 'Contact & Web', score: contactScore, maxScore: contactMax, percentage: Math.round((contactScore / contactMax) * 100) },
+    { name: 'Opening Hours', score: hoursScore, maxScore: hoursMax, percentage: Math.round((hoursScore / hoursMax) * 100) },
+    { name: 'Photos & Media', score: photosScore, maxScore: photosMax, percentage: Math.round((photosScore / photosMax) * 100) },
+    { name: 'Services & Extras', score: servicesScore, maxScore: servicesMax, percentage: Math.round((servicesScore / servicesMax) * 100) },
+  ];
+
+  // Sort suggestions by priority
+  const priorityOrder: Record<SeoPriority, number> = { high: 0, medium: 1, low: 2 };
+  suggestions.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
+
+  const band: 'green' | 'yellow' | 'red' = overallScore >= 80 ? 'green' : overallScore >= 50 ? 'yellow' : 'red';
+
+  return { overallScore, categories, suggestions, band };
+}
+
+export function calculateClientSeoStats(businesses: Business[]) {
+  if (businesses.length === 0) {
+    return {
+      averageScore: 0,
+      distribution: { green: 0, yellow: 0, red: 0 },
+      lowestScoring: [],
+      commonMissingFields: [],
+    };
+  }
+
+  const results = businesses.map(b => ({ business: b, result: calculateSeoScore(b) }));
+  const averageScore = Math.round(results.reduce((sum, r) => sum + r.result.overallScore, 0) / results.length);
+  
+  const distribution = { green: 0, yellow: 0, red: 0 };
+  results.forEach(r => { distribution[r.result.band]++; });
+
+  const lowestScoring = [...results]
+    .sort((a, b) => a.result.overallScore - b.result.overallScore)
+    .slice(0, 10)
+    .map(r => ({ business: r.business, score: r.result.overallScore, band: r.result.band }));
+
+  // Count most common missing fields
+  const fieldCounts: Record<string, number> = {};
+  results.forEach(r => {
+    r.result.suggestions.forEach(s => {
+      fieldCounts[s.field] = (fieldCounts[s.field] || 0) + 1;
+    });
+  });
+  
+  const commonMissingFields = Object.entries(fieldCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([field, count]) => ({ field, count, percentage: Math.round((count / businesses.length) * 100) }));
+
+  return { averageScore, distribution, lowestScoring, commonMissingFields };
+}
