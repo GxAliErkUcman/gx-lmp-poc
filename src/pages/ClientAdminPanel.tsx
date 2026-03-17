@@ -484,6 +484,13 @@ const ClientAdminPanel = () => {
               />
             )}
           </TabsContent>
+
+          <TabsContent value="seo" className="space-y-6">
+            <ClientSeoOverview 
+              businesses={businesses} 
+              onEditBusiness={handleEditBusiness}
+            />
+          </TabsContent>
         </Tabs>
       </main>
 

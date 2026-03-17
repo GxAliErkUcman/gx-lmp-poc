@@ -847,6 +847,13 @@ const ClientDashboard = () => {
                     )}
                   </TabsContent>
                 )}
+
+                <TabsContent value="seo">
+                  <ClientSeoOverview 
+                    businesses={dataSourceFilteredBusinesses} 
+                    onEditBusiness={handleEditBusiness}
+                  />
+                </TabsContent>
               </Tabs>
             )}
           </>
