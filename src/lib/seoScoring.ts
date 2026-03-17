@@ -101,7 +101,8 @@ export function calculateSeoScore(business: Business): SeoScoreResult {
   let addrScore = 0;
   const addrMax = 20;
   
-  if (hasValue(business.addressLine1)) { addrScore += 4; }
+  // addressLine1 (5pts)
+  if (hasValue(business.addressLine1)) { addrScore += 5; }
   else { suggestions.push({ field: 'addressLine1', priority: 'high', category: 'Address & Geo', message: 'Add an address', impact: 'Address is required for local search visibility' }); }
   
   if (hasValue(business.city)) { addrScore += 3; }
