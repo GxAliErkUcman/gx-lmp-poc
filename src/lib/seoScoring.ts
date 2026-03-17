@@ -105,7 +105,7 @@ export function calculateSeoScore(business: Business): SeoScoreResult {
   if (hasValue(business.addressLine1)) { addrScore += 5; }
   else { suggestions.push({ field: 'addressLine1', priority: 'high', category: 'Address & Geo', message: 'Add an address', impact: 'Address is required for local search visibility' }); }
   
-  if (hasValue(business.city)) { addrScore += 3; }
+  if (hasValue(business.city)) { addrScore += 4; }
   else { suggestions.push({ field: 'city', priority: 'high', category: 'Address & Geo', message: 'Add a city', impact: 'City is essential for local search targeting' }); }
   
   if (hasValue(business.postalCode)) { addrScore += 3; }
