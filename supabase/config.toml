@@ -16,8 +16,6 @@ verify_jwt = true
 [functions.manual-json-export]
 verify_jwt = true
 
-[functions.create-admin-user]
-verify_jwt = false
 
 [functions.delete-client]
 verify_jwt = true
