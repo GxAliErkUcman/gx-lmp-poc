@@ -324,15 +324,61 @@ export default function ClientSeoOverview({ businesses, onEditBusiness, clientNa
         </Card>
       )}
 
-      {/* Interactive Detail View */}
-      {selectedDetail && (
-        <div ref={detailRef}>
-          <SeoScoreCard 
-            result={selectedDetail.result} 
-            businessName={selectedDetail.business.businessName} 
-          />
-        </div>
-      )}
+      {/* Location Search & Detail View */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Search className="w-4 h-4 text-muted-foreground" />
+            Location SEO Details
+          </CardTitle>
+          <div className="relative mt-2">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by name, store code, or city..."
+              value={locationSearch}
+              onChange={(e) => setLocationSearch(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          <div className="max-h-48 overflow-y-auto mt-2 border rounded-md">
+            {allScored
+              .filter(({ business }) => {
+                if (!locationSearch) return true;
+                const q = locationSearch.toLowerCase();
+                return (
+                  (business.businessName || '').toLowerCase().includes(q) ||
+                  (business.storeCode || '').toLowerCase().includes(q) ||
+                  (business.city || '').toLowerCase().includes(q)
+                );
+              })
+              .map(({ business, result }) => (
+                <button
+                  key={business.id}
+                  onClick={() => handleSelectLocation(business.id)}
+                  className={`w-full flex items-center justify-between px-3 py-2 text-sm text-left transition-colors ${
+                    selectedBusinessId === business.id
+                      ? 'bg-primary/10 text-primary font-medium'
+                      : 'hover:bg-muted/50'
+                  }`}
+                >
+                  <div className="flex flex-col min-w-0">
+                    <span className="truncate">{business.businessName || '—'}</span>
+                    <span className="text-xs text-muted-foreground">{business.storeCode} · {business.city || '—'}</span>
+                  </div>
+                  <SeoScoreBadge score={result.overallScore} band={result.band} />
+                </button>
+              ))}
+          </div>
+        </CardHeader>
+        {selectedDetail && (
+          <CardContent ref={detailRef}>
+            <SeoScoreCard
+              result={selectedDetail.result}
+              businessName={selectedDetail.business.businessName}
+            />
+          </CardContent>
+        )}
+      </Card>
     </div>
   );
 }
