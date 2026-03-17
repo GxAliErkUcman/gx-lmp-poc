@@ -101,13 +101,14 @@ export function calculateSeoScore(business: Business): SeoScoreResult {
   let addrScore = 0;
   const addrMax = 20;
   
-  if (hasValue(business.addressLine1)) { addrScore += 4; }
+  // addressLine1 (5pts)
+  if (hasValue(business.addressLine1)) { addrScore += 5; }
   else { suggestions.push({ field: 'addressLine1', priority: 'high', category: 'Address & Geo', message: 'Add an address', impact: 'Address is required for local search visibility' }); }
   
-  if (hasValue(business.city)) { addrScore += 3; }
+  if (hasValue(business.city)) { addrScore += 4; }
   else { suggestions.push({ field: 'city', priority: 'high', category: 'Address & Geo', message: 'Add a city', impact: 'City is essential for local search targeting' }); }
   
-  if (hasValue(business.postalCode)) { addrScore += 3; }
+  if (hasValue(business.postalCode)) { addrScore += 4; }
   else { suggestions.push({ field: 'postalCode', priority: 'medium', category: 'Address & Geo', message: 'Add a postal code', impact: 'Postal codes improve proximity-based search results' }); }
   
   if (hasValue(business.country)) { addrScore += 3; }

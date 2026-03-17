@@ -25,8 +25,6 @@ import { useTranslation } from 'react-i18next';
 import NeedAttentionBanner from '@/components/NeedAttentionBanner';
 import { isActiveBusiness, hasCriticalErrors } from '@/lib/exportValidation';
 import { fetchAllBusinesses } from '@/lib/fetchAllRows';
-import ClientSeoOverview from '@/components/ClientSeoOverview';
-import { Activity } from 'lucide-react';
 
 const Dashboard = () => {
   const { t } = useTranslation();
@@ -41,7 +39,7 @@ const Dashboard = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('table');
   const [multiEditDialogOpen, setMultiEditDialogOpen] = useState(false);
   const [selectedBusinessIds, setSelectedBusinessIds] = useState<string[]>([]);
-  const [activeTab, setActiveTab] = useState<'active' | 'pending' | 'seo'>('active');
+  const [activeTab, setActiveTab] = useState<'active' | 'pending'>('active');
   const [userLogo, setUserLogo] = useState<string | null>(null);
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
   const [deleteConfirmDialogOpen, setDeleteConfirmDialogOpen] = useState(false);
@@ -362,8 +360,8 @@ useEffect(() => {
             </CardContent>
           </Card>
         ) : (
-          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'active' | 'pending' | 'seo')}>
-            <TabsList className="grid w-full grid-cols-3 mb-4 sm:mb-6 h-auto gap-1 p-1">
+          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'active' | 'pending')}>
+            <TabsList className="grid w-full grid-cols-2 mb-4 sm:mb-6 h-auto gap-1 p-1">
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -401,11 +399,6 @@ useEffect(() => {
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-              <TabsTrigger value="seo" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm py-2">
-                <Activity className="w-3.5 h-3.5 hidden sm:inline" />
-                <span className="hidden sm:inline">SEO Health</span>
-                <span className="sm:hidden">SEO</span>
-              </TabsTrigger>
             </TabsList>
             
             <TabsContent value="active">
@@ -571,12 +564,8 @@ useEffect(() => {
               )}
             </TabsContent>
 
-            <TabsContent value="seo">
-              <ClientSeoOverview 
-                businesses={businesses} 
-                onEditBusiness={handleEditBusiness}
-              />
-            </TabsContent>
+
+
           </Tabs>
         )}
       </main>

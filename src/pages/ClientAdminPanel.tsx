@@ -19,7 +19,7 @@ import BusinessDialog from '@/components/BusinessDialog';
 import ImportDialog from '@/components/ImportDialog';
 import { JsonExport } from '@/components/JsonExport';
 import { isActiveBusiness, hasCriticalErrors } from '@/lib/exportValidation';
-import ClientSeoOverview from '@/components/ClientSeoOverview';
+
 import { useFieldPermissions } from '@/hooks/use-field-permissions';
 import type { Business } from '@/types/business';
 import { UserSettingsDialog } from '@/components/UserSettingsDialog';
@@ -324,7 +324,7 @@ const ClientAdminPanel = () => {
 
       <main className="container mx-auto px-4 py-8">
         <Tabs defaultValue="users" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="users" className="flex items-center gap-2">
               <Users className="w-4 h-4" />
               Users
@@ -334,9 +334,6 @@ const ClientAdminPanel = () => {
               <Store className="w-4 h-4" />
               Stores
               <Badge variant="secondary">{businesses.length}</Badge>
-            </TabsTrigger>
-            <TabsTrigger value="seo" className="flex items-center gap-2">
-              SEO Health
             </TabsTrigger>
           </TabsList>
 
@@ -485,12 +482,8 @@ const ClientAdminPanel = () => {
             )}
           </TabsContent>
 
-          <TabsContent value="seo" className="space-y-6">
-            <ClientSeoOverview 
-              businesses={businesses} 
-              onEditBusiness={handleEditBusiness}
-            />
-          </TabsContent>
+
+
         </Tabs>
       </main>
 
