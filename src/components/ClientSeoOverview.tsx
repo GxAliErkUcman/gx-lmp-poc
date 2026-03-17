@@ -1,10 +1,9 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { AlertTriangle, TrendingUp, BarChart3, Target } from 'lucide-react';
+import { AlertTriangle, TrendingUp, BarChart3, Target, FileDown } from 'lucide-react';
 import { calculateSeoScore, calculateClientSeoStats, SEO_THRESHOLD } from '@/lib/seoScoring';
 import { SeoScoreCircle, SeoScoreBadge } from '@/components/SeoScoreCard';
 import SeoScoreCard from '@/components/SeoScoreCard';
@@ -13,23 +12,144 @@ import type { Business } from '@/types/business';
 interface ClientSeoOverviewProps {
   businesses: Business[];
   onEditBusiness?: (business: Business) => void;
+  clientName?: string;
 }
 
-export default function ClientSeoOverview({ businesses, onEditBusiness }: ClientSeoOverviewProps) {
+export default function ClientSeoOverview({ businesses, onEditBusiness, clientName }: ClientSeoOverviewProps) {
   const stats = useMemo(() => calculateClientSeoStats(businesses), [businesses]);
   const averageBand = stats.averageScore >= 80 ? 'green' as const : stats.averageScore >= 50 ? 'yellow' as const : 'red' as const;
+  const [selectedBusinessId, setSelectedBusinessId] = useState<string | null>(null);
+  const detailRef = useRef<HTMLDivElement>(null);
 
   const belowThreshold = useMemo(() => 
     stats.lowestScoring.filter(l => l.score < SEO_THRESHOLD),
     [stats.lowestScoring]
   );
 
-  // Get the full SeoScoreResult for the lowest scoring location for detailed view
-  const worstLocation = useMemo(() => {
-    if (stats.lowestScoring.length === 0) return null;
-    const worst = stats.lowestScoring[0];
-    return { business: worst.business, result: calculateSeoScore(worst.business) };
-  }, [stats.lowestScoring]);
+  // All scored businesses for the interactive selector
+  const allScored = useMemo(() => 
+    businesses.map(b => ({ business: b, result: calculateSeoScore(b) }))
+      .sort((a, b) => a.result.overallScore - b.result.overallScore),
+    [businesses]
+  );
+
+  // Selected location detail
+  const selectedDetail = useMemo(() => {
+    if (!selectedBusinessId) {
+      // Default to worst location below threshold
+      const worst = allScored.find(s => s.result.overallScore < SEO_THRESHOLD);
+      return worst || allScored[0] || null;
+    }
+    return allScored.find(s => s.business.id === selectedBusinessId) || null;
+  }, [selectedBusinessId, allScored]);
+
+  const handleSelectLocation = (businessId: string) => {
+    setSelectedBusinessId(businessId);
+    // Scroll to detail card
+    setTimeout(() => {
+      detailRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+  };
+
+  const handleExportPdf = () => {
+    // Build a printable HTML document and trigger print dialog
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    const locationRows = allScored.map(({ business, result }) => `
+      <tr>
+        <td style="padding:6px 8px;border-bottom:1px solid #e5e7eb;">${business.businessName || '—'}</td>
+        <td style="padding:6px 8px;border-bottom:1px solid #e5e7eb;font-size:12px;color:#6b7280;">${business.storeCode}</td>
+        <td style="padding:6px 8px;border-bottom:1px solid #e5e7eb;color:#6b7280;">${business.city || '—'}</td>
+        <td style="padding:6px 8px;border-bottom:1px solid #e5e7eb;color:#6b7280;">${business.country || '—'}</td>
+        <td style="padding:6px 8px;border-bottom:1px solid #e5e7eb;text-align:right;font-weight:600;color:${result.band === 'green' ? '#059669' : result.band === 'yellow' ? '#d97706' : '#dc2626'};">${result.overallScore}%</td>
+        <td style="padding:6px 8px;border-bottom:1px solid #e5e7eb;font-size:12px;color:#6b7280;">${result.suggestions.slice(0, 3).map(s => s.message).join('; ') || 'No suggestions'}</td>
+      </tr>
+    `).join('');
+
+    const missingFieldsHtml = stats.commonMissingFields.map(f => `<li>${f.field} — missing in ${f.percentage}% of locations</li>`).join('');
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>SEO Health Report — ${clientName || 'Client'}</title>
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 40px; color: #1a1a1a; }
+          h1 { font-size: 24px; margin-bottom: 4px; }
+          h2 { font-size: 18px; margin-top: 32px; margin-bottom: 12px; border-bottom: 2px solid #e5e7eb; padding-bottom: 6px; }
+          .subtitle { color: #6b7280; font-size: 14px; margin-bottom: 24px; }
+          .stats { display: flex; gap: 24px; margin-bottom: 24px; }
+          .stat-box { border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; flex: 1; }
+          .stat-value { font-size: 28px; font-weight: 700; }
+          .stat-label { font-size: 12px; color: #6b7280; margin-top: 4px; }
+          table { width: 100%; border-collapse: collapse; font-size: 13px; }
+          th { text-align: left; padding: 8px; border-bottom: 2px solid #d1d5db; font-size: 12px; text-transform: uppercase; color: #6b7280; }
+          .green { color: #059669; } .yellow { color: #d97706; } .red { color: #dc2626; }
+          .footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid #e5e7eb; font-size: 11px; color: #9ca3af; text-align: center; }
+          @media print { body { margin: 20px; } }
+        </style>
+      </head>
+      <body>
+        <h1>SEO Health Report</h1>
+        <p class="subtitle">${clientName || 'Client'} — ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })} — ${businesses.length} locations</p>
+
+        <div class="stats">
+          <div class="stat-box">
+            <div class="stat-value ${averageBand}">${stats.averageScore}%</div>
+            <div class="stat-label">Average Score</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-value">${stats.distribution.green}</div>
+            <div class="stat-label">Good (80+)</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-value">${stats.distribution.yellow}</div>
+            <div class="stat-label">Fair (50-79)</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-value">${stats.distribution.red}</div>
+            <div class="stat-label">Poor (&lt;50)</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-value">${belowThreshold.length}</div>
+            <div class="stat-label">Below ${SEO_THRESHOLD}% threshold</div>
+          </div>
+        </div>
+
+        ${stats.commonMissingFields.length > 0 ? `
+          <h2>Top Missing Fields</h2>
+          <ul>${missingFieldsHtml}</ul>
+        ` : ''}
+
+        <h2>All Locations by Score</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Location</th>
+              <th>Store Code</th>
+              <th>City</th>
+              <th>Country</th>
+              <th style="text-align:right;">Score</th>
+              <th>Top Suggestions</th>
+            </tr>
+          </thead>
+          <tbody>${locationRows}</tbody>
+        </table>
+
+        <div class="footer">
+          Jasoner SEO Health Report — Generated ${new Date().toLocaleString()} — Confidential
+        </div>
+      </body>
+      </html>
+    `;
+
+    printWindow.document.write(html);
+    printWindow.document.close();
+    printWindow.onload = () => {
+      printWindow.print();
+    };
+  };
 
   if (businesses.length === 0) {
     return (
@@ -45,6 +165,18 @@ export default function ClientSeoOverview({ businesses, onEditBusiness }: Client
 
   return (
     <div className="space-y-6">
+      {/* Header with Export */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-bold">SEO Health Overview</h2>
+          <p className="text-sm text-muted-foreground">{total} location{total !== 1 ? 's' : ''} analyzed</p>
+        </div>
+        <Button variant="outline" size="sm" onClick={handleExportPdf}>
+          <FileDown className="w-4 h-4 mr-2" />
+          Export PDF
+        </Button>
+      </div>
+
       {/* Summary Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
@@ -130,13 +262,14 @@ export default function ClientSeoOverview({ businesses, onEditBusiness }: Client
         </Card>
       </div>
 
-      {/* Lowest Scoring Locations Table */}
+      {/* Lowest Scoring Locations Table — Interactive */}
       {stats.lowestScoring.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
               <AlertTriangle className="w-4 h-4 text-amber-500" />
               Lowest Scoring Locations
+              <span className="text-xs font-normal text-muted-foreground ml-2">Click a row to view details</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -153,7 +286,15 @@ export default function ClientSeoOverview({ businesses, onEditBusiness }: Client
               </TableHeader>
               <TableBody>
                 {stats.lowestScoring.map(({ business, score, band }) => (
-                  <TableRow key={business.id}>
+                  <TableRow 
+                    key={business.id} 
+                    className={`cursor-pointer transition-colors ${
+                      (selectedBusinessId || allScored.find(s => s.result.overallScore < SEO_THRESHOLD)?.business.id || allScored[0]?.business.id) === business.id 
+                        ? 'bg-primary/5 border-l-2 border-l-primary' 
+                        : 'hover:bg-muted/50'
+                    }`}
+                    onClick={() => handleSelectLocation(business.id)}
+                  >
                     <TableCell className="font-medium">{business.businessName || '—'}</TableCell>
                     <TableCell className="text-muted-foreground text-xs">{business.storeCode}</TableCell>
                     <TableCell className="text-muted-foreground">{business.city || '—'}</TableCell>
@@ -166,7 +307,7 @@ export default function ClientSeoOverview({ businesses, onEditBusiness }: Client
                         <Button 
                           size="sm" 
                           variant="ghost" 
-                          onClick={() => onEditBusiness(business)}
+                          onClick={(e) => { e.stopPropagation(); onEditBusiness(business); }}
                           className="text-xs"
                         >
                           Edit
@@ -181,12 +322,14 @@ export default function ClientSeoOverview({ businesses, onEditBusiness }: Client
         </Card>
       )}
 
-      {/* Detailed view of worst location */}
-      {worstLocation && worstLocation.result.overallScore < SEO_THRESHOLD && (
-        <SeoScoreCard 
-          result={worstLocation.result} 
-          businessName={worstLocation.business.businessName} 
-        />
+      {/* Interactive Detail View */}
+      {selectedDetail && (
+        <div ref={detailRef}>
+          <SeoScoreCard 
+            result={selectedDetail.result} 
+            businessName={selectedDetail.business.businessName} 
+          />
+        </div>
       )}
     </div>
   );
