@@ -237,6 +237,68 @@ serve(async (req) => {
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
   const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+  const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+
+  // --- Authentication & Authorization ---
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader?.startsWith('Bearer ')) {
+    return new Response(
+      JSON.stringify({ success: false, error: 'Unauthorized', code: 'no_auth' }),
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+
+  const userSupabase = createClient(supabaseUrl, supabaseAnonKey, {
+    global: { headers: { Authorization: authHeader } },
+  });
+
+  const token = authHeader.replace('Bearer ', '');
+  const { data: claimsData, error: claimsError } = await userSupabase.auth.getClaims(token);
+  if (claimsError || !claimsData?.claims) {
+    return new Response(
+      JSON.stringify({ success: false, error: 'Invalid token', code: 'invalid_token' }),
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+
+  const userId = claimsData.claims.sub as string;
+
+  // Check that caller is admin or service_user
+  const serviceSupabase = createClient(supabaseUrl, supabaseServiceKey);
+  const { data: roles } = await serviceSupabase
+    .from('user_roles')
+    .select('role')
+    .eq('user_id', userId)
+    .in('role', ['admin', 'service_user']);
+
+  if (!roles || roles.length === 0) {
+    return new Response(
+      JSON.stringify({ success: false, error: 'Forbidden: admin or service_user role required', code: 'forbidden' }),
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+
+  // For service_users, verify they have access to the Energie 360° client
+  const isAdmin = roles.some((r: any) => r.role === 'admin');
+  if (!isAdmin) {
+    const { data: access } = await serviceSupabase
+      .from('user_client_access')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('client_id', ENERGIE_360_CLIENT_ID)
+      .limit(1);
+
+    if (!access || access.length === 0) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Forbidden: no access to this client', code: 'no_client_access' }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+  }
+
+  console.log(`Import triggered by user ${userId} (admin: ${isAdmin})`);
+  // --- End Auth ---
+
   const ecoMovementToken = Deno.env.get('ECO_MOVEMENT_API_TOKEN');
 
   if (!ecoMovementToken) {
@@ -247,7 +309,7 @@ serve(async (req) => {
     );
   }
 
-  const supabase = createClient(supabaseUrl, supabaseServiceKey);
+  const supabase = serviceSupabase;
 
   // Create import log entry
   const { data: logEntry, error: logError } = await supabase
