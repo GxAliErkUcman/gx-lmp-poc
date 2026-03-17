@@ -564,12 +564,8 @@ useEffect(() => {
               )}
             </TabsContent>
 
-            <TabsContent value="seo">
-              <ClientSeoOverview 
-                businesses={businesses} 
-                onEditBusiness={handleEditBusiness}
-              />
-            </TabsContent>
+
+
           </Tabs>
         )}
       </main>
