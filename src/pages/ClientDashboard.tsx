@@ -654,7 +654,7 @@ const ClientDashboard = () => {
                 </CardContent>
               </Card>
             ) : (
-              <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'active' | 'pending' | 'new' | 'async')}>
+              <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'active' | 'pending' | 'new' | 'async' | 'seo')}>
                 <TabsList className="mb-4 w-full flex flex-wrap h-auto gap-1 p-1">
                   <TabsTrigger value="active" className="flex-1 min-w-[80px] text-xs sm:text-sm">
                     {t('status.active')} ({activeBusinesses.length})
