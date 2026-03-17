@@ -309,7 +309,7 @@ serve(async (req) => {
     );
   }
 
-  const supabase = createClient(supabaseUrl, supabaseServiceKey);
+  const supabase = serviceSupabase;
 
   // Create import log entry
   const { data: logEntry, error: logError } = await supabase
