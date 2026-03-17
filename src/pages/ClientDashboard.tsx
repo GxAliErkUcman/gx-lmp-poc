@@ -852,6 +852,7 @@ const ClientDashboard = () => {
                   <ClientSeoOverview 
                     businesses={dataSourceFilteredBusinesses} 
                     onEditBusiness={handleEditBusiness}
+                    clientName={selectedClient?.name}
                   />
                 </TabsContent>
               </Tabs>
