@@ -22,7 +22,7 @@ export default function ClientSeoOverview({ businesses, onEditBusiness, clientNa
   const averageBand = stats.averageScore >= 80 ? 'green' as const : stats.averageScore >= 50 ? 'yellow' as const : 'red' as const;
   const [selectedBusinessId, setSelectedBusinessId] = useState<string | null>(null);
   const detailRef = useRef<HTMLDivElement>(null);
-
+  const [locationSearch, setLocationSearch] = useState('');
   const belowThreshold = useMemo(() => 
     stats.lowestScoring.filter(l => l.score < SEO_THRESHOLD),
     [stats.lowestScoring]
