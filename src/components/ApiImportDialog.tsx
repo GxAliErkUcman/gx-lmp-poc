@@ -33,11 +33,6 @@ export const ApiImportDialog = ({ clientId, clientName, onSyncComplete }: ApiImp
   const [isLoading, setIsLoading] = useState(false);
   const [importLogs, setImportLogs] = useState<ImportLog[]>([]);
 
-  // Only render for Energie 360° client
-  if (clientId !== ENERGIE_360_CLIENT_ID) {
-    return null;
-  }
-
   const fetchImportLogs = async () => {
     setIsLoading(true);
     try {
@@ -58,10 +53,15 @@ export const ApiImportDialog = ({ clientId, clientName, onSyncComplete }: ApiImp
   };
 
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && clientId === ENERGIE_360_CLIENT_ID) {
       fetchImportLogs();
     }
   }, [isOpen, clientId]);
+
+  // Only render for Energie 360° client
+  if (clientId !== ENERGIE_360_CLIENT_ID) {
+    return null;
+  }
 
   const handleSync = async () => {
     setIsSyncing(true);
