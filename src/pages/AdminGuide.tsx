@@ -221,6 +221,7 @@ const AdminGuide = () => {
     'Integrations',
     'Troubleshooting & FAQ',
     'Product Updates (Photo Gallery & GCP Other Photos)',
+    'SEO Health Score & Suggestions Engine',
   ];
 
   return (
