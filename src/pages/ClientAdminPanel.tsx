@@ -19,6 +19,7 @@ import BusinessDialog from '@/components/BusinessDialog';
 import ImportDialog from '@/components/ImportDialog';
 import { JsonExport } from '@/components/JsonExport';
 import { isActiveBusiness, hasCriticalErrors } from '@/lib/exportValidation';
+import ClientSeoOverview from '@/components/ClientSeoOverview';
 import { useFieldPermissions } from '@/hooks/use-field-permissions';
 import type { Business } from '@/types/business';
 import { UserSettingsDialog } from '@/components/UserSettingsDialog';
