@@ -362,8 +362,8 @@ useEffect(() => {
             </CardContent>
           </Card>
         ) : (
-          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'active' | 'pending')}>
-            <TabsList className="grid w-full grid-cols-2 mb-4 sm:mb-6 h-auto gap-1 p-1">
+          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'active' | 'pending' | 'seo')}>
+            <TabsList className="grid w-full grid-cols-3 mb-4 sm:mb-6 h-auto gap-1 p-1">
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
