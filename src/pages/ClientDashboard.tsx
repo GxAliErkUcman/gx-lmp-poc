@@ -31,6 +31,8 @@ import { useTranslation } from 'react-i18next';
 import { fetchAllBusinesses } from '@/lib/fetchAllRows';
 import NeedAttentionBanner from '@/components/NeedAttentionBanner';
 import { isActiveBusiness, hasCriticalErrors } from '@/lib/exportValidation';
+import ClientSeoOverview from '@/components/ClientSeoOverview';
+import { Activity } from 'lucide-react';
 
 // Energie 360° client ID for data source filter
 const ENERGIE_360_CLIENT_ID = 'e77c44c5-0585-4225-a5ea-59a38edb85fb';
@@ -50,7 +52,7 @@ const ClientDashboard = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('table');
   const [multiEditDialogOpen, setMultiEditDialogOpen] = useState(false);
   const [selectedBusinessIds, setSelectedBusinessIds] = useState<string[]>([]);
-  const [activeTab, setActiveTab] = useState<'active' | 'pending' | 'new' | 'async'>('active');
+  const [activeTab, setActiveTab] = useState<'active' | 'pending' | 'new' | 'async' | 'seo'>('active');
   const [userLogo, setUserLogo] = useState<string | null>(null);
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
   const [deleteConfirmDialogOpen, setDeleteConfirmDialogOpen] = useState(false);
@@ -652,7 +654,7 @@ const ClientDashboard = () => {
                 </CardContent>
               </Card>
             ) : (
-              <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'active' | 'pending' | 'new' | 'async')}>
+              <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'active' | 'pending' | 'new' | 'async' | 'seo')}>
                 <TabsList className="mb-4 w-full flex flex-wrap h-auto gap-1 p-1">
                   <TabsTrigger value="active" className="flex-1 min-w-[80px] text-xs sm:text-sm">
                     {t('status.active')} ({activeBusinesses.length})
@@ -668,6 +670,10 @@ const ClientDashboard = () => {
                       Async ({asyncBusinesses.length})
                     </TabsTrigger>
                   )}
+                  <TabsTrigger value="seo" className="flex-1 min-w-[80px] text-xs sm:text-sm">
+                    <Activity className="w-3.5 h-3.5 mr-1 hidden sm:inline" />
+                    SEO Health
+                  </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="active">
@@ -841,6 +847,13 @@ const ClientDashboard = () => {
                     )}
                   </TabsContent>
                 )}
+
+                <TabsContent value="seo">
+                  <ClientSeoOverview 
+                    businesses={dataSourceFilteredBusinesses} 
+                    onEditBusiness={handleEditBusiness}
+                  />
+                </TabsContent>
               </Tabs>
             )}
           </>
