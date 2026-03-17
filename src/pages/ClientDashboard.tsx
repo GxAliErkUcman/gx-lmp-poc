@@ -670,6 +670,10 @@ const ClientDashboard = () => {
                       Async ({asyncBusinesses.length})
                     </TabsTrigger>
                   )}
+                  <TabsTrigger value="seo" className="flex-1 min-w-[80px] text-xs sm:text-sm">
+                    <Activity className="w-3.5 h-3.5 mr-1 hidden sm:inline" />
+                    SEO Health
+                  </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="active">
