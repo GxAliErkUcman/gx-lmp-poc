@@ -25,8 +25,6 @@ import { useTranslation } from 'react-i18next';
 import NeedAttentionBanner from '@/components/NeedAttentionBanner';
 import { isActiveBusiness, hasCriticalErrors } from '@/lib/exportValidation';
 import { fetchAllBusinesses } from '@/lib/fetchAllRows';
-import ClientSeoOverview from '@/components/ClientSeoOverview';
-import { Activity } from 'lucide-react';
 
 const Dashboard = () => {
   const { t } = useTranslation();
