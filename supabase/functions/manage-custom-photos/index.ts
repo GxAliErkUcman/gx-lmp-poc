@@ -192,10 +192,36 @@ serve(async (req) => {
       })
     }
 
-    const { action, clientName, storeCode, fileData, fileExtension, objectName } = await req.json()
+    const body = await req.json()
+    const { action, clientName, storeCode, fileData, fileExtension, objectName } = body ?? {}
 
-    if (!clientName || !storeCode) {
-      return new Response(JSON.stringify({ success: false, error: 'clientName and storeCode are required' }), {
+    // Input validation
+    const validActions = ['list', 'upload', 'delete']
+    if (!action || typeof action !== 'string' || !validActions.includes(action)) {
+      return new Response(JSON.stringify({ success: false, error: `Invalid action. Must be one of: ${validActions.join(', ')}` }), {
+        status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+    if (!clientName || typeof clientName !== 'string' || clientName.length > 255 || clientName.includes('..') || clientName.includes('/')) {
+      return new Response(JSON.stringify({ success: false, error: 'Invalid or missing clientName' }), {
+        status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+    if (!storeCode || typeof storeCode !== 'string' || storeCode.length > 255 || storeCode.includes('..') || storeCode.includes('/')) {
+      return new Response(JSON.stringify({ success: false, error: 'Invalid or missing storeCode' }), {
+        status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+    if (fileExtension !== undefined) {
+      const allowedExtensions = ['jpg', 'jpeg', 'png', 'tiff', 'bmp']
+      if (typeof fileExtension !== 'string' || !allowedExtensions.includes(fileExtension.toLowerCase())) {
+        return new Response(JSON.stringify({ success: false, error: `Invalid fileExtension. Allowed: ${allowedExtensions.join(', ')}` }), {
+          status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        })
+      }
+    }
+    if (objectName !== undefined && (typeof objectName !== 'string' || objectName.length > 1000 || objectName.includes('..'))) {
+      return new Response(JSON.stringify({ success: false, error: 'Invalid objectName' }), {
         status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
     }

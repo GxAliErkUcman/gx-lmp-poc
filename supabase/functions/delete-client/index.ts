@@ -18,10 +18,15 @@ const handler = async (req: Request): Promise<Response> => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const { clientId, deleteUsers } = await req.json();
+    const body = await req.json();
+    const { clientId, deleteUsers } = body ?? {};
 
-    if (!clientId) {
-      throw new Error('Client ID is required');
+    // Input validation
+    if (!clientId || typeof clientId !== 'string' || clientId.length > 255) {
+      throw new Error('Invalid or missing clientId');
+    }
+    if (deleteUsers !== undefined && typeof deleteUsers !== 'boolean') {
+      throw new Error('deleteUsers must be a boolean');
     }
 
     console.log(`Deleting client ${clientId}, deleteUsers: ${deleteUsers}`);

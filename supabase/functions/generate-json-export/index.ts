@@ -251,7 +251,16 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { client_id } = await req.json();
+    const body = await req.json();
+    const { client_id } = body ?? {};
+
+    // Input validation
+    if (!client_id || typeof client_id !== 'string' || client_id.length > 255) {
+      return new Response(JSON.stringify({ error: 'Invalid or missing client_id' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
 
     console.log(`Generating JSON export for client: ${client_id}`);
 

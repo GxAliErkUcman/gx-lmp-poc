@@ -25,15 +25,26 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
     // Get the request body
-    const { currentClientId, newClientId, clientName }: UpdateClientIdRequest = await req.json()
+    const body = await req.json()
+    const { currentClientId, newClientId, clientName } = body ?? {}
 
-    if (!currentClientId || !newClientId) {
+    // Input validation
+    if (!currentClientId || typeof currentClientId !== 'string' || currentClientId.length > 255) {
       return new Response(
-        JSON.stringify({ error: 'Missing required fields: currentClientId and newClientId' }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
+        JSON.stringify({ error: 'Invalid or missing currentClientId' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+    if (!newClientId || typeof newClientId !== 'string' || newClientId.length > 255) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid or missing newClientId' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+    if (clientName !== undefined && (typeof clientName !== 'string' || clientName.length > 255)) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid clientName (max 255 chars)' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 

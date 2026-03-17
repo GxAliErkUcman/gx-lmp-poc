@@ -56,8 +56,61 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error('Insufficient permissions');
     }
 
-    const requestBody: CreateUserRequest = await req.json();
-    const { clientId } = requestBody;
+    const requestBody = await req.json();
+
+    // --- Input validation ---
+    const { email, firstName, lastName, clientId, role, storeIds, password, countryCodes } = requestBody ?? {};
+
+    if (!email || typeof email !== 'string' || email.length > 255 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Invalid or missing email address', code: 'invalid_input' }),
+        { status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+      );
+    }
+    if (!firstName || typeof firstName !== 'string' || firstName.length > 100) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Invalid or missing firstName (max 100 chars)', code: 'invalid_input' }),
+        { status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+      );
+    }
+    if (!lastName || typeof lastName !== 'string' || lastName.length > 100) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Invalid or missing lastName (max 100 chars)', code: 'invalid_input' }),
+        { status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+      );
+    }
+    if (!clientId || typeof clientId !== 'string' || clientId.length > 255) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Invalid or missing clientId', code: 'invalid_input' }),
+        { status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+      );
+    }
+    const validRoles = ['client_admin', 'user', 'store_owner', 'service_user'];
+    if (role !== undefined && (typeof role !== 'string' || !validRoles.includes(role))) {
+      return new Response(
+        JSON.stringify({ success: false, error: `Invalid role. Must be one of: ${validRoles.join(', ')}`, code: 'invalid_input' }),
+        { status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+      );
+    }
+    if (storeIds !== undefined && (!Array.isArray(storeIds) || storeIds.some((id: any) => typeof id !== 'string'))) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'storeIds must be an array of strings', code: 'invalid_input' }),
+        { status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+      );
+    }
+    if (password !== undefined && (typeof password !== 'string' || password.length > 128)) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Invalid password', code: 'invalid_input' }),
+        { status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+      );
+    }
+    if (countryCodes !== undefined && (!Array.isArray(countryCodes) || countryCodes.some((c: any) => typeof c !== 'string' || c.length > 10))) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'countryCodes must be an array of short strings', code: 'invalid_input' }),
+        { status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+      );
+    }
+    // --- End input validation ---
 
     // If service_user, verify they have access to this client
     if (hasServiceUserRole && !hasAdminRole) {
@@ -86,7 +139,7 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
-    const { email, firstName, lastName, role, storeIds, password, countryCodes } = requestBody;
+    // email, firstName, lastName, role, storeIds, password, countryCodes already destructured above
 
     console.log('Creating user:', { email, firstName, lastName, clientId, role, storeCount: storeIds?.length || 0, hasPassword: !!password, countryCount: countryCodes?.length || 0 });
 
