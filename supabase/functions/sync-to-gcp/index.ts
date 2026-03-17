@@ -116,11 +116,33 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const { fileName, bucketName = 'json-exports', clientId } = await req.json()
+    const body = await req.json()
+    const { fileName, bucketName = 'json-exports', clientId } = body ?? {}
 
-    if (!fileName) {
+    // Input validation
+    if (!fileName || typeof fileName !== 'string' || fileName.length > 500) {
       return new Response(
-        JSON.stringify({ error: 'fileName is required' }),
+        JSON.stringify({ error: 'fileName is required and must be a string (max 500 chars)' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+    // Prevent path traversal
+    if (fileName.includes('..') || fileName.includes('\\')) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid fileName: path traversal not allowed' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+    const allowedBuckets = ['json-exports', 'json-backups']
+    if (typeof bucketName !== 'string' || !allowedBuckets.includes(bucketName)) {
+      return new Response(
+        JSON.stringify({ error: `Invalid bucketName. Allowed: ${allowedBuckets.join(', ')}` }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+    if (clientId !== undefined && (typeof clientId !== 'string' || clientId.length > 255)) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid clientId' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }

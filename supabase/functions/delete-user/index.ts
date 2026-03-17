@@ -54,7 +54,14 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error('Insufficient permissions');
     }
 
-    const { userId }: DeleteUserRequest = await req.json();
+    const body = await req.json();
+    const { userId } = body ?? {};
+
+    // Input validation: userId must be a valid UUID
+    const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!userId || typeof userId !== 'string' || !uuidPattern.test(userId)) {
+      throw new Error('Invalid or missing userId (must be a valid UUID)');
+    }
 
     console.log('Deleting user:', userId);
 

@@ -139,7 +139,7 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
-    const { email, firstName, lastName, role, storeIds, password, countryCodes } = requestBody;
+    // email, firstName, lastName, role, storeIds, password, countryCodes already destructured above
 
     console.log('Creating user:', { email, firstName, lastName, clientId, role, storeCount: storeIds?.length || 0, hasPassword: !!password, countryCount: countryCodes?.length || 0 });
 

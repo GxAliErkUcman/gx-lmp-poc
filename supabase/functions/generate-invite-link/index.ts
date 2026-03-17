@@ -22,9 +22,12 @@ const handler = async (req: Request): Promise<Response> => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const { email }: GenerateInviteRequest = await req.json();
-    if (!email) {
-      return new Response(JSON.stringify({ error: 'Email is required' }), {
+    const body = await req.json();
+    const { email } = body ?? {};
+
+    // Input validation
+    if (!email || typeof email !== 'string' || email.length > 255 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return new Response(JSON.stringify({ error: 'Invalid or missing email address' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json', ...corsHeaders },
       });

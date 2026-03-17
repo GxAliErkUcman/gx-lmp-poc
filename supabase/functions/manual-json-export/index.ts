@@ -237,7 +237,16 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error('Insufficient permissions');
     }
 
-    const { clientId }: ManualExportRequest = await req.json();
+    const body = await req.json();
+    const { clientId } = body ?? {};
+
+    // Input validation
+    if (!clientId || typeof clientId !== 'string' || clientId.length > 255) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid or missing clientId' }),
+        { status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+      );
+    }
 
     console.log('Manual JSON export requested for client:', clientId);
 

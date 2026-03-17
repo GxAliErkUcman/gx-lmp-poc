@@ -13,26 +13,32 @@ serve(async (req) => {
   }
 
   try {
-    const { api_key, email } = await req.json();
+    const body = await req.json();
+    const { api_key, email } = body ?? {};
+
+    // Input validation
+    if (!api_key || typeof api_key !== 'string' || api_key.length > 500) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid or missing api_key' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    if (!email || typeof email !== 'string' || email.length > 255 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid or missing email address' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     console.log('LSC Magic Link request received for email:', email);
 
-    // Step 1: Verify API key
+    // Verify API key
     const LSC_API_KEY = Deno.env.get('LSC_API_KEY');
     if (!LSC_API_KEY || api_key !== LSC_API_KEY) {
       console.error('Invalid or missing API key');
       return new Response(
         JSON.stringify({ error: 'Invalid API key' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Validate required field
-    if (!email) {
-      console.error('Missing required field: email');
-      return new Response(
-        JSON.stringify({ error: 'Missing required field: email' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
