@@ -206,16 +206,24 @@ export const UserSettingsDialog = ({
               <ToggleGroup
                 type="single"
                 value={theme}
-                onValueChange={(value) => value && setTheme(value)}
+                onValueChange={(value) => value && setTheme(value as AppTheme)}
                 className="justify-start"
               >
                 <ToggleGroupItem
-                  value="light"
-                  aria-label="Light theme"
+                  value="gx"
+                  aria-label="GX theme"
+                  className="gap-2"
+                >
+                  <Leaf className="h-4 w-4" />
+                  GX
+                </ToggleGroupItem>
+                <ToggleGroupItem
+                  value="legacy"
+                  aria-label="Legacy theme"
                   className="gap-2"
                 >
                   <Sun className="h-4 w-4" />
-                  {t('theme.light')}
+                  Legacy
                 </ToggleGroupItem>
                 <ToggleGroupItem
                   value="dark"
@@ -223,15 +231,7 @@ export const UserSettingsDialog = ({
                   className="gap-2"
                 >
                   <Moon className="h-4 w-4" />
-                  {t('theme.dark')}
-                </ToggleGroupItem>
-                <ToggleGroupItem
-                  value="system"
-                  aria-label="System theme"
-                  className="gap-2"
-                >
-                  <Monitor className="h-4 w-4" />
-                  {t('theme.system')}
+                  Dark
                 </ToggleGroupItem>
               </ToggleGroup>
             </div>
