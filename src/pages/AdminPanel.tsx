@@ -29,6 +29,7 @@ import { useTranslation } from 'react-i18next';
 import UserCountryAccessDialog from '@/components/UserCountryAccessDialog';
 import StoreOwnerAssignmentDialog from '@/components/StoreOwnerAssignmentDialog';
 import EdgeFunctionLogsPanel from '@/components/EdgeFunctionLogsPanel';
+import { UserSettingsDialog } from '@/components/UserSettingsDialog';
 
 
 interface Client {
@@ -968,13 +969,7 @@ const AdminPanel = () => {
             <Copy className="w-4 h-4 mr-2" />
             Jasoner Bucket
           </Button>
-          <Button
-            variant="outline"
-            onClick={() => navigate('/dashboard?openSettings=true')}
-          >
-            <Settings className="w-4 h-4 mr-2" />
-            Account Settings
-          </Button>
+          <UserSettingsDialog variant="outline" showLabel={true} />
           <Button
             variant="outline"
             onClick={() => window.open('/admin-guide', '_blank')}
