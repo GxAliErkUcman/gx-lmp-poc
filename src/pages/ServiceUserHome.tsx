@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdmin } from '@/hooks/use-admin';
 import { Navigate, useNavigate } from 'react-router-dom';
@@ -9,6 +9,12 @@ import { Badge } from '@/components/ui/badge';
 import { Eye, MapPin, Users, Loader2, LogOut, UserPlus, HelpCircle } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import jasonerLogo from '@/assets/jasoner-horizontal-logo.png';
+import ServiceUserCreateDialog from '@/components/ServiceUserCreateDialog';
+import { UserSettingsDialog } from '@/components/UserSettingsDialog';
+import DashboardSummaryCards from '@/components/DashboardSummaryCards';
+import { calculateSeoScore } from '@/lib/seoScoring';
+import { fetchAllBusinesses } from '@/lib/fetchAllRows';
+import type { Business } from '@/types/business';
 import ServiceUserCreateDialog from '@/components/ServiceUserCreateDialog';
 import { UserSettingsDialog } from '@/components/UserSettingsDialog';
 
