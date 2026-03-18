@@ -48,6 +48,7 @@ const Dashboard = () => {
   const [clientId, setClientId] = useState<string | null>(null);
   const [clientName, setClientName] = useState<string>('');
   const [customPhotosEnabled, setCustomPhotosEnabled] = useState(false);
+  const [roleChecked, setRoleChecked] = useState(false);
 
   const handleLogoUploaded = () => {
     // Refresh businesses to get updated logo
