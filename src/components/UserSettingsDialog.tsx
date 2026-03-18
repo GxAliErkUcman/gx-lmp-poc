@@ -42,7 +42,7 @@ export const UserSettingsDialog = ({
   const [userRole, setUserRole] = useState<string | null>(null);
   const { toast } = useToast();
   const { user } = useAuth();
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme } = useAppTheme();
   const { t, i18n } = useTranslation();
   const [availableLanguages, setAvailableLanguages] = useState(getAllLanguages());
 
