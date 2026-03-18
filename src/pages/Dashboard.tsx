@@ -25,6 +25,7 @@ import { useTranslation } from 'react-i18next';
 import NeedAttentionBanner from '@/components/NeedAttentionBanner';
 import { isActiveBusiness, hasCriticalErrors } from '@/lib/exportValidation';
 import { fetchAllBusinesses } from '@/lib/fetchAllRows';
+import DashboardSummaryCards from '@/components/DashboardSummaryCards';
 
 const Dashboard = () => {
   const { t } = useTranslation();
