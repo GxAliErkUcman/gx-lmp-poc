@@ -444,6 +444,7 @@ const StoreOwnerDashboard = () => {
               )}
             </TabsContent>
           </Tabs>
+          </>
         )}
       </main>
 
