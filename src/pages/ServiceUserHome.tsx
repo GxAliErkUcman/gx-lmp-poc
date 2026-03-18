@@ -38,6 +38,17 @@ const ServiceUserHome = () => {
   const [isServiceUser, setIsServiceUser] = useState(false);
   const [createUserDialogOpen, setCreateUserDialogOpen] = useState(false);
   const [selectedClientForUser, setSelectedClientForUser] = useState<{ id: string; name: string } | null>(null);
+  const [allBusinesses, setAllBusinesses] = useState<Business[]>([]);
+
+  const seoStats = useMemo(() => {
+    if (allBusinesses.length === 0) return null;
+    const scores = allBusinesses.map(b => calculateSeoScore(b).overallScore);
+    return Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+  }, [allBusinesses]);
+
+  const totalLocations = clients.reduce((sum, c) => sum + c.active_locations + c.pending_locations, 0);
+  const totalActive = clients.reduce((sum, c) => sum + c.active_locations, 0);
+  const totalPending = clients.reduce((sum, c) => sum + c.pending_locations, 0);
 
   useEffect(() => {
     const checkRoleAndFetch = async () => {
@@ -52,6 +63,13 @@ const ServiceUserHome = () => {
       }
 
       await fetchClientData();
+      // Fetch all businesses for SEO scoring
+      try {
+        const businesses = await fetchAllBusinesses();
+        setAllBusinesses(businesses);
+      } catch (e) {
+        console.error('Error fetching businesses for SEO:', e);
+      }
     };
 
     checkRoleAndFetch();
