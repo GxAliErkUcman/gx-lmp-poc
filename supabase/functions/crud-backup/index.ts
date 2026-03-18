@@ -5,50 +5,27 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-interface Business {
-  businessName: string;
-  storeCode: string;
-  addressLine1: string;
-  addressLine2: string | null;
-  addressLine3: string | null;
-  addressLine4: string | null;
-  addressLine5: string | null;
-  city: string | null;
-  state: string | null;
-  postalCode: string | null;
-  country: string;
-  latitude: number | null;
-  longitude: number | null;
-  primaryPhone: string | null;
-  additionalPhones: string | null;
-  website: string | null;
-  primaryCategory: string;
-  additionalCategories: string | null;
-  mondayHours: string | null;
-  tuesdayHours: string | null;
-  wednesdayHours: string | null;
-  thursdayHours: string | null;
-  fridayHours: string | null;
-  saturdayHours: string | null;
-  sundayHours: string | null;
-  specialHours: string | null;
-  moreHours: any;
-  labels: string | null;
-  fromTheBusiness: string | null;
-  adwords: string | null;
-  logoPhoto: string | null;
-  coverPhoto: string | null;
-  otherPhotos: string | null;
-  openingDate: string | null;
-  temporarilyClosed: boolean | null;
-  appointmentURL: string | null;
-  menuURL: string | null;
-  reservationsURL: string | null;
-  orderAheadURL: string | null;
-  socialMediaUrls: any;
-  customServices: any;
-  district: string | null;
-  relevantLocation: any;
+async function logExecution(
+  supabase: any,
+  functionName: string,
+  status: 'success' | 'error',
+  requestBody: any,
+  startTime: number,
+  errorMessage?: string,
+  responseBody?: any
+) {
+  try {
+    await supabase.from('edge_function_logs').insert({
+      function_name: functionName,
+      status,
+      request_body: requestBody,
+      response_body: responseBody || null,
+      error_message: errorMessage || null,
+      duration_ms: Date.now() - startTime,
+    });
+  } catch (e) {
+    console.warn('Failed to write execution log:', e);
+  }
 }
 
 Deno.serve(async (req) => {
@@ -56,8 +33,12 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const startTime = Date.now();
+  let requestBody: any = {};
+
   try {
     const { client_id } = await req.json();
+    requestBody = { client_id };
 
     if (!client_id) {
       throw new Error('client_id is required');
@@ -69,7 +50,6 @@ Deno.serve(async (req) => {
 
     console.log(`Creating CRUD backup for client: ${client_id}`);
 
-    // Fetch client info
     const { data: client, error: clientError } = await supabase
       .from('clients')
       .select('id, name')
@@ -78,10 +58,10 @@ Deno.serve(async (req) => {
 
     if (clientError) {
       console.error('Error fetching client:', clientError);
+      await logExecution(supabase, 'crud-backup', 'error', requestBody, startTime, `Failed to fetch client: ${clientError.message}`);
       throw clientError;
     }
 
-    // Fetch active businesses for this client (excluding async locations)
     const { data: businesses, error: businessError } = await supabase
       .from('businesses')
       .select('*')
@@ -91,10 +71,10 @@ Deno.serve(async (req) => {
 
     if (businessError) {
       console.error('Error fetching businesses:', businessError);
+      await logExecution(supabase, 'crud-backup', 'error', requestBody, startTime, `Failed to fetch businesses: ${businessError.message}`);
       throw businessError;
     }
 
-    // Filter and transform businesses
     const validBusinesses = (businesses || [])
       .filter((b: any) => b.businessName && b.addressLine1 && b.country && b.primaryCategory)
       .map((business: any) => ({
@@ -145,17 +125,16 @@ Deno.serve(async (req) => {
 
     if (validBusinesses.length === 0) {
       console.log('No valid businesses, skipping backup');
+      await logExecution(supabase, 'crud-backup', 'success', requestBody, startTime, undefined, { message: 'No valid businesses to backup' });
       return new Response(
         JSON.stringify({ success: true, message: 'No valid businesses to backup' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
       );
     }
 
-    // Generate JSON content
     const jsonContent = JSON.stringify(validBusinesses, null, 2);
     const jsonBlob = new Blob([jsonContent], { type: 'application/json' });
 
-    // Generate filename: ClientName-DD-MM-YYYY-HH:MM.json
     const now = new Date();
     const day = String(now.getDate()).padStart(2, '0');
     const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -165,7 +144,6 @@ Deno.serve(async (req) => {
     const timestamp = `${day}-${month}-${year}-${hours}:${minutes}`;
     const fileName = `${client.id}/crud/${client.name}-${timestamp}.json`;
 
-    // Upload to storage
     const { error: uploadError } = await supabase.storage
       .from('json-backups')
       .upload(fileName, jsonBlob, {
@@ -175,6 +153,7 @@ Deno.serve(async (req) => {
 
     if (uploadError) {
       console.error('Error uploading backup:', uploadError);
+      await logExecution(supabase, 'crud-backup', 'error', requestBody, startTime, `Failed to upload backup: ${uploadError.message}`);
       throw uploadError;
     }
 
@@ -193,29 +172,32 @@ Deno.serve(async (req) => {
       console.log(`Cleaned up ${filesToDelete.length} old CRUD backups`);
     }
 
+    const responseBody = {
+      success: true,
+      message: 'CRUD backup created successfully',
+      fileName,
+      businessCount: validBusinesses.length,
+    };
+
+    await logExecution(supabase, 'crud-backup', 'success', requestBody, startTime, undefined, responseBody);
+
     return new Response(
-      JSON.stringify({
-        success: true,
-        message: 'CRUD backup created successfully',
-        fileName,
-        businessCount: validBusinesses.length,
-      }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200,
-      }
+      JSON.stringify(responseBody),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     );
   } catch (error) {
     console.error('CRUD backup error:', error);
+    const msg = (error as any)?.message || String(error);
+    try {
+      const supabase = createClient(
+        Deno.env.get('SUPABASE_URL')!,
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+      );
+      await logExecution(supabase, 'crud-backup', 'error', requestBody, startTime, msg);
+    } catch (_) { /* ignore */ }
     return new Response(
-      JSON.stringify({
-        success: false,
-        error: error.message,
-      }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500,
-      }
+      JSON.stringify({ success: false, error: msg }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );
   }
 });
