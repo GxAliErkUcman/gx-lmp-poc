@@ -3,7 +3,7 @@ import { Navigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import gxBackground from '@/assets/gx-background.jpg';
-import jasonerMascot from '@/assets/jasoner-mascot.png';
+import jasonerMascot from '@/assets/jasoner-new-logo.png';
 
 const Index = () => {
   const { user, loading } = useAuth();

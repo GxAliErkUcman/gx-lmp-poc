@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Eye, MapPin, Users, Loader2, LogOut, UserPlus, HelpCircle, Activity } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import jasonerLogo from '@/assets/jasoner-horizontal-logo.png';
+import jasonerLogo from '@/assets/jasoner-new-logo.png';
 import ServiceUserCreateDialog from '@/components/ServiceUserCreateDialog';
 import { UserSettingsDialog } from '@/components/UserSettingsDialog';
 import DashboardSummaryCards from '@/components/DashboardSummaryCards';

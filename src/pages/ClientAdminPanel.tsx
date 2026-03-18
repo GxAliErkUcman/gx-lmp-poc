@@ -23,7 +23,7 @@ import { isActiveBusiness, hasCriticalErrors } from '@/lib/exportValidation';
 import { useFieldPermissions } from '@/hooks/use-field-permissions';
 import type { Business } from '@/types/business';
 import { UserSettingsDialog } from '@/components/UserSettingsDialog';
-import jasonerLogo from '@/assets/jasoner-horizontal-logo.png';
+import jasonerLogo from '@/assets/jasoner-new-logo.png';
 import { fetchAllBusinesses } from '@/lib/fetchAllRows';
 
 interface UserProfile {

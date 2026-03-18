@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import jasonerLogo from '@/assets/jasoner-horizontal-logo.png';
+import jasonerLogo from '@/assets/jasoner-new-logo.png';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Printer, Search, X, ChevronUp } from 'lucide-react';

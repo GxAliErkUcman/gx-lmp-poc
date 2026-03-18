@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import gxBackground from '@/assets/jasoner-background2.jpg';
-import jasonerMascot from '@/assets/jasoner-logo-1.svg';
+import jasonerMascot from '@/assets/jasoner-new-logo.png';
 
 const SetPassword = () => {
   const { toast } = useToast();
