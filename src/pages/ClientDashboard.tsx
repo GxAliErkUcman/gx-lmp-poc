@@ -132,7 +132,13 @@ const ClientDashboard = () => {
     }
   }, [selectedClientId, businesses]);
 
-  const fetchApiSourcedBusinessIds = async () => {
+  // Avg SEO score for service users / admins
+  const avgSeoScore = useMemo(() => {
+    if (!businesses.length || (!isServiceUser && !isAdmin)) return null;
+    const scores = businesses.map(b => calculateSeoScore(b).overallScore);
+    return Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+  }, [businesses, isServiceUser, isAdmin]);
+
     try {
       // Get all store codes that exist in the API feed
       const { data, error } = await supabase
