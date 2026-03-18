@@ -15,7 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAppTheme, AppTheme } from "@/contexts/ThemeContext";
 import { useTranslation } from "react-i18next";
-import { Settings, Sun, Moon, Leaf, Key, Mail, Shield } from "lucide-react";
+import { Settings, Sun, Moon, Leaf, Sparkles, Key, Mail, Shield } from "lucide-react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
