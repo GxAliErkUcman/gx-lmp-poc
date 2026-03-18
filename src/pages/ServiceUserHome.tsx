@@ -301,7 +301,6 @@ const ServiceUserHome = () => {
           total={totalLocations}
           active={totalActive}
           needAttention={totalPending}
-          avgSeoScore={seoStats}
         />
 
         {clients.length === 0 ? (
