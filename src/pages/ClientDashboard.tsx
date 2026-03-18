@@ -139,6 +139,7 @@ const ClientDashboard = () => {
     return Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
   }, [businesses, isServiceUser, isAdmin]);
 
+  const fetchApiSourcedBusinessIds = async () => {
     try {
       // Get all store codes that exist in the API feed
       const { data, error } = await supabase
