@@ -29,6 +29,7 @@ import { useTranslation } from 'react-i18next';
 import UserCountryAccessDialog from '@/components/UserCountryAccessDialog';
 import StoreOwnerAssignmentDialog from '@/components/StoreOwnerAssignmentDialog';
 import EdgeFunctionLogsPanel from '@/components/EdgeFunctionLogsPanel';
+import { UserSettingsDialog } from '@/components/UserSettingsDialog';
 
 
 interface Client {
