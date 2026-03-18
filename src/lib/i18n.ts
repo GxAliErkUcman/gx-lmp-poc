@@ -1825,6 +1825,12 @@ const romanianTranslations = {
 export const DEFAULT_LANGUAGES = [
   { code: 'en', name: 'English', flag: '🇬🇧', isDefault: true },
   { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
+  { code: 'tr', name: 'Türkçe', flag: '🇹🇷' },
+  { code: 'es', name: 'Español', flag: '🇪🇸' },
+  { code: 'fr', name: 'Française', flag: '🇫🇷' },
+  { code: 'it', name: 'Italiano', flag: '🇮🇹' },
+  { code: 'sr', name: 'Srpski', flag: '🇷🇸' },
+  { code: 'ro', name: 'Română', flag: '🇷🇴' },
 ];
 
 export interface Language {
