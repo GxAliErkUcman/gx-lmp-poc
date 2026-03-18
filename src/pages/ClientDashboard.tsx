@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Upload, Edit, Trash2, Grid, Table2, Settings, LogOut, ArrowLeft } from 'lucide-react';
+import { Plus, Upload, Edit, Trash2, Grid, Table2, Settings, LogOut, ArrowLeft, ChevronDown, FileDown, FolderSync, Globe } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import BusinessDialog from '@/components/BusinessDialog';
@@ -35,6 +36,7 @@ import ClientSeoOverview from '@/components/ClientSeoOverview';
 import { calculateSeoScore } from '@/lib/seoScoring';
 import { Activity, MapPin, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import DashboardSummaryCards from '@/components/DashboardSummaryCards';
+import { SeoScoreBadge } from '@/components/SeoScoreCard';
 
 // Energie 360° client ID for data source filter
 const ENERGIE_360_CLIENT_ID = 'e77c44c5-0585-4225-a5ea-59a38edb85fb';
@@ -82,7 +84,6 @@ const ClientDashboard = () => {
       setIsAdmin(adminRole);
       setIsServiceUser(serviceUserRole);
 
-      // Allow both admins and service users
       if (!adminRole && !serviceUserRole) {
         navigate('/dashboard');
         return;
@@ -94,7 +95,6 @@ const ClientDashboard = () => {
     checkRoleAndFetch();
   }, [user]);
 
-  // Determine selected client from URL or default, and fetch businesses in one effect
   useEffect(() => {
     if (accessibleClients.length === 0) return;
 
@@ -112,17 +112,11 @@ const ClientDashboard = () => {
     }
   }, [searchParams, accessibleClients]);
 
-  // Fetch businesses and API feed when selectedClientId is set
   useEffect(() => {
     if (!selectedClientId) return;
-    
-    const fetchAll = async () => {
-      await fetchBusinesses();
-    };
-    fetchAll();
+    fetchBusinesses();
   }, [selectedClientId]);
 
-  // Fetch API feed locations after businesses are loaded (for Energie 360° only)
   useEffect(() => {
     if (selectedClientId === ENERGIE_360_CLIENT_ID && businesses.length > 0) {
       fetchApiSourcedBusinessIds();
@@ -132,7 +126,6 @@ const ClientDashboard = () => {
     }
   }, [selectedClientId, businesses]);
 
-  // Avg SEO score for service users / admins
   const avgSeoScore = useMemo(() => {
     if (!businesses.length || (!isServiceUser && !isAdmin)) return null;
     const scores = businesses.map(b => calculateSeoScore(b).overallScore);
@@ -141,7 +134,6 @@ const ClientDashboard = () => {
 
   const fetchApiSourcedBusinessIds = async () => {
     try {
-      // Get all store codes that exist in the API feed
       const { data, error } = await supabase
         .from('api_feed_locations')
         .select('store_code')
@@ -150,8 +142,6 @@ const ClientDashboard = () => {
       if (error) throw error;
       
       const apiStoreCodes = new Set((data || []).map(d => d.store_code));
-      
-      // Now map these store codes to business IDs
       const apiBusinessIds = new Set(
         businesses
           .filter(b => apiStoreCodes.has(b.storeCode))
@@ -167,7 +157,6 @@ const ClientDashboard = () => {
   const fetchAccessibleClients = async (isAdminUser: boolean) => {
     try {
       if (isAdminUser) {
-        // Admins can access all clients
         const { data: clientsData, error: clientsError } = await supabase
           .from('clients')
           .select('id, name, custom_photos_enabled')
@@ -176,7 +165,6 @@ const ClientDashboard = () => {
         if (clientsError) throw clientsError;
         setAccessibleClients(clientsData || []);
       } else {
-        // Service users can only access assigned clients
         const { data: accessData, error: accessError } = await supabase
           .from('user_client_access')
           .select('client_id')
@@ -216,7 +204,6 @@ const ClientDashboard = () => {
       if (!silent) setLoading(true);
       let businessList = await fetchAllBusinesses(selectedClientId);
 
-      // Apply country restrictions if user has them
       if (user) {
         const { data: countryAccess } = await supabase
           .from('user_country_access')
@@ -224,8 +211,6 @@ const ClientDashboard = () => {
           .eq('user_id', user.id);
 
         if (countryAccess && countryAccess.length > 0) {
-          // NOTE: businesses.country is historically inconsistent (sometimes code like "UZ", sometimes name like "Uzbekistan").
-          // Normalize both sides to ISO code before filtering.
           const { getCountryCode } = await import('@/components/CountrySelect');
           const allowedCountries = countryAccess.map(ca => ca.country_code);
           businessList = businessList.filter(b => {
@@ -251,7 +236,6 @@ const ClientDashboard = () => {
     }
   };
 
-  // Wait for auth (and URL-based login) to initialize before checking user/redirecting
   if (authLoading || urlAuthProcessing) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -272,8 +256,6 @@ const ClientDashboard = () => {
     if (!confirm('Are you sure you want to delete this business?')) return;
 
     try {
-      // Deletion tracking is now handled automatically by database trigger
-      // CRITICAL: Only delete businesses from the current client
       const { error } = await supabase
         .from('businesses')
         .delete()
@@ -283,17 +265,10 @@ const ClientDashboard = () => {
       if (error) throw error;
 
       setBusinesses(businesses.filter(b => b.id !== id));
-      toast({
-        title: "Success",
-        description: "Business deleted successfully",
-      });
+      toast({ title: "Success", description: "Business deleted successfully" });
     } catch (error) {
       console.error('Error deleting business:', error);
-      toast({
-        title: "Error",
-        description: "Failed to delete business",
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: "Failed to delete business", variant: "destructive" });
     }
   };
 
@@ -314,7 +289,6 @@ const ClientDashboard = () => {
 
   const confirmMultiDelete = async () => {
     try {
-      // CRITICAL: Only delete businesses from the current client
       const { error } = await supabase
         .from('businesses')
         .delete()
@@ -324,19 +298,12 @@ const ClientDashboard = () => {
       if (error) throw error;
 
       setBusinesses(businesses.filter(b => !businessesToDelete.includes(b.id)));
-      toast({
-        title: "Success",
-        description: `${businessesToDelete.length} businesses deleted successfully`,
-      });
+      toast({ title: "Success", description: `${businessesToDelete.length} businesses deleted successfully` });
       setDeleteConfirmDialogOpen(false);
       setBusinessesToDelete([]);
     } catch (error) {
       console.error('Error deleting businesses:', error);
-      toast({
-        title: "Error",
-        description: "Failed to delete businesses",
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: "Failed to delete businesses", variant: "destructive" });
     }
   };
 
@@ -346,10 +313,7 @@ const ClientDashboard = () => {
   };
 
   const handleUserCreated = () => {
-    toast({
-      title: 'Success',
-      description: 'User created successfully',
-    });
+    toast({ title: 'Success', description: 'User created successfully' });
   };
 
   // Apply data source filter for Energie 360°
@@ -362,41 +326,43 @@ const ClientDashboard = () => {
       })
     : businesses;
 
-  // Filter by status, async flag, and export validation errors
-  // Active: status=active AND not async AND no export validation errors at all
   const activeBusinesses = dataSourceFilteredBusinesses.filter(b => isActiveBusiness(b));
-  // Critical Issues (Need Attention): any validation error OR status=pending OR async=true
   const pendingBusinesses = dataSourceFilteredBusinesses.filter(b => hasCriticalErrors(b));
-  // Async only (for Energie 360° tab)
   const asyncBusinesses = dataSourceFilteredBusinesses.filter(b => (b as any).is_async === true);
   
-  // Filter businesses created within the last 3 days
   const threeDaysAgo = new Date();
   threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
   const newBusinesses = dataSourceFilteredBusinesses.filter(b => new Date(b.created_at) >= threeDaysAgo);
 
   const selectedClient = accessibleClients.find(c => c.id === selectedClientId);
 
+  // Helper to get SEO band
+  const getSeoBand = (score: number) => {
+    if (score >= 80) return 'green';
+    if (score >= 50) return 'yellow';
+    return 'red';
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
-      {/* Header */}
-      <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10">
-        <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
+      {/* Streamlined Header */}
+      <header className="border-b bg-card/80 backdrop-blur-md sticky top-0 z-10">
+        <div className="container mx-auto px-3 sm:px-6 py-3">
+          <div className="flex items-center justify-between gap-3">
+            {/* Left: Back + Logo + Client Selector */}
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
               <Button
                 variant="ghost"
-                size="sm"
+                size="icon"
                 onClick={() => navigate(isAdmin ? '/admin' : '/service-user-home')}
-                className="px-2 sm:px-3"
+                className="shrink-0 h-9 w-9"
               >
-                <ArrowLeft className="w-4 h-4 sm:mr-2" />
-                <span className="hidden sm:inline">{t('nav.backToOverview')}</span>
+                <ArrowLeft className="w-4 h-4" />
               </Button>
-              <img src={jasonerLogo} alt="Logo" className="h-6 sm:h-8" />
-              {/* Client Selector */}
+              <img src={jasonerLogo} alt="Logo" className="h-6 sm:h-7 shrink-0" />
+              <div className="hidden sm:block w-px h-6 bg-border" />
               <Select value={selectedClientId} onValueChange={handleClientChange}>
-                <SelectTrigger className="w-full sm:w-[280px]">
+                <SelectTrigger className="w-full sm:w-[240px] border-0 bg-muted/50 font-medium">
                   <SelectValue placeholder="Select a client" />
                 </SelectTrigger>
                 <SelectContent>
@@ -408,12 +374,13 @@ const ClientDashboard = () => {
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex items-center gap-2 sm:gap-4 justify-between sm:justify-end">
-              <span className="text-xs sm:text-sm text-muted-foreground truncate max-w-[150px] sm:max-w-none">{user.email}</span>
+
+            {/* Right: User info */}
+            <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+              <span className="text-xs text-muted-foreground hidden lg:inline truncate max-w-[180px]">{user.email}</span>
               <UserSettingsDialog variant="ghost" />
-              <Button variant="ghost" size="sm" onClick={() => signOut()} className="px-2 sm:px-3">
-                <LogOut className="w-4 h-4 sm:mr-2" />
-                <span className="hidden sm:inline">{t('nav.signOut')}</span>
+              <Button variant="ghost" size="icon" onClick={() => signOut()} className="h-9 w-9">
+                <LogOut className="w-4 h-4" />
               </Button>
             </div>
           </div>
@@ -421,94 +388,103 @@ const ClientDashboard = () => {
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-8">
+      <main className="container mx-auto px-3 sm:px-6 py-5 sm:py-8">
         {loading ? (
           <div className="flex items-center justify-center h-64">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
         ) : (
           <>
-            <div className="flex flex-col gap-4 mb-6 sm:mb-8">
-              <div>
-                <h1 className="text-2xl sm:text-4xl font-bold mb-2">
-                  {accessibleClients.find(c => c.id === selectedClientId)?.name || 'Client Dashboard'}
+            {/* Title + Action Bar */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+              <div className="min-w-0">
+                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight truncate">
+                  {selectedClient?.name || 'Client Dashboard'}
                 </h1>
-                <div className="flex flex-wrap gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
-                  <span>{t('status.total')}: {dataSourceFilteredBusinesses.length}{dataSourceFilter !== 'all' ? ` (of ${businesses.length})` : ''}</span>
-                  <span>{t('status.active')}: {activeBusinesses.length}</span>
-                  <span>{t('status.pending')}: {pendingBusinesses.length}</span>
-                </div>
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  {dataSourceFilteredBusinesses.length} location{dataSourceFilteredBusinesses.length !== 1 ? 's' : ''}
+                  {dataSourceFilter !== 'all' && ` (filtered from ${businesses.length})`}
+                </p>
               </div>
               
-              {/* Desktop Actions */}
-              <div className="hidden md:flex items-center gap-2 flex-wrap">
+              {/* Desktop Actions — Grouped into logical dropdowns */}
+              <div className="hidden md:flex items-center gap-2">
+                {/* Primary: Add Location */}
+                <Button onClick={() => { setEditingBusiness(null); setBusinessDialogOpen(true); }}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  {t('actions.addBusiness')}
+                </Button>
+
+                {/* Import Dropdown */}
+                {!isImportDisabled() && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" className="gap-1.5">
+                        <Upload className="w-4 h-4" />
+                        {t('actions.import')}
+                        <ChevronDown className="w-3.5 h-3.5 opacity-50" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => { setImportMergeMode(false); setImportDialogOpen(true); }}>
+                        <Upload className="w-4 h-4 mr-2" />
+                        {t('actions.import')}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => { setImportMergeMode(true); setImportDialogOpen(true); }}>
+                        <FolderSync className="w-4 h-4 mr-2" />
+                        {t('actions.mergeImport')}
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
+
+                {/* API Sync + Export */}
                 <ApiImportDialog 
                   clientId={selectedClientId} 
-                  clientName={accessibleClients.find(c => c.id === selectedClientId)?.name || ''}
+                  clientName={selectedClient?.name || ''}
                   onSyncComplete={() => fetchBusinesses(true)}
                 />
                 <JsonExport 
                   businesses={businesses} 
-                  clientName={accessibleClients.find(c => c.id === selectedClientId)?.name} 
+                  clientName={selectedClient?.name} 
                   onNavigateToBusiness={handleEditBusiness}
                 />
-                <Button 
-                  variant="outline" 
-                  onClick={() => setVersionHistoryOpen(true)}
-                >
-                  <HistoryIcon className="w-4 h-4 mr-2" />
-                  {t('actions.versionHistory')}
-                </Button>
-                <Button variant="outline" onClick={() => setSettingsDialogOpen(true)}>
-                  <Settings className="w-4 h-4 mr-2" />
-                  {t('actions.settings')}
-                </Button>
-                <Button variant="outline" onClick={() => setCustomServicesDialogOpen(true)}>
-                  <Wrench className="w-4 h-4 mr-2" />
-                  {t('actions.customServices')}
-                </Button>
-                <Button onClick={() => {
-                  setEditingBusiness(null);
-                  setBusinessDialogOpen(true);
-                }}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  {t('actions.addBusiness')}
-                </Button>
-                {!isImportDisabled() && (
-                  <>
-                    <Button 
-                      variant="outline" 
-                      onClick={() => {
-                        setImportMergeMode(true);
-                        setImportDialogOpen(true);
-                      }}
-                      className="bg-sage-100 hover:bg-sage-200 border-sage-300 text-sage-800 dark:bg-sage-900/30 dark:hover:bg-sage-900/50 dark:border-sage-700 dark:text-sage-300"
-                    >
-                      <Upload className="w-4 h-4 mr-2" />
-                      {t('actions.mergeImport')}
+
+                {/* Tools Dropdown */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="gap-1.5">
+                      <Settings className="w-4 h-4" />
+                      Tools
+                      <ChevronDown className="w-3.5 h-3.5 opacity-50" />
                     </Button>
-                    <Button 
-                      variant="outline" 
-                      onClick={() => {
-                        setImportMergeMode(false);
-                        setImportDialogOpen(true);
-                      }}
-                      className="bg-sage-100 hover:bg-sage-200 border-sage-300 text-sage-800 dark:bg-sage-900/30 dark:hover:bg-sage-900/50 dark:border-sage-700 dark:text-sage-300"
-                    >
-                      <Upload className="w-4 h-4 mr-2" />
-                      {t('actions.import')}
-                    </Button>
-                  </>
-                )}
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-52">
+                    <DropdownMenuItem onClick={() => setCreateUserDialogOpen(true)}>
+                      <UserPlus className="w-4 h-4 mr-2" />
+                      {t('actions.createUser')}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setCustomServicesDialogOpen(true)}>
+                      <Wrench className="w-4 h-4 mr-2" />
+                      {t('actions.customServices')}
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => setVersionHistoryOpen(true)}>
+                      <HistoryIcon className="w-4 h-4 mr-2" />
+                      {t('actions.versionHistory')}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setSettingsDialogOpen(true)}>
+                      <Settings className="w-4 h-4 mr-2" />
+                      {t('actions.settings')}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
 
               {/* Mobile Actions */}
               <div className="flex md:hidden items-center gap-2">
                 <Button 
-                  onClick={() => {
-                    setEditingBusiness(null);
-                    setBusinessDialogOpen(true);
-                  }}
+                  onClick={() => { setEditingBusiness(null); setBusinessDialogOpen(true); }}
                   className="flex-1"
                 >
                   <Plus className="w-4 h-4 mr-2" />
@@ -524,155 +500,67 @@ const ClientDashboard = () => {
                     <div className="flex flex-col gap-2 mt-4">
                       <ApiImportDialog 
                         clientId={selectedClientId} 
-                        clientName={accessibleClients.find(c => c.id === selectedClientId)?.name || ''}
+                        clientName={selectedClient?.name || ''}
                         onSyncComplete={() => fetchBusinesses(true)}
                       />
                       <JsonExport 
                         businesses={businesses} 
-                        clientName={accessibleClients.find(c => c.id === selectedClientId)?.name} 
+                        clientName={selectedClient?.name} 
                         onNavigateToBusiness={handleEditBusiness}
                       />
-                      <Button 
-                        variant="outline" 
-                        onClick={() => setVersionHistoryOpen(true)}
-                        className="w-full justify-start"
-                      >
-                        <HistoryIcon className="w-4 h-4 mr-2" />
-                        {t('actions.versionHistory')}
-                      </Button>
-                      <Button variant="outline" onClick={() => setSettingsDialogOpen(true)} className="w-full justify-start">
-                        <Settings className="w-4 h-4 mr-2" />
-                        {t('actions.settings')}
-                      </Button>
-                      <Button variant="outline" onClick={() => setCustomServicesDialogOpen(true)} className="w-full justify-start">
-                        <Wrench className="w-4 h-4 mr-2" />
-                        {t('actions.customServices')}
-                      </Button>
                       {!isImportDisabled() && (
                         <>
-                          <Button 
-                            variant="outline" 
-                            onClick={() => {
-                              setImportMergeMode(true);
-                              setImportDialogOpen(true);
-                            }} 
-                            className="w-full justify-start bg-sage-100 hover:bg-sage-200 border-sage-300 text-sage-800 dark:bg-sage-900/30 dark:hover:bg-sage-900/50 dark:border-sage-700 dark:text-sage-300"
-                          >
-                            <Upload className="w-4 h-4 mr-2" />
+                          <Button variant="outline" onClick={() => { setImportMergeMode(true); setImportDialogOpen(true); }} className="w-full justify-start">
+                            <FolderSync className="w-4 h-4 mr-2" />
                             {t('actions.mergeImport')}
                           </Button>
-                          <Button 
-                            variant="outline" 
-                            onClick={() => {
-                              setImportMergeMode(false);
-                              setImportDialogOpen(true);
-                            }} 
-                            className="w-full justify-start bg-sage-100 hover:bg-sage-200 border-sage-300 text-sage-800 dark:bg-sage-900/30 dark:hover:bg-sage-900/50 dark:border-sage-700 dark:text-sage-300"
-                          >
+                          <Button variant="outline" onClick={() => { setImportMergeMode(false); setImportDialogOpen(true); }} className="w-full justify-start">
                             <Upload className="w-4 h-4 mr-2" />
                             {t('actions.import')}
                           </Button>
                         </>
                       )}
-                      <Button 
-                        onClick={() => setCreateUserDialogOpen(true)}
-                        className="w-full justify-start"
-                      >
-                        <UserPlus className="w-4 h-4 mr-2" />
-                        {t('actions.createUser')}
-                      </Button>
+                      <div className="border-t pt-2 mt-1">
+                        <Button variant="outline" onClick={() => setCreateUserDialogOpen(true)} className="w-full justify-start">
+                          <UserPlus className="w-4 h-4 mr-2" />
+                          {t('actions.createUser')}
+                        </Button>
+                        <Button variant="outline" onClick={() => setCustomServicesDialogOpen(true)} className="w-full justify-start mt-2">
+                          <Wrench className="w-4 h-4 mr-2" />
+                          {t('actions.customServices')}
+                        </Button>
+                        <Button variant="outline" onClick={() => setVersionHistoryOpen(true)} className="w-full justify-start mt-2">
+                          <HistoryIcon className="w-4 h-4 mr-2" />
+                          {t('actions.versionHistory')}
+                        </Button>
+                        <Button variant="outline" onClick={() => setSettingsDialogOpen(true)} className="w-full justify-start mt-2">
+                          <Settings className="w-4 h-4 mr-2" />
+                          {t('actions.settings')}
+                        </Button>
+                      </div>
                     </div>
                   </SheetContent>
                 </Sheet>
               </div>
             </div>
 
-            <div className="mb-6 hidden md:flex md:items-start md:justify-between">
-              <div>
-                <Button 
-                  onClick={() => setCreateUserDialogOpen(true)}
-                  size="lg"
-                  className="w-full sm:w-auto"
-                >
-                  <UserPlus className="w-5 h-5 mr-2" />
-                  {t('actions.createUser')} {selectedClient?.name}
-                </Button>
-                <p className="text-xs text-muted-foreground mt-2">
-                  {t('messages.createUserDescription')}
-                </p>
-              </div>
-              <div>
-                <Button 
-                  onClick={() => {
-                    setEditingBusiness(null);
-                    setBusinessDialogOpen(true);
-                  }}
-                  size="lg"
-                  className="w-full sm:w-auto"
-                >
-                  <Plus className="w-5 h-5 mr-2" />
-                  {t('actions.addBusiness')}
-                </Button>
-                <p className="text-xs text-muted-foreground mt-2">
-                  Add a new location for {selectedClient?.name}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <Button
-                  variant={viewMode === 'table' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setViewMode('table')}
-                >
-                  <Table2 className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant={viewMode === 'grid' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setViewMode('grid')}
-                >
-                  <Grid className="w-4 h-4" />
-                </Button>
-                
-                {/* Data Source filter - Only for Energie 360° */}
-                {isEnergie360 && (
-                  <Select value={dataSourceFilter} onValueChange={(v) => setDataSourceFilter(v as 'all' | 'api' | 'crud')}>
-                    <SelectTrigger className="w-[140px]">
-                      <SelectValue placeholder="Data Source" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Sources</SelectItem>
-                      <SelectItem value="api">API Only</SelectItem>
-                      <SelectItem value="crud">CRUD Only</SelectItem>
-                    </SelectContent>
-                  </Select>
-                )}
-              </div>
-            </div>
-
             {businesses.length === 0 ? (
-              <Card>
-                <CardContent className="py-12 sm:py-16 text-center">
-                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
-                    <MapPin className="w-8 h-8 text-muted-foreground" />
+              <Card className="border-dashed border-2">
+                <CardContent className="py-16 text-center">
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-primary/5 flex items-center justify-center">
+                    <MapPin className="w-8 h-8 text-primary/60" />
                   </div>
-                  <p className="text-muted-foreground font-medium mb-1">{t('messages.noBusinessesFound')}</p>
-                  <p className="text-sm text-muted-foreground mb-6">No locations for this client yet — Import or add your first location.</p>
+                  <h2 className="text-lg font-semibold mb-1">{t('messages.noBusinessesFound')}</h2>
+                  <p className="text-sm text-muted-foreground mb-6 max-w-md mx-auto">
+                    No locations for this client yet — Import a spreadsheet or add your first location to get started.
+                  </p>
                   <div className="flex items-center justify-center gap-3">
                     <Button onClick={() => setBusinessDialogOpen(true)}>
                       <Plus className="w-4 h-4 mr-2" />
                       {t('actions.addFirstBusiness')}
                     </Button>
                     {!isImportDisabled() && (
-                      <Button 
-                        variant="outline"
-                        onClick={() => {
-                          setImportMergeMode(false);
-                          setImportDialogOpen(true);
-                        }}
-                      >
+                      <Button variant="outline" onClick={() => { setImportMergeMode(false); setImportDialogOpen(true); }}>
                         <Upload className="w-4 h-4 mr-2" />
                         {t('actions.import')}
                       </Button>
@@ -682,165 +570,89 @@ const ClientDashboard = () => {
               </Card>
             ) : (
               <>
-              <DashboardSummaryCards
-                total={dataSourceFilteredBusinesses.length}
-                active={activeBusinesses.length}
-                needAttention={pendingBusinesses.length}
-                avgSeoScore={avgSeoScore}
-              />
-              <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'active' | 'pending' | 'new' | 'async' | 'seo')}>
-                <TabsList className="mb-4 w-full flex flex-wrap h-auto gap-1 p-1">
-                  <TabsTrigger value="active" className="flex-1 min-w-[80px] text-xs sm:text-sm">
-                    {t('status.active')} ({activeBusinesses.length})
-                  </TabsTrigger>
-                  <TabsTrigger value="pending" className="flex-1 min-w-[80px] text-xs sm:text-sm">
-                    {t('tabs.needAttention')} ({pendingBusinesses.length})
-                  </TabsTrigger>
-                  <TabsTrigger value="new" className="flex-1 min-w-[80px] text-xs sm:text-sm">
-                    {t('tabs.new')} ({newBusinesses.length})
-                  </TabsTrigger>
-                  {isEnergie360 && (
-                    <TabsTrigger value="async" className="flex-1 min-w-[80px] text-xs sm:text-sm">
-                      Async ({asyncBusinesses.length})
+                {/* Summary Cards */}
+                <DashboardSummaryCards
+                  total={dataSourceFilteredBusinesses.length}
+                  active={activeBusinesses.length}
+                  needAttention={pendingBusinesses.length}
+                  avgSeoScore={avgSeoScore}
+                />
+
+                {/* View Controls + Data Source Filter */}
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center bg-muted rounded-lg p-0.5">
+                      <Button
+                        variant={viewMode === 'table' ? 'default' : 'ghost'}
+                        size="sm"
+                        onClick={() => setViewMode('table')}
+                        className="h-8 px-3"
+                      >
+                        <Table2 className="w-4 h-4 mr-1.5" />
+                        <span className="hidden sm:inline text-xs">Table</span>
+                      </Button>
+                      <Button
+                        variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                        size="sm"
+                        onClick={() => setViewMode('grid')}
+                        className="h-8 px-3"
+                      >
+                        <Grid className="w-4 h-4 mr-1.5" />
+                        <span className="hidden sm:inline text-xs">Grid</span>
+                      </Button>
+                    </div>
+                    
+                    {isEnergie360 && (
+                      <Select value={dataSourceFilter} onValueChange={(v) => setDataSourceFilter(v as 'all' | 'api' | 'crud')}>
+                        <SelectTrigger className="w-[140px] h-8 text-xs">
+                          <SelectValue placeholder="Data Source" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Sources</SelectItem>
+                          <SelectItem value="api">API Only</SelectItem>
+                          <SelectItem value="crud">CRUD Only</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
+                  </div>
+                </div>
+
+                {/* Tabs */}
+                <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'active' | 'pending' | 'new' | 'async' | 'seo')}>
+                  <TabsList className="mb-4 w-full flex flex-wrap h-auto gap-1 p-1 bg-muted/60">
+                    <TabsTrigger value="active" className="flex-1 min-w-[80px] text-xs sm:text-sm data-[state=active]:bg-card data-[state=active]:shadow-sm">
+                      <CheckCircle2 className="w-3.5 h-3.5 mr-1.5 hidden sm:inline text-emerald-600" />
+                      {t('status.active')}
+                      <Badge variant="secondary" className="ml-1.5 text-[10px] px-1.5 py-0">{activeBusinesses.length}</Badge>
                     </TabsTrigger>
-                  )}
-                  <TabsTrigger value="seo" className="flex-1 min-w-[80px] text-xs sm:text-sm">
-                    <Activity className="w-3.5 h-3.5 mr-1 hidden sm:inline" />
-                    SEO Health
-                  </TabsTrigger>
-                </TabsList>
+                    <TabsTrigger value="pending" className="flex-1 min-w-[80px] text-xs sm:text-sm data-[state=active]:bg-card data-[state=active]:shadow-sm">
+                      <AlertTriangle className="w-3.5 h-3.5 mr-1.5 hidden sm:inline text-amber-600" />
+                      {t('tabs.needAttention')}
+                      <Badge variant={pendingBusinesses.length > 0 ? "destructive" : "secondary"} className="ml-1.5 text-[10px] px-1.5 py-0">
+                        {pendingBusinesses.length}
+                      </Badge>
+                    </TabsTrigger>
+                    <TabsTrigger value="new" className="flex-1 min-w-[80px] text-xs sm:text-sm data-[state=active]:bg-card data-[state=active]:shadow-sm">
+                      <Plus className="w-3.5 h-3.5 mr-1.5 hidden sm:inline" />
+                      {t('tabs.new')}
+                      <Badge variant="secondary" className="ml-1.5 text-[10px] px-1.5 py-0">{newBusinesses.length}</Badge>
+                    </TabsTrigger>
+                    {isEnergie360 && (
+                      <TabsTrigger value="async" className="flex-1 min-w-[80px] text-xs sm:text-sm data-[state=active]:bg-card data-[state=active]:shadow-sm">
+                        Async
+                        <Badge variant="secondary" className="ml-1.5 text-[10px] px-1.5 py-0">{asyncBusinesses.length}</Badge>
+                      </TabsTrigger>
+                    )}
+                    <TabsTrigger value="seo" className="flex-1 min-w-[80px] text-xs sm:text-sm data-[state=active]:bg-card data-[state=active]:shadow-sm">
+                      <Activity className="w-3.5 h-3.5 mr-1.5 hidden sm:inline" />
+                      SEO Health
+                    </TabsTrigger>
+                  </TabsList>
 
-                <TabsContent value="active">
-                  {viewMode === 'table' ? (
-                    <BusinessTableView
-                      businesses={activeBusinesses}
-                      onEdit={handleEditBusiness}
-                      onDelete={handleDeleteBusiness}
-                      onMultiEdit={handleMultiEdit}
-                      onMultiDelete={handleMultiDelete}
-                      clientName={selectedClient?.name || ''}
-                      customPhotosEnabled={selectedClient?.custom_photos_enabled ?? false}
-                    />
-                  ) : (
-                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                      {activeBusinesses.map((business) => (
-                        <Card key={business.id}>
-                          <CardHeader>
-                            <CardTitle>{business.businessName}</CardTitle>
-                          </CardHeader>
-                          <CardContent>
-                            <div className="space-y-2 text-sm">
-                              <p className="text-muted-foreground">{business.addressLine1}</p>
-                              <p className="text-muted-foreground">{business.city}, {business.state}</p>
-                              <div className="flex gap-2 mt-4">
-                                <Button size="sm" variant="outline" onClick={() => handleEditBusiness(business)}>
-                                  <Edit className="w-4 h-4 mr-2" />
-                                  Edit
-                                </Button>
-                                <Button size="sm" variant="destructive" onClick={() => handleDeleteBusiness(business.id)}>
-                                  <Trash2 className="w-4 h-4 mr-2" />
-                                  Delete
-                                </Button>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  )}
-                </TabsContent>
-
-                <TabsContent value="pending">
-                  <NeedAttentionBanner 
-                    pendingBusinesses={pendingBusinesses} 
-                    showAsyncInfo={isEnergie360}
-                  />
-                  {viewMode === 'table' ? (
-                    <BusinessTableView
-                      businesses={pendingBusinesses}
-                      onEdit={handleEditBusiness}
-                      onDelete={handleDeleteBusiness}
-                      onMultiEdit={handleMultiEdit}
-                      onMultiDelete={handleMultiDelete}
-                      showValidationErrors={true}
-                      clientName={selectedClient?.name || ''}
-                      customPhotosEnabled={selectedClient?.custom_photos_enabled ?? false}
-                    />
-                  ) : (
-                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                      {pendingBusinesses.map((business) => (
-                        <Card key={business.id}>
-                          <CardHeader>
-                            <CardTitle>{business.businessName}</CardTitle>
-                          </CardHeader>
-                          <CardContent>
-                            <div className="space-y-2 text-sm">
-                              <p className="text-muted-foreground">{business.addressLine1}</p>
-                              <p className="text-muted-foreground">{business.city}, {business.state}</p>
-                              <div className="flex gap-2 mt-4">
-                                <Button size="sm" variant="outline" onClick={() => handleEditBusiness(business)}>
-                                  <Edit className="w-4 h-4 mr-2" />
-                                  Edit
-                                </Button>
-                                <Button size="sm" variant="destructive" onClick={() => handleDeleteBusiness(business.id)}>
-                                  <Trash2 className="w-4 h-4 mr-2" />
-                                  Delete
-                                </Button>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  )}
-                </TabsContent>
-
-                <TabsContent value="new">
-                  {viewMode === 'table' ? (
-                    <BusinessTableView
-                      businesses={newBusinesses}
-                      onEdit={handleEditBusiness}
-                      onDelete={handleDeleteBusiness}
-                      onMultiEdit={handleMultiEdit}
-                      onMultiDelete={handleMultiDelete}
-                      clientName={selectedClient?.name || ''}
-                      customPhotosEnabled={selectedClient?.custom_photos_enabled ?? false}
-                    />
-                  ) : (
-                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                      {newBusinesses.map((business) => (
-                        <Card key={business.id}>
-                          <CardHeader>
-                            <CardTitle>{business.businessName}</CardTitle>
-                          </CardHeader>
-                          <CardContent>
-                            <div className="space-y-2 text-sm">
-                              <p className="text-muted-foreground">{business.addressLine1}</p>
-                              <p className="text-muted-foreground">{business.city}, {business.state}</p>
-                              <div className="flex gap-2 mt-4">
-                                <Button size="sm" variant="outline" onClick={() => handleEditBusiness(business)}>
-                                  <Edit className="w-4 h-4 mr-2" />
-                                  Edit
-                                </Button>
-                                <Button size="sm" variant="destructive" onClick={() => handleDeleteBusiness(business.id)}>
-                                  <Trash2 className="w-4 h-4 mr-2" />
-                                  Delete
-                                </Button>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  )}
-                </TabsContent>
-
-                {/* Async Locations Tab - Only for Energie 360° */}
-                {isEnergie360 && (
-                  <TabsContent value="async">
+                  <TabsContent value="active" className="animate-in fade-in-50 duration-300">
                     {viewMode === 'table' ? (
                       <BusinessTableView
-                        businesses={asyncBusinesses}
+                        businesses={activeBusinesses}
                         onEdit={handleEditBusiness}
                         onDelete={handleDeleteBusiness}
                         onMultiEdit={handleMultiEdit}
@@ -849,30 +661,114 @@ const ClientDashboard = () => {
                         customPhotosEnabled={selectedClient?.custom_photos_enabled ?? false}
                       />
                     ) : (
-                      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                        {asyncBusinesses.map((business) => (
-                          <Card key={business.id}>
-                            <CardHeader>
-                              <CardTitle className="flex items-center gap-2">
-                                {business.businessName}
-                                <Badge variant="destructive" className="text-xs">Async</Badge>
-                              </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                              <div className="space-y-2 text-sm">
-                                <p className="text-muted-foreground">{business.addressLine1}</p>
-                                <p className="text-muted-foreground">{business.city}, {business.state}</p>
-                                <p className="text-xs text-destructive mt-2">Missing from Eco-Movement feed</p>
-                                <div className="flex gap-2 mt-4">
-                                  <Button size="sm" variant="outline" onClick={() => handleEditBusiness(business)}>
-                                    <Edit className="w-4 h-4 mr-2" />
-                                    Edit
-                                  </Button>
-                                  <Button size="sm" variant="destructive" onClick={() => handleDeleteBusiness(business.id)}>
-                                    <Trash2 className="w-4 h-4 mr-2" />
-                                    Delete
-                                  </Button>
+                      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                        {activeBusinesses.map((business) => {
+                          const seo = calculateSeoScore(business);
+                          return (
+                            <Card 
+                              key={business.id} 
+                              className="group hover:shadow-lg transition-all duration-200 cursor-pointer border-0 shadow-sm bg-card"
+                              onClick={() => handleEditBusiness(business)}
+                            >
+                              <CardContent className="p-5">
+                                <div className="flex items-start justify-between gap-2 mb-3">
+                                  <div className="min-w-0 flex-1">
+                                    <h3 className="font-semibold truncate group-hover:text-primary transition-colors">{business.businessName || 'Unnamed'}</h3>
+                                    <p className="text-xs text-muted-foreground mt-0.5 truncate">{business.storeCode}</p>
+                                  </div>
+                                  <Badge variant="outline" className="shrink-0 text-[10px] border-emerald-300 text-emerald-700 bg-emerald-50 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-800">
+                                    Active
+                                  </Badge>
                                 </div>
+                                <div className="space-y-1.5 text-sm text-muted-foreground mb-3">
+                                  {business.addressLine1 && (
+                                    <p className="flex items-center gap-1.5 truncate">
+                                      <MapPin className="w-3.5 h-3.5 shrink-0" />
+                                      {business.addressLine1}
+                                    </p>
+                                  )}
+                                  {(business.city || business.country) && (
+                                    <p className="flex items-center gap-1.5 truncate pl-5">
+                                      {[business.city, business.state, business.country].filter(Boolean).join(', ')}
+                                    </p>
+                                  )}
+                                  {business.primaryCategory && (
+                                    <p className="flex items-center gap-1.5 truncate">
+                                      <Globe className="w-3.5 h-3.5 shrink-0" />
+                                      {business.primaryCategory}
+                                    </p>
+                                  )}
+                                </div>
+                                <div className="flex items-center justify-between pt-3 border-t">
+                                  <SeoScoreBadge score={seo.overallScore} band={getSeoBand(seo.overallScore)} />
+                                  <div className="flex gap-1">
+                                    <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={(e) => { e.stopPropagation(); handleEditBusiness(business); }}>
+                                      <Edit className="w-3.5 h-3.5 mr-1" />
+                                      Edit
+                                    </Button>
+                                  </div>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </TabsContent>
+
+                  <TabsContent value="pending" className="animate-in fade-in-50 duration-300">
+                    <NeedAttentionBanner 
+                      pendingBusinesses={pendingBusinesses} 
+                      showAsyncInfo={isEnergie360}
+                    />
+                    {viewMode === 'table' ? (
+                      <BusinessTableView
+                        businesses={pendingBusinesses}
+                        onEdit={handleEditBusiness}
+                        onDelete={handleDeleteBusiness}
+                        onMultiEdit={handleMultiEdit}
+                        onMultiDelete={handleMultiDelete}
+                        showValidationErrors={true}
+                        clientName={selectedClient?.name || ''}
+                        customPhotosEnabled={selectedClient?.custom_photos_enabled ?? false}
+                      />
+                    ) : (
+                      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                        {pendingBusinesses.map((business) => (
+                          <Card 
+                            key={business.id} 
+                            className="group hover:shadow-lg transition-all duration-200 cursor-pointer border-0 shadow-sm ring-1 ring-amber-200/50 dark:ring-amber-800/30"
+                            onClick={() => handleEditBusiness(business)}
+                          >
+                            <CardContent className="p-5">
+                              <div className="flex items-start justify-between gap-2 mb-3">
+                                <div className="min-w-0 flex-1">
+                                  <h3 className="font-semibold truncate group-hover:text-primary transition-colors">{business.businessName || 'Unnamed'}</h3>
+                                  <p className="text-xs text-muted-foreground mt-0.5 truncate">{business.storeCode}</p>
+                                </div>
+                                <Badge variant="outline" className="shrink-0 text-[10px] border-amber-300 text-amber-700 bg-amber-50 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-800">
+                                  <AlertTriangle className="w-3 h-3 mr-1" />
+                                  Attention
+                                </Badge>
+                              </div>
+                              <div className="space-y-1.5 text-sm text-muted-foreground mb-3">
+                                {business.addressLine1 && (
+                                  <p className="flex items-center gap-1.5 truncate">
+                                    <MapPin className="w-3.5 h-3.5 shrink-0" />
+                                    {business.addressLine1}
+                                  </p>
+                                )}
+                                {(business.city || business.country) && (
+                                  <p className="flex items-center gap-1.5 truncate pl-5">
+                                    {[business.city, business.state, business.country].filter(Boolean).join(', ')}
+                                  </p>
+                                )}
+                              </div>
+                              <div className="flex items-center justify-end pt-3 border-t">
+                                <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={(e) => { e.stopPropagation(); handleEditBusiness(business); }}>
+                                  <Edit className="w-3.5 h-3.5 mr-1" />
+                                  Fix Issues
+                                </Button>
                               </div>
                             </CardContent>
                           </Card>
@@ -880,16 +776,121 @@ const ClientDashboard = () => {
                       </div>
                     )}
                   </TabsContent>
-                )}
 
-                <TabsContent value="seo">
-                  <ClientSeoOverview 
-                    businesses={dataSourceFilteredBusinesses} 
-                    onEditBusiness={handleEditBusiness}
-                    clientName={selectedClient?.name}
-                  />
-                </TabsContent>
-              </Tabs>
+                  <TabsContent value="new" className="animate-in fade-in-50 duration-300">
+                    {viewMode === 'table' ? (
+                      <BusinessTableView
+                        businesses={newBusinesses}
+                        onEdit={handleEditBusiness}
+                        onDelete={handleDeleteBusiness}
+                        onMultiEdit={handleMultiEdit}
+                        onMultiDelete={handleMultiDelete}
+                        clientName={selectedClient?.name || ''}
+                        customPhotosEnabled={selectedClient?.custom_photos_enabled ?? false}
+                      />
+                    ) : (
+                      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                        {newBusinesses.map((business) => (
+                          <Card 
+                            key={business.id} 
+                            className="group hover:shadow-lg transition-all duration-200 cursor-pointer border-0 shadow-sm ring-1 ring-primary/20"
+                            onClick={() => handleEditBusiness(business)}
+                          >
+                            <CardContent className="p-5">
+                              <div className="flex items-start justify-between gap-2 mb-3">
+                                <div className="min-w-0 flex-1">
+                                  <h3 className="font-semibold truncate group-hover:text-primary transition-colors">{business.businessName || 'Unnamed'}</h3>
+                                  <p className="text-xs text-muted-foreground mt-0.5 truncate">{business.storeCode}</p>
+                                </div>
+                                <Badge variant="outline" className="shrink-0 text-[10px] border-primary/30 text-primary bg-primary/5">
+                                  New
+                                </Badge>
+                              </div>
+                              <div className="space-y-1.5 text-sm text-muted-foreground mb-3">
+                                {business.addressLine1 && (
+                                  <p className="flex items-center gap-1.5 truncate">
+                                    <MapPin className="w-3.5 h-3.5 shrink-0" />
+                                    {business.addressLine1}
+                                  </p>
+                                )}
+                                {(business.city || business.country) && (
+                                  <p className="flex items-center gap-1.5 truncate pl-5">
+                                    {[business.city, business.state, business.country].filter(Boolean).join(', ')}
+                                  </p>
+                                )}
+                              </div>
+                              <div className="flex items-center justify-end pt-3 border-t">
+                                <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={(e) => { e.stopPropagation(); handleEditBusiness(business); }}>
+                                  <Edit className="w-3.5 h-3.5 mr-1" />
+                                  Edit
+                                </Button>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    )}
+                  </TabsContent>
+
+                  {isEnergie360 && (
+                    <TabsContent value="async" className="animate-in fade-in-50 duration-300">
+                      {viewMode === 'table' ? (
+                        <BusinessTableView
+                          businesses={asyncBusinesses}
+                          onEdit={handleEditBusiness}
+                          onDelete={handleDeleteBusiness}
+                          onMultiEdit={handleMultiEdit}
+                          onMultiDelete={handleMultiDelete}
+                          clientName={selectedClient?.name || ''}
+                          customPhotosEnabled={selectedClient?.custom_photos_enabled ?? false}
+                        />
+                      ) : (
+                        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                          {asyncBusinesses.map((business) => (
+                            <Card 
+                              key={business.id} 
+                              className="group hover:shadow-lg transition-all duration-200 cursor-pointer border-0 shadow-sm ring-1 ring-destructive/20"
+                              onClick={() => handleEditBusiness(business)}
+                            >
+                              <CardContent className="p-5">
+                                <div className="flex items-start justify-between gap-2 mb-3">
+                                  <div className="min-w-0 flex-1">
+                                    <h3 className="font-semibold truncate">{business.businessName || 'Unnamed'}</h3>
+                                    <p className="text-xs text-muted-foreground mt-0.5 truncate">{business.storeCode}</p>
+                                  </div>
+                                  <Badge variant="destructive" className="shrink-0 text-[10px]">Async</Badge>
+                                </div>
+                                <div className="space-y-1.5 text-sm text-muted-foreground mb-3">
+                                  {business.addressLine1 && (
+                                    <p className="flex items-center gap-1.5 truncate">
+                                      <MapPin className="w-3.5 h-3.5 shrink-0" />
+                                      {business.addressLine1}
+                                    </p>
+                                  )}
+                                  <p className="text-xs text-destructive mt-1">Missing from Eco-Movement feed</p>
+                                </div>
+                                <div className="flex items-center justify-end pt-3 border-t">
+                                  <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={(e) => { e.stopPropagation(); handleEditBusiness(business); }}>
+                                    <Edit className="w-3.5 h-3.5 mr-1" />
+                                    Edit
+                                  </Button>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                      )}
+                    </TabsContent>
+                  )}
+
+                  <TabsContent value="seo" className="animate-in fade-in-50 duration-300">
+                    <ClientSeoOverview 
+                      businesses={dataSourceFilteredBusinesses} 
+                      onEditBusiness={handleEditBusiness}
+                      clientName={selectedClient?.name}
+                    />
+                  </TabsContent>
+                </Tabs>
               </>
             )}
           </>
@@ -950,12 +951,9 @@ const ClientDashboard = () => {
         onImport={() => fetchBusinesses(true)}
         onEditBusiness={(businessId) => {
           const business = businesses.find(b => b.id === businessId);
-          if (business) {
-            handleEditBusiness(business);
-          }
+          if (business) handleEditBusiness(business);
         }}
       />
-
       <ClientCustomServicesDialog
         open={customServicesDialogOpen}
         onOpenChange={setCustomServicesDialogOpen}
