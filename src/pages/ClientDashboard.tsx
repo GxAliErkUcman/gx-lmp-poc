@@ -673,6 +673,12 @@ const ClientDashboard = () => {
                 </CardContent>
               </Card>
             ) : (
+              <>
+              <DashboardSummaryCards
+                total={dataSourceFilteredBusinesses.length}
+                active={activeBusinesses.length}
+                needAttention={pendingBusinesses.length}
+              />
               <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'active' | 'pending' | 'new' | 'async' | 'seo')}>
                 <TabsList className="mb-4 w-full flex flex-wrap h-auto gap-1 p-1">
                   <TabsTrigger value="active" className="flex-1 min-w-[80px] text-xs sm:text-sm">
