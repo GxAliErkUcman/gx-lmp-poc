@@ -271,7 +271,7 @@ const ClientAdminPanel = () => {
   const pendingBusinesses = businesses.filter((b) => hasCriticalErrors(b));
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted/30 font-montserrat">
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted/30 font-roobert">
       <header className="border-b bg-card/50 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-6 flex items-center justify-between">
           <div className="flex items-center gap-4">

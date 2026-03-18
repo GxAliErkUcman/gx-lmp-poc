@@ -193,7 +193,7 @@ const StoreOwnerDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted/30 font-montserrat">
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted/30 font-roobert">
       <header className="border-b bg-card/50 backdrop-blur-sm">
         <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4">
