@@ -35,11 +35,14 @@ export const AppThemeProvider = ({ children }: { children: React.ReactNode }) =>
   useEffect(() => {
     const root = document.documentElement;
     // Clear all theme classes
-    root.classList.remove("dark", "theme-gx", "theme-legacy");
+    root.classList.remove("dark", "theme-gx", "theme-legacy", "theme-gx-dark");
 
     switch (theme) {
       case "dark":
         root.classList.add("dark");
+        break;
+      case "gx-dark":
+        root.classList.add("theme-gx-dark");
         break;
       case "legacy":
         root.classList.add("theme-legacy");
