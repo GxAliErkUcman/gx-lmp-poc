@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Grid, Table2, HelpCircle, Edit } from 'lucide-react';
+import { Grid, Table2, HelpCircle, Edit, MapPin, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import BusinessDialog from '@/components/BusinessDialog';
@@ -18,6 +18,7 @@ import { UserSettingsDialog } from '@/components/UserSettingsDialog';
 import jasonerLogo from '@/assets/jasoner-horizontal-logo.png';
 import NeedAttentionBanner from '@/components/NeedAttentionBanner';
 import { isActiveBusiness, hasCriticalErrors } from '@/lib/exportValidation';
+import DashboardSummaryCards from '@/components/DashboardSummaryCards';
 
 const StoreOwnerDashboard = () => {
   const { user, signOut, loading: authLoading, urlAuthProcessing } = useAuth();
@@ -262,10 +263,20 @@ const StoreOwnerDashboard = () => {
         {businesses.length === 0 ? (
           <Card className="shadow-card">
             <CardContent className="py-16 text-center">
-              <p className="text-muted-foreground">No locations assigned to you yet.</p>
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
+                <MapPin className="w-8 h-8 text-muted-foreground" />
+              </div>
+              <p className="text-muted-foreground font-medium mb-1">No locations assigned to you yet</p>
+              <p className="text-sm text-muted-foreground">Your administrator hasn't assigned any locations to you. Please contact them to get access.</p>
             </CardContent>
           </Card>
         ) : (
+          <>
+          <DashboardSummaryCards
+            total={businesses.length}
+            active={activeBusinesses.length}
+            needAttention={pendingBusinesses.length}
+          />
           <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'active' | 'pending')}>
             <TabsList className="grid w-full grid-cols-2 mb-4 sm:mb-6 h-auto gap-1 p-1">
               <TooltipProvider>
@@ -311,7 +322,11 @@ const StoreOwnerDashboard = () => {
               {activeBusinesses.length === 0 ? (
                 <Card className="shadow-card">
                   <CardContent className="py-16 text-center">
-                    <p className="text-muted-foreground">No active locations found.</p>
+                    <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-amber-500/10 flex items-center justify-center">
+                      <AlertTriangle className="w-6 h-6 text-amber-600 dark:text-amber-400" />
+                    </div>
+                    <p className="text-muted-foreground font-medium mb-1">All locations need attention</p>
+                    <p className="text-sm text-muted-foreground">Switch to the <button onClick={() => setActiveTab('pending')} className="text-primary underline underline-offset-2 font-medium">Need Attention</button> tab to fix issues.</p>
                   </CardContent>
                 </Card>
               ) : viewMode === 'table' ? (
@@ -369,7 +384,11 @@ const StoreOwnerDashboard = () => {
               {pendingBusinesses.length === 0 ? (
                 <Card className="shadow-card">
                   <CardContent className="py-16 text-center">
-                    <p className="text-muted-foreground">No pending locations found.</p>
+                    <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-emerald-500/10 flex items-center justify-center">
+                      <CheckCircle2 className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+                    </div>
+                    <p className="text-muted-foreground font-medium mb-1">All clear!</p>
+                    <p className="text-sm text-muted-foreground">All your locations are active and ready to publish.</p>
                   </CardContent>
                 </Card>
               ) : viewMode === 'table' ? (
@@ -425,6 +444,7 @@ const StoreOwnerDashboard = () => {
               )}
             </TabsContent>
           </Tabs>
+          </>
         )}
       </main>
 

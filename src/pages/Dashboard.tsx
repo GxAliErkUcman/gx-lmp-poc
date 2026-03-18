@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Plus, Upload, Edit, Trash2, Grid, Table2, Settings, HelpCircle } from 'lucide-react';
+import { Plus, Upload, Edit, Trash2, Grid, Table2, Settings, HelpCircle, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 import { toast } from '@/hooks/use-toast';
@@ -25,6 +25,7 @@ import { useTranslation } from 'react-i18next';
 import NeedAttentionBanner from '@/components/NeedAttentionBanner';
 import { isActiveBusiness, hasCriticalErrors } from '@/lib/exportValidation';
 import { fetchAllBusinesses } from '@/lib/fetchAllRows';
+import DashboardSummaryCards from '@/components/DashboardSummaryCards';
 
 const Dashboard = () => {
   const { t } = useTranslation();
@@ -348,18 +349,34 @@ useEffect(() => {
               </div>
               <div className="text-muted-foreground mb-6 space-y-1">
                 <p className="text-lg font-medium">No businesses found</p>
-                <p>Get started by adding your first business profile.</p>
+                <p>Get started by adding your first business or importing a spreadsheet.</p>
               </div>
-              <Button 
-                onClick={() => setBusinessDialogOpen(true)}
-                className="shadow-modern bg-gradient-primary hover:opacity-90"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Add Your First Business
-              </Button>
+              <div className="flex items-center justify-center gap-3">
+                <Button 
+                  onClick={() => setBusinessDialogOpen(true)}
+                  className="shadow-modern bg-gradient-primary hover:opacity-90"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Your First Business
+                </Button>
+                <Button 
+                  onClick={() => setImportDialogOpen(true)}
+                  variant="outline"
+                  className="shadow-modern"
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  Import Spreadsheet
+                </Button>
+              </div>
             </CardContent>
           </Card>
         ) : (
+          <>
+          <DashboardSummaryCards
+            total={businesses.length}
+            active={activeBusinesses.length}
+            needAttention={pendingBusinesses.length}
+          />
           <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'active' | 'pending')}>
             <TabsList className="grid w-full grid-cols-2 mb-4 sm:mb-6 h-auto gap-1 p-1">
               <TooltipProvider>
@@ -405,7 +422,11 @@ useEffect(() => {
               {activeBusinesses.length === 0 ? (
                 <Card className="shadow-card">
                   <CardContent className="py-16 text-center">
-                    <p className="text-muted-foreground">No active businesses found.</p>
+                    <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-amber-500/10 flex items-center justify-center">
+                      <AlertTriangle className="w-6 h-6 text-amber-600 dark:text-amber-400" />
+                    </div>
+                    <p className="text-muted-foreground font-medium mb-1">All locations need attention</p>
+                    <p className="text-sm text-muted-foreground">Switch to the <button onClick={() => setActiveTab('pending')} className="text-primary underline underline-offset-2 font-medium">Need Attention</button> tab to fix issues.</p>
                   </CardContent>
                 </Card>
               ) : viewMode === 'table' ? (
@@ -484,7 +505,11 @@ useEffect(() => {
               {pendingBusinesses.length === 0 ? (
                 <Card className="shadow-card">
                   <CardContent className="py-16 text-center">
-                    <p className="text-muted-foreground">No pending businesses found.</p>
+                    <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-emerald-500/10 flex items-center justify-center">
+                      <CheckCircle2 className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+                    </div>
+                    <p className="text-muted-foreground font-medium mb-1">All clear!</p>
+                    <p className="text-sm text-muted-foreground">All your locations are active and ready to publish.</p>
                   </CardContent>
                 </Card>
               ) : viewMode === 'table' ? (
@@ -567,6 +592,7 @@ useEffect(() => {
 
 
           </Tabs>
+          </>
         )}
       </main>
 

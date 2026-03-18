@@ -32,7 +32,8 @@ import { fetchAllBusinesses } from '@/lib/fetchAllRows';
 import NeedAttentionBanner from '@/components/NeedAttentionBanner';
 import { isActiveBusiness, hasCriticalErrors } from '@/lib/exportValidation';
 import ClientSeoOverview from '@/components/ClientSeoOverview';
-import { Activity } from 'lucide-react';
+import { Activity, MapPin, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import DashboardSummaryCards from '@/components/DashboardSummaryCards';
 
 // Energie 360° client ID for data source filter
 const ENERGIE_360_CLIENT_ID = 'e77c44c5-0585-4225-a5ea-59a38edb85fb';
@@ -645,15 +646,39 @@ const ClientDashboard = () => {
 
             {businesses.length === 0 ? (
               <Card>
-                <CardContent className="py-8 sm:py-12 text-center">
-                  <p className="text-muted-foreground mb-4">{t('messages.noBusinessesFound')}</p>
-                  <Button onClick={() => setBusinessDialogOpen(true)}>
-                    <Plus className="w-4 h-4 mr-2" />
-                    {t('actions.addFirstBusiness')}
-                  </Button>
+                <CardContent className="py-12 sm:py-16 text-center">
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
+                    <MapPin className="w-8 h-8 text-muted-foreground" />
+                  </div>
+                  <p className="text-muted-foreground font-medium mb-1">{t('messages.noBusinessesFound')}</p>
+                  <p className="text-sm text-muted-foreground mb-6">No locations for this client yet — Import or add your first location.</p>
+                  <div className="flex items-center justify-center gap-3">
+                    <Button onClick={() => setBusinessDialogOpen(true)}>
+                      <Plus className="w-4 h-4 mr-2" />
+                      {t('actions.addFirstBusiness')}
+                    </Button>
+                    {!isImportDisabled() && (
+                      <Button 
+                        variant="outline"
+                        onClick={() => {
+                          setImportMergeMode(false);
+                          setImportDialogOpen(true);
+                        }}
+                      >
+                        <Upload className="w-4 h-4 mr-2" />
+                        {t('actions.import')}
+                      </Button>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             ) : (
+              <>
+              <DashboardSummaryCards
+                total={dataSourceFilteredBusinesses.length}
+                active={activeBusinesses.length}
+                needAttention={pendingBusinesses.length}
+              />
               <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'active' | 'pending' | 'new' | 'async' | 'seo')}>
                 <TabsList className="mb-4 w-full flex flex-wrap h-auto gap-1 p-1">
                   <TabsTrigger value="active" className="flex-1 min-w-[80px] text-xs sm:text-sm">
@@ -856,6 +881,7 @@ const ClientDashboard = () => {
                   />
                 </TabsContent>
               </Tabs>
+              </>
             )}
           </>
         )}
