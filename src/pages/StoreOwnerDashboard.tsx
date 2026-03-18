@@ -263,7 +263,11 @@ const StoreOwnerDashboard = () => {
         {businesses.length === 0 ? (
           <Card className="shadow-card">
             <CardContent className="py-16 text-center">
-              <p className="text-muted-foreground">No locations assigned to you yet.</p>
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
+                <MapPin className="w-8 h-8 text-muted-foreground" />
+              </div>
+              <p className="text-muted-foreground font-medium mb-1">No locations assigned to you yet</p>
+              <p className="text-sm text-muted-foreground">Your administrator hasn't assigned any locations to you. Please contact them to get access.</p>
             </CardContent>
           </Card>
         ) : (
