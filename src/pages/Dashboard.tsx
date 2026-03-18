@@ -158,8 +158,8 @@ useEffect(() => {
     checkRoleAndRedirect();
   }, [user]);
 
-  // Wait for auth (and URL-based login) to initialize before checking user/redirecting
-  if (authLoading || urlAuthProcessing) {
+  // Wait for auth (and URL-based login) and role check to complete before rendering
+  if (authLoading || urlAuthProcessing || (!roleChecked && user)) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
