@@ -455,6 +455,53 @@ export type Database = {
         }
         Relationships: []
       }
+      edge_function_logs: {
+        Row: {
+          created_at: string
+          duration_ms: number | null
+          error_message: string | null
+          function_name: string
+          id: string
+          request_body: Json | null
+          response_body: Json | null
+          retried_at: string | null
+          retry_of: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          duration_ms?: number | null
+          error_message?: string | null
+          function_name: string
+          id?: string
+          request_body?: Json | null
+          response_body?: Json | null
+          retried_at?: string | null
+          retry_of?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          duration_ms?: number | null
+          error_message?: string | null
+          function_name?: string
+          id?: string
+          request_body?: Json | null
+          response_body?: Json | null
+          retried_at?: string | null
+          retry_of?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "edge_function_logs_retry_of_fkey"
+            columns: ["retry_of"]
+            isOneToOne: false
+            referencedRelation: "edge_function_logs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lockable_fields: {
         Row: {
           created_at: string
