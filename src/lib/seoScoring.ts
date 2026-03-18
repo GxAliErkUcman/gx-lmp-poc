@@ -114,7 +114,7 @@ export function calculateSeoScore(business: Business): SeoScoreResult {
   if (hasValue(business.country)) { addrScore += 3; }
   else { suggestions.push({ field: 'country', priority: 'high', category: 'Address & Geo', message: 'Set a country', impact: 'Country is required for geographic targeting' }); }
   
-  if (hasValue(business.latitude) && hasValue(business.longitude)) { addrScore += 7; }
+  if (hasValue(business.latitude) && hasValue(business.longitude)) { addrScore += 4; }
   else { suggestions.push({ field: 'latitude/longitude', priority: 'high', category: 'Address & Geo', message: 'Add GPS coordinates (latitude & longitude)', impact: 'Coordinates are critical for Google Maps placement and proximity ranking' }); }
 
   // === CONTACT & WEB (15 points) ===
