@@ -17,7 +17,7 @@ export const useAppTheme = () => useContext(ThemeContext);
 // Compatibility hook for components using next-themes API (e.g. Sonner)
 export const useTheme = () => {
   const { theme } = useAppTheme();
-  return { theme: theme === "dark" ? "dark" : "light" };
+  return { theme: (theme === "dark" || theme === "gx-dark") ? "dark" : "light" };
 };
 
 export const AppThemeProvider = ({ children }: { children: React.ReactNode }) => {
