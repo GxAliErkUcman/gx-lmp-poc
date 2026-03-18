@@ -15,9 +15,6 @@ import DashboardSummaryCards from '@/components/DashboardSummaryCards';
 import { calculateSeoScore } from '@/lib/seoScoring';
 import { fetchAllBusinesses } from '@/lib/fetchAllRows';
 import type { Business } from '@/types/business';
-import ServiceUserCreateDialog from '@/components/ServiceUserCreateDialog';
-import { UserSettingsDialog } from '@/components/UserSettingsDialog';
-
 interface ClientInfo {
   id: string;
   name: string;
