@@ -285,6 +285,13 @@ const ServiceUserHome = () => {
           </p>
         </div>
 
+        <DashboardSummaryCards
+          total={totalLocations}
+          active={totalActive}
+          needAttention={totalPending}
+          avgSeoScore={seoStats}
+        />
+
         {clients.length === 0 ? (
           <Card>
             <CardContent className="py-12 text-center">
