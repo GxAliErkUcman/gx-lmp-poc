@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdmin } from '@/hooks/use-admin';
 import { Navigate, useNavigate } from 'react-router-dom';
@@ -11,7 +11,10 @@ import { toast } from '@/hooks/use-toast';
 import jasonerLogo from '@/assets/jasoner-horizontal-logo.png';
 import ServiceUserCreateDialog from '@/components/ServiceUserCreateDialog';
 import { UserSettingsDialog } from '@/components/UserSettingsDialog';
-
+import DashboardSummaryCards from '@/components/DashboardSummaryCards';
+import { calculateSeoScore } from '@/lib/seoScoring';
+import { fetchAllBusinesses } from '@/lib/fetchAllRows';
+import type { Business } from '@/types/business';
 interface ClientInfo {
   id: string;
   name: string;
@@ -35,6 +38,17 @@ const ServiceUserHome = () => {
   const [isServiceUser, setIsServiceUser] = useState(false);
   const [createUserDialogOpen, setCreateUserDialogOpen] = useState(false);
   const [selectedClientForUser, setSelectedClientForUser] = useState<{ id: string; name: string } | null>(null);
+  const [allBusinesses, setAllBusinesses] = useState<Business[]>([]);
+
+  const seoStats = useMemo(() => {
+    if (allBusinesses.length === 0) return null;
+    const scores = allBusinesses.map(b => calculateSeoScore(b).overallScore);
+    return Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+  }, [allBusinesses]);
+
+  const totalLocations = clients.reduce((sum, c) => sum + c.active_locations + c.pending_locations, 0);
+  const totalActive = clients.reduce((sum, c) => sum + c.active_locations, 0);
+  const totalPending = clients.reduce((sum, c) => sum + c.pending_locations, 0);
 
   useEffect(() => {
     const checkRoleAndFetch = async () => {
@@ -49,6 +63,13 @@ const ServiceUserHome = () => {
       }
 
       await fetchClientData();
+      // Fetch all businesses for SEO scoring
+      try {
+        const businesses = await fetchAllBusinesses();
+        setAllBusinesses(businesses);
+      } catch (e) {
+        console.error('Error fetching businesses for SEO:', e);
+      }
     };
 
     checkRoleAndFetch();
@@ -263,6 +284,13 @@ const ServiceUserHome = () => {
             Manage and view all clients you're responsible for
           </p>
         </div>
+
+        <DashboardSummaryCards
+          total={totalLocations}
+          active={totalActive}
+          needAttention={totalPending}
+          avgSeoScore={seoStats}
+        />
 
         {clients.length === 0 ? (
           <Card>

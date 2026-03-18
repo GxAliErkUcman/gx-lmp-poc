@@ -1,15 +1,26 @@
 import { Card, CardContent } from '@/components/ui/card';
-import { MapPin, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { MapPin, CheckCircle2, AlertTriangle, Activity } from 'lucide-react';
+import { SeoScoreCircle } from '@/components/SeoScoreCard';
 
 interface DashboardSummaryCardsProps {
   total: number;
   active: number;
   needAttention: number;
+  avgSeoScore?: number | null;
 }
 
-const DashboardSummaryCards = ({ total, active, needAttention }: DashboardSummaryCardsProps) => {
+function seoBand(score: number): 'green' | 'yellow' | 'red' {
+  if (score >= 80) return 'green';
+  if (score >= 50) return 'yellow';
+  return 'red';
+}
+
+const DashboardSummaryCards = ({ total, active, needAttention, avgSeoScore }: DashboardSummaryCardsProps) => {
+  const showSeo = avgSeoScore !== undefined && avgSeoScore !== null;
+  const cols = showSeo ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-3';
+
   return (
-    <div className="grid grid-cols-3 gap-3 sm:gap-4 mb-6">
+    <div className={`grid ${cols} gap-3 sm:gap-4 mb-6`}>
       <Card className="shadow-card">
         <CardContent className="p-3 sm:p-4 flex items-center gap-3">
           <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
@@ -43,6 +54,17 @@ const DashboardSummaryCards = ({ total, active, needAttention }: DashboardSummar
           </div>
         </CardContent>
       </Card>
+      {showSeo && (
+        <Card className="shadow-card">
+          <CardContent className="p-3 sm:p-4 flex items-center gap-3">
+            <SeoScoreCircle score={avgSeoScore} band={seoBand(avgSeoScore)} size="sm" />
+            <div className="min-w-0">
+              <p className="text-xs text-muted-foreground truncate">Avg SEO Health</p>
+              <p className="text-xl sm:text-2xl font-bold">{avgSeoScore}%</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
