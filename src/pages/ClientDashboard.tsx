@@ -379,6 +379,9 @@ const ClientDashboard = () => {
             <div className="flex items-center gap-1 sm:gap-2 shrink-0">
               <span className="text-xs text-muted-foreground hidden lg:inline truncate max-w-[180px]">{user.email}</span>
               <UserSettingsDialog variant="ghost" />
+              <Button variant="ghost" size="icon" onClick={() => window.open('/admin-guide', '_blank')} className="h-9 w-9">
+                <HelpCircle className="w-4 h-4" />
+              </Button>
               <Button variant="ghost" size="icon" onClick={() => signOut()} className="h-9 w-9">
                 <LogOut className="w-4 h-4" />
               </Button>
