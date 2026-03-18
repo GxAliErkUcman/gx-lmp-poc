@@ -646,12 +646,30 @@ const ClientDashboard = () => {
 
             {businesses.length === 0 ? (
               <Card>
-                <CardContent className="py-8 sm:py-12 text-center">
-                  <p className="text-muted-foreground mb-4">{t('messages.noBusinessesFound')}</p>
-                  <Button onClick={() => setBusinessDialogOpen(true)}>
-                    <Plus className="w-4 h-4 mr-2" />
-                    {t('actions.addFirstBusiness')}
-                  </Button>
+                <CardContent className="py-12 sm:py-16 text-center">
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
+                    <MapPin className="w-8 h-8 text-muted-foreground" />
+                  </div>
+                  <p className="text-muted-foreground font-medium mb-1">{t('messages.noBusinessesFound')}</p>
+                  <p className="text-sm text-muted-foreground mb-6">No locations for this client yet — Import or add your first location.</p>
+                  <div className="flex items-center justify-center gap-3">
+                    <Button onClick={() => setBusinessDialogOpen(true)}>
+                      <Plus className="w-4 h-4 mr-2" />
+                      {t('actions.addFirstBusiness')}
+                    </Button>
+                    {!isImportDisabled() && (
+                      <Button 
+                        variant="outline"
+                        onClick={() => {
+                          setImportMergeMode(false);
+                          setImportDialogOpen(true);
+                        }}
+                      >
+                        <Upload className="w-4 h-4 mr-2" />
+                        {t('actions.import')}
+                      </Button>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             ) : (
