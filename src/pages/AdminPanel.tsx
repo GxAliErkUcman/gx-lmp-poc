@@ -1661,6 +1661,10 @@ const AdminPanel = () => {
           </Card>
         </TabsContent>
         
+        <TabsContent value="logs">
+          <EdgeFunctionLogsPanel />
+        </TabsContent>
+
         <TabsContent value="translations">
           <TranslationEditor />
         </TabsContent>
