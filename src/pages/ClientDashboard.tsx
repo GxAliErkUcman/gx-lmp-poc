@@ -401,14 +401,25 @@ const ClientDashboard = () => {
           <>
             {/* Title + Action Bar */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-              <div className="min-w-0">
-                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight truncate">
-                  {selectedClient?.name || 'Client Dashboard'}
-                </h1>
-                <p className="text-sm text-muted-foreground mt-0.5">
-                  {dataSourceFilteredBusinesses.length} location{dataSourceFilteredBusinesses.length !== 1 ? 's' : ''}
-                  {dataSourceFilter !== 'all' && ` (filtered from ${businesses.length})`}
-                </p>
+              <div className="min-w-0 flex items-center gap-3">
+                <div className="flex-1 min-w-0">
+                  <h1 className="text-2xl sm:text-3xl font-bold tracking-tight truncate">
+                    {selectedClient?.name || 'Client Dashboard'}
+                  </h1>
+                  <p className="text-sm text-muted-foreground mt-0.5">
+                    {dataSourceFilteredBusinesses.length} location{dataSourceFilteredBusinesses.length !== 1 ? 's' : ''}
+                    {dataSourceFilter !== 'all' && ` (filtered from ${businesses.length})`}
+                  </p>
+                </div>
+                {(() => {
+                  const clientLogo = businesses.find(b => b.logoPhoto)?.logoPhoto;
+                  return clientLogo ? (
+                    <Avatar className="h-12 w-12 ring-1 ring-border shrink-0">
+                      <AvatarImage src={clientLogo} alt={selectedClient?.name || 'Client logo'} />
+                      <AvatarFallback className="text-xs font-medium">{(selectedClient?.name || '?')[0]}</AvatarFallback>
+                    </Avatar>
+                  ) : null;
+                })()}
               </div>
               
               {/* Desktop Actions — Grouped into logical dropdowns */}
