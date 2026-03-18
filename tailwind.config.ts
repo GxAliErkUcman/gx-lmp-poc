@@ -67,7 +67,8 @@ export default {
         },
       },
       fontFamily: {
-        'montserrat': ['Montserrat', 'sans-serif'],
+        'roobert': ['Roobert', 'sans-serif'],
+        'sans': ['Roobert', 'sans-serif'],
       },
       backgroundImage: {
         'gradient-primary': 'var(--gradient-primary)',

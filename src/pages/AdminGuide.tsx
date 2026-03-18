@@ -225,7 +225,7 @@ const AdminGuide = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background font-montserrat">
+    <div className="min-h-screen bg-background font-roobert">
       {/* Toolbar */}
       <div className="fixed top-4 right-4 z-50 print:hidden flex gap-2 items-center">
         <div className="relative">
