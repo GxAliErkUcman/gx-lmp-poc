@@ -189,6 +189,7 @@ const EdgeFunctionLogsPanel = () => {
                   <TableRow>
                     <TableHead className="w-[160px]">Time</TableHead>
                     <TableHead>Function</TableHead>
+                    <TableHead>Client</TableHead>
                     <TableHead className="w-[80px]">Status</TableHead>
                     <TableHead className="w-[80px]">Duration</TableHead>
                     <TableHead>Details</TableHead>
