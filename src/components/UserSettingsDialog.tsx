@@ -13,9 +13,9 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useTheme } from "next-themes";
+import { useAppTheme, AppTheme } from "@/contexts/ThemeContext";
 import { useTranslation } from "react-i18next";
-import { Settings, Sun, Moon, Monitor, Key, Mail, Shield } from "lucide-react";
+import { Settings, Sun, Moon, Leaf, Key, Mail, Shield } from "lucide-react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -42,7 +42,7 @@ export const UserSettingsDialog = ({
   const [userRole, setUserRole] = useState<string | null>(null);
   const { toast } = useToast();
   const { user } = useAuth();
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme } = useAppTheme();
   const { t, i18n } = useTranslation();
   const [availableLanguages, setAvailableLanguages] = useState(getAllLanguages());
 
@@ -206,16 +206,24 @@ export const UserSettingsDialog = ({
               <ToggleGroup
                 type="single"
                 value={theme}
-                onValueChange={(value) => value && setTheme(value)}
+                onValueChange={(value) => value && setTheme(value as AppTheme)}
                 className="justify-start"
               >
                 <ToggleGroupItem
-                  value="light"
-                  aria-label="Light theme"
+                  value="gx"
+                  aria-label="GX theme"
+                  className="gap-2"
+                >
+                  <Leaf className="h-4 w-4" />
+                  GX
+                </ToggleGroupItem>
+                <ToggleGroupItem
+                  value="legacy"
+                  aria-label="Legacy theme"
                   className="gap-2"
                 >
                   <Sun className="h-4 w-4" />
-                  {t('theme.light')}
+                  Legacy
                 </ToggleGroupItem>
                 <ToggleGroupItem
                   value="dark"
@@ -223,15 +231,7 @@ export const UserSettingsDialog = ({
                   className="gap-2"
                 >
                   <Moon className="h-4 w-4" />
-                  {t('theme.dark')}
-                </ToggleGroupItem>
-                <ToggleGroupItem
-                  value="system"
-                  aria-label="System theme"
-                  className="gap-2"
-                >
-                  <Monitor className="h-4 w-4" />
-                  {t('theme.system')}
+                  Dark
                 </ToggleGroupItem>
               </ToggleGroup>
             </div>
