@@ -40,10 +40,22 @@ const ServiceUserHome = () => {
   const [selectedClientForUser, setSelectedClientForUser] = useState<{ id: string; name: string } | null>(null);
   const [allBusinesses, setAllBusinesses] = useState<Business[]>([]);
 
-  const seoStats = useMemo(() => {
-    if (allBusinesses.length === 0) return null;
-    const scores = allBusinesses.map(b => calculateSeoScore(b).overallScore);
-    return Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+  // Compute per-client SEO scores
+  const clientSeoScores = useMemo(() => {
+    if (allBusinesses.length === 0) return new Map<string, number>();
+    const map = new Map<string, number>();
+    const grouped = new Map<string, Business[]>();
+    for (const b of allBusinesses) {
+      if (!b.client_id) continue;
+      const arr = grouped.get(b.client_id) || [];
+      arr.push(b);
+      grouped.set(b.client_id, arr);
+    }
+    for (const [clientId, businesses] of grouped) {
+      const scores = businesses.map(b => calculateSeoScore(b).overallScore);
+      map.set(clientId, Math.round(scores.reduce((a, b) => a + b, 0) / scores.length));
+    }
+    return map;
   }, [allBusinesses]);
 
   const totalLocations = clients.reduce((sum, c) => sum + c.active_locations + c.pending_locations, 0);
