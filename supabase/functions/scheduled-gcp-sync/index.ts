@@ -11,6 +11,8 @@ serve(async (req) => {
     return new Response('ok', { headers: corsHeaders })
   }
 
+  const startTime = Date.now();
+
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -18,24 +20,34 @@ serve(async (req) => {
 
     console.log('Scheduled GCP sync started at', new Date().toISOString())
 
-    // List all files in json-exports bucket
     const { data: files, error: listError } = await supabase.storage
       .from('json-exports')
       .list('', { limit: 1000 })
 
     if (listError) {
-      throw new Error(`Failed to list files: ${listError.message}`)
+      const msg = `Failed to list files: ${listError.message}`;
+      await supabase.from('edge_function_logs').insert({
+        function_name: 'scheduled-gcp-sync',
+        status: 'error',
+        error_message: msg,
+        duration_ms: Date.now() - startTime,
+      });
+      throw new Error(msg)
     }
 
     if (!files || files.length === 0) {
-      console.log('No files found in json-exports bucket')
+      await supabase.from('edge_function_logs').insert({
+        function_name: 'scheduled-gcp-sync',
+        status: 'success',
+        response_body: { message: 'No files to sync', synced: 0 },
+        duration_ms: Date.now() - startTime,
+      });
       return new Response(
         JSON.stringify({ success: true, message: 'No files to sync', synced: 0, failed: 0 }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    // Filter out folders (only actual files)
     const actualFiles = files.filter(f => f.id && f.name && !f.name.endsWith('/'))
     console.log(`Found ${actualFiles.length} files to sync`)
 
@@ -43,14 +55,8 @@ serve(async (req) => {
     let failedCount = 0
     const errors: string[] = []
 
-    // Determine client_id from filename for BBraun detection
-    // Files are typically named like "{client_name}.json"
-    // We need to look up client_id by matching — but sync-to-gcp only needs clientId for BBraun copy
-    // So we'll pass it when we can determine it
-
     for (const file of actualFiles) {
       try {
-        // Call the existing sync-to-gcp function
         const syncResponse = await fetch(`${supabaseUrl}/functions/v1/sync-to-gcp`, {
           method: 'POST',
           headers: {
@@ -83,20 +89,42 @@ serve(async (req) => {
     const summary = `Scheduled GCP sync complete: ${syncedCount} synced, ${failedCount} failed out of ${actualFiles.length} files`
     console.log(summary)
 
+    const responseBody = {
+      success: failedCount === 0,
+      message: summary,
+      synced: syncedCount,
+      failed: failedCount,
+      errors: errors.length > 0 ? errors : undefined
+    };
+
+    await supabase.from('edge_function_logs').insert({
+      function_name: 'scheduled-gcp-sync',
+      status: failedCount === 0 ? 'success' : 'error',
+      response_body: responseBody,
+      error_message: failedCount > 0 ? `${failedCount} files failed to sync: ${errors.join('; ')}` : null,
+      duration_ms: Date.now() - startTime,
+    });
+
     return new Response(
-      JSON.stringify({
-        success: failedCount === 0,
-        message: summary,
-        synced: syncedCount,
-        failed: failedCount,
-        errors: errors.length > 0 ? errors : undefined
-      }),
+      JSON.stringify(responseBody),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
 
   } catch (error) {
     console.error('Scheduled GCP sync error:', error)
     const msg = (error as any)?.message || String(error)
+    try {
+      const supabase = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      );
+      await supabase.from('edge_function_logs').insert({
+        function_name: 'scheduled-gcp-sync',
+        status: 'error',
+        error_message: msg,
+        duration_ms: Date.now() - startTime,
+      });
+    } catch (_) { /* ignore */ }
     return new Response(
       JSON.stringify({ error: msg }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
