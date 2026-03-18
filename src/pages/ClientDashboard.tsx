@@ -32,7 +32,8 @@ import { fetchAllBusinesses } from '@/lib/fetchAllRows';
 import NeedAttentionBanner from '@/components/NeedAttentionBanner';
 import { isActiveBusiness, hasCriticalErrors } from '@/lib/exportValidation';
 import ClientSeoOverview from '@/components/ClientSeoOverview';
-import { Activity } from 'lucide-react';
+import { Activity, MapPin, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import DashboardSummaryCards from '@/components/DashboardSummaryCards';
 
 // Energie 360° client ID for data source filter
 const ENERGIE_360_CLIENT_ID = 'e77c44c5-0585-4225-a5ea-59a38edb85fb';
