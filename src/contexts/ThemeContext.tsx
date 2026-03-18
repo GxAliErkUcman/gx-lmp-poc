@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 
-export type AppTheme = "gx" | "legacy" | "dark";
+export type AppTheme = "gx" | "legacy" | "dark" | "gx-dark";
 
 interface ThemeContextType {
   theme: AppTheme;
@@ -17,13 +17,13 @@ export const useAppTheme = () => useContext(ThemeContext);
 // Compatibility hook for components using next-themes API (e.g. Sonner)
 export const useTheme = () => {
   const { theme } = useAppTheme();
-  return { theme: theme === "dark" ? "dark" : "light" };
+  return { theme: (theme === "dark" || theme === "gx-dark") ? "dark" : "light" };
 };
 
 export const AppThemeProvider = ({ children }: { children: React.ReactNode }) => {
   const [theme, setThemeState] = useState<AppTheme>(() => {
     const stored = localStorage.getItem("app-theme");
-    if (stored === "gx" || stored === "legacy" || stored === "dark") return stored;
+    if (stored === "gx" || stored === "legacy" || stored === "dark" || stored === "gx-dark") return stored;
     return "gx";
   });
 
@@ -35,11 +35,14 @@ export const AppThemeProvider = ({ children }: { children: React.ReactNode }) =>
   useEffect(() => {
     const root = document.documentElement;
     // Clear all theme classes
-    root.classList.remove("dark", "theme-gx", "theme-legacy");
+    root.classList.remove("dark", "theme-gx", "theme-legacy", "theme-gx-dark");
 
     switch (theme) {
       case "dark":
         root.classList.add("dark");
+        break;
+      case "gx-dark":
+        root.classList.add("theme-gx-dark");
         break;
       case "legacy":
         root.classList.add("theme-legacy");

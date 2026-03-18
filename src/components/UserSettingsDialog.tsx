@@ -15,7 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAppTheme, AppTheme } from "@/contexts/ThemeContext";
 import { useTranslation } from "react-i18next";
-import { Settings, Sun, Moon, Leaf, Key, Mail, Shield } from "lucide-react";
+import { Settings, Sun, Moon, Leaf, Sparkles, Key, Mail, Shield } from "lucide-react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -207,7 +207,7 @@ export const UserSettingsDialog = ({
                 type="single"
                 value={theme}
                 onValueChange={(value) => value && setTheme(value as AppTheme)}
-                className="justify-start"
+                className="justify-start flex-wrap"
               >
                 <ToggleGroupItem
                   value="gx"
@@ -216,6 +216,14 @@ export const UserSettingsDialog = ({
                 >
                   <Leaf className="h-4 w-4" />
                   GX
+                </ToggleGroupItem>
+                <ToggleGroupItem
+                  value="gx-dark"
+                  aria-label="GX Dark theme"
+                  className="gap-2"
+                >
+                  <Sparkles className="h-4 w-4" />
+                  GX-Dark
                 </ToggleGroupItem>
                 <ToggleGroupItem
                   value="legacy"
