@@ -881,6 +881,7 @@ const ClientDashboard = () => {
                   />
                 </TabsContent>
               </Tabs>
+              </>
             )}
           </>
         )}
