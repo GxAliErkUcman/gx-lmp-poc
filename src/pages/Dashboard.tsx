@@ -371,6 +371,12 @@ useEffect(() => {
             </CardContent>
           </Card>
         ) : (
+          <>
+          <DashboardSummaryCards
+            total={businesses.length}
+            active={activeBusinesses.length}
+            needAttention={pendingBusinesses.length}
+          />
           <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'active' | 'pending')}>
             <TabsList className="grid w-full grid-cols-2 mb-4 sm:mb-6 h-auto gap-1 p-1">
               <TooltipProvider>
