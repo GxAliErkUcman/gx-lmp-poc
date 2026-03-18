@@ -685,6 +685,7 @@ const ClientDashboard = () => {
                 total={dataSourceFilteredBusinesses.length}
                 active={activeBusinesses.length}
                 needAttention={pendingBusinesses.length}
+                avgSeoScore={avgSeoScore}
               />
               <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'active' | 'pending' | 'new' | 'async' | 'seo')}>
                 <TabsList className="mb-4 w-full flex flex-wrap h-auto gap-1 p-1">
