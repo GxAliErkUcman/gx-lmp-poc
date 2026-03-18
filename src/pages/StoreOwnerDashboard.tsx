@@ -384,7 +384,11 @@ const StoreOwnerDashboard = () => {
               {pendingBusinesses.length === 0 ? (
                 <Card className="shadow-card">
                   <CardContent className="py-16 text-center">
-                    <p className="text-muted-foreground">No pending locations found.</p>
+                    <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-emerald-500/10 flex items-center justify-center">
+                      <CheckCircle2 className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+                    </div>
+                    <p className="text-muted-foreground font-medium mb-1">All clear!</p>
+                    <p className="text-sm text-muted-foreground">All your locations are active and ready to publish.</p>
                   </CardContent>
                 </Card>
               ) : viewMode === 'table' ? (
