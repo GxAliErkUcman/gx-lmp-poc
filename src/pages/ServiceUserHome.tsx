@@ -6,7 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Eye, MapPin, Users, Loader2, LogOut, UserPlus, HelpCircle } from 'lucide-react';
+import { Eye, MapPin, Users, Loader2, LogOut, UserPlus, HelpCircle, Activity } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import jasonerLogo from '@/assets/jasoner-horizontal-logo.png';
 import ServiceUserCreateDialog from '@/components/ServiceUserCreateDialog';
