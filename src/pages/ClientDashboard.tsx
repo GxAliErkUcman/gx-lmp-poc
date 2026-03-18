@@ -368,13 +368,6 @@ const ClientDashboard = () => {
   threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
   const newBusinesses = dataSourceFilteredBusinesses.filter(b => new Date(b.created_at) >= threeDaysAgo);
 
-  // Avg SEO score for service users / admins
-  const avgSeoScore = useMemo(() => {
-    if (!businesses.length || (!isServiceUser && !isAdmin)) return null;
-    const scores = businesses.map(b => calculateSeoScore(b).overallScore);
-    return Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
-  }, [businesses, isServiceUser, isAdmin]);
-
   const selectedClient = accessibleClients.find(c => c.id === selectedClientId);
 
   return (
