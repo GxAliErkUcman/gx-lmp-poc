@@ -322,7 +322,11 @@ const StoreOwnerDashboard = () => {
               {activeBusinesses.length === 0 ? (
                 <Card className="shadow-card">
                   <CardContent className="py-16 text-center">
-                    <p className="text-muted-foreground">No active locations found.</p>
+                    <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-amber-500/10 flex items-center justify-center">
+                      <AlertTriangle className="w-6 h-6 text-amber-600 dark:text-amber-400" />
+                    </div>
+                    <p className="text-muted-foreground font-medium mb-1">All locations need attention</p>
+                    <p className="text-sm text-muted-foreground">Switch to the <button onClick={() => setActiveTab('pending')} className="text-primary underline underline-offset-2 font-medium">Need Attention</button> tab to fix issues.</p>
                   </CardContent>
                 </Card>
               ) : viewMode === 'table' ? (
