@@ -19,7 +19,7 @@ import type { Business } from '@/types/business';
 import SettingsDialog from '@/components/SettingsDialog';
 import DeleteConfirmationDialog from '@/components/DeleteConfirmationDialog';
 import { UserSettingsDialog } from '@/components/UserSettingsDialog';
-import jasonerLogo from '@/assets/jasoner-horizontal-logo.png';
+import jasonerLogo from '@/assets/jasoner-new-logo.png';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { JsonExport } from '@/components/JsonExport';
 import ServiceUserCreateDialog from '@/components/ServiceUserCreateDialog';

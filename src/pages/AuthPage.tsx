@@ -8,7 +8,7 @@ import { toast } from '@/hooks/use-toast';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAdmin } from '@/hooks/use-admin';
 import gxBackground from '@/assets/jasoner-background2.jpg';
-import jasonerMascot from '@/assets/jasoner-logo-1.svg';
+import jasonerMascot from '@/assets/jasoner-new-logo.png';
 import { supabase } from '@/integrations/supabase/client';
 
 const AuthPage = () => {

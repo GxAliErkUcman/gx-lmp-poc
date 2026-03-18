@@ -15,7 +15,7 @@ import MultiEditDialog from '@/components/MultiEditDialog';
 import type { Business } from '@/types/business';
 import DeleteConfirmationDialog from '@/components/DeleteConfirmationDialog';
 import { UserSettingsDialog } from '@/components/UserSettingsDialog';
-import jasonerLogo from '@/assets/jasoner-horizontal-logo.png';
+import jasonerLogo from '@/assets/jasoner-new-logo.png';
 import NeedAttentionBanner from '@/components/NeedAttentionBanner';
 import { isActiveBusiness, hasCriticalErrors } from '@/lib/exportValidation';
 import DashboardSummaryCards from '@/components/DashboardSummaryCards';
