@@ -30,6 +30,7 @@ const EdgeFunctionLogsPanel = () => {
   const [functionFilter, setFunctionFilter] = useState<string>('all');
   const [retrying, setRetrying] = useState<string | null>(null);
   const [detailLog, setDetailLog] = useState<EdgeFunctionLog | null>(null);
+  const [clientNames, setClientNames] = useState<Record<string, string>>({});
   const { toast } = useToast();
 
   const fetchLogs = useCallback(async () => {
@@ -53,7 +54,26 @@ const EdgeFunctionLogsPanel = () => {
 
       const { data, error } = await query;
       if (error) throw error;
-      setLogs((data as EdgeFunctionLog[]) || []);
+      const fetchedLogs = (data as EdgeFunctionLog[]) || [];
+      setLogs(fetchedLogs);
+
+      // Resolve client names for logs with client_id
+      const clientIds = [...new Set(
+        fetchedLogs
+          .map(l => l.request_body?.client_id)
+          .filter((id): id is string => !!id)
+      )];
+      if (clientIds.length > 0) {
+        const { data: clients } = await supabase
+          .from('clients')
+          .select('id, name')
+          .in('id', clientIds);
+        if (clients) {
+          const map: Record<string, string> = {};
+          clients.forEach(c => { map[c.id] = c.name; });
+          setClientNames(map);
+        }
+      }
     } catch (err: any) {
       toast({ title: 'Failed to load logs', description: err.message, variant: 'destructive' });
     } finally {
