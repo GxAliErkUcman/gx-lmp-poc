@@ -151,6 +151,7 @@ useEffect(() => {
         return;
       }
       
+      setRoleChecked(true);
       fetchBusinesses();
     };
     
