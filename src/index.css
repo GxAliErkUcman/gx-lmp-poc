@@ -2,6 +2,50 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Roobert font-face declarations */
+@font-face {
+  font-family: 'Roobert';
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+  src: url('https://raw.githubusercontent.com/nitrowo/roobert-cdn/master/RoobertLight.woff') format('woff');
+}
+@font-face {
+  font-family: 'Roobert';
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  src: url('https://raw.githubusercontent.com/nitrowo/roobert-cdn/master/RoobertRegular.woff') format('woff');
+}
+@font-face {
+  font-family: 'Roobert';
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+  src: url('https://raw.githubusercontent.com/nitrowo/roobert-cdn/master/RoobertMedium.woff') format('woff');
+}
+@font-face {
+  font-family: 'Roobert';
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+  src: url('https://raw.githubusercontent.com/nitrowo/roobert-cdn/master/RoobertSemiBold.woff') format('woff');
+}
+@font-face {
+  font-family: 'Roobert';
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  src: url('https://raw.githubusercontent.com/nitrowo/roobert-cdn/master/RoobertBold.woff') format('woff');
+}
+@font-face {
+  font-family: 'Roobert';
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+  src: url('https://raw.githubusercontent.com/nitrowo/roobert-cdn/master/RoobertHeavy.woff') format('woff');
+}
+
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
 All colors MUST be HSL.
 */
