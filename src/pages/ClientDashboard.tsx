@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdmin } from '@/hooks/use-admin';
 import { useFieldPermissions } from '@/hooks/use-field-permissions';
@@ -32,6 +32,7 @@ import { fetchAllBusinesses } from '@/lib/fetchAllRows';
 import NeedAttentionBanner from '@/components/NeedAttentionBanner';
 import { isActiveBusiness, hasCriticalErrors } from '@/lib/exportValidation';
 import ClientSeoOverview from '@/components/ClientSeoOverview';
+import { calculateSeoScore } from '@/lib/seoScoring';
 import { Activity, MapPin, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import DashboardSummaryCards from '@/components/DashboardSummaryCards';
 
@@ -130,6 +131,13 @@ const ClientDashboard = () => {
       setDataSourceFilter('all');
     }
   }, [selectedClientId, businesses]);
+
+  // Avg SEO score for service users / admins
+  const avgSeoScore = useMemo(() => {
+    if (!businesses.length || (!isServiceUser && !isAdmin)) return null;
+    const scores = businesses.map(b => calculateSeoScore(b).overallScore);
+    return Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+  }, [businesses, isServiceUser, isAdmin]);
 
   const fetchApiSourcedBusinessIds = async () => {
     try {
@@ -678,6 +686,7 @@ const ClientDashboard = () => {
                 total={dataSourceFilteredBusinesses.length}
                 active={activeBusinesses.length}
                 needAttention={pendingBusinesses.length}
+                avgSeoScore={avgSeoScore}
               />
               <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'active' | 'pending' | 'new' | 'async' | 'seo')}>
                 <TabsList className="mb-4 w-full flex flex-wrap h-auto gap-1 p-1">

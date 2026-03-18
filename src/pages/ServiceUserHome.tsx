@@ -6,7 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Eye, MapPin, Users, Loader2, LogOut, UserPlus, HelpCircle } from 'lucide-react';
+import { Eye, MapPin, Users, Loader2, LogOut, UserPlus, HelpCircle, Activity } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import jasonerLogo from '@/assets/jasoner-horizontal-logo.png';
 import ServiceUserCreateDialog from '@/components/ServiceUserCreateDialog';
@@ -40,10 +40,22 @@ const ServiceUserHome = () => {
   const [selectedClientForUser, setSelectedClientForUser] = useState<{ id: string; name: string } | null>(null);
   const [allBusinesses, setAllBusinesses] = useState<Business[]>([]);
 
-  const seoStats = useMemo(() => {
-    if (allBusinesses.length === 0) return null;
-    const scores = allBusinesses.map(b => calculateSeoScore(b).overallScore);
-    return Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+  // Compute per-client SEO scores
+  const clientSeoScores = useMemo(() => {
+    if (allBusinesses.length === 0) return new Map<string, number>();
+    const map = new Map<string, number>();
+    const grouped = new Map<string, Business[]>();
+    for (const b of allBusinesses) {
+      if (!b.client_id) continue;
+      const arr = grouped.get(b.client_id) || [];
+      arr.push(b);
+      grouped.set(b.client_id, arr);
+    }
+    for (const [clientId, businesses] of grouped) {
+      const scores = businesses.map(b => calculateSeoScore(b).overallScore);
+      map.set(clientId, Math.round(scores.reduce((a, b) => a + b, 0) / scores.length));
+    }
+    return map;
   }, [allBusinesses]);
 
   const totalLocations = clients.reduce((sum, c) => sum + c.active_locations + c.pending_locations, 0);
@@ -289,7 +301,6 @@ const ServiceUserHome = () => {
           total={totalLocations}
           active={totalActive}
           needAttention={totalPending}
-          avgSeoScore={seoStats}
         />
 
         {clients.length === 0 ? (
@@ -342,9 +353,27 @@ const ServiceUserHome = () => {
                       </span>
                       <Badge variant="secondary">{client.pending_locations}</Badge>
                     </div>
-                  </div>
+                    </div>
 
-                  {/* Users Summary */}
+                  {/* SEO Health */}
+                  {clientSeoScores.has(client.id) && (() => {
+                    const score = clientSeoScores.get(client.id)!;
+                    const band = score >= 80 ? 'green' : score >= 50 ? 'yellow' : 'red';
+                    const colorClass = band === 'green' ? 'text-emerald-600 dark:text-emerald-400' : band === 'yellow' ? 'text-amber-600 dark:text-amber-400' : 'text-red-600 dark:text-red-400';
+                    return (
+                      <div className="border-t pt-3">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="flex items-center gap-2 text-muted-foreground">
+                            <Activity className="w-4 h-4" />
+                            Avg SEO Health
+                          </span>
+                          <Badge variant="outline" className={`font-mono ${colorClass} border-current`}>
+                            {score}%
+                          </Badge>
+                        </div>
+                      </div>
+                    );
+                  })()}
                   <div className="border-t pt-4">
                     <div className="flex items-center justify-between mb-3">
                       <span className="text-sm font-medium flex items-center gap-2">
