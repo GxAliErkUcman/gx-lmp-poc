@@ -126,6 +126,12 @@ useEffect(() => {
     if (!user) return;
     
     const checkRoleAndRedirect = async () => {
+      const isAdmin = await hasRole('admin');
+      if (isAdmin) {
+        navigate('/admin', { replace: true });
+        return;
+      }
+
       const isServiceUser = await hasRole('service_user');
       if (isServiceUser) {
         navigate('/service-user-home', { replace: true });
