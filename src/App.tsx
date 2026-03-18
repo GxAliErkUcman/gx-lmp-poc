@@ -29,7 +29,6 @@ const App = () => (
       <AuthProvider>
         <TooltipProvider>
           <Toaster />
-          <Sonner />
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
