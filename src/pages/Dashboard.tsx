@@ -349,15 +349,25 @@ useEffect(() => {
               </div>
               <div className="text-muted-foreground mb-6 space-y-1">
                 <p className="text-lg font-medium">No businesses found</p>
-                <p>Get started by adding your first business profile.</p>
+                <p>Get started by adding your first business or importing a spreadsheet.</p>
               </div>
-              <Button 
-                onClick={() => setBusinessDialogOpen(true)}
-                className="shadow-modern bg-gradient-primary hover:opacity-90"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Add Your First Business
-              </Button>
+              <div className="flex items-center justify-center gap-3">
+                <Button 
+                  onClick={() => setBusinessDialogOpen(true)}
+                  className="shadow-modern bg-gradient-primary hover:opacity-90"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Your First Business
+                </Button>
+                <Button 
+                  onClick={() => setImportDialogOpen(true)}
+                  variant="outline"
+                  className="shadow-modern"
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  Import Spreadsheet
+                </Button>
+              </div>
             </CardContent>
           </Card>
         ) : (
