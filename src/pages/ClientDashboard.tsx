@@ -32,6 +32,7 @@ import { fetchAllBusinesses } from '@/lib/fetchAllRows';
 import NeedAttentionBanner from '@/components/NeedAttentionBanner';
 import { isActiveBusiness, hasCriticalErrors } from '@/lib/exportValidation';
 import ClientSeoOverview from '@/components/ClientSeoOverview';
+import { calculateSeoScore } from '@/lib/seoScoring';
 import { Activity, MapPin, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import DashboardSummaryCards from '@/components/DashboardSummaryCards';
 
