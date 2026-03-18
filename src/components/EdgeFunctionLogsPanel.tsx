@@ -207,11 +207,11 @@ const EdgeFunctionLogsPanel = () => {
                       </TableCell>
                       <TableCell>
                         <span className="text-sm font-medium">{log.function_name}</span>
-                        {log.request_body?.client_id && (
-                          <span className="text-xs text-muted-foreground ml-2">
-                            ({String(log.request_body.client_id).substring(0, 8)}…)
-                          </span>
-                        )}
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground">
+                        {log.request_body?.client_id
+                          ? clientNames[log.request_body.client_id] || String(log.request_body.client_id).substring(0, 8) + '…'
+                          : '-'}
                       </TableCell>
                       <TableCell>
                         {log.status === 'success' ? (
