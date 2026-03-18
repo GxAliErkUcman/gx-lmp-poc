@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdmin } from '@/hooks/use-admin';
 import { useFieldPermissions } from '@/hooks/use-field-permissions';
