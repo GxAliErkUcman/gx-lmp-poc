@@ -1,9 +1,6 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { Navigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import gxBackground from '@/assets/gx-background.jpg';
-import jasonerMascot from '@/assets/jasoner-new-logo.png';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 const Index = () => {
   const { user, loading } = useAuth();
