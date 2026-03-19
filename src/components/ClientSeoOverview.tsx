@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { AlertTriangle, TrendingUp, BarChart3, Target, FileDown, Search } from 'lucide-react';
+import SeoCountryComparison from '@/components/SeoCountryComparison';
 import { calculateSeoScore, calculateClientSeoStats, SEO_THRESHOLD } from '@/lib/seoScoring';
 import { SeoScoreCircle, SeoScoreBadge } from '@/components/SeoScoreCard';
 import SeoScoreCard from '@/components/SeoScoreCard';
