@@ -299,6 +299,9 @@ export default function ClientSeoOverview({ businesses, onEditBusiness, clientNa
         </Card>
       </div>
 
+      {/* Country & Market Comparison */}
+      <SeoCountryComparison businesses={businesses} />
+
       {/* Lowest Scoring Locations Table — Interactive */}
       {stats.lowestScoring.length > 0 && (
         <Card>
