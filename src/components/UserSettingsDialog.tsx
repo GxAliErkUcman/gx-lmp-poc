@@ -211,11 +211,19 @@ export const UserSettingsDialog = ({
               >
                 <ToggleGroupItem
                   value="gx"
-                  aria-label="GX theme"
+                  aria-label="GX Sage theme"
                   className="gap-2"
                 >
                   <Leaf className="h-4 w-4" />
-                  GX
+                  GX-Sage
+                </ToggleGroupItem>
+                <ToggleGroupItem
+                  value="gx-new"
+                  aria-label="GX New theme"
+                  className="gap-2"
+                >
+                  <Leaf className="h-4 w-4" />
+                  GX-New
                 </ToggleGroupItem>
                 <ToggleGroupItem
                   value="gx-dark"

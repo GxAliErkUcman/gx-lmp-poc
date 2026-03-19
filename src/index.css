@@ -273,6 +273,61 @@ All colors MUST be HSL.
     --sidebar-border: 264 25% 18%;
     --sidebar-ring: 293 100% 88%;
   }
+
+  /* GX-New — Brand Dark Green + Light Green */
+  .theme-gx-new {
+    --background: 190 42% 14%;
+    --foreground: 100 40% 90%;
+
+    --card: 190 38% 17%;
+    --card-foreground: 100 40% 92%;
+
+    --popover: 190 38% 17%;
+    --popover-foreground: 100 40% 92%;
+
+    --primary: 100 52% 52%;
+    --primary-foreground: 190 42% 10%;
+
+    --secondary: 190 30% 20%;
+    --secondary-foreground: 100 40% 88%;
+
+    --muted: 190 30% 20%;
+    --muted-foreground: 180 15% 55%;
+
+    --accent: 190 28% 22%;
+    --accent-foreground: 100 40% 88%;
+
+    --destructive: 0 62.8% 35%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 190 25% 22%;
+    --input: 190 25% 22%;
+    --ring: 100 52% 52%;
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 190 42% 11%;
+    --sidebar-foreground: 100 30% 80%;
+    --sidebar-primary: 100 52% 52%;
+    --sidebar-primary-foreground: 190 42% 10%;
+    --sidebar-accent: 190 28% 18%;
+
+    --gradient-primary: linear-gradient(135deg, hsl(100 52% 48%), hsl(110 45% 55%));
+    --gradient-subtle: linear-gradient(180deg, hsl(190 42% 14%), hsl(190 38% 18%));
+    --shadow-modern: 0 4px 6px -1px hsl(100 52% 52% / 0.15), 0 2px 4px -2px hsl(100 52% 52% / 0.1);
+    --shadow-card: 0 1px 3px 0 hsl(0 0% 0% / 0.35), 0 1px 2px -1px hsl(0 0% 0% / 0.25);
+
+    --sage-100: 190 28% 18%;
+    --sage-200: 190 25% 23%;
+    --sage-300: 190 20% 32%;
+    --sage-700: 100 40% 55%;
+    --sage-800: 100 50% 65%;
+    --sage-900: 100 52% 75%;
+
+    --sidebar-accent-foreground: 100 30% 85%;
+    --sidebar-border: 190 25% 18%;
+    --sidebar-ring: 100 52% 52%;
+  }
 }
 
 @layer base {
