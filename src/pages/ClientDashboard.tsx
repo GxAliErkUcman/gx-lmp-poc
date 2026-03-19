@@ -13,6 +13,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import BusinessDialog from '@/components/BusinessDialog';
+import LoadingSpinner from '@/components/LoadingSpinner';
 import ImportDialog from '@/components/ImportDialog';
 import BusinessTableView from '@/components/BusinessTableView';
 import MultiEditDialog from '@/components/MultiEditDialog';
