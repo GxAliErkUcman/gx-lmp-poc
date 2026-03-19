@@ -214,8 +214,10 @@ export function calculateSeoScore(business: Business): SeoScoreResult {
   if (filledUrls >= 1) { servicesScore += Math.min(filledUrls, 3); }
 
   // === CALCULATE TOTALS ===
+  // Base 45% for having all gate fields, remaining 55% scaled from weighted factors
   const rawScore = coreScore + addrScore + contactScore + hoursScore + photosScore + servicesScore;
-  const overallScore = Math.round((rawScore / MAX_SCORE) * 100);
+  const factorPercentage = rawScore / MAX_SCORE; // 0..1
+  const overallScore = Math.round(45 + factorPercentage * 55);
 
   const categories: SeoCategoryScore[] = [
     { name: 'Core Identity', score: coreScore, maxScore: coreMax, percentage: Math.round((coreScore / coreMax) * 100) },
