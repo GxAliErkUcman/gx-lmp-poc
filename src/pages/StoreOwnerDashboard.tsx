@@ -13,6 +13,7 @@ import BusinessDialog from '@/components/BusinessDialog';
 import BusinessTableView from '@/components/BusinessTableView';
 import MultiEditDialog from '@/components/MultiEditDialog';
 import type { Business } from '@/types/business';
+import LoadingSpinner from '@/components/LoadingSpinner';
 import DeleteConfirmationDialog from '@/components/DeleteConfirmationDialog';
 import { UserSettingsDialog } from '@/components/UserSettingsDialog';
 import jasonerLogo from '@/assets/jasoner-new-logo.png';
@@ -102,11 +103,7 @@ const StoreOwnerDashboard = () => {
 
   // Wait for auth (and URL-based login) to initialize before checking user/redirecting
   if (authLoading || urlAuthProcessing) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
+    return <LoadingSpinner fullScreen />;
   }
 
   if (!user) {

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import LoadingSpinner from "@/components/LoadingSpinner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 
@@ -99,7 +100,7 @@ export default function AuthCallback() {
             <CardTitle>Signing you in</CardTitle>
           </CardHeader>
           <CardContent className="flex items-center gap-3">
-            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary" aria-hidden="true" />
+            <LoadingSpinner size="sm" />
             <p className="text-sm text-muted-foreground">Please wait…</p>
           </CardContent>
         </Card>

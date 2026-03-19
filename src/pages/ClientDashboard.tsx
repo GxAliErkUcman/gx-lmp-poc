@@ -13,6 +13,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import BusinessDialog from '@/components/BusinessDialog';
+import LoadingSpinner from '@/components/LoadingSpinner';
 import ImportDialog from '@/components/ImportDialog';
 import BusinessTableView from '@/components/BusinessTableView';
 import MultiEditDialog from '@/components/MultiEditDialog';
@@ -238,11 +239,7 @@ const ClientDashboard = () => {
   };
 
   if (authLoading || urlAuthProcessing) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
+    return <LoadingSpinner fullScreen />;
   }
 
   if (!user) {
@@ -395,7 +392,7 @@ const ClientDashboard = () => {
       <main className="container mx-auto px-3 sm:px-6 py-5 sm:py-8">
         {loading ? (
           <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <LoadingSpinner />
           </div>
         ) : (
           <>

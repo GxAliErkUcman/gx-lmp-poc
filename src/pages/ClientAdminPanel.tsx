@@ -13,6 +13,7 @@ import CreateUserDialog from '@/components/CreateUserDialog';
 import StoreOwnerAssignmentDialog from '@/components/StoreOwnerAssignmentDialog';
 import SettingsDialog from '@/components/SettingsDialog';
 import ClientCustomServicesDialog from '@/components/ClientCustomServicesDialog';
+import LoadingSpinner from '@/components/LoadingSpinner';
 import ClientFieldPermissionsDialog from '@/components/ClientFieldPermissionsDialog';
 import BusinessTableView from '@/components/BusinessTableView';
 import BusinessDialog from '@/components/BusinessDialog';
@@ -245,11 +246,7 @@ const ClientAdminPanel = () => {
 
   // Wait for auth (and URL-based login) to initialize before checking user/redirecting
   if (authLoading || urlAuthProcessing) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
+    return <LoadingSpinner fullScreen />;
   }
 
   if (!user) {
