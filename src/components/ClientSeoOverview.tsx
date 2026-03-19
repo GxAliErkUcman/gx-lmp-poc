@@ -53,8 +53,36 @@ export default function ClientSeoOverview({ businesses, onEditBusiness, clientNa
     }, 100);
   };
 
+  const handleExportCsv = () => {
+    const escape = (v: string) => `"${v.replace(/"/g, '""')}"`;
+    const rows: string[][] = [['Store Code', 'Business Name', 'City', 'Country', 'SEO Score', 'Band', 'Missing Fields', 'Suggestions']];
+
+    allScored.forEach(({ business, result }) => {
+      const missingFields = result.suggestions.map(s => s.field).join('; ');
+      const suggestions = result.suggestions.map(s => `[${s.priority}] ${s.message}`).join('; ');
+      rows.push([
+        business.storeCode || '',
+        business.businessName || '',
+        business.city || '',
+        business.country || '',
+        String(result.overallScore),
+        result.band,
+        missingFields,
+        suggestions,
+      ]);
+    });
+
+    const csv = rows.map(row => row.map(escape).join(',')).join('\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `seo-health-${clientName || 'export'}-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const handleExportPdf = () => {
-    // Build a printable HTML document and trigger print dialog
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
 
@@ -173,10 +201,16 @@ export default function ClientSeoOverview({ businesses, onEditBusiness, clientNa
           <h2 className="text-xl font-bold">SEO Health Overview</h2>
           <p className="text-sm text-muted-foreground">{total} location{total !== 1 ? 's' : ''} analyzed</p>
         </div>
-        <Button variant="outline" size="sm" onClick={handleExportPdf}>
-          <FileDown className="w-4 h-4 mr-2" />
-          Export PDF
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={handleExportCsv}>
+            <FileDown className="w-4 h-4 mr-2" />
+            Export CSV
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleExportPdf}>
+            <FileDown className="w-4 h-4 mr-2" />
+            Export PDF
+          </Button>
+        </div>
       </div>
 
       {/* Summary Cards */}
