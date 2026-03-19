@@ -201,10 +201,16 @@ export default function ClientSeoOverview({ businesses, onEditBusiness, clientNa
           <h2 className="text-xl font-bold">SEO Health Overview</h2>
           <p className="text-sm text-muted-foreground">{total} location{total !== 1 ? 's' : ''} analyzed</p>
         </div>
-        <Button variant="outline" size="sm" onClick={handleExportPdf}>
-          <FileDown className="w-4 h-4 mr-2" />
-          Export PDF
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={handleExportCsv}>
+            <FileDown className="w-4 h-4 mr-2" />
+            Export CSV
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleExportPdf}>
+            <FileDown className="w-4 h-4 mr-2" />
+            Export PDF
+          </Button>
+        </div>
       </div>
 
       {/* Summary Cards */}
