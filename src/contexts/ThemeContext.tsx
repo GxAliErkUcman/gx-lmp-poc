@@ -23,7 +23,7 @@ export const useTheme = () => {
 export const AppThemeProvider = ({ children }: { children: React.ReactNode }) => {
   const [theme, setThemeState] = useState<AppTheme>(() => {
     const stored = localStorage.getItem("app-theme");
-    if (stored === "gx" || stored === "legacy" || stored === "dark" || stored === "gx-dark") return stored;
+    if (stored === "gx" || stored === "legacy" || stored === "dark" || stored === "gx-dark" || stored === "gx-new") return stored;
     return "gx";
   });
 
