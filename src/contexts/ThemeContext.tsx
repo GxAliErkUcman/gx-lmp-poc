@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 
-export type AppTheme = "gx" | "legacy" | "dark" | "gx-dark";
+export type AppTheme = "gx" | "legacy" | "dark" | "gx-dark" | "gx-new";
 
 interface ThemeContextType {
   theme: AppTheme;
