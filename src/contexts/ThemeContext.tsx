@@ -35,7 +35,7 @@ export const AppThemeProvider = ({ children }: { children: React.ReactNode }) =>
   useEffect(() => {
     const root = document.documentElement;
     // Clear all theme classes
-    root.classList.remove("dark", "theme-gx", "theme-legacy", "theme-gx-dark");
+    root.classList.remove("dark", "theme-gx", "theme-legacy", "theme-gx-dark", "theme-gx-new");
 
     switch (theme) {
       case "dark":
@@ -43,6 +43,9 @@ export const AppThemeProvider = ({ children }: { children: React.ReactNode }) =>
         break;
       case "gx-dark":
         root.classList.add("theme-gx-dark");
+        break;
+      case "gx-new":
+        root.classList.add("theme-gx-new");
         break;
       case "legacy":
         root.classList.add("theme-legacy");
