@@ -34,6 +34,9 @@ let cachedBaseScore: number = 45;
 let cacheTimestamp = 0;
 const CACHE_TTL = 60_000; // 1 minute
 
+// Per-client profile cache
+const clientProfileCache: Record<string, { weights: Record<string, number>; baseScore: number; ts: number }> = {};
+
 export async function loadSeoWeights(): Promise<{ weights: Record<string, number>; baseScore: number }> {
   const now = Date.now();
   if (cachedWeights && now - cacheTimestamp < CACHE_TTL) {
@@ -66,10 +69,66 @@ export async function loadSeoWeights(): Promise<{ weights: Record<string, number
   }
 }
 
+// Load weights for a specific client (checks for assigned profile first)
+export async function loadClientSeoWeights(clientId: string): Promise<{ weights: Record<string, number>; baseScore: number }> {
+  const now = Date.now();
+  const cached = clientProfileCache[clientId];
+  if (cached && now - cached.ts < CACHE_TTL) {
+    return { weights: cached.weights, baseScore: cached.baseScore };
+  }
+
+  try {
+    // Check if client has a custom profile assigned
+    const { data: clientData, error: clientError } = await supabase
+      .from('clients')
+      .select('seo_weight_profile_id')
+      .eq('id', clientId)
+      .single();
+
+    if (clientError || !clientData?.seo_weight_profile_id) {
+      // No custom profile — use global weights
+      return loadSeoWeights();
+    }
+
+    const profileId = clientData.seo_weight_profile_id;
+
+    // Fetch profile base_score
+    const { data: profileData } = await supabase
+      .from('seo_weight_profiles')
+      .select('base_score')
+      .eq('id', profileId)
+      .single();
+
+    // Fetch profile items
+    const { data: items } = await supabase
+      .from('seo_weight_profile_items')
+      .select('factor_key, weight')
+      .eq('profile_id', profileId);
+
+    if (!items || items.length === 0) {
+      return loadSeoWeights();
+    }
+
+    const weights: Record<string, number> = {};
+    items.forEach((item: any) => {
+      weights[item.factor_key] = item.weight;
+    });
+
+    const baseScore = profileData?.base_score ?? 45;
+
+    clientProfileCache[clientId] = { weights, baseScore, ts: now };
+    return { weights, baseScore };
+  } catch {
+    return loadSeoWeights();
+  }
+}
+
 // Allow forcing cache invalidation
 export function invalidateSeoWeightsCache() {
   cachedWeights = null;
   cacheTimestamp = 0;
+  // Also clear client caches
+  Object.keys(clientProfileCache).forEach(k => delete clientProfileCache[k]);
 }
 
 const DEFAULT_WEIGHTS: Record<string, number> = {

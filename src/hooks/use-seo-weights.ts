@@ -1,23 +1,25 @@
 import { useState, useEffect } from 'react';
-import { loadSeoWeights, invalidateSeoWeightsCache } from '@/lib/seoScoring';
+import { loadSeoWeights, loadClientSeoWeights, invalidateSeoWeightsCache } from '@/lib/seoScoring';
 
-export function useSeoWeights() {
+export function useSeoWeights(clientId?: string) {
   const [weights, setWeights] = useState<Record<string, number> | null>(null);
   const [baseScore, setBaseScore] = useState(45);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadSeoWeights().then(({ weights, baseScore }) => {
+    const loader = clientId ? loadClientSeoWeights(clientId) : loadSeoWeights();
+    loader.then(({ weights, baseScore }) => {
       setWeights(weights);
       setBaseScore(baseScore);
       setLoading(false);
     });
-  }, []);
+  }, [clientId]);
 
   const refresh = () => {
     invalidateSeoWeightsCache();
     setLoading(true);
-    loadSeoWeights().then(({ weights, baseScore }) => {
+    const loader = clientId ? loadClientSeoWeights(clientId) : loadSeoWeights();
+    loader.then(({ weights, baseScore }) => {
       setWeights(weights);
       setBaseScore(baseScore);
       setLoading(false);
