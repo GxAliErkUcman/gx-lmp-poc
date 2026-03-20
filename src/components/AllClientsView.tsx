@@ -42,7 +42,38 @@ export const AllClientsView = () => {
 
   useEffect(() => {
     fetchAllClientData();
+    fetchSeoProfiles();
   }, []);
+
+  const fetchSeoProfiles = async () => {
+    try {
+      const { data } = await supabase
+        .from('seo_weight_profiles')
+        .select('id, name')
+        .order('name');
+      setSeoProfiles(data || []);
+    } catch (e) {
+      console.error('Error fetching SEO profiles:', e);
+    }
+  };
+
+  const handleSeoProfileChange = async (clientId: string, profileId: string | null) => {
+    try {
+      const { error } = await supabase
+        .from('clients')
+        .update({ seo_weight_profile_id: profileId } as any)
+        .eq('id', clientId);
+      if (error) throw error;
+      invalidateSeoWeightsCache();
+      setClients(prev => prev.map(c => c.id === clientId ? { ...c, seo_weight_profile_id: profileId } : c));
+      toast({
+        title: 'SEO Profile Updated',
+        description: profileId ? 'Client assigned to custom SEO profile.' : 'Client reverted to global SEO weights.',
+      });
+    } catch (error: any) {
+      toast({ title: 'Error', description: error.message || 'Failed to update SEO profile.', variant: 'destructive' });
+    }
+  };
 
   const fetchAllClientData = async () => {
     try {
