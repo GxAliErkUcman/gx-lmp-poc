@@ -132,9 +132,9 @@ const ClientDashboard = () => {
 
   const avgSeoScore = useMemo(() => {
     if (!businesses.length || (!isServiceUser && !isAdmin)) return null;
-    const scores = businesses.map(b => calculateSeoScore(b).overallScore);
+    const scores = businesses.map(b => calculateSeoScore(b, seoWeights || undefined, seoBaseScore).overallScore);
     return Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
-  }, [businesses, isServiceUser, isAdmin]);
+  }, [businesses, isServiceUser, isAdmin, seoWeights, seoBaseScore]);
 
   const fetchApiSourcedBusinessIds = async () => {
     try {
