@@ -30,6 +30,7 @@ import UserCountryAccessDialog from '@/components/UserCountryAccessDialog';
 import StoreOwnerAssignmentDialog from '@/components/StoreOwnerAssignmentDialog';
 import EdgeFunctionLogsPanel from '@/components/EdgeFunctionLogsPanel';
 import { UserSettingsDialog } from '@/components/UserSettingsDialog';
+import SeoWeightsPanel from '@/components/SeoWeightsPanel';
 
 
 interface Client {
