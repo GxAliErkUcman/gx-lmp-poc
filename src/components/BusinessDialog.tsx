@@ -1276,6 +1276,7 @@ const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId, cus
           clientName={resolvedClientName}
           onLogoChange={(url) => setValue('logoPhoto', url)}
           onCoverChange={(url) => setCoverPhoto(url)}
+          customPhotosEnabled={customPhotosEnabled}
         />
       )}
     </Dialog>

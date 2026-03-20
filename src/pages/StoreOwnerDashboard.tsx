@@ -459,6 +459,7 @@ const StoreOwnerDashboard = () => {
           setBusinessDialogOpen(false);
           setEditingBusiness(null);
         }}
+        customPhotosEnabled={customPhotosEnabled}
       />
 
       <MultiEditDialog

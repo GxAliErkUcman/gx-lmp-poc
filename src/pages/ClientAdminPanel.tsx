@@ -512,6 +512,7 @@ const ClientAdminPanel = () => {
         business={editingBusiness}
         onSuccess={() => fetchData(true)}
         clientId={clientId || undefined}
+        customPhotosEnabled={customPhotosEnabled}
       />
 
       <ImportDialog

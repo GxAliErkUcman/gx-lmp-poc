@@ -917,6 +917,7 @@ const ClientDashboard = () => {
         business={editingBusiness}
         onSuccess={() => fetchBusinesses(true)}
         clientId={selectedClientId}
+        customPhotosEnabled={selectedClient?.custom_photos_enabled ?? false}
       />
       <ImportDialog
         open={importDialogOpen}

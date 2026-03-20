@@ -615,6 +615,7 @@ useEffect(() => {
           setBusinessDialogOpen(false);
           setEditingBusiness(null);
         }}
+        customPhotosEnabled={customPhotosEnabled}
       />
 
       <ImportDialog
