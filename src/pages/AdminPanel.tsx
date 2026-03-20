@@ -1662,6 +1662,10 @@ const AdminPanel = () => {
           <EdgeFunctionLogsPanel />
         </TabsContent>
 
+        <TabsContent value="seo-weights">
+          <SeoWeightsPanel />
+        </TabsContent>
+
         <TabsContent value="translations">
           <TranslationEditor />
         </TabsContent>
