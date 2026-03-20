@@ -1,4 +1,4 @@
-import { useMemo, useState, useRef } from 'react';
+import { useMemo, useState, useRef, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -12,21 +12,24 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import type { Business } from '@/types/business';
 import { useSeoWeights } from '@/hooks/use-seo-weights';
+import LocationGalleryDialog from '@/components/LocationGalleryDialog';
 
 interface ClientSeoOverviewProps {
   businesses: Business[];
   onEditBusiness?: (business: Business) => void;
   clientName?: string;
   clientId?: string;
+  customPhotosEnabled?: boolean;
 }
 
-export default function ClientSeoOverview({ businesses, onEditBusiness, clientName, clientId }: ClientSeoOverviewProps) {
+export default function ClientSeoOverview({ businesses, onEditBusiness, clientName, clientId, customPhotosEnabled = false }: ClientSeoOverviewProps) {
   const { weights, baseScore, loading: weightsLoading } = useSeoWeights(clientId);
   const stats = useMemo(() => calculateClientSeoStats(businesses, weights || undefined, baseScore), [businesses, weights, baseScore]);
   const averageBand = stats.averageScore >= 80 ? 'green' as const : stats.averageScore >= 50 ? 'yellow' as const : 'red' as const;
   const [selectedBusinessId, setSelectedBusinessId] = useState<string | null>(null);
   const detailRef = useRef<HTMLDivElement>(null);
   const [locationSearch, setLocationSearch] = useState('');
+  const [galleryBusiness, setGalleryBusiness] = useState<Business | null>(null);
   const belowThreshold = useMemo(() => 
     stats.lowestScoring.filter(l => l.score < SEO_THRESHOLD),
     [stats.lowestScoring]
@@ -56,6 +59,17 @@ export default function ClientSeoOverview({ businesses, onEditBusiness, clientNa
       detailRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 100);
   };
+
+  const handleFixAction = useCallback((field: string, action: string) => {
+    if (!selectedDetail) return;
+    const business = selectedDetail.business;
+    
+    if (action === 'gallery') {
+      setGalleryBusiness(business);
+    } else if (action === 'edit' && onEditBusiness) {
+      onEditBusiness(business);
+    }
+  }, [selectedDetail, onEditBusiness]);
 
   const handleExportCsv = () => {
     const escape = (v: string) => `"${v.replace(/"/g, '""')}"`;
@@ -416,10 +430,21 @@ export default function ClientSeoOverview({ businesses, onEditBusiness, clientNa
             <SeoScoreCard
               result={selectedDetail.result}
               businessName={selectedDetail.business.businessName}
+              onFixAction={handleFixAction}
             />
           </CardContent>
         )}
       </Card>
+
+      {galleryBusiness && (
+        <LocationGalleryDialog
+          open={!!galleryBusiness}
+          onOpenChange={(open) => { if (!open) setGalleryBusiness(null); }}
+          business={galleryBusiness}
+          clientName={clientName || ''}
+          customPhotosEnabled={customPhotosEnabled}
+        />
+      )}
     </div>
   );
 }

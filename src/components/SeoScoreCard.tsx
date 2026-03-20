@@ -2,14 +2,46 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ChevronDown, ChevronUp, AlertTriangle, CheckCircle2, Info } from 'lucide-react';
+import { ChevronDown, ChevronUp, AlertTriangle, CheckCircle2, Info, Pencil, Image, ExternalLink } from 'lucide-react';
 import type { SeoScoreResult, SeoPriority } from '@/lib/seoScoring';
+
+type SuggestionAction = 'edit' | 'gallery' | 'none';
+
+// Map suggestion field names to their action type
+const getFieldAction = (field: string): { action: SuggestionAction; label: string } => {
+  switch (field) {
+    case 'coverPhoto':
+    case 'otherPhotos':
+    case 'logoPhoto':
+      return { action: 'gallery', label: 'Open Gallery' };
+    case 'businessName':
+    case 'primaryCategory':
+    case 'additionalCategories':
+    case 'fromTheBusiness':
+    case 'addressLine1':
+    case 'city':
+    case 'postalCode':
+    case 'latitude/longitude':
+    case 'primaryPhone':
+    case 'website':
+    case 'socialMediaUrls':
+    case 'openingHours':
+    case 'specialHours':
+    case 'customServices':
+    case 'labels':
+      return { action: 'edit', label: 'Fix now' };
+    default:
+      return { action: 'none', label: '' };
+  }
+};
 
 interface SeoScoreCardProps {
   result: SeoScoreResult;
   businessName?: string;
   compact?: boolean;
+  onFixAction?: (field: string, action: SuggestionAction) => void;
 }
 
 const bandColors = {
@@ -77,7 +109,7 @@ export function SeoScoreCircle({ score, band, size = 'md' }: { score: number; ba
   );
 }
 
-export default function SeoScoreCard({ result, businessName, compact = false }: SeoScoreCardProps) {
+export default function SeoScoreCard({ result, businessName, compact = false, onFixAction }: SeoScoreCardProps) {
   const [suggestionsOpen, setSuggestionsOpen] = useState(!compact);
 
   // Group suggestions by category
@@ -143,13 +175,29 @@ export default function SeoScoreCard({ result, businessName, compact = false }: 
                     {items.map((suggestion, i) => {
                       const config = priorityConfig[suggestion.priority];
                       const Icon = config.icon;
+                      const fieldAction = getFieldAction(suggestion.field);
                       return (
-                        <div key={i} className="flex gap-2 text-sm border rounded-lg p-2.5">
+                        <div key={i} className="flex items-start gap-2 text-sm border rounded-lg p-2.5">
                           <Icon className={`w-4 h-4 mt-0.5 shrink-0 ${config.className}`} />
-                          <div>
+                          <div className="flex-1 min-w-0">
                             <p className="font-medium">{suggestion.message}</p>
                             <p className="text-xs text-muted-foreground mt-0.5">{suggestion.impact}</p>
                           </div>
+                          {onFixAction && fieldAction.action !== 'none' && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="shrink-0 text-xs h-7 gap-1"
+                              onClick={() => onFixAction(suggestion.field, fieldAction.action)}
+                            >
+                              {fieldAction.action === 'gallery' ? (
+                                <Image className="w-3 h-3" />
+                              ) : (
+                                <Pencil className="w-3 h-3" />
+                              )}
+                              {fieldAction.label}
+                            </Button>
+                          )}
                         </div>
                       );
                     })}

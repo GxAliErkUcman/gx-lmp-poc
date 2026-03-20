@@ -901,6 +901,7 @@ const ClientDashboard = () => {
                       onEditBusiness={handleEditBusiness}
                       clientName={selectedClient?.name}
                       clientId={selectedClientId}
+                      customPhotosEnabled={selectedClient?.custom_photos_enabled ?? false}
                     />
                   </TabsContent>
                 </Tabs>
