@@ -50,7 +50,7 @@ export const AllClientsView = () => {
       // Fetch ALL clients (admins have access to all)
       const { data: clientsData, error: clientsError } = await supabase
         .from('clients')
-        .select('id, name, custom_photos_enabled')
+        .select('id, name, custom_photos_enabled, seo_weight_profile_id')
         .order('name');
 
       if (clientsError) throw clientsError;
