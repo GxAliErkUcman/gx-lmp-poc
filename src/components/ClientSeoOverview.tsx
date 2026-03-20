@@ -71,6 +71,7 @@ export default function ClientSeoOverview({ businesses, onEditBusiness, clientNa
     }
   }, [selectedDetail, onEditBusiness]);
 
+  const handleExportCsv = () => {
     const escape = (v: string) => `"${v.replace(/"/g, '""')}"`;
     const rows: string[][] = [['Store Code', 'Business Name', 'City', 'Country', 'SEO Score', 'Band', 'Missing Fields', 'Suggestions']];
 
