@@ -205,6 +205,7 @@ const BulkGeocodeDialog = ({ open, onOpenChange, clientId, onSuccess, specificBu
     const errorList: ErrorEntry[] = [];
     let successes = 0;
     let failures = 0;
+    const pendingUpdates: { id: string; latitude: number; longitude: number }[] = [];
 
     for (let i = 0; i < locations.length; i++) {
       if (cancelledRef.current) break;
@@ -224,7 +225,7 @@ const BulkGeocodeDialog = ({ open, onOpenChange, clientId, onSuccess, specificBu
         failures++;
         setFailureCount(failures);
         setProcessedCount(i + 1);
-        await sleep(200); // small delay for no-address skips
+        await sleep(200);
         continue;
       }
 
@@ -232,24 +233,9 @@ const BulkGeocodeDialog = ({ open, onOpenChange, clientId, onSuccess, specificBu
         const result = await geocodeSingle(biz);
 
         if (result) {
-          const { error } = await supabase
-            .from('businesses')
-            .update({ latitude: result.lat, longitude: result.lon })
-            .eq('id', biz.id);
-
-          if (error) {
-            errorList.push({
-              storeCode: biz.storeCode,
-              businessName: biz.businessName || '',
-              addressLine1: biz.addressLine1 || '',
-              city: biz.city || '',
-              country: biz.country || '',
-              reason: `Database update failed: ${error.message}`,
-            });
-            failures++;
-          } else {
-            successes++;
-          }
+          // Collect for batch update instead of writing per-row
+          pendingUpdates.push({ id: biz.id, latitude: result.lat, longitude: result.lon });
+          successes++;
         } else {
           errorList.push({
             storeCode: biz.storeCode,
@@ -280,6 +266,47 @@ const BulkGeocodeDialog = ({ open, onOpenChange, clientId, onSuccess, specificBu
       // Rate limit: ~1.5s between requests to avoid Nominatim throttling
       if (i < locations.length - 1 && !cancelledRef.current) {
         await sleep(1500);
+      }
+    }
+
+    // Batch write all coordinates to DB at once (in chunks of 50 to avoid payload limits)
+    if (pendingUpdates.length > 0) {
+      setCurrentLocation('Saving all coordinates to database...');
+      const BATCH_SIZE = 50;
+      let dbFailures = 0;
+
+      for (let i = 0; i < pendingUpdates.length; i += BATCH_SIZE) {
+        const batch = pendingUpdates.slice(i, i + BATCH_SIZE);
+        const promises = batch.map(update =>
+          supabase
+            .from('businesses')
+            .update({ latitude: update.latitude, longitude: update.longitude })
+            .eq('id', update.id)
+        );
+
+        const results = await Promise.all(promises);
+        for (const { error } of results) {
+          if (error) {
+            dbFailures++;
+          }
+        }
+
+        // Small delay between batches to avoid overwhelming Supabase
+        if (i + BATCH_SIZE < pendingUpdates.length) {
+          await sleep(500);
+        }
+      }
+
+      if (dbFailures > 0) {
+        successes -= dbFailures;
+        failures += dbFailures;
+        setSuccessCount(successes);
+        setFailureCount(failures);
+        toast({
+          title: 'Warning',
+          description: `${dbFailures} database updates failed.`,
+          variant: 'destructive',
+        });
       }
     }
 
