@@ -75,6 +75,7 @@ const ClientDashboard = () => {
   const [apiSourcedBusinessIds, setApiSourcedBusinessIds] = useState<Set<string>>(new Set());
   
   const { isImportDisabled } = useFieldPermissions(selectedClientId);
+  const { weights: seoWeights, baseScore: seoBaseScore } = useSeoWeights(selectedClientId);
   const isEnergie360 = selectedClientId === ENERGIE_360_CLIENT_ID;
 
   useEffect(() => {
