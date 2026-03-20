@@ -274,16 +274,13 @@ export function calculateSeoScore(business: Business, w: Record<string, number> 
   const hoursMax = (w.openingHours || 0) + (w.specialHours || 0);
 
   const filledDays = countFilledHours(business);
-  if (filledDays === 7) { hoursScore += w.openingHours || 0; }
-  else if (filledDays >= 5) {
-    hoursScore += Math.floor((w.openingHours || 0) * 0.7);
-    suggestions.push({ field: 'openingHours', priority: 'medium', category: 'Opening Hours', message: `Set hours for all 7 days (${filledDays}/7 filled)`, impact: 'Complete hours improve customer experience and search visibility' });
+  // If at least one day has hours, the location has a defined schedule.
+  // Days without hours simply mean "closed" — that's valid, not a penalty.
+  if (filledDays > 0) {
+    hoursScore += w.openingHours || 0;
+  } else {
+    suggestions.push({ field: 'openingHours', priority: 'high', category: 'Opening Hours', message: 'Add opening hours for your business', impact: 'Opening hours are one of the top local SEO ranking factors' });
   }
-  else if (filledDays > 0) {
-    hoursScore += Math.floor((w.openingHours || 0) * 0.3);
-    suggestions.push({ field: 'openingHours', priority: 'high', category: 'Opening Hours', message: `Set hours for all 7 days (only ${filledDays}/7 filled)`, impact: 'Incomplete hours may signal an inactive or unreliable business' });
-  }
-  else { suggestions.push({ field: 'openingHours', priority: 'high', category: 'Opening Hours', message: 'Add opening hours for each day of the week', impact: 'Opening hours are one of the top local SEO ranking factors' }); }
 
   if (hasValue(business.specialHours)) { hoursScore += w.specialHours || 0; }
   else { suggestions.push({ field: 'specialHours', priority: 'medium', category: 'Opening Hours', message: 'Add special/holiday hours', impact: 'Special hours prevent customer frustration and improve trust' }); }
