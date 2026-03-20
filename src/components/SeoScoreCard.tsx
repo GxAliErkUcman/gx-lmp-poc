@@ -109,7 +109,7 @@ export function SeoScoreCircle({ score, band, size = 'md' }: { score: number; ba
   );
 }
 
-export default function SeoScoreCard({ result, businessName, compact = false }: SeoScoreCardProps) {
+export default function SeoScoreCard({ result, businessName, compact = false, onFixAction }: SeoScoreCardProps) {
   const [suggestionsOpen, setSuggestionsOpen] = useState(!compact);
 
   // Group suggestions by category
