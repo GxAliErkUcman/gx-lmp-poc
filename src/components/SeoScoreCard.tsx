@@ -59,7 +59,7 @@ const bandBgColors = {
 const priorityConfig: Record<SeoPriority, { icon: typeof AlertTriangle; label: string; className: string }> = {
   high: { icon: AlertTriangle, label: 'High Impact', className: 'text-red-600 dark:text-red-400' },
   medium: { icon: Info, label: 'Medium Impact', className: 'text-amber-600 dark:text-amber-400' },
-  low: { icon: CheckCircle2, label: 'Low Impact', className: 'text-muted-foreground' },
+  low: { icon: Eye, label: 'Low Impact', className: 'text-muted-foreground' },
 };
 
 export function SeoScoreBadge({ score, band }: { score: number; band: 'green' | 'yellow' | 'red' }) {
