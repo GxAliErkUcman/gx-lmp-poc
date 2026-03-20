@@ -366,6 +366,7 @@ export const AllClientsView = () => {
                   </div>
                 )}
 
+                <div className="border-t pt-4">
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-sm font-medium flex items-center gap-2">
                       <Users className="w-4 h-4" />
