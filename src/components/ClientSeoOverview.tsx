@@ -60,7 +60,17 @@ export default function ClientSeoOverview({ businesses, onEditBusiness, clientNa
     }, 100);
   };
 
-  const handleExportCsv = () => {
+  const handleFixAction = useCallback((field: string, action: string) => {
+    if (!selectedDetail) return;
+    const business = selectedDetail.business;
+    
+    if (action === 'gallery') {
+      setGalleryBusiness(business);
+    } else if (action === 'edit' && onEditBusiness) {
+      onEditBusiness(business);
+    }
+  }, [selectedDetail, onEditBusiness]);
+
     const escape = (v: string) => `"${v.replace(/"/g, '""')}"`;
     const rows: string[][] = [['Store Code', 'Business Name', 'City', 'Country', 'SEO Score', 'Band', 'Missing Fields', 'Suggestions']];
 
