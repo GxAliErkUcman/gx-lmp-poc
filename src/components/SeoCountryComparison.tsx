@@ -81,12 +81,12 @@ function computeCountryStats(businesses: Business[], weights?: Record<string, nu
   });
 }
 
-export default function SeoCountryComparison({ businesses }: SeoCountryComparisonProps) {
+export default function SeoCountryComparison({ businesses, weights, baseScore }: SeoCountryComparisonProps) {
   const [sortKey, setSortKey] = useState<SortKey>('averageScore');
   const [sortAsc, setSortAsc] = useState(false);
   const [expandedCountry, setExpandedCountry] = useState<string | null>(null);
 
-  const countryStats = useMemo(() => computeCountryStats(businesses), [businesses]);
+  const countryStats = useMemo(() => computeCountryStats(businesses, weights, baseScore), [businesses, weights, baseScore]);
 
   const sorted = useMemo(() => {
     const copy = [...countryStats];
