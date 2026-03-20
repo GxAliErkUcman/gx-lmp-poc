@@ -29,6 +29,7 @@ export default function ClientSeoOverview({ businesses, onEditBusiness, clientNa
   const [selectedBusinessId, setSelectedBusinessId] = useState<string | null>(null);
   const detailRef = useRef<HTMLDivElement>(null);
   const [locationSearch, setLocationSearch] = useState('');
+  const [galleryBusiness, setGalleryBusiness] = useState<Business | null>(null);
   const belowThreshold = useMemo(() => 
     stats.lowestScoring.filter(l => l.score < SEO_THRESHOLD),
     [stats.lowestScoring]
