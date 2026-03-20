@@ -340,7 +340,32 @@ export const AllClientsView = () => {
                   </div>
                 </div>
 
-                <div className="border-t pt-4">
+                {/* SEO Weight Profile */}
+                {seoProfiles.length > 0 && (
+                  <div className="border-t pt-4">
+                    <div className="flex items-center justify-between">
+                      <Label className="flex items-center gap-2 text-sm">
+                        <BarChart3 className="w-4 h-4 text-muted-foreground" />
+                        SEO Profile
+                      </Label>
+                      <Select
+                        value={client.seo_weight_profile_id || 'global'}
+                        onValueChange={(val) => handleSeoProfileChange(client.id, val === 'global' ? null : val)}
+                      >
+                        <SelectTrigger className="w-36 h-8 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="global">Global (Default)</SelectItem>
+                          {seoProfiles.map(p => (
+                            <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                )}
+
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-sm font-medium flex items-center gap-2">
                       <Users className="w-4 h-4" />
