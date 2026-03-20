@@ -12,6 +12,8 @@ import type { SeoScoreResult, SeoCategoryScore } from '@/lib/seoScoring';
 
 interface SeoCountryComparisonProps {
   businesses: Business[];
+  weights?: Record<string, number>;
+  baseScore?: number;
 }
 
 interface CountryStats {
