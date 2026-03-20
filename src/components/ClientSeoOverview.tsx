@@ -11,6 +11,7 @@ import SeoScoreCard from '@/components/SeoScoreCard';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import type { Business } from '@/types/business';
+import { useSeoWeights } from '@/hooks/use-seo-weights';
 
 interface ClientSeoOverviewProps {
   businesses: Business[];
@@ -19,7 +20,8 @@ interface ClientSeoOverviewProps {
 }
 
 export default function ClientSeoOverview({ businesses, onEditBusiness, clientName }: ClientSeoOverviewProps) {
-  const stats = useMemo(() => calculateClientSeoStats(businesses), [businesses]);
+  const { weights, baseScore, loading: weightsLoading } = useSeoWeights();
+  const stats = useMemo(() => calculateClientSeoStats(businesses, weights || undefined, baseScore), [businesses, weights, baseScore]);
   const averageBand = stats.averageScore >= 80 ? 'green' as const : stats.averageScore >= 50 ? 'yellow' as const : 'red' as const;
   const [selectedBusinessId, setSelectedBusinessId] = useState<string | null>(null);
   const detailRef = useRef<HTMLDivElement>(null);
@@ -31,9 +33,9 @@ export default function ClientSeoOverview({ businesses, onEditBusiness, clientNa
 
   // All scored businesses for the interactive selector
   const allScored = useMemo(() => 
-    businesses.map(b => ({ business: b, result: calculateSeoScore(b) }))
+    businesses.map(b => ({ business: b, result: calculateSeoScore(b, weights || undefined, baseScore) }))
       .sort((a, b) => a.result.overallScore - b.result.overallScore),
-    [businesses]
+    [businesses, weights, baseScore]
   );
 
   // Selected location detail
