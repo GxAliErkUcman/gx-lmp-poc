@@ -183,21 +183,26 @@ export default function SeoScoreCard({ result, businessName, compact = false, on
                             <p className="font-medium">{suggestion.message}</p>
                             <p className="text-xs text-muted-foreground mt-0.5">{suggestion.impact}</p>
                           </div>
-                          {onFixAction && fieldAction.action !== 'none' && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="shrink-0 text-xs h-7 gap-1"
-                              onClick={() => onFixAction(suggestion.field, fieldAction.action)}
-                            >
-                              {fieldAction.action === 'gallery' ? (
-                                <Image className="w-3 h-3" />
-                              ) : (
-                                <Pencil className="w-3 h-3" />
-                              )}
-                              {fieldAction.label}
-                            </Button>
-                          )}
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <Badge variant="outline" className={`text-[10px] font-semibold px-1.5 py-0 h-5 ${config.badgeClass}`}>
+                              {config.label}
+                            </Badge>
+                            {onFixAction && fieldAction.action !== 'none' && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-xs h-7 gap-1"
+                                onClick={() => onFixAction(suggestion.field, fieldAction.action)}
+                              >
+                                {fieldAction.action === 'gallery' ? (
+                                  <Image className="w-3 h-3" />
+                                ) : (
+                                  <Pencil className="w-3 h-3" />
+                                )}
+                                {fieldAction.label}
+                              </Button>
+                            )}
+                          </div>
                         </div>
                       );
                     })}
