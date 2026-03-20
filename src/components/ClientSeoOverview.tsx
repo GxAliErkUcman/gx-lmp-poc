@@ -429,10 +429,21 @@ export default function ClientSeoOverview({ businesses, onEditBusiness, clientNa
             <SeoScoreCard
               result={selectedDetail.result}
               businessName={selectedDetail.business.businessName}
+              onFixAction={handleFixAction}
             />
           </CardContent>
         )}
       </Card>
+
+      {galleryBusiness && (
+        <LocationGalleryDialog
+          open={!!galleryBusiness}
+          onOpenChange={(open) => { if (!open) setGalleryBusiness(null); }}
+          business={galleryBusiness}
+          clientName={clientName || ''}
+          customPhotosEnabled={customPhotosEnabled}
+        />
+      )}
     </div>
   );
 }
