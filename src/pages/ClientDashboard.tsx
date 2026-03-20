@@ -36,6 +36,7 @@ import NeedAttentionBanner from '@/components/NeedAttentionBanner';
 import { isActiveBusiness, hasCriticalErrors } from '@/lib/exportValidation';
 import ClientSeoOverview from '@/components/ClientSeoOverview';
 import { calculateSeoScore } from '@/lib/seoScoring';
+import { useSeoWeights } from '@/hooks/use-seo-weights';
 import { Activity, MapPin, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import DashboardSummaryCards from '@/components/DashboardSummaryCards';
 import { SeoScoreBadge } from '@/components/SeoScoreCard';
@@ -74,6 +75,7 @@ const ClientDashboard = () => {
   const [apiSourcedBusinessIds, setApiSourcedBusinessIds] = useState<Set<string>>(new Set());
   
   const { isImportDisabled } = useFieldPermissions(selectedClientId);
+  const { weights: seoWeights, baseScore: seoBaseScore } = useSeoWeights(selectedClientId);
   const isEnergie360 = selectedClientId === ENERGIE_360_CLIENT_ID;
 
   useEffect(() => {
@@ -130,9 +132,9 @@ const ClientDashboard = () => {
 
   const avgSeoScore = useMemo(() => {
     if (!businesses.length || (!isServiceUser && !isAdmin)) return null;
-    const scores = businesses.map(b => calculateSeoScore(b).overallScore);
+    const scores = businesses.map(b => calculateSeoScore(b, seoWeights || undefined, seoBaseScore).overallScore);
     return Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
-  }, [businesses, isServiceUser, isAdmin]);
+  }, [businesses, isServiceUser, isAdmin, seoWeights, seoBaseScore]);
 
   const fetchApiSourcedBusinessIds = async () => {
     try {
