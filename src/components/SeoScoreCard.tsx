@@ -178,7 +178,12 @@ export default function SeoScoreCard({ result, businessName, compact = false, on
                       const fieldAction = getFieldAction(suggestion.field);
                       return (
                         <div key={i} className="flex items-start gap-2 text-sm border rounded-lg p-2.5">
-                          <Icon className={`w-4 h-4 mt-0.5 shrink-0 ${config.className}`} />
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Icon className={`w-4 h-4 mt-0.5 shrink-0 ${config.className}`} />
+                            </TooltipTrigger>
+                            <TooltipContent side="left" className="text-xs">{config.label}</TooltipContent>
+                          </Tooltip>
                           <div className="flex-1 min-w-0">
                             <p className="font-medium">{suggestion.message}</p>
                             <p className="text-xs text-muted-foreground mt-0.5">{suggestion.impact}</p>
