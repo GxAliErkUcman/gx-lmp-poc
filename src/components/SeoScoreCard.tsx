@@ -184,9 +184,6 @@ export default function SeoScoreCard({ result, businessName, compact = false, on
                             <p className="text-xs text-muted-foreground mt-0.5">{suggestion.impact}</p>
                           </div>
                           <div className="flex items-center gap-1.5 shrink-0">
-                            <Badge variant="outline" className={`text-[10px] font-semibold px-1.5 py-0 h-5 ${config.badgeClass}`}>
-                              {config.label}
-                            </Badge>
                             {onFixAction && fieldAction.action !== 'none' && (
                               <Button
                                 size="sm"
