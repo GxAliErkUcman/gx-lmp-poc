@@ -30,6 +30,7 @@ import UserCountryAccessDialog from '@/components/UserCountryAccessDialog';
 import StoreOwnerAssignmentDialog from '@/components/StoreOwnerAssignmentDialog';
 import EdgeFunctionLogsPanel from '@/components/EdgeFunctionLogsPanel';
 import { UserSettingsDialog } from '@/components/UserSettingsDialog';
+import SeoWeightsPanel from '@/components/SeoWeightsPanel';
 
 
 interface Client {
@@ -1208,6 +1209,7 @@ const AdminPanel = () => {
           <TabsTrigger value="clients">Client Overview</TabsTrigger>
           <TabsTrigger value="all-clients">All Clients</TabsTrigger>
           <TabsTrigger value="users">Users</TabsTrigger>
+          <TabsTrigger value="seo-weights">SEO Weights</TabsTrigger>
           <TabsTrigger value="logs">Function Logs</TabsTrigger>
           <TabsTrigger value="translations">Translations</TabsTrigger>
         </TabsList>
@@ -1658,6 +1660,10 @@ const AdminPanel = () => {
         
         <TabsContent value="logs">
           <EdgeFunctionLogsPanel />
+        </TabsContent>
+
+        <TabsContent value="seo-weights">
+          <SeoWeightsPanel />
         </TabsContent>
 
         <TabsContent value="translations">

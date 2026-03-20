@@ -12,6 +12,8 @@ import type { SeoScoreResult, SeoCategoryScore } from '@/lib/seoScoring';
 
 interface SeoCountryComparisonProps {
   businesses: Business[];
+  weights?: Record<string, number>;
+  baseScore?: number;
 }
 
 interface CountryStats {
@@ -27,14 +29,14 @@ interface CountryStats {
 
 type SortKey = 'country' | 'count' | 'averageScore' | 'belowThreshold';
 
-function computeCountryStats(businesses: Business[]): CountryStats[] {
+function computeCountryStats(businesses: Business[], weights?: Record<string, number>, baseScore?: number): CountryStats[] {
   const grouped: Record<string, { businesses: Business[]; results: SeoScoreResult[] }> = {};
 
   businesses.forEach(b => {
     const country = b.country?.trim() || 'Unknown';
     if (!grouped[country]) grouped[country] = { businesses: [], results: [] };
     grouped[country].businesses.push(b);
-    grouped[country].results.push(calculateSeoScore(b));
+    grouped[country].results.push(calculateSeoScore(b, weights, baseScore));
   });
 
   return Object.entries(grouped).map(([country, { businesses: biz, results }]) => {
@@ -79,12 +81,12 @@ function computeCountryStats(businesses: Business[]): CountryStats[] {
   });
 }
 
-export default function SeoCountryComparison({ businesses }: SeoCountryComparisonProps) {
+export default function SeoCountryComparison({ businesses, weights, baseScore }: SeoCountryComparisonProps) {
   const [sortKey, setSortKey] = useState<SortKey>('averageScore');
   const [sortAsc, setSortAsc] = useState(false);
   const [expandedCountry, setExpandedCountry] = useState<string | null>(null);
 
-  const countryStats = useMemo(() => computeCountryStats(businesses), [businesses]);
+  const countryStats = useMemo(() => computeCountryStats(businesses, weights, baseScore), [businesses, weights, baseScore]);
 
   const sorted = useMemo(() => {
     const copy = [...countryStats];
