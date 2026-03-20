@@ -7,9 +7,11 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Eye, MapPin, Users, Loader2, UserPlus, Image, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Eye, MapPin, Users, Loader2, UserPlus, Image, Search, ChevronLeft, ChevronRight, BarChart3 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import ServiceUserCreateDialog from '@/components/ServiceUserCreateDialog';
+import { invalidateSeoWeightsCache } from '@/lib/seoScoring';
 
 interface ClientInfo {
   id: string;
@@ -17,6 +19,7 @@ interface ClientInfo {
   active_locations: number;
   pending_locations: number;
   custom_photos_enabled: boolean;
+  seo_weight_profile_id: string | null;
   users: {
     user_id: string;
     first_name: string;
