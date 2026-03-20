@@ -140,6 +140,7 @@ export const AllClientsView = () => {
           active_locations,
           pending_locations,
           custom_photos_enabled: (client as any).custom_photos_enabled ?? false,
+          seo_weight_profile_id: (client as any).seo_weight_profile_id ?? null,
           users: usersWithRoles.filter(u => u !== null) as typeof usersWithRoles[0][]
         };
       });
