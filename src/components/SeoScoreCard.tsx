@@ -175,13 +175,29 @@ export default function SeoScoreCard({ result, businessName, compact = false, on
                     {items.map((suggestion, i) => {
                       const config = priorityConfig[suggestion.priority];
                       const Icon = config.icon;
+                      const fieldAction = getFieldAction(suggestion.field);
                       return (
-                        <div key={i} className="flex gap-2 text-sm border rounded-lg p-2.5">
+                        <div key={i} className="flex items-start gap-2 text-sm border rounded-lg p-2.5">
                           <Icon className={`w-4 h-4 mt-0.5 shrink-0 ${config.className}`} />
-                          <div>
+                          <div className="flex-1 min-w-0">
                             <p className="font-medium">{suggestion.message}</p>
                             <p className="text-xs text-muted-foreground mt-0.5">{suggestion.impact}</p>
                           </div>
+                          {onFixAction && fieldAction.action !== 'none' && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="shrink-0 text-xs h-7 gap-1"
+                              onClick={() => onFixAction(suggestion.field, fieldAction.action)}
+                            >
+                              {fieldAction.action === 'gallery' ? (
+                                <Image className="w-3 h-3" />
+                              ) : (
+                                <Pencil className="w-3 h-3" />
+                              )}
+                              {fieldAction.label}
+                            </Button>
+                          )}
                         </div>
                       );
                     })}
