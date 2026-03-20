@@ -302,7 +302,7 @@ export default function ClientSeoOverview({ businesses, onEditBusiness, clientNa
       </div>
 
       {/* Country & Market Comparison */}
-      <SeoCountryComparison businesses={businesses} />
+      <SeoCountryComparison businesses={businesses} weights={weights || undefined} baseScore={baseScore} />
 
       {/* Lowest Scoring Locations Table — Interactive */}
       {stats.lowestScoring.length > 0 && (

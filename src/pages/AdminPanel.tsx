@@ -1208,6 +1208,7 @@ const AdminPanel = () => {
           <TabsTrigger value="clients">Client Overview</TabsTrigger>
           <TabsTrigger value="all-clients">All Clients</TabsTrigger>
           <TabsTrigger value="users">Users</TabsTrigger>
+          <TabsTrigger value="seo-weights">SEO Weights</TabsTrigger>
           <TabsTrigger value="logs">Function Logs</TabsTrigger>
           <TabsTrigger value="translations">Translations</TabsTrigger>
         </TabsList>
