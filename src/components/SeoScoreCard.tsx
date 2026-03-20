@@ -2,14 +2,46 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ChevronDown, ChevronUp, AlertTriangle, CheckCircle2, Info } from 'lucide-react';
+import { ChevronDown, ChevronUp, AlertTriangle, CheckCircle2, Info, Pencil, Image, ExternalLink } from 'lucide-react';
 import type { SeoScoreResult, SeoPriority } from '@/lib/seoScoring';
+
+type SuggestionAction = 'edit' | 'gallery' | 'none';
+
+// Map suggestion field names to their action type
+const getFieldAction = (field: string): { action: SuggestionAction; label: string } => {
+  switch (field) {
+    case 'coverPhoto':
+    case 'otherPhotos':
+    case 'logoPhoto':
+      return { action: 'gallery', label: 'Open Gallery' };
+    case 'businessName':
+    case 'primaryCategory':
+    case 'additionalCategories':
+    case 'fromTheBusiness':
+    case 'addressLine1':
+    case 'city':
+    case 'postalCode':
+    case 'latitude/longitude':
+    case 'primaryPhone':
+    case 'website':
+    case 'socialMediaUrls':
+    case 'openingHours':
+    case 'specialHours':
+    case 'customServices':
+    case 'labels':
+      return { action: 'edit', label: 'Fix now' };
+    default:
+      return { action: 'none', label: '' };
+  }
+};
 
 interface SeoScoreCardProps {
   result: SeoScoreResult;
   businessName?: string;
   compact?: boolean;
+  onFixAction?: (field: string, action: SuggestionAction) => void;
 }
 
 const bandColors = {
