@@ -91,9 +91,10 @@ interface BusinessDialogProps {
   business?: Business | null;
   onSuccess: () => void;
   clientId?: string; // when provided, force new businesses to this client
+  customPhotosEnabled?: boolean;
 }
 
-const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId }: BusinessDialogProps) => {
+const BusinessDialog = ({ open, onOpenChange, business, onSuccess, clientId, customPhotosEnabled = false }: BusinessDialogProps) => {
   const { t } = useTranslation();
   const { t: tFields } = useTranslation('fields');
   const { user } = useAuth();
