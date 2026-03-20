@@ -38,6 +38,7 @@ export const AllClientsView = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const PAGE_SIZE = 12;
+  const [seoProfiles, setSeoProfiles] = useState<{ id: string; name: string }[]>([]);
 
   useEffect(() => {
     fetchAllClientData();
