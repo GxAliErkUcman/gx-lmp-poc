@@ -900,6 +900,7 @@ const ClientDashboard = () => {
                       businesses={dataSourceFilteredBusinesses} 
                       onEditBusiness={handleEditBusiness}
                       clientName={selectedClient?.name}
+                      clientId={selectedClientId}
                     />
                   </TabsContent>
                 </Tabs>

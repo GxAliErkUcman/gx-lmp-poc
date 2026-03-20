@@ -17,10 +17,11 @@ interface ClientSeoOverviewProps {
   businesses: Business[];
   onEditBusiness?: (business: Business) => void;
   clientName?: string;
+  clientId?: string;
 }
 
-export default function ClientSeoOverview({ businesses, onEditBusiness, clientName }: ClientSeoOverviewProps) {
-  const { weights, baseScore, loading: weightsLoading } = useSeoWeights();
+export default function ClientSeoOverview({ businesses, onEditBusiness, clientName, clientId }: ClientSeoOverviewProps) {
+  const { weights, baseScore, loading: weightsLoading } = useSeoWeights(clientId);
   const stats = useMemo(() => calculateClientSeoStats(businesses, weights || undefined, baseScore), [businesses, weights, baseScore]);
   const averageBand = stats.averageScore >= 80 ? 'green' as const : stats.averageScore >= 50 ? 'yellow' as const : 'red' as const;
   const [selectedBusinessId, setSelectedBusinessId] = useState<string | null>(null);
