@@ -570,6 +570,39 @@ export type Database = {
           },
         ]
       }
+      seo_weights: {
+        Row: {
+          base_score: number
+          category: string
+          factor_key: string
+          factor_label: string
+          id: string
+          updated_at: string
+          updated_by: string | null
+          weight: number
+        }
+        Insert: {
+          base_score?: number
+          category: string
+          factor_key: string
+          factor_label: string
+          id?: string
+          updated_at?: string
+          updated_by?: string | null
+          weight?: number
+        }
+        Update: {
+          base_score?: number
+          category?: string
+          factor_key?: string
+          factor_label?: string
+          id?: string
+          updated_at?: string
+          updated_by?: string | null
+          weight?: number
+        }
+        Relationships: []
+      }
       store_owner_access: {
         Row: {
           business_id: string
