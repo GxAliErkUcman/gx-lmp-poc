@@ -56,10 +56,10 @@ const bandBgColors = {
   red: 'bg-red-500',
 };
 
-const priorityConfig: Record<SeoPriority, { icon: typeof AlertTriangle; label: string; className: string }> = {
-  high: { icon: AlertTriangle, label: 'High', className: 'text-red-600 dark:text-red-400' },
-  medium: { icon: Info, label: 'Medium', className: 'text-amber-600 dark:text-amber-400' },
-  low: { icon: CheckCircle2, label: 'Low', className: 'text-muted-foreground' },
+const priorityConfig: Record<SeoPriority, { icon: typeof AlertTriangle; label: string; className: string; badgeClass: string }> = {
+  high: { icon: AlertTriangle, label: 'High Impact', className: 'text-red-600 dark:text-red-400', badgeClass: 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400 border-red-200 dark:border-red-800' },
+  medium: { icon: Info, label: 'Medium Impact', className: 'text-amber-600 dark:text-amber-400', badgeClass: 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400 border-amber-200 dark:border-amber-800' },
+  low: { icon: CheckCircle2, label: 'Low Impact', className: 'text-muted-foreground', badgeClass: 'bg-muted text-muted-foreground border-border' },
 };
 
 export function SeoScoreBadge({ score, band }: { score: number; band: 'green' | 'yellow' | 'red' }) {
