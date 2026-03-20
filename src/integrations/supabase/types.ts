@@ -435,6 +435,7 @@ export type Database = {
           id: string
           lsc_id: number | null
           name: string
+          seo_weight_profile_id: string | null
           updated_at: string
         }
         Insert: {
@@ -443,6 +444,7 @@ export type Database = {
           id?: string
           lsc_id?: number | null
           name: string
+          seo_weight_profile_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -451,9 +453,18 @@ export type Database = {
           id?: string
           lsc_id?: number | null
           name?: string
+          seo_weight_profile_id?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "clients_seo_weight_profile_id_fkey"
+            columns: ["seo_weight_profile_id"]
+            isOneToOne: false
+            referencedRelation: "seo_weight_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       edge_function_logs: {
         Row: {
@@ -569,6 +580,62 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      seo_weight_profile_items: {
+        Row: {
+          factor_key: string
+          id: string
+          profile_id: string
+          weight: number
+        }
+        Insert: {
+          factor_key: string
+          id?: string
+          profile_id: string
+          weight?: number
+        }
+        Update: {
+          factor_key?: string
+          id?: string
+          profile_id?: string
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seo_weight_profile_items_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "seo_weight_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      seo_weight_profiles: {
+        Row: {
+          base_score: number
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          base_score?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          base_score?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       seo_weights: {
         Row: {

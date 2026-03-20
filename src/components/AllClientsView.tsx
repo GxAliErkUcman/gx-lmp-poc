@@ -7,9 +7,11 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Eye, MapPin, Users, Loader2, UserPlus, Image, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Eye, MapPin, Users, Loader2, UserPlus, Image, Search, ChevronLeft, ChevronRight, BarChart3 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import ServiceUserCreateDialog from '@/components/ServiceUserCreateDialog';
+import { invalidateSeoWeightsCache } from '@/lib/seoScoring';
 
 interface ClientInfo {
   id: string;
@@ -17,6 +19,7 @@ interface ClientInfo {
   active_locations: number;
   pending_locations: number;
   custom_photos_enabled: boolean;
+  seo_weight_profile_id: string | null;
   users: {
     user_id: string;
     first_name: string;
@@ -35,10 +38,42 @@ export const AllClientsView = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const PAGE_SIZE = 12;
+  const [seoProfiles, setSeoProfiles] = useState<{ id: string; name: string }[]>([]);
 
   useEffect(() => {
     fetchAllClientData();
+    fetchSeoProfiles();
   }, []);
+
+  const fetchSeoProfiles = async () => {
+    try {
+      const { data } = await supabase
+        .from('seo_weight_profiles')
+        .select('id, name')
+        .order('name');
+      setSeoProfiles(data || []);
+    } catch (e) {
+      console.error('Error fetching SEO profiles:', e);
+    }
+  };
+
+  const handleSeoProfileChange = async (clientId: string, profileId: string | null) => {
+    try {
+      const { error } = await supabase
+        .from('clients')
+        .update({ seo_weight_profile_id: profileId } as any)
+        .eq('id', clientId);
+      if (error) throw error;
+      invalidateSeoWeightsCache();
+      setClients(prev => prev.map(c => c.id === clientId ? { ...c, seo_weight_profile_id: profileId } : c));
+      toast({
+        title: 'SEO Profile Updated',
+        description: profileId ? 'Client assigned to custom SEO profile.' : 'Client reverted to global SEO weights.',
+      });
+    } catch (error: any) {
+      toast({ title: 'Error', description: error.message || 'Failed to update SEO profile.', variant: 'destructive' });
+    }
+  };
 
   const fetchAllClientData = async () => {
     try {
@@ -47,7 +82,7 @@ export const AllClientsView = () => {
       // Fetch ALL clients (admins have access to all)
       const { data: clientsData, error: clientsError } = await supabase
         .from('clients')
-        .select('id, name, custom_photos_enabled')
+        .select('id, name, custom_photos_enabled, seo_weight_profile_id')
         .order('name');
 
       if (clientsError) throw clientsError;
@@ -137,6 +172,7 @@ export const AllClientsView = () => {
           active_locations,
           pending_locations,
           custom_photos_enabled: (client as any).custom_photos_enabled ?? false,
+          seo_weight_profile_id: (client as any).seo_weight_profile_id ?? null,
           users: usersWithRoles.filter(u => u !== null) as typeof usersWithRoles[0][]
         };
       });
@@ -303,6 +339,32 @@ export const AllClientsView = () => {
                     />
                   </div>
                 </div>
+
+                {/* SEO Weight Profile */}
+                {seoProfiles.length > 0 && (
+                  <div className="border-t pt-4">
+                    <div className="flex items-center justify-between">
+                      <Label className="flex items-center gap-2 text-sm">
+                        <BarChart3 className="w-4 h-4 text-muted-foreground" />
+                        SEO Profile
+                      </Label>
+                      <Select
+                        value={client.seo_weight_profile_id || 'global'}
+                        onValueChange={(val) => handleSeoProfileChange(client.id, val === 'global' ? null : val)}
+                      >
+                        <SelectTrigger className="w-36 h-8 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="global">Global (Default)</SelectItem>
+                          {seoProfiles.map(p => (
+                            <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                )}
 
                 <div className="border-t pt-4">
                   <div className="flex items-center justify-between mb-3">
