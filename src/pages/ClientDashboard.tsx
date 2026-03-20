@@ -36,6 +36,7 @@ import NeedAttentionBanner from '@/components/NeedAttentionBanner';
 import { isActiveBusiness, hasCriticalErrors } from '@/lib/exportValidation';
 import ClientSeoOverview from '@/components/ClientSeoOverview';
 import { calculateSeoScore } from '@/lib/seoScoring';
+import { useSeoWeights } from '@/hooks/use-seo-weights';
 import { Activity, MapPin, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import DashboardSummaryCards from '@/components/DashboardSummaryCards';
 import { SeoScoreBadge } from '@/components/SeoScoreCard';
