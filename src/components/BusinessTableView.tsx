@@ -12,6 +12,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Edit, Trash2, Search, ArrowUp, ArrowDown, Settings, Filter, X, AlertCircle, Check, ChevronsUpDown, Info, Image, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Business } from '@/types/business';
 import ManageColumnsDialog, { type ColumnConfig } from './ManageColumnsDialog';
+import { getCountryCode } from './CountrySelect';
 import LocationGalleryDialog from './LocationGalleryDialog';
 import { formatCountryDisplay } from '@/components/CountrySelect';
 import { ValidationError } from '@/lib/validation';
