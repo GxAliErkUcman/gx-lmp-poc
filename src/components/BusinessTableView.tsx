@@ -12,6 +12,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Edit, Trash2, Search, ArrowUp, ArrowDown, Settings, Filter, X, AlertCircle, Check, ChevronsUpDown, Info, Image, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Business } from '@/types/business';
 import ManageColumnsDialog, { type ColumnConfig } from './ManageColumnsDialog';
+import { getCountryCode } from './CountrySelect';
 import LocationGalleryDialog from './LocationGalleryDialog';
 import { formatCountryDisplay } from '@/components/CountrySelect';
 import { ValidationError } from '@/lib/validation';
@@ -83,7 +84,7 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
   // Get unique values for filter dropdowns
   const uniqueCategories = [...new Set(businesses.map(b => b.primaryCategory).filter(Boolean))];
   const uniqueCities = [...new Set(businesses.map(b => b.city).filter(Boolean))];
-  const uniqueCountries = [...new Set(businesses.map(b => b.country).filter(Boolean))];
+  const uniqueCountries = [...new Set(businesses.map(b => getCountryCode(b.country || '')).filter(Boolean))].sort((a, b) => formatCountryDisplay(a).localeCompare(formatCountryDisplay(b)));
   const uniquePostalCodes = [...new Set(businesses.map(b => b.postalCode).filter(Boolean))];
 
   // Derive filtered + sorted businesses via useMemo (no state, no useEffect)
@@ -99,7 +100,7 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
       
       const matchesCategory = !categoryFilter || business.primaryCategory === categoryFilter;
       const matchesCity = !cityFilter || business.city === cityFilter;
-      const matchesCountry = !countryFilter || business.country === countryFilter;
+      const matchesCountry = !countryFilter || getCountryCode(business.country || '') === countryFilter;
       const matchesPostalCode = !postalCodeFilter || business.postalCode === postalCodeFilter;
       const matchesNoCoordinates = !noCoordinatesFilter || (!business.latitude && !business.longitude);
       
