@@ -84,7 +84,7 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
   // Get unique values for filter dropdowns
   const uniqueCategories = [...new Set(businesses.map(b => b.primaryCategory).filter(Boolean))];
   const uniqueCities = [...new Set(businesses.map(b => b.city).filter(Boolean))];
-  const uniqueCountries = [...new Set(businesses.map(b => b.country).filter(Boolean))];
+  const uniqueCountries = [...new Set(businesses.map(b => getCountryCode(b.country || '')).filter(Boolean))].sort((a, b) => formatCountryDisplay(a).localeCompare(formatCountryDisplay(b)));
   const uniquePostalCodes = [...new Set(businesses.map(b => b.postalCode).filter(Boolean))];
 
   // Derive filtered + sorted businesses via useMemo (no state, no useEffect)
