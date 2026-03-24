@@ -100,7 +100,7 @@ const BusinessTableView = ({ businesses, onEdit, onDelete, onMultiEdit, onMultiD
       
       const matchesCategory = !categoryFilter || business.primaryCategory === categoryFilter;
       const matchesCity = !cityFilter || business.city === cityFilter;
-      const matchesCountry = !countryFilter || business.country === countryFilter;
+      const matchesCountry = !countryFilter || getCountryCode(business.country || '') === countryFilter;
       const matchesPostalCode = !postalCodeFilter || business.postalCode === postalCodeFilter;
       const matchesNoCoordinates = !noCoordinatesFilter || (!business.latitude && !business.longitude);
       
