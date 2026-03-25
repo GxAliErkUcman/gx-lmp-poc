@@ -61,6 +61,19 @@ const phonePattern = /^\(?[+]?[0-9a-zA-Z  ()./–-]*$/;
 const additionalPhonesPattern = /^(\(?[+]?[0-9a-zA-Z  ()./–-]*, ?)*(\(?[+]?[0-9a-zA-Z  ()./–-]*)$/;
 const specialHoursPattern = /^(([0-9]{4}-[0-9]{2}-[0-9]{2}: ?(([0-9]{1,2}:[0-9]{2} ?- ?[0-9]{1,2}:[0-9]{2})|x), ?)*([0-9]{4}-[0-9]{2}-[0-9]{2}: ?(([0-9]{1,2}:[0-9]{2} ?- ?[0-9]{1,2}:[0-9]{2})|x))|x|)$/;
 
+function normalizeCountryCode(value: string | null | undefined): string | null {
+  if (!value) return null;
+
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  const parenthesizedCode = trimmed.match(/\(([A-Za-z]{2})\)\s*$/)?.[1];
+  const candidate = (parenthesizedCode || trimmed).trim().toUpperCase();
+  const aliases: Record<string, string> = { UK: 'GB' };
+
+  return aliases[candidate] || candidate;
+}
+
 function validateBusiness(business: Business): boolean {
   if (!business.storeCode || business.storeCode.length > 64) return false;
   if (!business.businessName || business.businessName.length > 300) return false;
@@ -154,7 +167,7 @@ function convertToJsonSchema(business: Business & { goldmine?: string }, include
     district: business.district || null,
     city: business.city || null,
     state: business.state || null,
-    country: business.country,
+    country: normalizeCountryCode(business.country),
     latitude: business.latitude || null,
     longitude: business.longitude || null,
     primaryCategory: business.primaryCategory,
