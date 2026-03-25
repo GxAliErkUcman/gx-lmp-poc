@@ -7,6 +7,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { ValidationErrors } from '@/components/ValidationErrors';
 import { validateBusiness } from '@/lib/validation';
 import { Business } from '@/types/business';
+import { getCountryCode } from '@/components/CountrySelect';
 import { toast } from '@/hooks/use-toast';
 import * as XLSX from 'xlsx';
 
@@ -51,7 +52,7 @@ export const JsonExport = ({ businesses, clientName, onNavigateToBusiness }: Jso
       district: business.district || null,
       city: business.city || null,
       state: business.state || null,
-      country: business.country,
+      country: getCountryCode(business.country || ''),
       latitude: business.latitude || null,
       longitude: business.longitude || null,
       primaryCategory: business.primaryCategory,
