@@ -1,5 +1,6 @@
 import { validateBusiness, ValidationError } from '@/lib/validation';
 import type { Business } from '@/types/business';
+import { getCountryCode } from '@/components/CountrySelect';
 
 // Required fields that make an error "critical" (blocking export)
 const REQUIRED_FIELDS = ['storeCode', 'businessName', 'addressLine1', 'country', 'primaryCategory'];
@@ -35,7 +36,7 @@ function convertForValidation(business: Business) {
     district: business.district || null,
     city: business.city || null,
     state: business.state || null,
-    country: business.country,
+    country: getCountryCode(business.country || ''),
     latitude: business.latitude || null,
     longitude: business.longitude || null,
     primaryCategory: business.primaryCategory,
